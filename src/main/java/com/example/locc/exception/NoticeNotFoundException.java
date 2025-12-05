@@ -1,0 +1,7 @@
+package com.example.locc.exception;
+
+public class NoticeNotFoundException extends RuntimeException {
+    public NoticeNotFoundException(Long id) {
+        super("공지사항을 찾을 수 없습니다. ID: " + id);
+    }
+}
