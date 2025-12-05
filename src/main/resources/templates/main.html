@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>그리스도 사랑교회</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center bg-white pt-24 px-6">
+        <div class="max-w-4xl w-full">
+            <div class="text-center mb-16">
+                <div class="inline-block mb-8">
+                    <p class="text-sm tracking-[0.3em] text-slate-400 uppercase mb-2">Isaiah 43:19</p>
+                </div>
+                <h1 class="text-5xl md:text-6xl lg:text-6xl font-light text-slate-900 leading-[1.4] mb-20 tracking-tight">
+                    "보라 내가 새 일을 행하리니<br>
+                    이제 나타낼 것이라<br>
+                    너희가 그것을 알지 못하겠느냐<br>
+                    반드시 내가 광야에 길을<br>
+                    사막에 강을 내리니"
+                </h1>
+
+                <div class="h-px w-12 bg-slate-300 mx-auto mb-16"></div>
+
+                <p class="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-2xl mx-auto font-light">
+                    우리는 교회의 기능 중 예배를 가장 소중하게 여깁니다.<br>
+                    살아계신 하나님께 예배하며, 하나님의 말씀을 통해<br>
+                    체험하고 하나님을 닮기를 원합니다.
+                </p>
+            </div>
+
+            <div class="flex justify-center mt-20">
+                <a href="/salvation" class="group relative inline-flex items-center px-10 py-4 overflow-hidden text-slate-900 transition-all duration-300 ease-out border-2 border-slate-900 hover:text-white text-lg">
+                    <span class="absolute inset-0 bg-slate-900 transition-all duration-300 ease-out transform translate-y-full group-hover:translate-y-0"></span>
+                    <span class="relative font-medium tracking-wide">구원의 길</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-32 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">About Church</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
+                    그리스도 사랑교회의 예배
+                </h2>
+            </div>
+
+            <div class="space-y-20">
+                <div>
+                    <h3 class="text-2xl font-medium text-slate-900 mb-6">우리의 믿음</h3>
+                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light">
+                        우리는 교회의 기능 중 예배를 가장 소중하게 여깁니다.
+                        이 시간을 통해서 살아계신 하나님께 예배하며, 기도하고,
+                        하나님의 말씀인 성경을 통해 선포되는 강해설교를 듣습니다.
+                    </p>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-medium text-slate-900 mb-6">우리의 추구</h3>
+                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light">
+                        우리는 이 시간을 통해 듣고 이해할 뿐 아니라,
+                        체험하고 하나님을 닮기를 원합니다.
+                        하나님과의 친밀한 교제와 성도들과의 진실한 사랑의 교제를 추구합니다.
+                    </p>
+                </div>
+
+                <div class="border-l-2 border-slate-900 pl-8 py-2">
+                    <p class="text-xl md:text-2xl text-slate-700 leading-relaxed font-light italic">
+                        하나님과의 친밀한 교제이며,<br class="hidden md:block">
+                        그분의 자녀들인 성도들과의 진실한 사랑의 교제입니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Worship Schedule Section -->
+    <section id="worship" class="py-32 bg-white px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Worship</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-4">예배</h2>
+                <p class="text-lg text-slate-500 font-light">모든 예배에 여러분을 초대합니다</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 lg:gap-16">
+                <!-- 주일 예배 -->
+                <div>
+                    <h3 class="text-2xl font-medium text-slate-900 mb-10 pb-4 border-b border-slate-200">
+                        주일 예배
+                    </h3>
+                    <div class="space-y-8">
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <p class="text-lg font-medium text-slate-900 mb-1">주일 1부 예배</p>
+                                <p class="text-base text-slate-500 font-light">본당</p>
+                            </div>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">09:00</p>
+                        </div>
+
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <p class="text-lg font-medium text-slate-900 mb-1">주일 2부 예배</p>
+                                <p class="text-base text-slate-500 font-light">본당</p>
+                            </div>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">11:00</p>
+                        </div>
+
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <p class="text-lg font-medium text-slate-900 mb-1">주일 오후 예배</p>
+                                <p class="text-base text-slate-500 font-light">본당</p>
+                            </div>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">14:00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 주중 예배 -->
+                <div>
+                    <h3 class="text-2xl font-medium text-slate-900 mb-10 pb-4 border-b border-slate-200">
+                        주중 예배
+                    </h3>
+                    <div class="space-y-8">
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <p class="text-lg font-medium text-slate-900 mb-1">수요예배</p>
+                                <p class="text-base text-slate-500 font-light">본당</p>
+                            </div>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">20:00</p>
+                        </div>
+
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <p class="text-lg font-medium text-slate-900 mb-1">금요기도회</p>
+                                <p class="text-base text-slate-500 font-light">본당</p>
+                            </div>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">20:30</p>
+                        </div>
+
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <p class="text-lg font-medium text-slate-900 mb-1">새벽기도</p>
+                                <p class="text-base text-slate-500 font-light">본당</p>
+                            </div>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">05:00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sermon Section -->
+    <section id="sermon" class="py-32 bg-slate-900 text-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-16">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">This Week's Message</p>
+                <h2 class="text-4xl md:text-5xl font-light tracking-tight">이번 주 설교</h2>
+            </div>
+
+            <div th:if="${latestSermon != null}" class="space-y-8">
+                <div>
+                    <h3 class="text-3xl md:text-4xl lg:text-5xl font-light leading-relaxed mb-8" th:text="${latestSermon.title}">
+                        낮도 주의 것이요, 밤도 주의 것이라
+                    </h3>
+
+                    <div class="space-y-2 text-slate-300">
+                        <p class="text-xl font-light" th:text="${latestSermon.scripture}">시편 74:12-17</p>
+                        <p class="text-lg" th:text="${latestSermon.preacher}">최신광 담임목사</p>
+                        <p class="text-base text-slate-500" th:text="${#temporals.format(latestSermon.sermonDate, 'yyyy.MM.dd')}">2024.11.10</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 pt-8">
+                    <a th:if="${latestSermon.audioUrl != null}"
+                       th:href="${latestSermon.audioUrl}"
+                       class="group relative inline-flex items-center justify-center px-10 py-4 overflow-hidden bg-white text-slate-900 transition-all duration-300 ease-out hover:bg-slate-100 text-lg">
+                        <span class="relative font-medium tracking-wide">설교 듣기</span>
+                    </a>
+                    <a th:href="@{/sermon/{id}(id=${latestSermon.id})}"
+                       class="group relative inline-flex items-center justify-center px-10 py-4 overflow-hidden text-white transition-all duration-300 ease-out border border-white hover:bg-white hover:text-slate-900 text-lg">
+                        <span class="relative font-medium tracking-wide">설교 원고</span>
+                    </a>
+                </div>
+            </div>
+
+            <div th:unless="${latestSermon != null}" class="py-16 text-center">
+                <p class="text-slate-400 font-light text-lg">최근 설교가 없습니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notice Section -->
+    <section id="notice" class="py-32 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-16">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Notice</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight">교회 공지</h2>
+            </div>
+
+            <div class="space-y-0 border-t border-slate-200">
+                <div th:each="notice : ${recentNotices}"
+                     class="group flex items-center justify-between py-6 border-b border-slate-200 cursor-pointer transition-all duration-200 hover:bg-slate-50 px-4 -mx-4"
+                     th:onclick="'location.href=\'/notice/' + ${notice.id} + '\''">
+                    <div class="flex items-center gap-4">
+                        <span th:if="${notice.isPinned}"
+                              class="text-sm px-2 py-1 border border-slate-300 text-slate-600 font-medium">공지</span>
+                        <span class="text-lg text-slate-900 font-light group-hover:text-slate-600 transition-colors"
+                              th:text="${notice.title}">공지사항 제목</span>
+                    </div>
+                    <span class="text-base text-slate-400 ml-4 whitespace-nowrap font-light tabular-nums"
+                          th:text="${#temporals.format(notice.createdAt, 'yyyy.MM.dd')}">2024.11.15</span>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <a href="/notice" class="inline-flex items-center text-slate-900 hover:text-slate-600 font-medium group transition-colors text-lg">
+                    <span class="tracking-wide">전체 공지 보기</span>
+                    <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Ministry Section -->
+    <section id="ministry" class="py-32 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-slate-900 leading-relaxed mb-12">
+                하나님과의 친밀한 교제와<br>
+                성도들과의 진실한 사랑의 교제
+            </h2>
+
+            <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light max-w-3xl mx-auto mb-12">
+                시광교회는 예배를 통하여, 그리고 예배가 지배하는 삶을 통해 하나님의 보상을 기대합니다.
+                그 보상은 세상도 줄 수 있는 잠시의 위안이나 물질적인 복, 건강, 명예와 같은 보잘것없는 것이 아니라
+                오히려 그 보상은 궁극적인 모든 선의 근원이 되시는 하나님과의 친밀한 교제이며,
+                그분의 자녀들인 성도들과의 진실한 사랑의 교제입니다.
+            </p>
+
+            <a href="/ministry" class="group relative inline-flex items-center px-10 py-4 overflow-hidden text-slate-900 transition-all duration-300 ease-out border border-slate-900 hover:text-white text-lg">
+                <span class="absolute inset-0 bg-slate-900 transition-all duration-300 ease-out transform translate-y-full group-hover:translate-y-0"></span>
+                <span class="relative font-medium tracking-wide">부서 소개</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-32 bg-white px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Location</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-4">오시는 길</h2>
+                <p class="text-lg text-slate-500 font-light">그리스도 사랑교회로 오시는 길을 안내합니다</p>
+            </div>
+
+            <div class="bg-slate-100 h-96 lg:h-[500px] mb-16 flex items-center justify-center">
+                <p class="text-slate-400 text-base font-light">지도 영역 (구글맵 or 카카오맵 API 통합 필요)</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-12">
+                <div>
+                    <h3 class="text-xl font-medium text-slate-900 mb-6">주소</h3>
+                    <div class="space-y-1 text-slate-600 font-light text-lg">
+                        <p>대구광역시 동구</p>
+                        <p>안심로55길 59</p>
+                        <p class="mt-4 font-medium text-slate-900">그리스도 사랑교회</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-medium text-slate-900 mb-6">연락처</h3>
+                    <div class="space-y-1 text-slate-600 font-light text-lg">
+                        <p>Tel: 053-962-8948</p>
+                        <p>Email: cslove@hanmail.net</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-medium text-slate-900 mb-6">교통편</h3>
+                    <div class="space-y-1 text-slate-600 font-light text-lg">
+                        <p class="font-medium text-slate-900">대구 지하철 1호선</p>
+                        <p>반야월역 도보 10분</p>
+                        <p class="mt-4 text-base">주차: 교회 주차장 이용</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>
