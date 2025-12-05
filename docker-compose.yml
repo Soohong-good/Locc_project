@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # MariaDB 데이터베이스
+  db:
+    image: mariadb:11.2
+    container_name: locc-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MARIADB_DATABASE: ${DB_NAME:-locc}
+      MARIADB_USER: ${DB_USER:-loccuser}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-loccpassword}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - locc-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot 애플리케이션
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: locc-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME:-locc}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-loccuser}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-loccpassword}
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-this-in-production}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - locc-network
+
+# 데이터 영속성을 위한 볼륨
+volumes:
+  mariadb_data:
+    driver: local
+
+# 컨테이너 간 통신을 위한 네트워크
+networks:
+  locc-network:
+    driver: bridge

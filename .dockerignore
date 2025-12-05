@@ -1,0 +1,37 @@
+# Gradle 빌드 파일
+.gradle/
+build/
+!build/libs/*.jar
+
+# IDE 설정
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# 환경 설정
+.env
+.env.local
+*.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 문서
+README.md
+docs/
+
+# 테스트
+src/test/
+
+# 임시 파일
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS 파일
+.DS_Store
+Thumbs.db
