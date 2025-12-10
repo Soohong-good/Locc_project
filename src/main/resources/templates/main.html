@@ -264,8 +264,8 @@
                 <p class="text-lg text-slate-500 font-light">그리스도 사랑교회로 오시는 길을 안내합니다</p>
             </div>
 
-            <div class="bg-slate-100 h-96 lg:h-[500px] mb-16 flex items-center justify-center">
-                <p class="text-slate-400 text-base font-light">지도 영역 (구글맵 or 카카오맵 API 통합 필요)</p>
+            <div class="bg-slate-100 h-96 lg:h-[500px] mb-16">
+                <div id="map" class="w-full h-full"></div>
             </div>
 
             <div class="grid md:grid-cols-3 gap-12">
@@ -299,6 +299,53 @@
     </section>
 
 </main>
+
+<th:block layout:fragment="scripts">
+    <script>
+        // 카카오맵 API 초기화
+        function initMap() {
+            const mapContainer = document.getElementById('map');
+
+            // 카카오맵 API가 로드되었는지 확인
+            if (typeof kakao !== 'undefined' && kakao.maps) {
+                const mapOption = {
+                    center: new kakao.maps.LatLng(35.9144, 128.7283), // 교회 좌표
+                    level: 3
+                };
+
+                const map = new kakao.maps.Map(mapContainer, mapOption);
+
+                // 마커 생성
+                const markerPosition = new kakao.maps.LatLng(35.9144, 128.7283);
+                const marker = new kakao.maps.Marker({
+                    position: markerPosition
+                });
+                marker.setMap(map);
+
+                // 인포윈도우 생성
+                const iwContent = '<div style="padding:10px;">그리스도 사랑교회</div>';
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: iwContent
+                });
+                infowindow.open(map, marker);
+
+                // 지도 클릭 시 카카오맵으로 이동
+                kakao.maps.event.addListener(map, 'click', function() {
+                    window.open('https://map.kakao.com/link/map/그리스도 사랑교회,35.9144,128.7283');
+                });
+            } else {
+                // 카카오맵 API가 없을 경우 대체 UI
+                mapContainer.innerHTML = '<a href="https://map.kakao.com/link/map/그리스도 사랑교회,35.9144,128.7283" target="_blank" class="flex items-center justify-center h-full text-slate-600 hover:text-slate-900 transition-colors"><div class="text-center"><svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><p class="text-lg font-light">카카오맵에서 보기</p></div></a>';
+            }
+        }
+
+        // 페이지 로드 시 지도 초기화
+        document.addEventListener('DOMContentLoaded', initMap);
+    </script>
+
+    <!-- 카카오맵 API 스크립트 -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_API_KEY"></script>
+</th:block>
 
 </body>
 </html>
