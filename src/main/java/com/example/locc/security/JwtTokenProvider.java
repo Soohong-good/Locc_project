@@ -37,6 +37,10 @@ public class JwtTokenProvider {
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "access");
+        // Role 정보 추가
+        claims.put("authorities", userDetails.getAuthorities().stream()
+                .map(auth -> auth.getAuthority())
+                .toList());
         return createToken(claims, userDetails.getUsername(), jwtExpiration);
     }
 
@@ -90,7 +94,7 @@ public class JwtTokenProvider {
     /**
      * 토큰에서 모든 claim 추출
      */
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(secretKey)
