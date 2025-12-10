@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+  <title>페이지를 찾을 수 없습니다</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+  <section class="min-h-screen flex items-center justify-center bg-white pt-24 px-6">
+    <div class="max-w-2xl w-full text-center">
+      <div class="mb-8">
+        <h1 class="text-9xl font-light text-slate-200 mb-4">404</h1>
+        <h2 class="text-3xl md:text-4xl font-light text-slate-900 mb-4">
+          페이지를 찾을 수 없습니다
+        </h2>
+        <p class="text-lg text-slate-600 font-light mb-8" th:if="${errorMessage}">
+          [[${errorMessage}]]
+        </p>
+        <p class="text-lg text-slate-600 font-light mb-8" th:unless="${errorMessage}">
+          요청하신 페이지를 찾을 수 없습니다.
+        </p>
+      </div>
+
+      <div class="flex justify-center gap-4">
+        <a href="/"
+           class="group relative inline-flex items-center px-8 py-3 overflow-hidden text-white bg-slate-900 transition-all duration-300 ease-out hover:bg-slate-800">
+          <span class="relative font-medium">홈으로 돌아가기</span>
+        </a>
+        <a href="javascript:history.back()"
+           class="group relative inline-flex items-center px-8 py-3 overflow-hidden text-slate-900 transition-all duration-300 ease-out border border-slate-900 hover:bg-slate-900 hover:text-white">
+          <span class="relative font-medium">이전 페이지</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+</body>
+</html>
