@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>말씀 - 그리스도 사랑교회</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center bg-slate-50 pt-24 pb-32 px-6">
+        <div class="max-w-4xl w-full">
+            <div class="text-center mb-16">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-6">God's Word</p>
+                <h1 class="text-5xl md:text-6xl lg:text-7xl font-light text-slate-900 leading-[1.3] tracking-tight mb-12">
+                    하나님의 말씀
+                </h1>
+                <div class="h-px w-16 bg-slate-300 mx-auto mb-12"></div>
+                <p class="text-xl md:text-2xl text-slate-600 leading-[1.8] font-light max-w-3xl mx-auto">
+                    성경은 하나님께서 우리에게 주신<br>
+                    살아있는 말씀입니다
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 말씀의 중요성 -->
+    <section class="py-32 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Foundation</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
+                    말씀 중심의 교회
+                </h2>
+                <div class="h-px w-16 bg-slate-300"></div>
+            </div>
+
+            <div class="space-y-16">
+                <div class="border-l-2 border-slate-900 pl-8 py-2">
+                    <p class="text-2xl md:text-3xl text-slate-700 leading-[1.7] font-light italic mb-4">
+                        "모든 성경은 하나님의 감동으로 된 것으로<br>
+                        교훈과 책망과 바르게 함과 의로 교육하기에 유익하니"
+                    </p>
+                    <p class="text-base text-slate-500 font-light">디모데후서 3:16</p>
+                </div>
+
+                <div class="prose prose-lg prose-slate max-w-none">
+                    <p class="text-lg md:text-xl text-slate-600 leading-[1.9] font-light">
+                        그리스도 사랑교회는 성경 말씀을 교회의 최고 권위로 믿습니다.
+                        우리는 하나님의 말씀이 우리의 신앙과 삶의 유일한 기준이 되어야 한다고 확신합니다.
+                        모든 예배와 교육, 그리고 성도들의 삶이 성경 말씀 위에 굳건히 서기를 추구합니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 강해설교 -->
+    <section class="py-32 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Expository Preaching</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
+                    강해설교
+                </h2>
+                <div class="h-px w-16 bg-slate-300"></div>
+            </div>
+
+            <div class="space-y-16">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-light text-slate-900 mb-6">강해설교란?</h3>
+                    <p class="text-lg md:text-xl text-slate-600 leading-[1.9] font-light mb-8">
+                        강해설교는 성경 본문을 순서대로 한 절 한 절 해석하며 가르치는 설교 방식입니다.
+                        이를 통해 하나님의 말씀을 왜곡 없이 있는 그대로 전하고,
+                        성도들이 성경 전체를 균형 있게 배울 수 있습니다.
+                    </p>
+
+                    <div class="border-l-2 border-slate-300 pl-8 py-2">
+                        <p class="text-2xl md:text-3xl text-slate-700 leading-[1.7] font-light italic mb-4">
+                            "네가 진리의 말씀을 옳게 분별하며<br>
+                            부끄러울 것이 없는 일꾼으로<br>
+                            인정된 자로 자신을 하나님 앞에 드리기를 힘쓰라"
+                        </p>
+                        <p class="text-base text-slate-500 font-light">디모데후서 2:15</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-10">
+                        <h4 class="text-xl font-medium text-slate-900 mb-4">본문 중심</h4>
+                        <p class="text-base text-slate-600 leading-[1.8] font-light">
+                            성경 본문이 말하고자 하는 바를
+                            정확하게 전달합니다
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-10">
+                        <h4 class="text-xl font-medium text-slate-900 mb-4">순차적 진행</h4>
+                        <p class="text-base text-slate-600 leading-[1.8] font-light">
+                            성경책을 처음부터 끝까지
+                            순서대로 가르칩니다
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-10">
+                        <h4 class="text-xl font-medium text-slate-900 mb-4">균형잡힌 교육</h4>
+                        <p class="text-base text-slate-600 leading-[1.8] font-light">
+                            성경 전체를 고르게 배우며
+                            편중됨이 없습니다
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-10">
+                        <h4 class="text-xl font-medium text-slate-900 mb-4">삶의 적용</h4>
+                        <p class="text-base text-slate-600 leading-[1.8] font-light">
+                            말씀을 오늘의 삶에
+                            구체적으로 적용합니다
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 현재 강해 중인 성경 -->
+    <section class="py-32 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Current Series</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
+                    현재 강해 중인 성경
+                </h2>
+                <div class="h-px w-16 bg-slate-300"></div>
+            </div>
+
+            <div class="space-y-12">
+                <!-- 주일 설교 -->
+                <div class="bg-slate-50 p-10 md:p-12">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 pb-6 border-b border-slate-200">
+                        <div>
+                            <p class="text-sm tracking-[0.2em] text-slate-400 uppercase mb-2">주일 예배</p>
+                            <h3 class="text-3xl font-light text-slate-900">시편 강해</h3>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <p class="text-lg text-slate-600 font-light">현재 진행 중</p>
+                        </div>
+                    </div>
+                    <p class="text-lg text-slate-600 leading-[1.9] font-light mb-8">
+                        시편은 하나님을 향한 찬양과 기도, 그리고 삶의 고백이 담긴 말씀입니다.
+                        시편을 통해 우리는 어떻게 하나님과 교제하며,
+                        삶의 모든 순간에 그분을 의지해야 하는지 배웁니다.
+                    </p>
+                    <a href="/worship/sermon"
+                       class="inline-flex items-center text-slate-900 hover:text-slate-600 transition-colors font-medium">
+                        <span class="tracking-wide">설교 목록 보기</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- 수요 예배 -->
+                <div class="bg-slate-50 p-10 md:p-12">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 pb-6 border-b border-slate-200">
+                        <div>
+                            <p class="text-sm tracking-[0.2em] text-slate-400 uppercase mb-2">수요 예배</p>
+                            <h3 class="text-3xl font-light text-slate-900">로마서 강해</h3>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <p class="text-lg text-slate-600 font-light">현재 진행 중</p>
+                        </div>
+                    </div>
+                    <p class="text-lg text-slate-600 leading-[1.9] font-light mb-8">
+                        로마서는 복음의 핵심 진리를 체계적으로 설명하는 바울의 위대한 서신입니다.
+                        구원의 교리와 그리스도인의 삶에 대한 깊은 가르침을 담고 있습니다.
+                    </p>
+                    <a href="/worship/sermon"
+                       class="inline-flex items-center text-slate-900 hover:text-slate-600 transition-colors font-medium">
+                        <span class="tracking-wide">설교 목록 보기</span>
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 과거 강해 이력 -->
+    <section class="py-32 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Past Series</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
+                    과거 강해 이력
+                </h2>
+                <div class="h-px w-16 bg-slate-300"></div>
+            </div>
+
+            <div class="space-y-0 border-t border-slate-200">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 border-b border-slate-200">
+                    <div>
+                        <h4 class="text-xl font-light text-slate-900 mb-1">에베소서</h4>
+                        <p class="text-sm text-slate-500 font-light">주일 예배</p>
+                    </div>
+                    <p class="text-base text-slate-400 mt-2 md:mt-0 font-light">2023.01 - 2024.06</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 border-b border-slate-200">
+                    <div>
+                        <h4 class="text-xl font-light text-slate-900 mb-1">요한복음</h4>
+                        <p class="text-sm text-slate-500 font-light">주일 예배</p>
+                    </div>
+                    <p class="text-base text-slate-400 mt-2 md:mt-0 font-light">2021.03 - 2022.12</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 border-b border-slate-200">
+                    <div>
+                        <h4 class="text-xl font-light text-slate-900 mb-1">갈라디아서</h4>
+                        <p class="text-sm text-slate-500 font-light">수요 예배</p>
+                    </div>
+                    <p class="text-base text-slate-400 mt-2 md:mt-0 font-light">2022.09 - 2023.05</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 border-b border-slate-200">
+                    <div>
+                        <h4 class="text-xl font-light text-slate-900 mb-1">창세기</h4>
+                        <p class="text-sm text-slate-500 font-light">주일 예배</p>
+                    </div>
+                    <p class="text-base text-slate-400 mt-2 md:mt-0 font-light">2019.01 - 2021.02</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 border-b border-slate-200">
+                    <div>
+                        <h4 class="text-xl font-light text-slate-900 mb-1">빌립보서</h4>
+                        <p class="text-sm text-slate-500 font-light">수요 예배</p>
+                    </div>
+                    <p class="text-base text-slate-400 mt-2 md:mt-0 font-light">2021.03 - 2022.08</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 말씀 묵상 -->
+    <section class="py-32 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="mb-20">
+                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Daily Devotion</p>
+                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
+                    말씀 묵상
+                </h2>
+                <div class="h-px w-16 bg-slate-300"></div>
+            </div>
+
+            <div class="space-y-12">
+                <div class="prose prose-lg prose-slate max-w-none">
+                    <p class="text-lg md:text-xl text-slate-600 leading-[1.9] font-light mb-8">
+                        말씀을 듣는 것뿐만 아니라, 개인적으로 성경을 읽고 묵상하는 것이 중요합니다.
+                        매일 하나님의 말씀과 만나는 시간을 통해
+                        우리의 영적 생명이 자라나고 하나님과의 관계가 깊어집니다.
+                    </p>
+
+                    <div class="border-l-2 border-slate-900 pl-8 py-2">
+                        <p class="text-2xl md:text-3xl text-slate-700 leading-[1.7] font-light italic mb-4">
+                            "이 율법책을 네 입에서 떠나지 말게 하며<br>
+                            주야로 그것을 묵상하여<br>
+                            그 안에 기록된 대로 다 지켜 행하라"
+                        </p>
+                        <p class="text-base text-slate-500 font-light">여호수아 1:8</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 text-white p-10 md:p-12">
+                    <h3 class="text-2xl font-light mb-8">말씀 묵상 가이드</h3>
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white text-sm">
+                                1
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">읽기 (Read)</h4>
+                                <p class="text-slate-300 font-light">
+                                    성경 본문을 천천히, 주의 깊게 읽습니다
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white text-sm">
+                                2
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">관찰 (Observe)</h4>
+                                <p class="text-slate-300 font-light">
+                                    본문에서 말하는 내용을 관찰하고 질문합니다
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white text-sm">
+                                3
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">묵상 (Meditate)</h4>
+                                <p class="text-slate-300 font-light">
+                                    본문의 의미를 깊이 생각하고 묵상합니다
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white text-sm">
+                                4
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">적용 (Apply)</h4>
+                                <p class="text-slate-300 font-light">
+                                    말씀을 자신의 삶에 구체적으로 적용합니다
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center border border-white text-sm">
+                                5
+                            </div>
+                            <div>
+                                <h4 class="font-medium mb-2">기도 (Pray)</h4>
+                                <p class="text-slate-300 font-light">
+                                    말씀에 기초하여 하나님께 기도합니다
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-32 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-slate-900 mb-8 leading-[1.4]">
+                하나님의 말씀으로<br>
+                양육받기를 원하십니까?
+            </h2>
+            <p class="text-lg md:text-xl text-slate-600 mb-12 font-light leading-[1.8] max-w-2xl mx-auto">
+                그리스도 사랑교회는 성경 말씀을 체계적으로 가르치며<br>
+                성도들이 말씀 위에 굳건히 서도록 돕습니다
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="/worship/sermon"
+                   class="inline-flex items-center px-8 py-4 bg-slate-900 text-white hover:bg-slate-800 transition-all duration-300 font-light tracking-wide">
+                    설교 듣기
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+                <a href="/church/contact"
+                   class="inline-flex items-center px-8 py-4 border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 font-light tracking-wide">
+                    교회 방문하기
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>
