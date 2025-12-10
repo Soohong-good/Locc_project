@@ -40,7 +40,7 @@ public class NoticeService {
      */
     public NoticeDto findById(Long id) {
         log.debug("Fetching notice by id: {}", id);
-        return noticeRepository.findById(id)
+        return noticeRepository.findByIdWithAll(id)
                 .map(this::convertToDto)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
     }
@@ -166,6 +166,20 @@ public class NoticeService {
             builder.createdById(notice.getCreatedBy().getId())
                    .createdByEmail(notice.getCreatedBy().getEmail())
                    .createdByName(notice.getCreatedBy().getName());
+        }
+        
+        // 첨부파일 정보 추가
+        if (notice.getAttachments() != null && !notice.getAttachments().isEmpty()) {
+            List<com.example.locc.dto.AttachmentDto> attachmentDtos = notice.getAttachments().stream()
+                    .map(attachment -> com.example.locc.dto.AttachmentDto.builder()
+                            .id(attachment.getId())
+                            .originalFilename(attachment.getOriginalFileName())
+                            .storedFilename(attachment.getStoredFileName())
+                            .fileSize(attachment.getFileSize())
+                            .contentType(attachment.getContentType())
+                            .build())
+                    .collect(Collectors.toList());
+            builder.attachments(attachmentDtos);
         }
         
         return builder.build();

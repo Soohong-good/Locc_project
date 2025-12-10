@@ -41,20 +41,7 @@ public class AuthService {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
 
-        // 미등록교인의 경우 추가 필드 검증
-        if (request.getUserType() == User.UserType.UNREGISTERED) {
-            if (request.getAddress() == null || request.getAddress().isBlank()) {
-                throw new IllegalArgumentException("미등록교인은 주소가 필수입니다.");
-            }
-            if (request.getBirth() == null) {
-                throw new IllegalArgumentException("미등록교인은 생년월일이 필수입니다.");
-            }
-            if (request.getRegistrationPath() == null || request.getRegistrationPath().isBlank()) {
-                throw new IllegalArgumentException("미등록교인은 등록 경로가 필수입니다.");
-            }
-        }
-
-        // 사용자 생성
+        // 사용자 생성 (승인 대기 상태로)
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -65,25 +52,18 @@ public class AuthService {
                 .address(request.getAddress())
                 .birth(request.getBirth())
                 .registrationPath(request.getRegistrationPath())
-                .role(User.Role.USER) // 기본 권한
+                .role(User.Role.USER)
+                .approvalStatus(User.ApprovalStatus.PENDING) // 승인 대기
+                .enabled(false) // 승인 전에는 로그인 불가
                 .build();
 
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
+        
+        log.info("User registered successfully (pending approval): {}", user.getEmail());
 
-        // 토큰 생성
-        String accessToken = jwtTokenProvider.generateAccessToken(savedUser);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(savedUser);
-
-        // Refresh Token 저장
-        saveToken(savedUser, refreshToken);
-
+        // 가입 신청 완료 응답 (토큰 없이)
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(jwtTokenProvider.extractExpiration(accessToken).getTime())
-                .username(savedUser.getEmail())
-                .role(savedUser.getRole().name())
+                .message("회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.")
                 .build();
     }
 
@@ -94,7 +74,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         log.info("User login attempt: {}", request.getEmail());
 
-        // 인증
+        // 인증 (비밀번호 검증)
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -103,6 +83,30 @@ public class AuthService {
         );
 
         User user = (User) authentication.getPrincipal();
+
+        // 인증 성공 후 계정 상태 체크
+        // 삭제된 계정
+        if (Boolean.TRUE.equals(user.getDeleted())) {
+            throw new com.example.locc.exception.AccountDeletedException(
+                    "삭제된 계정입니다. 관리자에게 문의해주세요.");
+        }
+
+        // 승인 대기 중
+        if (user.getApprovalStatus() == User.ApprovalStatus.PENDING) {
+            throw new com.example.locc.exception.AccountNotApprovedException(
+                    "회원가입 승인 대기 중입니다. 관리자 승인 후 로그인이 가능합니다.",
+                    "PENDING"
+            );
+        }
+
+        // 가입 반려
+        if (user.getApprovalStatus() == User.ApprovalStatus.REJECTED) {
+            String message = "회원가입이 반려되었습니다.";
+            if (user.getRejectionReason() != null && !user.getRejectionReason().isEmpty()) {
+                message += "\n사유: " + user.getRejectionReason();
+            }
+            throw new com.example.locc.exception.AccountNotApprovedException(message, "REJECTED");
+        }
 
         // 토큰 생성
         String accessToken = jwtTokenProvider.generateAccessToken(user);
@@ -191,5 +195,34 @@ public class AuthService {
     public void cleanExpired() {
         log.info("Deleting expired refresh tokens");
         refreshTokenRepository.deleteExpired(LocalDateTime.now());
+    }
+
+    /**
+     * 이메일 사용 가능 여부 체크
+     */
+    public boolean isEmailAvailable(String email) {
+        return !userRepository.existsByEmail(email);
+    }
+
+    /**
+     * 현재 로그인한 사용자 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public UserInfoResponse getUserInfo(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        return UserInfoResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .gender(user.getGender())
+                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole().name())
+                .userType(user.getUserType().name())
+                .address(user.getAddress())
+                .birth(user.getBirth())
+                .registrationPath(user.getRegistrationPath())
+                .build();
     }
 }
