@@ -1,7 +1,13 @@
 package com.example.locc.controller.api;
 
 import com.example.locc.dto.NoticeDto;
+import com.example.locc.entity.Attachment;
+import com.example.locc.entity.Notice;
+import com.example.locc.entity.User;
+import com.example.locc.repository.NoticeRepository;
+import com.example.locc.service.AttachmentService;
 import com.example.locc.service.NoticeService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -11,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -22,6 +29,9 @@ import java.util.List;
 public class NoticeApiController {
 
     private final NoticeService noticeService;
+    private final AttachmentService attachmentService;
+    private final NoticeRepository noticeRepository;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
     public ResponseEntity<Page<NoticeDto>> getAll(
@@ -62,14 +72,30 @@ public class NoticeApiController {
 
     @PostMapping
     public ResponseEntity<NoticeDto> create(
-            @Valid @RequestBody NoticeDto noticeDto,
+            @RequestParam("data") String noticeData,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
             Authentication authentication) {
 
-        String username = authentication.getName();
-        log.info("API: Creating notice - title: {} by user: {}", noticeDto.getTitle(), username);
+        try {
+            String username = authentication.getName();
+            NoticeDto noticeDto = objectMapper.readValue(noticeData, NoticeDto.class);
+            log.info("API: Creating notice - title: {} by user: {}", noticeDto.getTitle(), username);
 
-        NoticeDto createdNotice = noticeService.create(noticeDto, username);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdNotice);
+            NoticeDto createdNotice = noticeService.create(noticeDto, username);
+            
+            // 첨부파일 처리
+            if (files != null && !files.isEmpty()) {
+                Notice notice = noticeRepository.findById(createdNotice.getId())
+                        .orElseThrow(() -> new RuntimeException("공지사항을 찾을 수 없습니다."));
+                // username(email)으로 User 조회
+                attachmentService.saveAttachments(files, notice, username);
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdNotice);
+        } catch (Exception e) {
+            log.error("Failed to create notice", e);
+            throw new RuntimeException("공지사항 생성에 실패했습니다.", e);
+        }
     }
 
     @PutMapping("/{id}")

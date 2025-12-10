@@ -29,6 +29,16 @@ public class AuthController {
     }
 
     /**
+     * 이메일 중복 체크
+     */
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
+        log.info("Check email availability: {}", email);
+        boolean isAvailable = authService.isEmailAvailable(email);
+        return ResponseEntity.ok(isAvailable);
+    }
+
+    /**
      * 로그인
      */
     @PostMapping("/login")
@@ -70,19 +80,9 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
 
-        User user = (User) authentication.getPrincipal();
-        UserInfoResponse response = UserInfoResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .name(user.getName())
-                .gender(user.getGender())
-                .phoneNumber(user.getPhoneNumber())
-                .role(user.getRole().name())
-                .userType(user.getUserType().name())
-                .address(user.getAddress())
-                .birth(user.getBirth())
-                .registrationPath(user.getRegistrationPath())
-                .build();
+        // email로 사용자 정보 조회
+        String email = authentication.getName();
+        UserInfoResponse response = authService.getUserInfo(email);
 
         return ResponseEntity.ok(response);
     }

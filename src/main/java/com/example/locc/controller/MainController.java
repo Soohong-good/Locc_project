@@ -25,56 +25,88 @@ public class MainController {
     public String home(Model model) {
         log.info("Accessing main page");
 
-        // 최신 설교 1개
-        SermonDto latestSermon = sermonService.findLatest();
-        model.addAttribute("latestSermon", latestSermon);
+        // 최근 설교 3개 (첫 번째가 최신 설교)
+        List<SermonDto> recentSermons = sermonService.findRecent(3);
+        model.addAttribute("recentSermons", recentSermons);
+        model.addAttribute("latestSermon", recentSermons.isEmpty() ? null : recentSermons.get(0));
 
-        // 고정된 공지사항
-        List<NoticeDto> pinnedNotices = noticeService.findPinned();
-        model.addAttribute("pinnedNotices", pinnedNotices);
-
-        // 최근 공지사항 5개 (페이징 사용)
+        // 최근 공지사항 5개 (고정 공지 포함)
         List<NoticeDto> recentNotices = noticeService.findAll(PageRequest.of(0, 5))
                 .getContent();
         model.addAttribute("recentNotices", recentNotices);
-
-        // 최근 설교 3개
-        List<SermonDto> recentSermons = sermonService.findRecent(3);
-        model.addAttribute("recentSermons", recentSermons);
+        
+        // 고정 공지만 필터링 (필요시)
+        List<NoticeDto> pinnedNotices = recentNotices.stream()
+                .filter(NoticeDto::getIsPinned)
+                .toList();
+        model.addAttribute("pinnedNotices", pinnedNotices);
 
         return "main";
     }
 
     // ==================== 그리스도 사랑 교회 ====================
 
+    // 단축 경로 (호환성)
     @GetMapping("/about")
+    public String aboutShort() {
+        return "redirect:/church/about";
+    }
+
+    @GetMapping("/staff")
+    public String staffShort() {
+        return "redirect:/church/staff";
+    }
+
+    @GetMapping("/contact")
+    public String contactShort() {
+        return "redirect:/church/contact";
+    }
+
+    @GetMapping("/notice")
+    public String noticeShort() {
+        return "redirect:/church/notice";
+    }
+
+    // 실제 경로
+    @GetMapping("/church/about")
     public String about() {
         log.info("Accessing about page");
         return "church/about";
     }
 
-    @GetMapping("/staff")
+    @GetMapping("/church/staff")
     public String staff() {
         log.info("Accessing staff page");
         return "church/staff";
     }
 
-    @GetMapping("/contact")
+    @GetMapping("/church/contact")
     public String contact() {
         log.info("Accessing contact page");
         return "church/contact";
     }
 
     // ==================== 예배 ====================
-    // /sermon, /notice는 각각의 Controller에서 처리
 
+    // 단축 경로 (호환성)
+    @GetMapping("/sermon")
+    public String sermonShort() {
+        return "redirect:/worship/sermon";
+    }
+
+    @GetMapping("/message")
+    public String messageShort() {
+        return "redirect:/worship/message";
+    }
+
+    // 실제 경로
     @GetMapping("/worship")
     public String worship() {
         log.info("Accessing worship page");
         return "worship/message";
     }
 
-    @GetMapping("/message")
+    @GetMapping("/worship/message")
     public String message() {
         log.info("Accessing message page");
         return "worship/message";
