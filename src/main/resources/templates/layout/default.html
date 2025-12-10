@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">그리스도 사랑교회 - Christ Love Church</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" th:href="@{/css/main.css}">
+
+  <!-- 추가 헤드 컨텐츠 영역 -->
+  <th:block layout:fragment="extra-head"></th:block>
+</head>
+<body class="bg-white text-gray-900">
+
+<!-- Navigation Header -->
+<th:block th:replace="~{layout/header :: header}"></th:block>
+
+<!-- Main Content -->
+<main layout:fragment="content">
+  <!-- 페이지별 컨텐츠가 여기에 들어갑니다 -->
+</main>
+
+<!-- Footer -->
+<th:block th:replace="~{layout/footer :: footer}"></th:block>
+
+<!-- 기본 스크립트 -->
+<script th:src="@{/js/main.js}"></script>
+
+<!-- 추가 스크립트 영역 -->
+<th:block layout:fragment="extra-scripts"></th:block>
+
+</body>
+</html>

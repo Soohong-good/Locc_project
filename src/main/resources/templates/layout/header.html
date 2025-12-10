@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Navigation -->
+<header th:fragment="header" class="fixed w-full top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-6 lg:px-12">
+        <div class="flex justify-between items-center h-20">
+            <!-- 로고 (왼쪽) -->
+            <div class="flex items-center">
+                <a href="/">
+                    <img src="/images/logo.png" style="width: 250px; height: 83px;" alt="그리스도 사랑교회" class="h-12">
+                </a>
+            </div>
+
+            <!-- 메뉴 + 계정 정보 (오른쪽) -->
+            <div class="hidden lg:flex items-center gap-8">
+                <!-- 네비게이션 메뉴 -->
+                <nav class="flex items-center space-x-8">
+                    <a href="/salvation" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium">구원의 길</a>
+
+                    <div class="dropdown">
+                        <a href="/about" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                            그리스도 사랑 교회
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="/church/about">교회 소개</a>
+                            <a href="/church/staff">섬기는 분들</a>
+                            <a href="/church/notice">공지</a>
+                            <a href="/church/contact">오시는 길</a>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <a href="/worship/sermon" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                            예배
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="/worship/sermon">설교</a>
+                            <a href="/worship/message">담임목사 메시지</a>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <a href="/ministry" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                            부서
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </a>
+                        <div class="dropdown-menu">
+                            <a href="/ministry#infant">태영아부</a>
+                            <a href="/ministry#preschool">유아유치부</a>
+                            <a href="/ministry#elementary">초등부</a>
+                            <a href="/ministry#youth">중고등부</a>
+                            <a href="/ministry#college">대청부</a>
+                            <a href="/ministry#newFamily">새가족부</a>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- 로그인/회원가입 버튼 -->
+                <div class="flex items-center gap-4" id="authButtons" style="opacity: 0; transition: opacity 0.2s;">
+                    <!-- 비로그인 상태 -->
+                    <div id="notLoggedIn" class="hidden items-center gap-3">
+                        <a href="/auth/login" class="text-gray-700 hover:text-gray-900 font-medium transition">로그인</a>
+                        <a href="/auth/register" class="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 transition font-medium rounded">회원가입</a>
+                    </div>
+
+                    <!-- 로그인 상태 -->
+                    <div id="loggedIn" class="hidden items-center gap-4">
+                        <span class="text-sm text-gray-600">
+                            <span id="userName"></span>님
+                            <span id="adminBadge" class="text-xs text-blue-600 font-medium ml-1" style="display: none;">[관리자]</span>
+                        </span>
+                        <div class="dropdown">
+                            <button class="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="/mypage">마이페이지</a>
+                                <a id="adminLink" href="/admin" style="display: none;">관리자</a>
+                                <a href="#" onclick="logout(); return false;">로그아웃</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모바일 메뉴 버튼 -->
+            <button id="mobileMenuBtn" class="lg:hidden text-gray-900">
+                <svg id="menuIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <svg id="closeIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 모바일 메뉴 -->
+        <nav id="mobileMenu" class="mobile-menu lg:hidden pb-6 space-y-2 border-t border-gray-200 mt-2 pt-4">
+            <a href="/salvation" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">구원의 길</a>
+
+            <div class="px-4 py-2">
+                <p class="text-xs text-gray-500 font-semibold uppercase mb-2">그리스도 사랑 교회</p>
+                <a href="/church/about" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">교회 소개</a>
+                <a href="/church/staff" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">섬기는 분들</a>
+                <a href="/church/notice" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">공지</a>
+                <a href="/church/contact" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">오시는 길</a>
+            </div>
+
+            <div class="px-4 py-2">
+                <p class="text-xs text-gray-500 font-semibold uppercase mb-2">예배</p>
+                <a href="/worship/sermon" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">설교</a>
+                <a href="/worship/message" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">담임목사 메시지</a>
+            </div>
+
+            <div class="px-4 py-2">
+                <p class="text-xs text-gray-500 font-semibold uppercase mb-2">부서</p>
+                <a href="/ministry#infant" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">태영아부</a>
+                <a href="/ministry#preschool" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">유아유치부</a>
+                <a href="/ministry#elementary" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">초등부</a>
+                <a href="/ministry#youth" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">중고등부</a>
+                <a href="/ministry#college" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">대청부</a>
+                <a href="/ministry#newFamily" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">새가족부</a>
+            </div>
+
+            <!-- 모바일 로그인/회원가입 -->
+            <div class="px-4 py-2 border-t border-gray-200 mt-4 pt-4" style="opacity: 0; transition: opacity 0.2s;" id="mobileAuthButtons">
+                <!-- 비로그인 상태 -->
+                <div id="mobileNotLoggedIn" class="hidden space-y-2">
+                    <a href="/auth/login" class="block px-4 py-3 text-center bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition">로그인</a>
+                    <a href="/auth/register" class="block px-4 py-3 text-center border-2 border-gray-900 text-gray-900 rounded-lg font-medium hover:bg-gray-50 transition">회원가입</a>
+                </div>
+
+                <!-- 로그인 상태 -->
+                <div id="mobileLoggedIn" class="hidden space-y-2">
+                    <p class="px-4 py-2 text-sm text-gray-600">
+                        <span id="mobileUserName"></span>님
+                        <span id="mobileAdminBadge" class="text-xs text-blue-600 font-medium ml-1" style="display: none;">[관리자]</span>
+                    </p>
+                    <a href="/mypage" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">마이페이지</a>
+                    <a id="mobileAdminLink" href="/admin" style="display: none;" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">관리자</a>
+                    <a href="#" onclick="logout(); return false;" class="block px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">로그아웃</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- 인증 상태 체크 스크립트 -->
+    <script>
+        // 로그인 상태 확인 함수
+        async function checkAuthStatus() {
+            const token = localStorage.getItem('accessToken');
+            const authButtons = document.getElementById('authButtons');
+            const mobileAuthButtons = document.getElementById('mobileAuthButtons');
+
+            if (!token) {
+                // 비로그인 상태
+                document.getElementById('notLoggedIn').classList.remove('hidden');
+                document.getElementById('notLoggedIn').classList.add('flex');
+                document.getElementById('loggedIn').classList.add('hidden');
+                document.getElementById('mobileNotLoggedIn').classList.remove('hidden');
+                document.getElementById('mobileLoggedIn').classList.add('hidden');
+
+                // Fade in
+                authButtons.style.opacity = '1';
+                mobileAuthButtons.style.opacity = '1';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+
+                    // 로그인 상태 UI 표시
+                    document.getElementById('notLoggedIn').classList.add('hidden');
+                    document.getElementById('loggedIn').classList.remove('hidden');
+                    document.getElementById('loggedIn').classList.add('flex');
+                    document.getElementById('userName').textContent = user.name;
+
+                    // 모바일
+                    document.getElementById('mobileNotLoggedIn').classList.add('hidden');
+                    document.getElementById('mobileLoggedIn').classList.remove('hidden');
+                    document.getElementById('mobileUserName').textContent = user.name;
+
+                    // 관리자 표시
+                    if (user.role === 'ADMIN') {
+                        document.getElementById('adminLink').style.display = 'block';
+                        document.getElementById('mobileAdminLink').style.display = 'block';
+                        document.getElementById('adminBadge').style.display = 'inline';
+                        document.getElementById('mobileAdminBadge').style.display = 'inline';
+                    }
+                } else {
+                    // 토큰이 유효하지 않음
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    document.getElementById('notLoggedIn').classList.remove('hidden');
+                    document.getElementById('notLoggedIn').classList.add('flex');
+                    document.getElementById('loggedIn').classList.add('hidden');
+                    document.getElementById('mobileNotLoggedIn').classList.remove('hidden');
+                    document.getElementById('mobileLoggedIn').classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                // 에러 발생 시 비로그인 상태로 처리
+                document.getElementById('notLoggedIn').classList.remove('hidden');
+                document.getElementById('notLoggedIn').classList.add('flex');
+                document.getElementById('loggedIn').classList.add('hidden');
+                document.getElementById('mobileNotLoggedIn').classList.remove('hidden');
+                document.getElementById('mobileLoggedIn').classList.add('hidden');
+            }
+
+            // Fade in
+            authButtons.style.opacity = '1';
+            mobileAuthButtons.style.opacity = '1';
+        }
+
+        // 로그아웃 함수
+        async function logout() {
+            const token = localStorage.getItem('accessToken');
+
+            if (token) {
+                try {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            }
+
+            // localStorage 삭제
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+
+            // 쿠키 삭제
+            document.cookie = 'accessToken=; path=/; max-age=0';
+            document.cookie = 'refreshToken=; path=/; max-age=0';
+
+            window.location.href = '/';
+        }
+
+        // 페이지 로드 시 인증 상태 확인 (즉시 실행)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAuthStatus);
+        } else {
+            checkAuthStatus();
+        }
+    </script>
+</header>
+
+</body>
+</html>
