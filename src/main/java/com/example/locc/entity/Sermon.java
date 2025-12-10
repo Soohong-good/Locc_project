@@ -51,7 +51,7 @@ public class Sermon extends BaseEntity {
 
     // ✅ 작성자는 createdBy User 관계로 관리
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
+    @JoinColumn(name = "created_by", columnDefinition = "BINARY(16)")
     private User createdBy;
 
     @Builder.Default

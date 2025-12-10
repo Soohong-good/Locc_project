@@ -31,7 +31,7 @@ public class Notice extends BaseEntity {
 
     // ✅ 작성자는 createdBy User 관계로 관리
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
+    @JoinColumn(name = "created_by", columnDefinition = "BINARY(16)")
     private User createdBy;
 
     @Builder.Default
@@ -56,5 +56,6 @@ public class Notice extends BaseEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "notice", cascade = CascadeType.ALL)
+    @org.hibernate.annotations.BatchSize(size = 10)
     private List<Attachment> attachments = new ArrayList<>();
 }

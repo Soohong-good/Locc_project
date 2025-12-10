@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class User extends BaseEntity implements UserDetails {
 
     @Id
+    @JdbcTypeCode(SqlTypes.BINARY)
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
@@ -44,12 +47,10 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false, length = 50)
     private String name;
 
-    @NotBlank(message = "성별은 필수입니다")
-    @Column(nullable = false, length = 10)
+    @Column(length = 10)
     private String gender;
 
-    @NotBlank(message = "전화번호는 필수입니다")
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phoneNumber;
 
     // 미등록교인 추가 필드
@@ -73,6 +74,14 @@ public class User extends BaseEntity implements UserDetails {
     @Builder.Default
     private UserType userType = UserType.REGISTERED;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+
+    @Column(length = 500)
+    private String rejectionReason; // 반려 사유
+
     @Builder.Default
     @Column(nullable = false)
     private Boolean accountNonExpired = true;
@@ -91,7 +100,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @Builder.Default
     @Column(nullable = false, name = "is_deleted")
-    private Boolean isDeleted = false;
+    private Boolean deleted = false;
 
     // 생성 전에 UUID 자동 생성
     @PrePersist
@@ -134,14 +143,16 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return enabled && !isDeleted;
+        // Spring Security의 자동 체크를 우회하고 AuthService에서 직접 체크
+        // 삭제된 계정만 여기서 false 반환
+        return !deleted;
     }
 
     /**
      * 논리적 삭제 (Soft Delete)
      */
     public void delete() {
-        this.isDeleted = true;
+        this.deleted = true;
         this.enabled = false;
     }
 
@@ -149,7 +160,7 @@ public class User extends BaseEntity implements UserDetails {
      * 삭제 복구
      */
     public void restore() {
-        this.isDeleted = false;
+        this.deleted = false;
         this.enabled = true;
     }
 
@@ -169,5 +180,29 @@ public class User extends BaseEntity implements UserDetails {
     public enum UserType {
         REGISTERED,   // 등록교인
         UNREGISTERED  // 미등록교인
+    }
+
+    public enum ApprovalStatus {
+        PENDING,   // 승인 대기
+        APPROVED,  // 승인 완료
+        REJECTED   // 반려
+    }
+
+    /**
+     * 가입 승인
+     */
+    public void approve() {
+        this.approvalStatus = ApprovalStatus.APPROVED;
+        this.enabled = true;
+        this.rejectionReason = null;
+    }
+
+    /**
+     * 가입 반려
+     */
+    public void reject(String reason) {
+        this.approvalStatus = ApprovalStatus.REJECTED;
+        this.enabled = false;
+        this.rejectionReason = reason;
     }
 }
