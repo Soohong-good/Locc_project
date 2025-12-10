@@ -47,23 +47,10 @@ public class SecurityConfig {
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
-                        // ========== 완전 Public (비로그인 OK) ==========
-                        .requestMatchers("/", "/index", "/error").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/api-docs/**", "/swagger-ui/**").permitAll()
-
-                        // 인증 엔드포인트
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        // 공개 페이지 (비로그인 조회 가능)
-                        .requestMatchers(HttpMethod.GET, "/notice/**", "/sermon/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/about", "/contact", "/salvation", "/worship", "/message", "/ministry", "/staff").permitAll()
-
-                        // 공개 API (비로그인 조회 가능)
-                        .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/sermons/**").permitAll()
-
-                        // ========== 로그인 필요 (일반 교인) ==========
+                        // ========== 정적 리소스 ==========
+                        .requestMatchers("/favicon.ico").permitAll()
+                        
+                        // ========== 로그인 필수 ==========
                         // 파일 다운로드는 로그인 필수
                         .requestMatchers("/api/attachments/download/**").authenticated()
                         .requestMatchers("/download/**").authenticated()
@@ -85,7 +72,8 @@ public class SecurityConfig {
                         // 관리자 페이지
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
-                        .anyRequest().authenticated()
+                        // ========== 나머지는 모두 Public (비로그인 OK) ==========
+                        .anyRequest().permitAll()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

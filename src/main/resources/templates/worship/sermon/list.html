@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>설교</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 bg-slate-900 text-white px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Sermon</p>
+                    <h1 class="text-4xl md:text-5xl font-light tracking-tight mb-4">설교</h1>
+                    <p class="text-lg text-slate-300 font-light">하나님 말씀을 들으시고 은혜받으세요</p>
+                </div>
+                <!-- 관리자 글쓰기 버튼 -->
+                <div th:if="${isAdmin}">
+                    <button onclick="openWriteModal()"
+                            class="px-6 py-3 bg-white text-slate-900 hover:bg-slate-100 transition font-medium">
+                        + 새 설교
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 검색 및 필터 -->
+    <section class="py-8 bg-white px-6 border-b border-slate-200">
+        <div class="max-w-5xl mx-auto">
+            <form th:action="@{/worship/sermon}" method="get" class="flex flex-col md:flex-row gap-3">
+                <input type="text"
+                       name="keyword"
+                       th:value="${keyword}"
+                       placeholder="설교 제목, 본문 검색"
+                       class="flex-1 px-4 py-3 border border-slate-300 focus:border-slate-900 focus:outline-none transition text-base">
+                <input type="text"
+                       name="preacher"
+                       th:value="${preacher}"
+                       placeholder="설교자 검색"
+                       class="md:w-48 px-4 py-3 border border-slate-300 focus:border-slate-900 focus:outline-none transition text-base">
+                <button type="submit"
+                        class="px-8 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium">
+                    검색
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- 설교 목록 -->
+    <section class="py-16 bg-slate-50 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <article th:each="sermon : ${sermons.content}"
+                         class="group bg-white border border-slate-200 hover:border-slate-900 hover:shadow-lg transition-all duration-300 relative">
+
+                    <!-- 관리자 버튼 (우상단) -->
+                    <div th:if="${isAdmin}" class="absolute top-4 right-4 flex gap-2 z-10">
+                        <button onclick="openEditModal(event, ${sermon.id})"
+                                th:attr="data-id=${sermon.id},
+                                         data-title=${sermon.title},
+                                         data-bibleverse=${sermon.bibleVerse},
+                                         data-preacher=${sermon.preacher},
+                                         data-sermondate=${sermon.sermonDate},
+                                         data-summary=${sermon.summary},
+                                         data-content=${sermon.content}"
+                                class="px-3 py-1 text-xs bg-white border border-slate-300 hover:border-slate-900 transition">
+                            수정
+                        </button>
+                        <button onclick="confirmDelete(event, ${sermon.id})"
+                                th:attr="data-id=${sermon.id}, data-title=${sermon.title}"
+                                class="px-3 py-1 text-xs bg-white border border-red-300 text-red-600 hover:border-red-600 transition">
+                            삭제
+                        </button>
+                    </div>
+
+                    <div class="p-8 cursor-pointer"
+                         th:onclick="'location.href=\'/worship/sermon/' + ${sermon.id} + '\''">
+                        <!-- 날짜 -->
+                        <p class="text-sm text-slate-400 font-light mb-4 tracking-wide"
+                           th:text="${#temporals.format(sermon.sermonDate, 'yyyy.MM.dd')}">
+                            2024.11.10
+                        </p>
+
+                        <!-- 제목 -->
+                        <h3 class="text-2xl font-light text-slate-900 leading-tight mb-4 group-hover:text-slate-600 transition line-clamp-2"
+                            th:text="${sermon.title}">
+                            설교 제목
+                        </h3>
+
+                        <!-- 성경 구절 -->
+                        <p class="text-base text-slate-600 mb-4 font-medium"
+                           th:text="${sermon.bibleVerse}">
+                            시편 74:12-17
+                        </p>
+
+                        <!-- 설교자 -->
+                        <p class="text-sm text-slate-500 mb-6"
+                           th:text="${sermon.preacher}">
+                            최신광 담임목사
+                        </p>
+
+                        <!-- 요약 -->
+                        <p th:if="${sermon.summary != null}"
+                           class="text-sm text-slate-600 leading-relaxed font-light line-clamp-3"
+                           th:text="${sermon.summary}">
+                            설교 요약
+                        </p>
+                    </div>
+
+                    <!-- 하단 바 -->
+                    <div class="px-8 py-4 bg-slate-50 group-hover:bg-slate-900 transition-colors cursor-pointer"
+                         th:onclick="'location.href=\'/worship/sermon/' + ${sermon.id} + '\''">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-600 group-hover:text-white transition font-medium">
+                                설교 보기
+                            </span>
+                            <svg class="w-5 h-5 text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div th:if="${sermons.empty}" class="py-20 text-center">
+                <p class="text-slate-400 font-light text-lg">등록된 설교가 없습니다.</p>
+            </div>
+
+            <!-- 페이징 -->
+            <div th:if="${sermons.totalPages > 0}" class="mt-16 flex justify-center items-center gap-2">
+                <a th:if="${currentPage > 0}"
+                   th:href="@{/worship/sermon(page=${currentPage - 1}, size=${sermons.size}, keyword=${keyword}, preacher=${preacher})}"
+                   class="px-4 py-2 border border-slate-300 hover:border-slate-900 transition text-slate-700 hover:text-slate-900 font-medium">
+                    이전
+                </a>
+
+                <div class="flex gap-1">
+                    <a th:each="pageNum : ${#numbers.sequence(0, sermons.totalPages - 1)}"
+                       th:href="@{/worship/sermon(page=${pageNum}, size=${sermons.size}, keyword=${keyword}, preacher=${preacher})}"
+                       th:text="${pageNum + 1}"
+                       th:classappend="${pageNum == currentPage} ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:border-slate-900'"
+                       class="px-4 py-2 border border-slate-300 transition font-medium">
+                    </a>
+                </div>
+
+                <a th:if="${currentPage < sermons.totalPages - 1}"
+                   th:href="@{/worship/sermon(page=${currentPage + 1}, size=${sermons.size}, keyword=${keyword}, preacher=${preacher})}"
+                   class="px-4 py-2 border border-slate-300 hover:border-slate-900 transition text-slate-700 hover:text-slate-900 font-medium">
+                    다음
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- 작성/수정 모달 -->
+<div id="sermonModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6" style="overflow-y: auto;">
+    <div class="bg-white rounded-lg max-w-3xl w-full my-8">
+        <div class="p-6 border-b">
+            <h2 id="modalTitle" class="text-2xl font-light">새 설교 등록</h2>
+        </div>
+
+        <form id="sermonForm" class="p-6 space-y-6">
+            <input type="hidden" id="sermonId">
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">설교 제목</label>
+                    <input type="text" id="sermonTitle" required
+                           class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">성경 구절</label>
+                    <input type="text" id="sermonBibleVerse" required placeholder="예: 시편 74:12-17"
+                           class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">설교자</label>
+                    <input type="text" id="sermonPreacher" required
+                           class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">설교 날짜</label>
+                    <input type="date" id="sermonDate" required
+                           class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">요약 (선택)</label>
+                <textarea id="sermonSummary" rows="3"
+                          class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">설교 내용</label>
+                <textarea id="sermonContent" required rows="12"
+                          class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none"></textarea>
+            </div>
+
+            <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"></div>
+        </form>
+
+        <div class="p-6 border-t flex gap-3">
+            <button type="button" onclick="saveSermon()"
+                    class="flex-1 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium rounded">
+                저장
+            </button>
+            <button type="button" onclick="closeModal()"
+                    class="px-6 py-3 border-2 border-slate-300 hover:border-slate-900 transition font-medium rounded">
+                취소
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6">
+    <div class="bg-white rounded-lg max-w-md w-full">
+        <div class="p-6 border-b">
+            <h2 class="text-2xl font-light text-red-600">설교 삭제</h2>
+        </div>
+
+        <div class="p-6">
+            <p class="text-slate-700 mb-2">다음 설교를 삭제하시겠습니까?</p>
+            <p class="font-medium text-slate-900" id="deleteSermonTitle"></p>
+        </div>
+
+        <div class="p-6 border-t flex gap-3">
+            <button type="button" onclick="deleteSermon()"
+                    class="flex-1 py-3 bg-red-600 text-white hover:bg-red-700 transition font-medium rounded">
+                삭제
+            </button>
+            <button type="button" onclick="closeDeleteModal()"
+                    class="px-6 py-3 border-2 border-slate-300 hover:border-slate-900 transition font-medium rounded">
+                취소
+            </button>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="extra-scripts">
+    <script>
+        let currentSermonId = null;
+
+        function openWriteModal() {
+            document.getElementById('modalTitle').textContent = '새 설교 등록';
+            document.getElementById('sermonId').value = '';
+            document.getElementById('sermonTitle').value = '';
+            document.getElementById('sermonBibleVerse').value = '';
+            document.getElementById('sermonPreacher').value = '';
+            document.getElementById('sermonDate').value = '';
+            document.getElementById('sermonSummary').value = '';
+            document.getElementById('sermonContent').value = '';
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('sermonModal').classList.remove('hidden');
+        }
+
+        function openEditModal(event, sermonId) {
+            event.stopPropagation();
+
+            const button = event.currentTarget;
+            const title = button.getAttribute('data-title');
+            const bibleVerse = button.getAttribute('data-bibleverse');
+            const preacher = button.getAttribute('data-preacher');
+            const sermonDate = button.getAttribute('data-sermondate');
+            const summary = button.getAttribute('data-summary');
+            const content = button.getAttribute('data-content');
+
+            document.getElementById('modalTitle').textContent = '설교 수정';
+            document.getElementById('sermonId').value = sermonId;
+            document.getElementById('sermonTitle').value = title;
+            document.getElementById('sermonBibleVerse').value = bibleVerse;
+            document.getElementById('sermonPreacher').value = preacher;
+            document.getElementById('sermonDate').value = sermonDate;
+            document.getElementById('sermonSummary').value = summary !== 'null' ? summary : '';
+            document.getElementById('sermonContent').value = content;
+            document.getElementById('errorMessage').classList.add('hidden');
+            document.getElementById('sermonModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('sermonModal').classList.add('hidden');
+        }
+
+        async function saveSermon() {
+            const sermonId = document.getElementById('sermonId').value;
+            const title = document.getElementById('sermonTitle').value;
+            const bibleVerse = document.getElementById('sermonBibleVerse').value;
+            const preacher = document.getElementById('sermonPreacher').value;
+            const sermonDate = document.getElementById('sermonDate').value;
+            const summary = document.getElementById('sermonSummary').value;
+            const content = document.getElementById('sermonContent').value;
+            const errorDiv = document.getElementById('errorMessage');
+
+            if (!title.trim() || !bibleVerse.trim() || !preacher.trim() || !sermonDate || !content.trim()) {
+                errorDiv.textContent = '필수 항목을 모두 입력해주세요.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const url = sermonId ? `/api/sermons/${sermonId}` : '/api/sermons';
+                const method = sermonId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        bibleVerse,
+                        preacher,
+                        sermonDate,
+                        summary: summary || null,
+                        content
+                    })
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.message || '저장 중 오류가 발생했습니다.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                errorDiv.textContent = '저장 중 오류가 발생했습니다.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function confirmDelete(event, sermonId) {
+            event.stopPropagation();
+
+            const button = event.currentTarget;
+            const title = button.getAttribute('data-title');
+
+            currentSermonId = sermonId;
+            document.getElementById('deleteSermonTitle').textContent = title;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        async function deleteSermon() {
+            if (!currentSermonId) return;
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`/api/sermons/${currentSermonId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('삭제 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            currentSermonId = null;
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeDeleteModal();
+            }
+        });
+    </script>
+</th:block>
+
+<style layout:fragment="extra-head">
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+
+</body>
+</html>
