@@ -16,6 +16,7 @@ spring:
       connection-timeout: 30000
   
   jpa:
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -32,11 +33,20 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:86400000}
+  expiration: ${JWT_EXPIRATION:18000000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:uploads}
 
 server:
   port: 8080
