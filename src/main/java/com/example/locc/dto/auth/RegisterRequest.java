@@ -30,10 +30,8 @@ public class RegisterRequest {
     @Size(max = 50, message = "이름은 50자를 초과할 수 없습니다")
     private String name;
 
-    @NotBlank(message = "성별은 필수입니다")
     private String gender;
 
-    @NotBlank(message = "전화번호는 필수입니다")
     private String phoneNumber;
 
     @NotNull(message = "회원 유형은 필수입니다")

@@ -16,4 +16,5 @@ public class AuthResponse {
     private Long expiresIn;
     private String username;
     private String role;
+    private String message; // 응답 메시지
 }
