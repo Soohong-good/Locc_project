@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>관리자 대시보드</title>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+    <section class="py-32 px-6">
+        <div class="max-w-7xl mx-auto">
+            <!-- 헤더 -->
+            <div class="mb-10">
+                <h1 class="text-4xl md:text-5xl font-light text-slate-900 mb-4">관리자 대시보드</h1>
+                <p class="text-slate-600 font-light">그리스도 사랑교회 관리 시스템</p>
+            </div>
+
+            <!-- 통계 카드 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <!-- 승인 대기 -->
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-orange-900">승인 대기</h3>
+                        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-light text-orange-900 mb-2" th:text="${pendingCount}">0</div>
+                    <a href="/admin/users/pending" class="text-sm text-orange-700 hover:text-orange-900 font-medium">
+                        승인 대기 회원 보기 →
+                    </a>
+                </div>
+
+                <!-- 전체 회원 -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-blue-900">전체 회원</h3>
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-3xl font-light text-blue-900 mb-2" th:text="${totalUsers}">0</div>
+                    <a href="/admin/users" class="text-sm text-blue-700 hover:text-blue-900 font-medium">
+                        전체 회원 보기 →
+                    </a>
+                </div>
+
+                <!-- 빠른 링크 -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-slate-900">빠른 링크</h3>
+                        <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="/church/notice" class="block text-sm text-slate-700 hover:text-slate-900">
+                            → 공지사항 관리
+                        </a>
+                        <a href="/worship/sermon" class="block text-sm text-slate-700 hover:text-slate-900">
+                            → 설교 관리
+                        </a>
+                        <a href="/" class="block text-sm text-slate-700 hover:text-slate-900">
+                            → 메인 사이트
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 주요 기능 -->
+            <div class="bg-white shadow-sm rounded-lg">
+                <div class="p-6 border-b">
+                    <h2 class="text-2xl font-light text-slate-900">주요 관리 기능</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 회원 관리 -->
+                        <div class="border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
+                            <h3 class="text-xl font-medium text-slate-900 mb-3">회원 관리</h3>
+                            <p class="text-slate-600 mb-4 text-sm">
+                                회원가입 승인, 회원 정보 조회 및 관리
+                            </p>
+                            <div class="space-y-2">
+                                <a href="/admin/users/pending" 
+                                   class="block px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-center font-medium">
+                                    승인 대기 회원 (<span th:text="${pendingCount}">0</span>)
+                                </a>
+                                <a href="/admin/users" 
+                                   class="block px-4 py-2 border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition text-center font-medium">
+                                    전체 회원 목록
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 콘텐츠 관리 -->
+                        <div class="border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
+                            <h3 class="text-xl font-medium text-slate-900 mb-3">콘텐츠 관리</h3>
+                            <p class="text-slate-600 mb-4 text-sm">
+                                공지사항, 설교 등 교회 콘텐츠 관리
+                            </p>
+                            <div class="space-y-2">
+                                <a href="/church/notice" 
+                                   class="block px-4 py-2 border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition text-center font-medium">
+                                    공지사항 관리
+                                </a>
+                                <a href="/worship/sermon" 
+                                   class="block px-4 py-2 border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition text-center font-medium">
+                                    설교 관리
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 안내 메시지 -->
+            <div class="mt-10 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="text-lg font-medium text-blue-900 mb-3">💡 관리자 안내</h3>
+                <ul class="space-y-2 text-sm text-blue-800">
+                    <li>• 회원가입 신청이 들어오면 <strong>승인 대기</strong> 카운트가 증가합니다</li>
+                    <li>• 회원 정보를 검토한 후 <strong>승인</strong> 또는 <strong>반려</strong> 처리해주세요</li>
+                    <li>• 승인된 회원만 로그인하여 교회 서비스를 이용할 수 있습니다</li>
+                    <li>• 공지사항과 설교는 관리자 권한으로만 작성/수정/삭제가 가능합니다</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>
