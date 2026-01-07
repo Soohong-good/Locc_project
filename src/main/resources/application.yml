@@ -11,8 +11,8 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
+      maximum-pool-size: 5  # 10 → 5 (메모리 절약)
+      minimum-idle: 2  # 5 → 2
       connection-timeout: 30000
   
   jpa:
@@ -45,6 +45,15 @@ jwt:
   expiration: ${JWT_EXPIRATION:18000000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
+kakao:
+  map:
+    api-key: ${KAKAO_MAP_API_KEY}
+
+# YouTube Data API 설정
+youtube:
+  api-key: ${YOUTUBE_API_KEY}
+
+# 파일 업로드 설정
 file:
   upload-dir: ${FILE_UPLOAD_DIR:uploads}
 

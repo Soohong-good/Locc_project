@@ -49,6 +49,9 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Uploads (사용자 업로드 파일)
+uploads/
+
 # Gradle
 .gradle/
 
