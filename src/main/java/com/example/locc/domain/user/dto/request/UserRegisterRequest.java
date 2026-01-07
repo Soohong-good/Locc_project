@@ -1,6 +1,7 @@
-package com.example.locc.dto.auth;
+package com.example.locc.domain.user.dto.request;
 
-import com.example.locc.entity.User;
+import com.example.locc.domain.user.dto.command.UserRegisterCommand;
+import com.example.locc.domain.user.entity.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,11 +13,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * User 회원가입 Request DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterRequest {
+public class UserRegisterRequest {
 
     @NotBlank(message = "이메일은 필수입니다")
     @Email(message = "올바른 이메일 형식이 아닙니다")
@@ -44,4 +48,21 @@ public class RegisterRequest {
 
     @Size(max = 500, message = "등록 경로는 500자를 초과할 수 없습니다")
     private String registrationPath;
+
+    /**
+     * Request → Command 변환
+     */
+    public UserRegisterCommand toCommand() {
+        return UserRegisterCommand.builder()
+                .email(email)
+                .password(password)
+                .name(name)
+                .gender(gender)
+                .phoneNumber(phoneNumber)
+                .address(address)
+                .birth(birth)
+                .registrationPath(registrationPath)
+                .userType(userType != null ? userType : User.UserType.REGISTERED)
+                .build();
+    }
 }

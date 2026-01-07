@@ -1,5 +1,6 @@
-package com.example.locc.dto.auth;
+package com.example.locc.domain.user.dto.request;
 
+import com.example.locc.domain.user.dto.command.UserLoginCommand;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -7,11 +8,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * User 로그인 Request DTO
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
+public class UserLoginRequest {
 
     @NotBlank(message = "이메일은 필수입니다")
     @Email(message = "올바른 이메일 형식이 아닙니다")
@@ -19,4 +23,14 @@ public class LoginRequest {
 
     @NotBlank(message = "비밀번호는 필수입니다")
     private String password;
+
+    /**
+     * Request → Command 변환
+     */
+    public UserLoginCommand toCommand() {
+        return UserLoginCommand.builder()
+                .email(email)
+                .password(password)
+                .build();
+    }
 }

@@ -1,6 +1,6 @@
 package com.example.locc.security;
 
-import com.example.locc.entity.User;
+import com.example.locc.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

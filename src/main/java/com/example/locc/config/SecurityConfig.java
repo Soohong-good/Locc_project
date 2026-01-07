@@ -49,10 +49,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ========== 정적 리소스 ==========
                         .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/.well-known/**").permitAll() // 브라우저 메타 요청
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() // 정적 리소스
                         
                         // ========== 로그인 필수 ==========
                         // 파일 다운로드는 로그인 필수
-                        .requestMatchers("/api/attachments/download/**").authenticated()
+                        .requestMatchers("/api/files/download/**").authenticated()
                         .requestMatchers("/download/**").authenticated()
 
                         // ========== 관리자만 (ADMIN) ==========
@@ -66,8 +68,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/sermons/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/sermons/**").hasRole("ADMIN")
 
-                        // 파일 업로드
-                        .requestMatchers("/api/attachments/upload/**").hasRole("ADMIN")
+                        // 파일 업로드/삭제
+                        .requestMatchers("/api/files/**").hasRole("ADMIN")
+
+                        // 갤러리 관리 (업로드/수정/삭제는 관리자만)
+                        .requestMatchers(HttpMethod.POST, "/api/departments/*/gallery").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/departments/*/gallery/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/departments/*/gallery/**").hasRole("ADMIN")
 
                         // 관리자 페이지
                         .requestMatchers("/admin/**").hasRole("ADMIN")
