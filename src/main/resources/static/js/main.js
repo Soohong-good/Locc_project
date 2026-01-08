@@ -26,7 +26,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             target.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start'
-            });
+            });u8
         }
     });
 });
