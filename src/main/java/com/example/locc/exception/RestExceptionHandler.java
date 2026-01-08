@@ -16,9 +16,33 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@RestControllerAdvice(basePackages = "com.example.locc.controller.api")
+@RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestExceptionHandler {
+
+    // 404 - 리소스를 찾을 수 없음
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e) {
+        log.warn("NotFoundException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(e.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    // 403 - 권한 없음
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+        log.warn("AccessDeniedException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(e.getMessage(), HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    // 400 - 잘못된 입력
+    @ExceptionHandler(InvalidInputException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidInputException(InvalidInputException e) {
+        log.warn("InvalidInputException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(e.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 
     @ExceptionHandler(AccountNotApprovedException.class)
     public ResponseEntity<Map<String, Object>> handleAccountNotApprovedException(AccountNotApprovedException e) {
