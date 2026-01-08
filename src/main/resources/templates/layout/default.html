@@ -5,10 +5,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">그리스도 사랑교회 - Christ Love Church</title>
+  <title layout:title-pattern="$CONTENT_TITLE">그리스도 사랑교회</title>
 
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" th:href="@{/favicon.ico}">
+  <link rel="icon" type="image/x-icon" th:href="@{/title_icon.ico}">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" th:href="@{/css/main.css}">
@@ -25,6 +25,9 @@
 <main layout:fragment="content">
   <!-- 페이지별 컨텐츠가 여기에 들어갑니다 -->
 </main>
+
+<!-- Modals -->
+<th:block layout:fragment="modals"></th:block>
 
 <!-- Footer -->
 <th:block th:replace="~{layout/footer :: footer}"></th:block>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>훈련</title>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 bg-slate-900 text-white px-6">
+        <div class="max-w-6xl mx-auto">
+            <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Training</p>
+            <h1 class="text-4xl md:text-5xl font-light tracking-tight mb-4">훈련</h1>
+            <p class="text-lg text-slate-300 font-light">제자훈련과 성경공부를 통해 신앙을 성장시키세요</p>
+        </div>
+    </section>
+
+    <!-- 훈련 프로그램 소개 -->
+    <section class="py-16 bg-white px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- 제자훈련 -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-3xl font-light text-slate-900">제자훈련</h2>
+                    </div>
+                    
+                    <p class="text-slate-600 leading-relaxed">
+                        그리스도의 제자로 살아가기 위한 체계적인 훈련 프로그램입니다. 
+                        성경적 가치관과 신앙의 기초를 다지며, 실제 삶에서 믿음을 적용하는 방법을 배웁니다.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-900 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-slate-900">신앙의 기초 확립</p>
+                                <p class="text-sm text-slate-600">성경 중심의 믿음 세우기</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-900 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-slate-900">삶의 적용</p>
+                                <p class="text-sm text-slate-600">일상에서 실천하는 신앙</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-900 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-slate-900">제자 양육</p>
+                                <p class="text-sm text-slate-600">다른 이를 세우는 리더십</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 성경공부 -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-slate-900 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-3xl font-light text-slate-900">성경공부</h2>
+                    </div>
+                    
+                    <p class="text-slate-600 leading-relaxed">
+                        말씀을 깊이 있게 연구하고 묵상하는 시간입니다. 
+                        소그룹으로 모여 성경을 함께 읽고, 토론하며, 하나님의 뜻을 발견합니다.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-900 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-slate-900">체계적 학습</p>
+                                <p class="text-sm text-slate-600">성경 전체를 이해하는 과정</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-900 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-slate-900">소그룹 나눔</p>
+                                <p class="text-sm text-slate-600">함께 배우고 성장하기</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-slate-900 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-slate-900">실천적 적용</p>
+                                <p class="text-sm text-slate-600">말씀대로 살아가기</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 훈련 일정 -->
+    <section class="py-16 bg-slate-50 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-sm tracking-[0.2em] text-slate-400 uppercase mb-2">Schedule</h2>
+                <h3 class="text-3xl font-light text-slate-900">훈련 일정</h3>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-light text-slate-900">제자훈련</h4>
+                        <span class="px-3 py-1 bg-slate-900 text-white text-xs font-medium">매주</span>
+                    </div>
+                    <div class="space-y-3 text-slate-600">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm">매주 수요일</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm">저녁 7:30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-light text-slate-900">성경공부</h4>
+                        <span class="px-3 py-1 bg-slate-900 text-white text-xs font-medium">매주</span>
+                    </div>
+                    <div class="space-y-3 text-slate-600">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm">매주 목요일</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm">오전 10:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="text-xl font-light text-slate-900">특별 세미나</h4>
+                        <span class="px-3 py-1 bg-slate-600 text-white text-xs font-medium">분기별</span>
+                    </div>
+                    <div class="space-y-3 text-slate-600">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm">분기별 진행</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm">공지 참조</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 문의 안내 -->
+    <section class="py-16 bg-white px-6">
+        <div class="max-w-6xl mx-auto text-center">
+            <h3 class="text-2xl font-light text-slate-900 mb-4">훈련에 참여하고 싶으신가요?</h3>
+            <p class="text-slate-600 mb-8">교회 사무실 또는 담당 교역자에게 문의해주세요.</p>
+            <a href="/church/contact" 
+               class="inline-block px-8 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium">
+                연락처 보기
+            </a>
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

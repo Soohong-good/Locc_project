@@ -7,9 +7,9 @@
 
 <!-- Navigation -->
 <header th:fragment="header" class="fixed w-full top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-6 lg:px-12">
-        <div class="flex justify-between items-center h-20">
-            <!-- 로고 (왼쪽) -->
+    <div class="w-full px-6 lg:px-12">
+        <div class="flex items-center justify-between h-[100px]">
+            <!-- 로고 (제일 왼쪽) -->
             <div class="flex items-center">
                 <a href="/">
                     <img src="/images/logo.png" style="width: 250px; height: 83px;" alt="그리스도 사랑교회" class="h-12">
@@ -47,23 +47,25 @@
                         <div class="dropdown-menu">
                             <a href="/worship/sermon">설교</a>
                             <a href="/worship/message">담임목사 메시지</a>
+                            <a href="/worship/training">훈련</a>
                         </div>
                     </div>
 
                     <div class="dropdown">
-                        <a href="/ministry" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                        <a href="/department/nursery" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
                             부서
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </a>
                         <div class="dropdown-menu">
-                            <a href="/ministry#infant">태영아부</a>
-                            <a href="/ministry#preschool">유아유치부</a>
-                            <a href="/ministry#elementary">초등부</a>
-                            <a href="/ministry#youth">중고등부</a>
-                            <a href="/ministry#college">대청부</a>
-                            <a href="/ministry#newFamily">새가족부</a>
+                            <a href="/department/nursery">태영아부</a>
+                            <a href="/department/preschool">유아유치부</a>
+                            <a href="/department/children">초등부</a>
+                            <a href="/department/youth">중고등부</a>
+                            <a href="/department/young-adults">대학청년부</a>
+                            <a href="/department/newcomers">새가족부</a>
+                            <a href="/department/multiethnic">다민족부</a>
                         </div>
                     </div>
                 </nav>
@@ -113,50 +115,78 @@
         </div>
 
         <!-- 모바일 메뉴 -->
-        <nav id="mobileMenu" class="mobile-menu lg:hidden pb-6 space-y-2 border-t border-gray-200 mt-2 pt-4">
-            <a href="/salvation" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">구원의 길</a>
+        <nav id="mobileMenu" class="mobile-menu lg:hidden overflow-y-auto border-t border-gray-200 mt-2 pt-4" style="max-height: calc(100vh - 100px);">
+            <div class="space-y-2 pb-6">
+                <a href="/salvation" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">구원의 길</a>
 
-            <div class="px-4 py-2">
-                <p class="text-xs text-gray-500 font-semibold uppercase mb-2">그리스도 사랑 교회</p>
-                <a href="/church/about" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">교회 소개</a>
-                <a href="/church/staff" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">섬기는 분들</a>
-                <a href="/church/notice" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">공지</a>
-                <a href="/church/contact" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">오시는 길</a>
-            </div>
-
-            <div class="px-4 py-2">
-                <p class="text-xs text-gray-500 font-semibold uppercase mb-2">예배</p>
-                <a href="/worship/sermon" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">설교</a>
-                <a href="/worship/message" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">담임목사 메시지</a>
-            </div>
-
-            <div class="px-4 py-2">
-                <p class="text-xs text-gray-500 font-semibold uppercase mb-2">부서</p>
-                <a href="/ministry#infant" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">태영아부</a>
-                <a href="/ministry#preschool" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">유아유치부</a>
-                <a href="/ministry#elementary" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">초등부</a>
-                <a href="/ministry#youth" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">중고등부</a>
-                <a href="/ministry#college" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">대청부</a>
-                <a href="/ministry#newFamily" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">새가족부</a>
-            </div>
-
-            <!-- 모바일 로그인/회원가입 -->
-            <div class="px-4 py-2 border-t border-gray-200 mt-4 pt-4" style="opacity: 0; transition: opacity 0.2s;" id="mobileAuthButtons">
-                <!-- 비로그인 상태 -->
-                <div id="mobileNotLoggedIn" class="hidden space-y-2">
-                    <a href="/auth/login" class="block px-4 py-3 text-center bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition">로그인</a>
-                    <a href="/auth/register" class="block px-4 py-3 text-center border-2 border-gray-900 text-gray-900 rounded-lg font-medium hover:bg-gray-50 transition">회원가입</a>
+                <!-- 그리스도 사랑 교회 드롭다운 -->
+                <div class="mobile-dropdown">
+                    <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                        <span class="font-medium">그리스도 사랑 교회</span>
+                        <svg class="mobile-dropdown-icon w-5 h-5 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div class="mobile-dropdown-content hidden pl-4">
+                        <a href="/church/about" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">교회 소개</a>
+                        <a href="/church/staff" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">섬기는 분들</a>
+                        <a href="/church/notice" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">공지</a>
+                        <a href="/church/contact" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">오시는 길</a>
+                    </div>
                 </div>
 
-                <!-- 로그인 상태 -->
-                <div id="mobileLoggedIn" class="hidden space-y-2">
-                    <p class="px-4 py-2 text-sm text-gray-600">
-                        <span id="mobileUserName"></span>님
-                        <span id="mobileAdminBadge" class="text-xs text-blue-600 font-medium ml-1" style="display: none;">[관리자]</span>
-                    </p>
-                    <a href="/mypage" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">마이페이지</a>
-                    <a id="mobileAdminLink" href="/admin" style="display: none;" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">관리자</a>
-                    <a href="#" onclick="logout(); return false;" class="block px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">로그아웃</a>
+                <!-- 예배 드롭다운 -->
+                <div class="mobile-dropdown">
+                    <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                        <span class="font-medium">예배</span>
+                        <svg class="mobile-dropdown-icon w-5 h-5 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div class="mobile-dropdown-content hidden pl-4">
+                        <a href="/worship/sermon" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">설교</a>
+                        <a href="/worship/message" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">담임목사 메시지</a>
+                        <a href="/worship/training" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">훈련</a>
+                    </div>
+                </div>
+
+                <!-- 부서 드롭다운 -->
+                <div class="mobile-dropdown">
+                    <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                        <span class="font-medium">부서</span>
+                        <svg class="mobile-dropdown-icon w-5 h-5 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div class="mobile-dropdown-content hidden pl-4">
+                        <a href="/department/nursery" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">태영아부</a>
+                        <a href="/department/preschool" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">유아유치부</a>
+                        <a href="/department/children" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">초등부</a>
+                        <a href="/department/youth" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">중고등부</a>
+                        <a href="/department/young-adults" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">대학청년부</a>
+                        <a href="/department/newcomers" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">새가족부</a>
+                        <a href="/department/multiethnic" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">다민족부</a>
+                    </div>
+                </div>
+
+                <!-- 모바일 로그인/회원가입 -->
+                <div class="border-t border-gray-200 mt-4 pt-4" style="opacity: 0; transition: opacity 0.2s;" id="mobileAuthButtons">
+                    <!-- 비로그인 상태 -->
+                    <div id="mobileNotLoggedIn" class="hidden space-y-2 px-4">
+                        <a href="/auth/login" class="block px-4 py-3 text-center bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition">로그인</a>
+                        <a href="/auth/register" class="block px-4 py-3 text-center border-2 border-gray-900 text-gray-900 rounded-lg font-medium hover:bg-gray-50 transition">회원가입</a>
+                    </div>
+
+                    <!-- 로그인 상태 -->
+                    <div id="mobileLoggedIn" class="hidden space-y-2">
+                        <p class="px-4 py-2 text-sm text-gray-600">
+                            <span id="mobileUserName"></span>님
+                            <span id="mobileAdminBadge" class="text-xs text-blue-600 font-medium ml-1" style="display: none;">[관리자]</span>
+                        </p>
+                        <a href="/mypage" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">마이페이지</a>
+                        <a id="mobileAdminLink" href="/admin" style="display: none;" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">관리자</a>
+                        <a href="#" onclick="logout(); return false;" class="block px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">로그아웃</a>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -271,6 +301,38 @@
         } else {
             checkAuthStatus();
         }
+
+        // 모바일 드롭다운 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileDropdowns = document.querySelectorAll('.mobile-dropdown');
+
+            mobileDropdowns.forEach(dropdown => {
+                const btn = dropdown.querySelector('.mobile-dropdown-btn');
+                const content = dropdown.querySelector('.mobile-dropdown-content');
+                const icon = dropdown.querySelector('.mobile-dropdown-icon');
+
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // 현재 드롭다운 토글
+                    const isOpen = !content.classList.contains('hidden');
+
+                    // 모든 드롭다운 닫기
+                    document.querySelectorAll('.mobile-dropdown-content').forEach(c => {
+                        c.classList.add('hidden');
+                    });
+                    document.querySelectorAll('.mobile-dropdown-icon').forEach(i => {
+                        i.classList.remove('rotate-180');
+                    });
+
+                    // 현재 드롭다운이 닫혀있었다면 열기
+                    if (!isOpen) {
+                        content.classList.remove('hidden');
+                        icon.classList.add('rotate-180');
+                    }
+                });
+            });
+        });
     </script>
 </header>
 

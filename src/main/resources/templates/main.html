@@ -161,35 +161,40 @@
 
     <!-- Sermon Section -->
     <section id="sermon" class="py-32 bg-slate-900 text-white px-6">
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <div class="mb-16">
                 <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">This Week's Message</p>
                 <h2 class="text-4xl md:text-5xl font-light tracking-tight">이번 주 설교</h2>
             </div>
 
-            <div th:if="${latestSermon != null}" class="space-y-8">
-                <div>
-                    <h3 class="text-3xl md:text-4xl lg:text-5xl font-light leading-relaxed mb-8" th:text="${latestSermon.title}">
-                        낮도 주의 것이요, 밤도 주의 것이라
-                    </h3>
+            <div th:if="${latestSermon != null}">
+                <!-- 설교 썸네일만 표시 (클릭 시 영상 모달) -->
+                <div th:if="${latestSermon.videoUrl != null}"
+                     class="relative w-full max-w-4xl mx-auto cursor-pointer group overflow-hidden"
+                     th:with="videoId=${#strings.contains(latestSermon.videoUrl, 'youtube.com') ?
+                                      (#strings.substringAfter(#strings.substringBefore(latestSermon.videoUrl + '&', '&'), 'v=')) :
+                                      (#strings.substringAfterLast(latestSermon.videoUrl, '/'))}"
+                     th:data-video-id="${videoId}"
+                     onclick="openVideoModal(this.dataset.videoId)">
 
-                    <div class="space-y-2 text-slate-300">
-                        <p class="text-xl font-light" th:text="${latestSermon.scripture}">시편 74:12-17</p>
-                        <p class="text-lg" th:text="${latestSermon.preacher}">최신광 담임목사</p>
-                        <p class="text-base text-slate-500" th:text="${#temporals.format(latestSermon.sermonDate, 'yyyy.MM.dd')}">2024.11.10</p>
+                    <!-- YouTube 썸네일 -->
+                    <div class="aspect-video bg-black">
+                        <img th:src="'https://img.youtube.com/vi/' + ${videoId} + '/maxresdefault.jpg'"
+                             th:alt="${latestSermon.title}"
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                     </div>
-                </div>
 
-                <div class="flex flex-col sm:flex-row gap-4 pt-8">
-                    <a th:if="${latestSermon.audioUrl != null}"
-                       th:href="${latestSermon.audioUrl}"
-                       class="group relative inline-flex items-center justify-center px-10 py-4 overflow-hidden bg-white text-slate-900 transition-all duration-300 ease-out hover:bg-slate-100 text-lg">
-                        <span class="relative font-medium tracking-wide">설교 듣기</span>
-                    </a>
-                    <a th:href="@{/sermon/{id}(id=${latestSermon.id})}"
-                       class="group relative inline-flex items-center justify-center px-10 py-4 overflow-hidden text-white transition-all duration-300 ease-out border border-white hover:bg-white hover:text-slate-900 text-lg">
-                        <span class="relative font-medium tracking-wide">설교 원고</span>
-                    </a>
+                    <!-- 어두운 오버레이 (호버 시만 표시) -->
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300"></div>
+
+                    <!-- 재생 버튼 (우하단 - 호버 시만 표시) -->
+                    <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div class="w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                            <svg class="w-5 h-5 text-slate-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -210,10 +215,16 @@
             <div class="space-y-0 border-t border-slate-200">
                 <div th:each="notice : ${recentNotices}"
                      class="group flex items-center justify-between py-6 border-b border-slate-200 cursor-pointer transition-all duration-200 hover:bg-slate-50 px-4 -mx-4"
-                     th:onclick="'location.href=\'/notice/' + ${notice.id} + '\''">
+                     th:onclick="'location.href=\'/church/notice/' + ${notice.id} + '\''">
                     <div class="flex items-center gap-4">
+                        <!-- 고정 핀 아이콘 -->
                         <span th:if="${notice.isPinned}"
-                              class="text-sm px-2 py-1 border border-slate-300 text-slate-600 font-medium">공지</span>
+                              class="text-amber-500 flex-shrink-0"
+                              title="고정된 공지">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                            </svg>
+                        </span>
                         <span class="text-lg text-slate-900 font-light group-hover:text-slate-600 transition-colors"
                               th:text="${notice.title}">공지사항 제목</span>
                     </div>
@@ -289,9 +300,23 @@
                 <div>
                     <h3 class="text-xl font-medium text-slate-900 mb-6">교통편</h3>
                     <div class="space-y-1 text-slate-600 font-light text-lg">
-                        <p class="font-medium text-slate-900">대구 지하철 1호선</p>
-                        <p>반야월역 도보 10분</p>
-                        <p class="mt-4 text-base">주차: 교회 주차장 이용</p>
+                        <p class="font-medium text-slate-900 mb-2">지하철</p>
+                        <p>1호선 반야월역 4번 출구</p>
+                        <p class="text-base text-slate-500 mb-4">도보 약 10분</p>
+
+                        <p class="font-medium text-slate-900 mb-2 mt-4">버스</p>
+                        <p class="text-base">경북교통앞 정류장 (도보 5분)</p>
+                        <p class="text-sm text-slate-500">805, 836, 동구4, 동구10, 북구3</p>
+
+
+                        <p class="text-base mt-2">동부고교앞·건너 정류장 (도보 8분)</p>
+                        <p class="text-sm text-slate-500">55, 555, 802, 814, 818, 북구3</p>
+
+
+
+
+                        <p class="mt-4 font-medium text-slate-900">주차</p>
+                        <p class="text-base">교회 주차장 이용 가능</p>
                     </div>
                 </div>
             </div>
@@ -300,51 +325,76 @@
 
 </main>
 
-<th:block layout:fragment="scripts">
+<!-- 영상 모달 -->
+<th:block layout:fragment="modals">
+<div id="videoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90">
+    <!-- 닫기 버튼 -->
+    <button onclick="closeVideoModal()"
+            class="absolute top-6 right-6 text-white hover:text-slate-300 transition-colors z-10">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+    </button>
+
+    <!-- 영상 컨테이너 -->
+    <div class="w-full max-w-6xl aspect-video">
+        <iframe id="videoFrame"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                class="w-full h-full">
+        </iframe>
+    </div>
+</div>
+</th:block>
+
+<th:block layout:fragment="extra-scripts">
+    <!-- 카카오맵 API 스크립트 -->
+    <script type="text/javascript" th:src="@{'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoMapApiKey}}"></script>
+
+    <!-- 카카오맵 초기화 모듈 -->
+    <script th:src="@{/js/common/kakao-map.js}"></script>
+
+    <!-- 영상 모달 스크립트 -->
     <script>
-        // 카카오맵 API 초기화
-        function initMap() {
-            const mapContainer = document.getElementById('map');
+        function openVideoModal(videoId) {
+            const modal = document.getElementById('videoModal');
+            const frame = document.getElementById('videoFrame');
 
-            // 카카오맵 API가 로드되었는지 확인
-            if (typeof kakao !== 'undefined' && kakao.maps) {
-                const mapOption = {
-                    center: new kakao.maps.LatLng(35.9144, 128.7283), // 교회 좌표
-                    level: 3
-                };
+            // YouTube 임베드 URL 설정
+            frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
 
-                const map = new kakao.maps.Map(mapContainer, mapOption);
-
-                // 마커 생성
-                const markerPosition = new kakao.maps.LatLng(35.9144, 128.7283);
-                const marker = new kakao.maps.Marker({
-                    position: markerPosition
-                });
-                marker.setMap(map);
-
-                // 인포윈도우 생성
-                const iwContent = '<div style="padding:10px;">그리스도 사랑교회</div>';
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: iwContent
-                });
-                infowindow.open(map, marker);
-
-                // 지도 클릭 시 카카오맵으로 이동
-                kakao.maps.event.addListener(map, 'click', function() {
-                    window.open('https://map.kakao.com/link/map/그리스도 사랑교회,35.9144,128.7283');
-                });
-            } else {
-                // 카카오맵 API가 없을 경우 대체 UI
-                mapContainer.innerHTML = '<a href="https://map.kakao.com/link/map/그리스도 사랑교회,35.9144,128.7283" target="_blank" class="flex items-center justify-center h-full text-slate-600 hover:text-slate-900 transition-colors"><div class="text-center"><svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><p class="text-lg font-light">카카오맵에서 보기</p></div></a>';
-            }
+            // 모달 열기
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
 
-        // 페이지 로드 시 지도 초기화
-        document.addEventListener('DOMContentLoaded', initMap);
-    </script>
+        function closeVideoModal() {
+            const modal = document.getElementById('videoModal');
+            const frame = document.getElementById('videoFrame');
 
-    <!-- 카카오맵 API 스크립트 -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_API_KEY"></script>
+            // 영상 정지 (src 초기화)
+            frame.src = '';
+
+            // 모달 닫기
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeVideoModal();
+            }
+        });
+
+        // 모달 배경 클릭 시 닫기
+        document.getElementById('videoModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeVideoModal();
+            }
+        });
+    </script>
 </th:block>
 
 </body>

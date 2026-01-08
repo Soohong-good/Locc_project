@@ -88,11 +88,6 @@
                                 magamedia8948@gmail.com
                             </a>
                         </div>
-                        <div class="pt-4">
-                            <p class="text-sm text-slate-500 mb-2">업무 시간</p>
-                            <p class="text-base">평일 10:00 - 17:00</p>
-                            <p class="text-base text-slate-500">(주말 및 공휴일 휴무)</p>
-                        </div>
                     </div>
                 </div>
 
@@ -107,15 +102,28 @@
                     </div>
                     <div class="space-y-6 text-slate-700 font-light text-lg">
                         <div>
-                            <p class="font-medium text-slate-900 mb-2">대구 지하철</p>
-                            <p class="text-base">1호선 반야월역 하차</p>
+                            <p class="font-medium text-slate-900 mb-2">지하철</p>
+                            <p class="text-base">1호선 반야월역 4번 출구 하차</p>
                             <p class="text-base text-slate-500">도보 약 10분</p>
                         </div>
+
                         <div>
                             <p class="font-medium text-slate-900 mb-2">버스</p>
-                            <p class="text-base">간선: 131, 401, 719</p>
-                            <p class="text-base">지선: 북구1, 동구2</p>
+                            <div class="space-y-3 text-base">
+                                <div>
+                                    <p class="text-slate-900">경북교통앞 정류장</p>
+                                    <p class="text-sm text-slate-500 mt-1">도보 약 5분</p>
+                                    <p class="text-sm text-slate-600 mt-1">805, 836, 동구4, 동구10, 북구3</p>
+                                </div>
+
+                                <div>
+                                    <p class="text-slate-900">동부고교앞·건너 정류장</p>
+                                    <p class="text-sm text-slate-500 mt-1">도보 약 8분</p>
+                                    <p class="text-sm text-slate-600 mt-1">55, 555, 802, 814, 818, 북구3</p>
+                                </div>
+                            </div>
                         </div>
+
                         <div>
                             <p class="font-medium text-slate-900 mb-2">주차</p>
                             <p class="text-base">교회 주차장 이용 가능</p>
@@ -233,52 +241,11 @@
 </main>
 
 <th:block layout:fragment="extra-scripts">
-    <script>
-        // 카카오맵 API 초기화
-        // API 키를 설정해야 합니다
-        function initMap() {
-            const mapContainer = document.getElementById('map');
-            const mapFallback = document.getElementById('map-fallback');
-            
-            // 카카오맵 API가 로드되었는지 확인
-            if (typeof kakao !== 'undefined' && kakao.maps) {
-                const mapOption = {
-                    center: new kakao.maps.LatLng(35.9144, 128.7283), // 대구 동구 안심로55길 59 좌표
-                    level: 3
-                };
-                
-                const map = new kakao.maps.Map(mapContainer, mapOption);
-                
-                // 마커 생성
-                const markerPosition = new kakao.maps.LatLng(35.9144, 128.7283);
-                const marker = new kakao.maps.Marker({
-                    position: markerPosition
-                });
-                marker.setMap(map);
-                
-                // 인포윈도우 생성
-                const iwContent = '<div style="padding:10px;">그리스도 사랑교회</div>';
-                const infowindow = new kakao.maps.InfoWindow({
-                    content: iwContent
-                });
-                infowindow.open(map, marker);
-                
-                // 지도 클릭 시 카카오맵으로 이동
-                kakao.maps.event.addListener(map, 'click', function() {
-                    window.open('https://map.kakao.com/link/map/그리스도 사랑교회,35.9144,128.7283');
-                });
-            } else {
-                // 카카오맵 API가 없을 경우
-                mapContainer.innerHTML = '<a href="https://map.kakao.com/link/map/그리스도 사랑교회,35.9144,128.7283" target="_blank" class="flex items-center justify-center h-full text-slate-600 hover:text-slate-900 transition-colors"><div class="text-center"><svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><p class="text-lg font-light">카카오맵에서 보기</p></div></a>';
-            }
-        }
-        
-        // 페이지 로드 시 지도 초기화
-        document.addEventListener('DOMContentLoaded', initMap);
-    </script>
-    
-    <!-- 카카오맵 API 스크립트 (API 키를 발급받아 YOUR_API_KEY 부분을 교체해야 합니다) -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_API_KEY"></script>
+    <!-- 카카오맵 API 스크립트 -->
+    <script type="text/javascript" th:src="@{'//dapi.kakao.com/v2/maps/sdk.js?appkey=' + ${kakaoMapApiKey}}"></script>
+
+    <!-- 카카오맵 초기화 모듈 -->
+    <script th:src="@{/js/common/kakao-map.js}"></script>
 </th:block>
 
 </body>

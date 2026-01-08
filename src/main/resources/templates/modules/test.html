@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript 모듈 테스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .module-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .module-card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .module-card p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button, input[type="button"] {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button:hover, input[type="button"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active, input[type="button"]:active {
+            transform: translateY(0);
+        }
+
+        .result-box {
+            background: #f0f0f0;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .result-box pre {
+            color: #555;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input.error {
+            border-color: #dc3545;
+        }
+
+        .error-text {
+            color: #dc3545;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #1565c0;
+        }
+
+        .test-box {
+            width: 200px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .test-box.highlight {
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 JavaScript 모듈 테스트</h1>
+        <p class="subtitle">모든 JavaScript 모듈이 정상적으로 로드되고 작동하는지 확인합니다</p>
+
+        <div class="info-box">
+            ℹ️ 각 섹션의 버튼을 클릭하여 모듈 테스트를 진행하세요
+        </div>
+
+        <div class="module-grid">
+            <!-- 1. Utils.js -->
+            <div class="module-card">
+                <h2>1️⃣ Utils.js</h2>
+                <p>유틸리티 함수들을 테스트합니다</p>
+                <div class="btn-group">
+                    <button onclick="testUtils()">Utils 테스트</button>
+                </div>
+                <div id="utilsResult" class="result-box"></div>
+            </div>
+
+            <!-- 2. DOM.js -->
+            <div class="module-card">
+                <h2>2️⃣ DOM.js</h2>
+                <p>DOM 조작 함수들을 테스트합니다</p>
+                <div class="btn-group">
+                    <button onclick="testDOM()">DOM 테스트</button>
+                    <button onclick="testDOMReset()">초기화</button>
+                </div>
+                <div id="domResult" class="result-box"></div>
+            </div>
+
+            <!-- 3. Validation.js -->
+            <div class="module-card">
+                <h2>3️⃣ Validation.js</h2>
+                <p>입력 검증 함수들을 테스트합니다</p>
+                <div id="validationForm" class="btn-group" style="gap: 15px;">
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="text" id="testEmail" placeholder="test@example.com">
+                        <div id="emailError" class="error-text"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="testPassword" placeholder="8자 이상">
+                        <div id="passwordError" class="error-text"></div>
+                    </div>
+                    <button onclick="testValidation()">검증 테스트</button>
+                    <button onclick="clearValidationUI()" class="btn-cancel">초기화</button>
+                </div>
+                <div id="validationResult" class="result-box"></div>
+            </div>
+
+            <!-- 4. API.js -->
+            <div class="module-card">
+                <h2>4️⃣ API.js</h2>
+                <p>API 함수들을 테스트합니다</p>
+                <div class="btn-group">
+                    <button onclick="testAPI()">API 함수 확인</button>
+                </div>
+                <div id="apiResult" class="result-box"></div>
+            </div>
+
+            <!-- 5. 모듈 로드 상태 -->
+            <div class="module-card">
+                <h2>5️⃣ 모듈 로드 상태</h2>
+                <p>현재 로드된 모듈들을 확인합니다</p>
+                <div class="btn-group">
+                    <button onclick="checkModuleStatus()">상태 확인</button>
+                </div>
+                <div id="statusResult" class="result-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 테스트용 DOM 요소 -->
+    <div id="testBox" class="test-box" style="position: absolute; display: none;">테스트 박스</div>
+
+    <!-- 모듈 로드 (순서 중요) -->
+    <script th:src="@{/js/common/utils.js}"></script>
+    <script th:src="@{/js/common/api.js}"></script>
+    <script th:src="@{/js/common/validation.js}"></script>
+    <script th:src="@{/js/common/dom.js}"></script>
+
+    <!-- 테스트 스크립트 -->
+    <script>
+        // ===== 모듈 로드 확인 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== JavaScript 모듈 테스트 페이지 로드 ===');
+        });
+
+        // ===== 1. Utils.js 테스트 =====
+        function testUtils() {
+            const result = document.getElementById('utilsResult');
+            result.classList.add('show');
+            
+            try {
+                let html = '<h3>✓ Utils 함수 테스트 결과</h3>';
+                
+                // checkToken 테스트
+                const hasCheckToken = typeof checkToken === 'function';
+                html += `<span class="status-badge ${hasCheckToken ? 'status-success' : 'status-error'}">checkToken: ${hasCheckToken ? '✓' : '✗'}</span><br>`;
+                
+                // formatDate 테스트
+                const today = new Date();
+                const formatted = formatDate(today);
+                html += `<span class="status-badge status-success">formatDate: ✓ (${formatted})</span><br>`;
+                
+                // formatDateTime 테스트
+                const formattedTime = formatDateTime(today);
+                html += `<span class="status-badge status-success">formatDateTime: ✓ (${formattedTime})</span><br>`;
+                
+                // showToast 테스트
+                html += `<span class="status-badge status-success">showToast: ✓</span><br>`;
+                showToast('Utils 모듈 테스트 성공!', 'success');
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<h3>✗ 오류 발생</h3><pre>${error.message}</pre>`;
+                result.querySelector('h3').style.color = '#dc3545';
+            }
+        }
+
+        // ===== 2. DOM.js 테스트 =====
+        function testDOM() {
+            const result = document.getElementById('domResult');
+            result.classList.add('show');
+            
+            try {
+                const testBox = document.getElementById('testBox');
+                testBox.style.display = 'block';
+                testBox.style.position = 'relative';
+                testBox.style.marginBottom = '20px';
+                
+                let html = '<h3>✓ DOM 조작 테스트</h3>';
+                
+                // addClass 테스트
+                addClass('testBox', 'highlight');
+                html += `<span class="status-badge status-success">addClass: ✓</span><br>`;
+                
+                // setText 테스트
+                setText('testBox', 'DOM 조작 성공!');
+                html += `<span class="status-badge status-success">setText: ✓</span><br>`;
+                
+                // show/hide 테스트
+                html += `<span class="status-badge status-success">show/hide: ✓</span><br>`;
+                
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<h3>✗ 오류 발생</h3><pre>${error.message}</pre>`;
+                result.querySelector('h3').style.color = '#dc3545';
+            }
+        }
+
+        function testDOMReset() {
+            const testBox = document.getElementById('testBox');
+            testBox.style.display = 'none';
+            setText('testBox', '테스트 박스');
+            removeClass('testBox', 'highlight');
+            
+            const result = document.getElementById('domResult');
+            result.classList.remove('show');
+        }
+
+        // ===== 3. Validation.js 테스트 =====
+        function testValidation() {
+            const result = document.getElementById('validationResult');
+            result.classList.add('show');
+            
+            try {
+                const email = document.getElementById('testEmail').value;
+                const password = document.getElementById('testPassword').value;
+                
+                let errors = [];
+                
+                if (!email) {
+                    errors.push('이메일은 필수입니다');
+                    document.getElementById('testEmail').classList.add('error');
+                } else if (!validateEmail(email)) {
+                    errors.push('유효한 이메일이 아닙니다');
+                    document.getElementById('testEmail').classList.add('error');
+                } else {
+                    document.getElementById('testEmail').classList.remove('error');
+                }
+                
+                if (!password) {
+                    errors.push('비밀번호는 필수입니다');
+                    document.getElementById('testPassword').classList.add('error');
+                } else if (password.length < 8) {
+                    errors.push('비밀번호는 8자 이상이어야 합니다');
+                    document.getElementById('testPassword').classList.add('error');
+                } else {
+                    document.getElementById('testPassword').classList.remove('error');
+                }
+                
+                if (errors.length === 0) {
+                    result.innerHTML = '<h3>✓ 검증 성공</h3><span class="status-badge status-success">모든 입력값이 유효합니다</span>';
+                } else {
+                    let html = '<h3>✗ 검증 실패</h3>';
+                    errors.forEach(err => {
+                        html += `<span class="status-badge status-error">${err}</span><br>`;
+                    });
+                    result.innerHTML = html;
+                }
+            } catch (error) {
+                result.innerHTML = `<h3>✗ 오류 발생</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        function clearValidationUI() {
+            document.getElementById('testEmail').value = '';
+            document.getElementById('testPassword').value = '';
+            document.getElementById('testEmail').classList.remove('error');
+            document.getElementById('testPassword').classList.remove('error');
+            document.getElementById('validationResult').classList.remove('show');
+        }
+
+        // ===== 4. API.js 테스트 =====
+        function testAPI() {
+            const result = document.getElementById('apiResult');
+            result.classList.add('show');
+            
+            try {
+                let html = '<h3>✓ API 함수 확인</h3>';
+                
+                const apiFunctions = [
+                    'apiRequest', 'apiGet', 'apiPost', 'apiPut', 'apiPatch', 'apiDelete',
+                    'createResource', 'updateResource', 'deleteResource',
+                    'uploadFile', 'validateImageFile', 'batchRequests'
+                ];
+                
+                let loadedCount = 0;
+                apiFunctions.forEach(funcName => {
+                    const exists = typeof window[funcName] === 'function';
+                    if (exists) loadedCount++;
+                    html += `<span class="status-badge ${exists ? 'status-success' : 'status-error'}">${funcName}: ${exists ? '✓' : '✗'}</span><br>`;
+                });
+                
+                html = `<h3>✓ API 함수 확인 (${loadedCount}/${apiFunctions.length})</h3>` + html;
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = `<h3>✗ 오류 발생</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        // ===== 5. 모듈 로드 상태 =====
+        function checkModuleStatus() {
+            const result = document.getElementById('statusResult');
+            result.classList.add('show');
+            
+            const modules = {
+                'utils.js': typeof checkToken !== 'undefined',
+                'api.js': typeof apiRequest !== 'undefined',
+                'validation.js': typeof validateEmail !== 'undefined',
+                'dom.js': typeof show !== 'undefined'
+            };
+            
+            let html = '<h3>✓ 모듈 로드 상태</h3>';
+            let loadedCount = 0;
+            
+            Object.entries(modules).forEach(([module, loaded]) => {
+                if (loaded) loadedCount++;
+                html += `<span class="status-badge ${loaded ? 'status-success' : 'status-error'}">${module}: ${loaded ? '✓' : '✗'}</span><br>`;
+            });
+            
+            html = `<h3>✓ 모듈 로드 상태 (${loadedCount}/${Object.keys(modules).length})</h3>` + html;
+            result.innerHTML = html;
+            
+            if (loadedCount === Object.keys(modules).length) {
+                console.log('✓ 모든 모듈이 정상적으로 로드되었습니다');
+            }
+        }
+
+        // 페이지 로드 시 모듈 상태 자동 확인
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                checkModuleStatus();
+                console.log('모듈 테스트 페이지 준비 완료');
+            }, 500);
+        });
+    </script>
+</body>
+</html>

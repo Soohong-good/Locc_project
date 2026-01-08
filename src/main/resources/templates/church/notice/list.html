@@ -2,16 +2,21 @@
 <html lang="ko"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/default}">
 <head>
     <title>공지사항</title>
+    <!-- Quill 에디터 CSS -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/common/quill-custom.css}">
 </head>
+
 <body>
 
 <main layout:fragment="content">
     <!-- Hero Section -->
     <section class="pt-32 pb-16 bg-slate-50 px-6">
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Notice</p>
@@ -19,8 +24,8 @@
                     <p class="text-lg text-slate-600 font-light">교회 소식과 주요 공지사항을 확인하세요</p>
                 </div>
                 <!-- 관리자 글쓰기 버튼 -->
-                <div th:if="${isAdmin}">
-                    <button onclick="openWriteModal()"
+                <div sec:authorize="hasRole('ADMIN')">
+                    <button onclick="NoticeList.openWriteModal()"
                             class="px-6 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium">
                         + 새 공지사항
                     </button>
@@ -31,7 +36,7 @@
 
     <!-- 검색 Section -->
     <section class="py-8 bg-white px-6 border-b border-slate-200">
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <form th:action="@{/church/notice}" method="get" class="flex gap-3">
                 <input type="text"
                        name="keyword"
@@ -48,278 +53,284 @@
 
     <!-- 공지사항 목록 -->
     <section class="py-16 bg-white px-6">
-        <div class="max-w-5xl mx-auto">
-            <div class="space-y-0 border-t border-slate-200">
-                <div th:each="notice, iterStat : ${notices.content}"
-                     class="group py-6 border-b border-slate-200">
+        <div class="max-w-6xl mx-auto">
+            <!-- 목록이 없을 때 -->
+            <div th:if="${notices.empty}" class="text-center py-20">
+                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-slate-500 font-light">등록된 공지사항이 없습니다.</p>
+            </div>
 
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1 cursor-pointer"
-                             th:onclick="|location.href='/church/notice/${notice.id}'|">
-                            <div class="flex items-center gap-3 mb-2">
+            <!-- 테이블 형식 목록 -->
+            <div th:unless="${notices.empty}">
+                <!-- 테이블 헤더 -->
+                <div class="hidden md:grid grid-cols-12 gap-4 py-4 px-4 border-b-2 border-slate-900 text-base font-medium text-slate-700">
+                    <div class="col-span-1 text-center">No</div>
+                    <div class="col-span-5">제목</div>
+                    <div class="col-span-2 text-center">글쓴이</div>
+                    <div class="col-span-2 text-center">작성시간</div>
+                    <div class="col-span-2 text-center">조회수</div>
+                </div>
+
+                <!-- 테이블 바디 -->
+                <div th:each="notice, iterStat : ${notices.content}"
+                     th:classappend="${notice.isPinned} ? 'bg-gradient-to-r from-slate-50 to-blue-50/30 border-l-4 border-blue-500' : ''"
+                     class="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 py-5 px-4 border-b border-slate-200 hover:bg-slate-50 transition-all duration-200 items-center group">
+
+                    <!-- No -->
+                    <div class="hidden md:flex col-span-1 items-center justify-center">
+                        <span th:if="${notice.isPinned}" class="flex items-center justify-center">
+                            <svg class="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                            </svg>
+                        </span>
+                        <span th:unless="${notice.isPinned}"
+                              class="text-slate-400 font-light text-sm"
+                              th:text="${notices.totalElements - (notices.number * notices.size) - iterStat.index}">149</span>
+                    </div>
+
+                    <!-- 제목 + 배지들 -->
+                    <div class="col-span-1 md:col-span-5">
+                        <div class="flex items-center gap-3">
+                            <!-- 모바일: 고정 아이콘 표시 -->
+                            <span th:if="${notice.isPinned}" class="md:hidden flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                </svg>
+                            </span>
+
+                            <!-- 제목 -->
+                            <a th:href="@{/church/notice/{id}(id=${notice.id})}"
+                               class="text-base md:text-lg hover:underline hover:text-blue-600 flex-1 min-w-0 transition-colors"
+                               th:classappend="${notice.isPinned} ? 'text-slate-900 font-medium' : 'text-slate-700 font-light'"
+                               th:text="${notice.title}">
+                                제목
+                            </a>
+
+                            <!-- 배지 영역 -->
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <!-- 첨부파일 아이콘 -->
+                                <span th:if="${notice.hasAttachments}"
+                                      class="text-slate-400 hover:text-slate-600 transition-colors"
+                                      title="첨부파일">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                    </svg>
+                                </span>
+
+                                <!-- NEW 배지 (최근 3일 이내) -->
                                 <span th:if="${notice.isNew}"
-                                      class="text-xs px-2 py-1 bg-slate-900 text-white font-medium">NEW</span>
-                                <span class="text-lg md:text-xl text-slate-900 font-light group-hover:text-slate-600 transition-colors"
-                                      th:text="${notice.title}">공지사항 제목</span>
-                            </div>
-                            <div class="flex items-center gap-4 text-sm text-slate-500 font-light">
-                                <span th:text="${notice.authorName}">작성자</span>
-                                <span>·</span>
-                                <span th:text="${#temporals.format(notice.createdAt, 'yyyy.MM.dd')}">2024.11.15</span>
-                                <span>·</span>
-                                <span>조회 <span th:text="${notice.viewCount}">0</span></span>
+                                      class="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full shadow-sm">
+                                    NEW
+                                </span>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- 글쓴이 -->
+                    <div class="col-span-1 md:col-span-2 flex items-center md:justify-center">
+                        <span class="text-sm md:text-base text-slate-500 md:text-slate-600"
+                              th:text="${notice.authorName}">작성자</span>
+                    </div>
+
+                    <!-- 작성시간 -->
+                    <div class="col-span-1 md:col-span-2 flex items-center md:justify-center">
+                        <span class="text-sm md:text-base text-slate-400 md:text-slate-500"
+                              th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}">2025-12-19</span>
+                    </div>
+
+                    <!-- 조회수 + 관리 버튼 -->
+                    <div class="col-span-1 md:col-span-2 flex items-center justify-between md:justify-center gap-4">
+                        <span class="text-sm md:text-base text-slate-400 md:text-slate-500 font-light"
+                              th:text="${notice.viewCount}">134</span>
 
                         <!-- 관리자 버튼 -->
-                        <div th:if="${isAdmin}" class="flex gap-2">
-                            <button th:onclick="|openEditModal(event, ${notice.id})|"
+                        <div sec:authorize="hasRole('ADMIN')" class="flex gap-2">
+                            <button th:onclick="|NoticeList.togglePin(event, ${notice.id}, ${notice.isPinned})|"
                                     th:data-id="${notice.id}"
-                                    class="px-3 py-1 text-sm border border-slate-300 hover:border-slate-900 transition">
-                                수정
+                                    th:data-pinned="${notice.isPinned}"
+                                    th:classappend="${notice.isPinned} ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                    class="p-2 rounded-lg transition-all duration-200"
+                                    th:title="${notice.isPinned} ? '고정 해제' : '고정'">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                </svg>
                             </button>
-                            <button th:onclick="|confirmDelete(event, ${notice.id})|"
+
+                            <button th:onclick="|NoticeList.confirmDelete(event, ${notice.id})|"
                                     th:data-id="${notice.id}"
                                     th:data-title="${notice.title}"
-                                    class="px-3 py-1 text-sm border border-red-300 text-red-600 hover:border-red-600 transition">
-                                삭제
+                                    class="p-2 bg-slate-100 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200"
+                                    title="삭제">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
                             </button>
-                        </div>
-
-                        <div class="hidden md:block text-3xl font-light text-slate-300 tabular-nums"
-                             th:text="${notices.totalElements - (notices.number * notices.size) - iterStat.index}">
-                            001
                         </div>
                     </div>
                 </div>
-
-                <div th:if="${notices.empty}" class="py-20 text-center">
-                    <p class="text-slate-400 font-light text-lg">등록된 공지사항이 없습니다.</p>
-                </div>
             </div>
 
-            <!-- 페이징 -->
-            <div th:if="${notices.totalPages > 0}" class="mt-16 flex justify-center items-center gap-2">
-                <a th:if="${currentPage > 0}"
-                   th:href="@{/church/notice(page=${currentPage - 1}, size=${notices.size}, keyword=${keyword})}"
-                   class="px-4 py-2 border border-slate-300 hover:border-slate-900 transition text-slate-700 hover:text-slate-900 font-medium">
-                    이전
-                </a>
-
-                <div class="flex gap-1">
-                    <a th:each="pageNum : ${#numbers.sequence(0, notices.totalPages - 1)}"
-                       th:href="@{/church/notice(page=${pageNum}, size=${notices.size}, keyword=${keyword})}"
-                       th:text="${pageNum + 1}"
-                       th:classappend="${pageNum == currentPage} ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:border-slate-900'"
-                       class="px-4 py-2 border border-slate-300 transition font-medium">
+            <!-- 페이지네이션 -->
+            <div th:unless="${notices.empty}" class="flex justify-center mt-12">
+                <nav class="flex items-center gap-2">
+                    <!-- 이전 페이지 -->
+                    <a th:if="${!notices.first}"
+                       th:href="@{/church/notice(page=${notices.number - 1}, keyword=${keyword})}"
+                       class="px-3 py-2 text-slate-600 hover:bg-slate-100 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
                     </a>
-                </div>
 
-                <a th:if="${currentPage < notices.totalPages - 1}"
-                   th:href="@{/church/notice(page=${currentPage + 1}, size=${notices.size}, keyword=${keyword})}"
-                   class="px-4 py-2 border border-slate-300 hover:border-slate-900 transition text-slate-700 hover:text-slate-900 font-medium">
-                    다음
-                </a>
+                    <!-- 페이지 번호 -->
+                    <th:block th:each="i : ${#numbers.sequence(0, notices.totalPages - 1)}">
+                        <a th:href="@{/church/notice(page=${i}, keyword=${keyword})}"
+                           th:classappend="${i == notices.number} ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'"
+                           class="px-4 py-2 transition font-light"
+                           th:text="${i + 1}">1</a>
+                    </th:block>
+
+                    <!-- 다음 페이지 -->
+                    <a th:if="${!notices.last}"
+                       th:href="@{/church/notice(page=${notices.number + 1}, keyword=${keyword})}"
+                       class="px-3 py-2 text-slate-600 hover:bg-slate-100 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </nav>
             </div>
         </div>
     </section>
-
-    <!-- 작성/수정 모달 -->
-    <div id="noticeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6">
-        <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6 border-b">
-                <h2 id="modalTitle" class="text-2xl font-light">새 공지사항 작성</h2>
-            </div>
-
-            <form id="noticeForm" class="p-6 space-y-6">
-                <input type="hidden" id="noticeId">
-
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">제목</label>
-                    <input type="text" id="noticeTitle" required
-                           class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">내용</label>
-                    <textarea id="noticeContent" required rows="15"
-                              class="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none"></textarea>
-                </div>
-
-                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded"></div>
-            </form>
-
-            <div class="p-6 border-t flex gap-3">
-                <button type="button" onclick="saveNotice()"
-                        class="flex-1 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium rounded">
-                    저장
-                </button>
-                <button type="button" onclick="closeModal()"
-                        class="px-6 py-3 border-2 border-slate-300 hover:border-slate-900 transition font-medium rounded">
-                    취소
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 삭제 확인 모달 -->
-    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6">
-        <div class="bg-white rounded-lg max-w-md w-full">
-            <div class="p-6 border-b">
-                <h2 class="text-2xl font-light text-red-600">공지사항 삭제</h2>
-            </div>
-
-            <div class="p-6">
-                <p class="text-slate-700 mb-2">다음 공지사항을 삭제하시겠습니까?</p>
-                <p class="font-medium text-slate-900" id="deleteNoticeTitle"></p>
-            </div>
-
-            <div class="p-6 border-t flex gap-3">
-                <button type="button" onclick="deleteNotice()"
-                        class="flex-1 py-3 bg-red-600 text-white hover:bg-red-700 transition font-medium rounded">
-                    삭제
-                </button>
-                <button type="button" onclick="closeDeleteModal()"
-                        class="px-6 py-3 border-2 border-slate-300 hover:border-slate-900 transition font-medium rounded">
-                    취소
-                </button>
-            </div>
-        </div>
-    </div>
 </main>
 
+<!-- 글쓰기 모달 -->
+<th:block layout:fragment="modals">
+<div id="noticeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+    <!-- 배경 오버레이 -->
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+
+    <!-- 모달 컨텐츠 -->
+    <div class="relative bg-white w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        <!-- 헤더 -->
+        <div class="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+            <div>
+                <h2 class="text-2xl font-light text-slate-900 tracking-tight">새 공지사항 작성</h2>
+                <p class="text-sm text-slate-500 mt-1 font-light">공지사항 정보를 입력해주세요</p>
+            </div>
+            <button onclick="NoticeList.closeModal()"
+                    class="text-slate-400 hover:text-slate-900 transition-colors p-2 hover:bg-slate-50 rounded-full">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- 폼 컨텐츠 -->
+        <div class="flex-1 overflow-y-auto px-8 py-6">
+            <form id="noticeForm" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 tracking-wide">제목 <span class="text-red-500">*</span></label>
+                    <input type="text" id="noticeTitle" required
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all font-light"
+                           placeholder="공지사항 제목을 입력하세요">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 tracking-wide">
+                        내용 <span class="text-red-500">*</span>
+                    </label>
+                    <div id="noticeContent"></div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700 tracking-wide">첨부파일 <span class="text-xs text-slate-500">(PDF, JPG, PNG / 최대 10MB)</span></label>
+                    <input type="file" id="noticeFiles" multiple
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-slate-900 file:text-white file:cursor-pointer hover:file:bg-slate-800 transition font-light">
+                    <div id="fileList" class="text-sm text-slate-600 space-y-1 mt-2"></div>
+                </div>
+
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 text-sm"></div>
+            </form>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="flex items-center justify-end gap-3 px-8 py-6 border-t border-slate-100 bg-slate-50">
+            <button type="button" onclick="NoticeList.closeModal()"
+                    class="px-6 py-3 text-slate-600 hover:bg-slate-100 transition font-medium">
+                취소
+            </button>
+            <button type="button" onclick="NoticeList.saveNotice()"
+                    class="px-6 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium">
+                등록
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 삭제 확인 모달 -->
+<div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    
+    <div class="relative bg-white max-w-md w-full shadow-2xl">
+        <div class="p-8">
+            <h3 class="text-xl font-light text-slate-900 mb-2">공지사항 삭제</h3>
+            <p class="text-slate-600 font-light mb-1">다음 공지사항을 삭제하시겠습니까?</p>
+            <p class="text-slate-900 font-medium" id="deleteNoticeTitle"></p>
+        </div>
+        
+        <div class="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-200">
+            <button onclick="NoticeList.closeDeleteModal()"
+                    class="px-6 py-3 text-slate-600 hover:bg-slate-100 transition font-medium">
+                취소
+            </button>
+            <button onclick="NoticeList.deleteNotice()"
+                    class="px-6 py-3 bg-red-600 text-white hover:bg-red-700 transition font-medium">
+                삭제
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 커스텀 링크 툴팁 -->
+<div id="linkTooltip" style="display: none;">
+    <label>URL</label>
+    <input type="text" id="linkUrlInput" placeholder="https://example.com">
+
+    <label>텍스트 (선택사항)</label>
+    <input type="text" id="linkTextInput" placeholder="링크 텍스트">
+
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="linkNewTabInput">
+        <label for="linkNewTabInput">새 탭으로 열기</label>
+    </div>
+
+    <div class="buttons">
+        <button type="button" class="btn-cancel" onclick="QuillEditor.hideLinkTooltip()">취소</button>
+        <button type="button" class="btn-insert" onclick="QuillEditor.insertLinkFromTooltip()">삽입</button>
+    </div>
+</div>
+</th:block>
+
 <th:block layout:fragment="extra-scripts">
-    <script>
-        let currentNoticeId = null;
+    <!-- Quill Editor -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Quill Image Resize 모듈 -->
+    <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
 
-        function openWriteModal() {
-            document.getElementById('modalTitle').textContent = '새 공지사항 작성';
-            document.getElementById('noticeId').value = '';
-            document.getElementById('noticeTitle').value = '';
-            document.getElementById('noticeContent').value = '';
-            document.getElementById('errorMessage').classList.add('hidden');
-            document.getElementById('noticeModal').classList.remove('hidden');
-        }
+    <!-- 공통 모듈 JS 로드 -->
+    <script th:src="@{/js/common/utils.js}"></script>
+    <script th:src="@{/js/common/api.js}"></script>
+    <script th:src="@{/js/common/quill-editor.js}"></script>
 
-        async function openEditModal(event, noticeId) {
-            event.stopPropagation();
-
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch(`/api/notices/${noticeId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const notice = await response.json();
-                    document.getElementById('modalTitle').textContent = '공지사항 수정';
-                    document.getElementById('noticeId').value = noticeId;
-                    document.getElementById('noticeTitle').value = notice.title || '';
-                    document.getElementById('noticeContent').value = notice.content || '';
-                    document.getElementById('errorMessage').classList.add('hidden');
-                    document.getElementById('noticeModal').classList.remove('hidden');
-                } else {
-                    alert('공지사항을 불러오는데 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Load error:', error);
-                alert('공지사항을 불러오는데 실패했습니다.');
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('noticeModal').classList.add('hidden');
-        }
-
-        async function saveNotice() {
-            const noticeId = document.getElementById('noticeId').value;
-            const title = document.getElementById('noticeTitle').value;
-            const content = document.getElementById('noticeContent').value;
-            const errorDiv = document.getElementById('errorMessage');
-
-            if (!title.trim() || !content.trim()) {
-                errorDiv.textContent = '제목과 내용을 모두 입력해주세요.';
-                errorDiv.classList.remove('hidden');
-                return;
-            }
-
-            try {
-                const token = localStorage.getItem('accessToken');
-                const url = noticeId ? `/api/notices/${noticeId}` : '/api/notices';
-                const method = noticeId ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ title, content })
-                });
-
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    const error = await response.json();
-                    errorDiv.textContent = error.message || '저장 중 오류가 발생했습니다.';
-                    errorDiv.classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error('Save error:', error);
-                errorDiv.textContent = '저장 중 오류가 발생했습니다.';
-                errorDiv.classList.remove('hidden');
-            }
-        }
-
-        function confirmDelete(event, noticeId) {
-            event.stopPropagation();
-
-            const button = event.currentTarget;
-            const title = button.dataset.title;
-
-            currentNoticeId = noticeId;
-            document.getElementById('deleteNoticeTitle').textContent = title || '';
-            document.getElementById('deleteModal').classList.remove('hidden');
-        }
-
-        async function deleteNotice() {
-            if (!currentNoticeId) return;
-
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch(`/api/notices/${currentNoticeId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('삭제 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            currentNoticeId = null;
-        }
-
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeDeleteModal();
-            }
-        });
-    </script>
+    <!-- 페이지 전용 스크립트 -->
+    <script th:src="@{/js/church/notice-list.js}"></script>
 </th:block>
 
 </body>

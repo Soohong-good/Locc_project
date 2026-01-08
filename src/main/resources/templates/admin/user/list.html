@@ -33,18 +33,15 @@
                 </div>
                 <div class="bg-white p-6 shadow-sm border-l-4 border-green-500">
                     <p class="text-sm text-slate-600 mb-1">승인 완료</p>
-                    <p class="text-3xl font-light text-slate-900" 
-                       th:text="${#lists.size(#lists.toList(users.content.?[approvalStatus.name() == 'APPROVED']))}"></p>
+                    <p class="text-3xl font-light text-slate-900" th:text="${approvedCount}"></p>
                 </div>
                 <div class="bg-white p-6 shadow-sm border-l-4 border-yellow-500">
                     <p class="text-sm text-slate-600 mb-1">승인 대기</p>
-                    <p class="text-3xl font-light text-slate-900" 
-                       th:text="${#lists.size(#lists.toList(users.content.?[approvalStatus.name() == 'PENDING']))}"></p>
+                    <p class="text-3xl font-light text-slate-900" th:text="${pendingCount}"></p>
                 </div>
                 <div class="bg-white p-6 shadow-sm border-l-4 border-red-500">
                     <p class="text-sm text-slate-600 mb-1">반려</p>
-                    <p class="text-3xl font-light text-slate-900" 
-                       th:text="${#lists.size(#lists.toList(users.content.?[approvalStatus.name() == 'REJECTED']))}"></p>
+                    <p class="text-3xl font-light text-slate-900" th:text="${rejectedCount}"></p>
                 </div>
             </div>
 
@@ -202,150 +199,12 @@
 </main>
 
 <th:block layout:fragment="extra-scripts">
-    <script>
-        function showUserDetail(button) {
-            const name = button.getAttribute('data-user-name');
-            const email = button.getAttribute('data-user-email');
-            const type = button.getAttribute('data-user-type');
-            const role = button.getAttribute('data-user-role');
-            const status = button.getAttribute('data-user-status');
-            const gender = button.getAttribute('data-user-gender');
-            const phone = button.getAttribute('data-user-phone');
-            const address = button.getAttribute('data-user-address') || '-';
-            const birth = button.getAttribute('data-user-birth') || '-';
-            const path = button.getAttribute('data-user-path') || '-';
-            const rejection = button.getAttribute('data-user-rejection') || '';
-            const deleted = button.getAttribute('data-user-deleted') === 'true';
+    <!-- 모듈 JS 로드 -->
+    <script th:src="@{/js/common/utils.js}"></script>
+    <script th:src="@{/js/common/api.js}"></script>
 
-            const typeText = type === 'REGISTERED' ? '등록교인' : '미등록교인';
-            const roleText = role === 'ADMIN' ? '관리자' : '일반 회원';
-            const statusText = status === 'APPROVED' ? '승인' : status === 'PENDING' ? '승인 대기' : '반려';
-            const statusClass = status === 'APPROVED' ? 'text-green-600' : status === 'PENDING' ? 'text-yellow-600' : 'text-red-600';
-
-            let content = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">이름</p>
-                        <p class="text-slate-900 font-medium">${name}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">이메일</p>
-                        <p class="text-slate-900">${email}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">교인 구분</p>
-                        <p class="text-slate-900">${typeText}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">권한</p>
-                        <p class="text-slate-900">${roleText}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">승인 상태</p>
-                        <p class="${statusClass} font-medium">${statusText}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">성별</p>
-                        <p class="text-slate-900">${gender}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">전화번호</p>
-                        <p class="text-slate-900">${phone}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-slate-500 mb-1">생년월일</p>
-                        <p class="text-slate-900">${birth}</p>
-                    </div>
-                    <div class="col-span-2">
-                        <p class="text-sm text-slate-500 mb-1">주소</p>
-                        <p class="text-slate-900">${address}</p>
-                    </div>
-            `;
-
-            if (type === 'UNREGISTERED') {
-                content += `
-                    <div class="col-span-2">
-                        <p class="text-sm text-slate-500 mb-1">가입 경로</p>
-                        <p class="text-slate-900 whitespace-pre-wrap">${path}</p>
-                    </div>
-                `;
-            }
-
-            if (status === 'REJECTED' && rejection) {
-                content += `
-                    <div class="col-span-2">
-                        <p class="text-sm text-slate-500 mb-1">반려 사유</p>
-                        <p class="text-red-600 whitespace-pre-wrap">${rejection}</p>
-                    </div>
-                `;
-            }
-
-            if (deleted) {
-                content += `
-                    <div class="col-span-2">
-                        <p class="text-sm text-slate-500 mb-1">상태</p>
-                        <p class="text-red-600 font-medium">삭제된 계정</p>
-                    </div>
-                `;
-            }
-
-            content += '</div>';
-
-            document.getElementById('modalContent').innerHTML = content;
-            document.getElementById('detailModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-        }
-
-        let currentDeleteUserId = null;
-
-        function confirmDelete(button) {
-            const userId = button.getAttribute('data-user-id');
-            const userName = button.getAttribute('data-user-name');
-
-            currentDeleteUserId = userId;
-            document.getElementById('deleteUserName').textContent = userName;
-            document.getElementById('deleteModal').classList.remove('hidden');
-        }
-
-        async function confirmDeleteAction() {
-            if (!currentDeleteUserId) return;
-
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await fetch(`/admin/users/${currentDeleteUserId}/delete`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('삭제 중 오류가 발생했습니다.');
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            currentDeleteUserId = null;
-        }
-
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeDeleteModal();
-            }
-        });
-    </script>
+    <!-- 페이지 전용 스크립트 -->
+    <script th:src="@{/js/admin/user-list.js}"></script>
 </th:block>
 
 </body>
