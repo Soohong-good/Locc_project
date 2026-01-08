@@ -1,0 +1,38 @@
+package com.example.locc.domain.department.dto.response;
+
+import com.example.locc.domain.department.entity.DepartmentBoard;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
+public class DepartmentBoardResponse {
+    
+    private final Long id;
+    private final String title;
+    private final String authorName;
+    private final Integer viewCount;
+    private final Boolean isPinned;
+    private final LocalDateTime createdAt;
+
+    private DepartmentBoardResponse(Long id, String title, String authorName, 
+                                   Integer viewCount, Boolean isPinned, LocalDateTime createdAt) {
+        this.id = id;
+        this.title = title;
+        this.authorName = authorName;
+        this.viewCount = viewCount;
+        this.isPinned = isPinned;
+        this.createdAt = createdAt;
+    }
+
+    public static DepartmentBoardResponse from(DepartmentBoard board) {
+        return new DepartmentBoardResponse(
+            board.getId(),
+            board.getTitle(),
+            board.getAuthor().getName(),
+            board.getViewCount(),
+            board.getIsPinned(),
+            board.getCreatedAt()
+        );
+    }
+}
