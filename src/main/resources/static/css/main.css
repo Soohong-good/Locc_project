@@ -28,7 +28,7 @@ html {
     scroll-behavior: smooth;
 }
 
-/* 모바일 메뉴 - 더 강력한 숨김 */
+/* 모바일 메뉴 - 스크롤 가능 */
 .mobile-menu {
     max-height: 0 !important;
     overflow: hidden !important;
@@ -39,11 +39,32 @@ html {
 }
 
 .mobile-menu.active {
-    max-height: 1000px !important;
+    max-height: calc(100vh - 100px) !important;
     opacity: 1 !important;
     visibility: visible !important;
     display: block !important;
+    overflow-y: auto !important;
     transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+}
+
+/* 모바일 드롭다운 */
+.mobile-dropdown-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.mobile-dropdown-content:not(.hidden) {
+    max-height: 500px;
+    transition: max-height 0.5s ease-in;
+}
+
+.mobile-dropdown-icon {
+    transition: transform 0.3s ease;
+}
+
+.mobile-dropdown-icon.rotate-180 {
+    transform: rotate(180deg);
 }
 
 .dropdown {
@@ -67,6 +88,12 @@ html {
     transition-delay: 0s; /* 닫힐 때는 즉시 */
     z-index: 50;
     pointer-events: none; /* 안 보일 때 클릭 방지 */
+}
+
+/* 사용자 메뉴(오른쪽 끝)는 오른쪽 정렬 */
+.dropdown:last-child .dropdown-menu {
+    left: auto;
+    right: 0;
 }
 
 .dropdown:hover .dropdown-menu {

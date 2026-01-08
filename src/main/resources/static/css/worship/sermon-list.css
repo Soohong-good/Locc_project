@@ -1,0 +1,22 @@
+/**
+ * 설교 목록 페이지 전용 스타일
+ * worship/sermon/list.html
+ */
+
+/* 텍스트 말줄임 유틸리티 */
+
+/* 2줄 말줄임 */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 3줄 말줄임 */
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
