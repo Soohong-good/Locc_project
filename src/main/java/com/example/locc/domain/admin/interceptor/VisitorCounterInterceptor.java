@@ -12,8 +12,7 @@ import java.util.List;
 
 /**
  * 방문자 카운터 Interceptor
- * - Phase 4에서 활성화
- * - WebConfig에 등록 필요
+ * - Phase 4 활성화
  */
 @Slf4j
 @Component
@@ -40,21 +39,18 @@ public class VisitorCounterInterceptor implements HandlerInterceptor {
         
         String uri = request.getRequestURI();
         
-        // Phase 4에서 활성화
-        // 지금은 로그만 출력
-        log.trace("방문자 카운팅 (Phase 4: 비활성화): {}", uri);
+        // 제외 대상 체크
+        if (shouldExclude(uri)) {
+            return true;
+        }
         
-        // Phase 4에서 주석 해제:
-        // if (shouldExclude(uri)) {
-        //     return true;
-        // }
-        // 
-        // try {
-        //     counterService.incrementPageView();
-        //     counterService.incrementVisit();
-        // } catch (Exception e) {
-        //     log.warn("방문자 카운트 실패 (무시됨): {}", e.getMessage());
-        // }
+        try {
+            counterService.incrementPageView();
+            counterService.incrementVisit();
+            log.trace("방문자 카운트 증가: {}", uri);
+        } catch (Exception e) {
+            log.warn("방문자 카운트 실패 (무시됨): {}", e.getMessage());
+        }
         
         return true;
     }

@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/locc_test?createDatabaseIfNotExist=true
+    username: root
+    password: 
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+jwt:
+  secret: test-jwt-secret-key-for-testing-minimum-32-characters-required
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+logging:
+  level:
+    root: INFO
+    com.example.locc: DEBUG
+    org.hibernate.SQL: DEBUG

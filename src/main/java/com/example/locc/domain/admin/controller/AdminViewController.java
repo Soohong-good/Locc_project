@@ -31,19 +31,21 @@ public class AdminViewController {
     private final NoticeQueryService noticeQueryService;
     private final SermonQueryService sermonQueryService;
     private final AdminContentQueryService adminContentQueryService;
+    private final AdminStatisticsQueryService adminStatisticsQueryService;
 
     /**
      * 관리자 대시보드 (통합 관리)
      * Phase 2: 콘텐츠 통계 + 최근 목록
      * Phase 3: 회원 통계 추가
+     * Phase 4: 방문자 통계 추가
      */
     @GetMapping
     public String dashboard(Model model) {
         log.info("관리자 대시보드 접근");
 
-        model.addAttribute("message", "Admin 영역 구축 완료 (Phase 3)");
-        model.addAttribute("phase", "Phase 3: 대시보드 완성");
-        model.addAttribute("nextPhase", "Phase 4: 방문자 통계");
+        model.addAttribute("message", "Admin 영역 구축 완료 (Phase 4)");
+        model.addAttribute("phase", "Phase 4: 방문자 통계");
+        model.addAttribute("nextPhase", "완료!");
         
         // Phase 2: 콘텐츠 요약 통계
         model.addAttribute("noticeSummary", adminContentQueryService.getNoticeSummary());
@@ -58,6 +60,9 @@ public class AdminViewController {
         model.addAttribute("approvedUsers", userQueryService.countApprovedUsers());
         model.addAttribute("pendingUsers", userQueryService.countPendingUsers());
         model.addAttribute("rejectedUsers", userQueryService.countRejectedUsers());
+        
+        // Phase 4: 방문자 통계
+        model.addAttribute("visitorStats", adminStatisticsQueryService.getVisitorStatistics());
 
         return "admin/dashboard";
     }

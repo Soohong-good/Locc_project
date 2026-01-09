@@ -32,6 +32,42 @@
                 </p>
             </div>
 
+            <!-- 방문자 통계 (Phase 4) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-blue-100 text-sm font-medium">오늘 방문자</span>
+                        <svg class="w-6 h-6 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-4xl font-bold" th:text="${visitorStats.todayCount}">0</div>
+                    <p class="text-blue-100 text-xs mt-2">실시간 집계</p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-600 text-sm font-medium">어제 방문자</span>
+                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="text-4xl font-bold text-slate-900" th:text="${visitorStats.yesterdayCount}">0</div>
+                    <p class="text-slate-500 text-xs mt-2">확정 통계</p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-slate-600 text-sm font-medium">주간 방문자</span>
+                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="text-4xl font-bold text-slate-900" th:text="${visitorStats.weekCount}">0</div>
+                    <p class="text-slate-500 text-xs mt-2">최근 7일</p>
+                </div>
+            </div>
+
             <!-- 관리 메뉴 그리드 -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
                 <!-- 공지사항 -->
@@ -248,12 +284,12 @@
 
                         <!-- Phase 4 -->
                         <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold">
-                                4
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
+                                ✓
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-slate-600 mb-1">Phase 4: 방문자 통계 (예정)</h3>
-                                <ul class="text-sm text-slate-500 space-y-1">
+                                <h3 class="font-medium text-slate-900 mb-1">Phase 4: 방문자 통계 (완료)</h3>
+                                <ul class="text-sm text-slate-600 space-y-1">
                                     <li>• Redis 기반 실시간 카운팅</li>
                                     <li>• VisitorStatistics Entity</li>
                                     <li>• 배치 스케줄러 (DB flush)</li>
