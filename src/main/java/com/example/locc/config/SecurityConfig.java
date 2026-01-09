@@ -49,37 +49,44 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ========== 정적 리소스 ==========
                         .requestMatchers("/favicon.ico").permitAll()
-                        .requestMatchers("/.well-known/**").permitAll() // 브라우저 메타 요청
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() // 정적 리소스
+                        .requestMatchers("/.well-known/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        
+                        // ========== 관리자 전용 영역 (ADMIN 권한 필수) ==========
+                        // 관리자 View 페이지
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        
+                        // 관리자 전용 API (행동만 담당: 수정/삭제/상태 변경)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         
                         // ========== 로그인 필수 ==========
-                        // 파일 다운로드는 로그인 필수
+                        // 파일 다운로드
                         .requestMatchers("/api/files/download/**").authenticated()
                         .requestMatchers("/download/**").authenticated()
 
-                        // ========== 관리자만 (ADMIN) ==========
-                        // 공지사항 관리
+                        // ========== 도메인별 관리 API (ADMIN 권한 필수) ==========
+                        // 공지사항 생성/수정/삭제
                         .requestMatchers(HttpMethod.POST, "/api/notices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasRole("ADMIN")
 
-                        // 설교 관리
+                        // 설교 생성/수정/삭제
                         .requestMatchers(HttpMethod.POST, "/api/sermons/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/sermons/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/sermons/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/sermons/**").hasRole("ADMIN")
 
                         // 파일 업로드/삭제
                         .requestMatchers("/api/files/**").hasRole("ADMIN")
 
-                        // 갤러리 관리 (업로드/수정/삭제는 관리자만)
+                        // 갤러리 관리
                         .requestMatchers(HttpMethod.POST, "/api/departments/*/gallery").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/departments/*/gallery/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/departments/*/gallery/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/departments/*/gallery/**").hasRole("ADMIN")
 
-                        // 관리자 페이지
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                        // ========== 나머지는 모두 Public (비로그인 OK) ==========
+                        // ========== 공개 영역 (조회만 허용, 비로그인 OK) ==========
                         .anyRequest().permitAll()
                 )
                 .authenticationProvider(authenticationProvider())
