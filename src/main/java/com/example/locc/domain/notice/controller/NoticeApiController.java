@@ -25,8 +25,8 @@ import java.util.Map;
 
 /**
  * Notice API Controller
- * - 요청/응답 처리만 담당
- * - 비즈니스 로직은 Service에 위임
+ * - 공개 API: 조회만 담당
+ * - 수정/삭제는 /api/admin/notices/** 사용
  */
 @Slf4j
 @RestController
@@ -66,96 +66,11 @@ public class NoticeApiController {
     }
 
     /**
-     * 생성
-     */
-    @PostMapping
-    public ResponseEntity<NoticeDetailResponse> create(
-            @Valid @ModelAttribute NoticeRequest request,
-            @RequestParam(value = "files", required = false) List<MultipartFile> files,
-            Authentication authentication) {
-
-        NoticeCreateCommand command = NoticeCreateCommand.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
-                .isPinned(request.getIsPinned())
-                .createdByEmail(authentication.getName())
-                .files(files)
-                .build();
-
-        NoticeDetailResponse created = noticeCommandService.create(command);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    /**
-     * 수정
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<NoticeDetailResponse> update(
-            @PathVariable Long id,
-            @Valid @ModelAttribute NoticeRequest request,
-            @RequestParam(value = "files", required = false) List<MultipartFile> files,
-            Authentication authentication) {
-
-        NoticeUpdateCommand command = NoticeUpdateCommand.builder()
-                .noticeId(id)
-                .title(request.getTitle())
-                .content(request.getContent())
-                .isPinned(request.getIsPinned())
-                .updatedByEmail(authentication.getName())
-                .files(files)
-                .build();
-
-        NoticeDetailResponse updated = noticeCommandService.update(command);
-        return ResponseEntity.ok(updated);
-    }
-
-    /**
-     * 삭제
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        noticeCommandService.delete(id, authentication.getName());
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
      * 조회수 증가
      */
     @PostMapping("/{id}/views")
     public ResponseEntity<Void> increaseViews(@PathVariable Long id) {
         noticeCommandService.increaseViews(id);
         return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 고정 토글
-     */
-    @PatchMapping("/{id}/pin")
-    public ResponseEntity<Void> togglePin(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        noticeCommandService.togglePin(id, authentication.getName());
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 콘텐츠 이미지 업로드 (Quill 에디터용)
-     */
-    @PostMapping("/upload-image")
-    public ResponseEntity<Map<String, String>> uploadImage(
-            @RequestParam("upload") MultipartFile image,
-            Authentication authentication) {
-
-        String imageUrl = fileCommandService.uploadContentImage(
-                image,
-                File.EntityType.NOTICE,
-                authentication.getName()
-        );
-
-        return ResponseEntity.ok(Map.of("url", imageUrl));
     }
 }
