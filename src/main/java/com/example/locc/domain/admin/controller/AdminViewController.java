@@ -1,9 +1,7 @@
 package com.example.locc.domain.admin.controller;
 
 import com.example.locc.domain.admin.service.AdminContentQueryService;
-import com.example.locc.domain.notice.dto.request.NoticeSearchCondition;
 import com.example.locc.domain.notice.service.NoticeQueryService;
-import com.example.locc.domain.sermon.dto.request.SermonSearchCondition;
 import com.example.locc.domain.sermon.service.SermonQueryService;
 import com.example.locc.domain.user.service.UserQueryService;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +12,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 관리자 View Controller
  * - 모든 관리자 화면 반환 (서버 렌더링)
  * - Phase 1: 더미 대시보드
- * - Phase 2: 콘텐츠 목록 페이지
+ * - Phase 2: 콘텐츠 통합 조회 및 대시보드 통합 관리
  * - Phase 3: 실제 대시보드 데이터 연동
  */
 @Slf4j
@@ -36,8 +33,8 @@ public class AdminViewController {
     private final AdminContentQueryService adminContentQueryService;
 
     /**
-     * 관리자 대시보드
-     * Phase 1: 더미 페이지
+     * 관리자 대시보드 (통합 관리)
+     * Phase 2: 콘텐츠 통계 + 최근 목록
      */
     @GetMapping
     public String dashboard(Model model) {
@@ -50,61 +47,12 @@ public class AdminViewController {
         // Phase 2: 콘텐츠 요약 통계
         model.addAttribute("noticeSummary", adminContentQueryService.getNoticeSummary());
         model.addAttribute("sermonSummary", adminContentQueryService.getSermonSummary());
+        
+        // Phase 2: 최근 공지사항/설교 목록 (각 5개)
+        model.addAttribute("recentNotices", noticeQueryService.findLatestUnpinned(5));
+        model.addAttribute("recentSermons", sermonQueryService.findLatest(5));
 
         return "admin/dashboard";
-    }
-
-    /**
-     * 공지사항 관리 목록
-     * Phase 2
-     */
-    @GetMapping("/notices")
-    public String noticeList(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            Model model) {
-        
-        log.debug("공지사항 관리 목록 진입: keyword={}, page={}", keyword, page);
-        
-        NoticeSearchCondition condition = NoticeSearchCondition.builder()
-                .keyword(keyword)
-                .page(page)
-                .size(size)
-                .build();
-        
-        model.addAttribute("notices", noticeQueryService.findList(condition));
-        model.addAttribute("keyword", keyword);
-        
-        return "admin/contents/notice-list";
-    }
-
-    /**
-     * 설교 관리 목록
-     * Phase 2
-     */
-    @GetMapping("/sermons")
-    public String sermonList(
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            Model model) {
-        
-        log.debug("설교 관리 목록 진입: category={}, keyword={}, page={}", category, keyword, page);
-        
-        SermonSearchCondition condition = SermonSearchCondition.builder()
-                .category(category)
-                .keyword(keyword)
-                .page(page)
-                .size(size)
-                .build();
-        
-        model.addAttribute("sermons", sermonQueryService.findList(condition));
-        model.addAttribute("category", category);
-        model.addAttribute("keyword", keyword);
-        
-        return "admin/contents/sermon-list";
     }
 
     /**
