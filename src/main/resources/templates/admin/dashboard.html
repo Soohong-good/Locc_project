@@ -4,7 +4,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/default}">
 <head>
-    <title>관리자 대시보드</title>
+    <title>관리자 대시보드 - LOCC</title>
 </head>
 
 <body>
@@ -15,116 +15,165 @@
             <!-- 헤더 -->
             <div class="mb-10">
                 <h1 class="text-4xl md:text-5xl font-light text-slate-900 mb-4">관리자 대시보드</h1>
-                <p class="text-slate-600 font-light">그리스도 사랑교회 관리 시스템</p>
+                <p class="text-slate-600 font-light">그리스도 사랑교회 통합 관리 시스템</p>
             </div>
 
-            <!-- 통계 카드 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <!-- 승인 대기 -->
-                <div class="bg-orange-50 border border-orange-200 rounded-lg p-6">
+            <!-- Phase 1 상태 표시 -->
+            <div class="mb-10 bg-green-50 border border-green-200 rounded-lg p-6">
+                <div class="flex items-center gap-3 mb-3">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h2 class="text-xl font-medium text-green-900" th:text="${phase}">Phase 1: 기반 구축</h2>
+                </div>
+                <p class="text-green-800 mb-2" th:text="${message}">Admin 영역 구축 완료</p>
+                <p class="text-sm text-green-700">
+                    <strong>다음 단계:</strong> <span th:text="${nextPhase}">Phase 2: 콘텐츠 통합 조회</span>
+                </p>
+            </div>
+
+            <!-- 관리 메뉴 그리드 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                <!-- 공지사항 -->
+                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-orange-900">승인 대기</h3>
-                        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        <h3 class="text-lg font-medium text-slate-900">공지사항</h3>
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-light text-orange-900 mb-2" th:text="${pendingCount}">0</div>
-                    <a href="/admin/users/pending" class="text-sm text-orange-700 hover:text-orange-900 font-medium">
-                        승인 대기 회원 보기 →
+                    <p class="text-sm text-slate-600 mb-4">Phase 2에서 통계 제공 예정</p>
+                    <a href="/church/notice"
+                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
+                        공지사항 관리
                     </a>
                 </div>
 
-                <!-- 전체 회원 -->
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <!-- 설교 -->
+                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-blue-900">전체 회원</h3>
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h3 class="text-lg font-medium text-slate-900">설교</h3>
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">Phase 2에서 통계 제공 예정</p>
+                    <a href="/worship/sermon"
+                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
+                        설교 관리
+                    </a>
+                </div>
+
+                <!-- 회원 관리 -->
+                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-slate-900">회원 관리</h3>
+                        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
                     </div>
-                    <div class="text-3xl font-light text-blue-900 mb-2" th:text="${totalUsers}">0</div>
-                    <a href="/admin/users" class="text-sm text-blue-700 hover:text-blue-900 font-medium">
-                        전체 회원 보기 →
+                    <p class="text-sm text-slate-600 mb-4">회원 승인 및 정보 관리</p>
+                    <a href="/admin/users"
+                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
+                        회원 관리
                     </a>
                 </div>
-
-                <!-- 빠른 링크 -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-slate-900">빠른 링크</h3>
-                        <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <div class="space-y-2">
-                        <a href="/church/notice" class="block text-sm text-slate-700 hover:text-slate-900">
-                            → 공지사항 관리
-                        </a>
-                        <a href="/worship/sermon" class="block text-sm text-slate-700 hover:text-slate-900">
-                            → 설교 관리
-                        </a>
-                        <a href="/" class="block text-sm text-slate-700 hover:text-slate-900">
-                            → 메인 사이트
-                        </a>
-                    </div>
-                </div>
             </div>
 
-            <!-- 주요 기능 -->
+            <!-- Phase 진행 상황 -->
             <div class="bg-white shadow-sm rounded-lg">
                 <div class="p-6 border-b">
-                    <h2 class="text-2xl font-light text-slate-900">주요 관리 기능</h2>
+                    <h2 class="text-2xl font-light text-slate-900">Admin 영역 구축 로드맵</h2>
                 </div>
                 <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- 회원 관리 -->
-                        <div class="border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
-                            <h3 class="text-xl font-medium text-slate-900 mb-3">회원 관리</h3>
-                            <p class="text-slate-600 mb-4 text-sm">
-                                회원가입 승인, 회원 정보 조회 및 관리
-                            </p>
-                            <div class="space-y-2">
-                                <a href="/admin/users/pending" 
-                                   class="block px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition text-center font-medium">
-                                    승인 대기 회원 (<span th:text="${pendingCount}">0</span>)
-                                </a>
-                                <a href="/admin/users" 
-                                   class="block px-4 py-2 border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition text-center font-medium">
-                                    전체 회원 목록
-                                </a>
+                    <div class="space-y-4">
+                        <!-- Phase 1 -->
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
+                                ✓
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-slate-900 mb-1">Phase 1: 기반 구축 (완료)</h3>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• 패키지 구조 생성</li>
+                                    <li>• Security 설정 강화 (/api/admin/** 권한 체크)</li>
+                                    <li>• 관리자 전용 API Controller 생성</li>
+                                    <li>• 공개 API 정리 (조회만)</li>
+                                    <li>• AdminViewController 및 더미 대시보드</li>
+                                </ul>
                             </div>
                         </div>
 
-                        <!-- 콘텐츠 관리 -->
-                        <div class="border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
-                            <h3 class="text-xl font-medium text-slate-900 mb-3">콘텐츠 관리</h3>
-                            <p class="text-slate-600 mb-4 text-sm">
-                                공지사항, 설교 등 교회 콘텐츠 관리
-                            </p>
-                            <div class="space-y-2">
-                                <a href="/church/notice" 
-                                   class="block px-4 py-2 border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition text-center font-medium">
-                                    공지사항 관리
-                                </a>
-                                <a href="/worship/sermon" 
-                                   class="block px-4 py-2 border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition text-center font-medium">
-                                    설교 관리
-                                </a>
+                        <!-- Phase 2 -->
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold">
+                                2
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-slate-600 mb-1">Phase 2: 콘텐츠 통합 조회 (예정)</h3>
+                                <ul class="text-sm text-slate-500 space-y-1">
+                                    <li>• DTO 설계 (ContentSummaryItem, NoticeAdminItem 등)</li>
+                                    <li>• AdminContentQueryService 구현</li>
+                                    <li>• /admin/notices, /admin/sermons 목록 페이지</li>
+                                    <li>• 삭제/수정 기능 연동</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Phase 3 -->
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold">
+                                3
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-slate-600 mb-1">Phase 3: 대시보드 구현 (예정)</h3>
+                                <ul class="text-sm text-slate-500 space-y-1">
+                                    <li>• AdminDashboardQueryService 구현</li>
+                                    <li>• 실제 콘텐츠 통계 연동</li>
+                                    <li>• Chart.js 그래프 추가</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Phase 4 -->
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold">
+                                4
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-medium text-slate-600 mb-1">Phase 4: 방문자 통계 (예정)</h3>
+                                <ul class="text-sm text-slate-500 space-y-1">
+                                    <li>• Redis 기반 실시간 카운팅</li>
+                                    <li>• VisitorStatistics Entity</li>
+                                    <li>• 배치 스케줄러 (DB flush)</li>
+                                    <li>• 대시보드 통계 연동</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 안내 메시지 -->
+            <!-- API 엔드포인트 안내 -->
             <div class="mt-10 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 class="text-lg font-medium text-blue-900 mb-3">💡 관리자 안내</h3>
-                <ul class="space-y-2 text-sm text-blue-800">
-                    <li>• 회원가입 신청이 들어오면 <strong>승인 대기</strong> 카운트가 증가합니다</li>
-                    <li>• 회원 정보를 검토한 후 <strong>승인</strong> 또는 <strong>반려</strong> 처리해주세요</li>
-                    <li>• 승인된 회원만 로그인하여 교회 서비스를 이용할 수 있습니다</li>
-                    <li>• 공지사항과 설교는 관리자 권한으로만 작성/수정/삭제가 가능합니다</li>
-                </ul>
+                <h3 class="text-lg font-medium text-blue-900 mb-3">🔐 새로운 API 구조</h3>
+                <div class="space-y-3 text-sm text-blue-800">
+                    <div>
+                        <strong class="block mb-1">공개 API (조회만):</strong>
+                        <code class="bg-white px-2 py-1 rounded">GET /api/notices</code>,
+                        <code class="bg-white px-2 py-1 rounded">GET /api/sermons</code>
+                    </div>
+                    <div>
+                        <strong class="block mb-1">관리자 API (행동만, ADMIN 권한 필수):</strong>
+                        <code class="bg-white px-2 py-1 rounded">DELETE /api/admin/notices/{id}</code>,
+                        <code class="bg-white px-2 py-1 rounded">PATCH /api/admin/notices/{id}/pin</code>
+                    </div>
+                    <div>
+                        <strong class="block mb-1">관리자 View:</strong>
+                        <code class="bg-white px-2 py-1 rounded">/admin</code> (대시보드),
+                        <code class="bg-white px-2 py-1 rounded">/admin/notices</code> (Phase 2)
+                    </div>
+                </div>
             </div>
         </div>
     </section>
