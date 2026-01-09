@@ -76,6 +76,27 @@ public class UserQueryService {
     }
 
     /**
+     * 승인 완료된 사용자 수 조회 (Admin용)
+     */
+    public Long countApprovedUsers() {
+        return userRepository.countByApprovalStatus(User.ApprovalStatus.APPROVED);
+    }
+
+    /**
+     * 반려된 사용자 수 조회 (Admin용)
+     */
+    public Long countRejectedUsers() {
+        return userRepository.countByApprovalStatus(User.ApprovalStatus.REJECTED);
+    }
+
+    /**
+     * 전체 사용자 수 조회 (Admin용)
+     */
+    public Long countAllUsers() {
+        return userRepository.count();
+    }
+
+    /**
      * ID로 사용자 조회 (내부용)
      */
     User findById(UUID id) {

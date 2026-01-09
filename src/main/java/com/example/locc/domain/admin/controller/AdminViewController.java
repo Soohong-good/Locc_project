@@ -35,14 +35,15 @@ public class AdminViewController {
     /**
      * 관리자 대시보드 (통합 관리)
      * Phase 2: 콘텐츠 통계 + 최근 목록
+     * Phase 3: 회원 통계 추가
      */
     @GetMapping
     public String dashboard(Model model) {
         log.info("관리자 대시보드 접근");
 
-        model.addAttribute("message", "Admin 영역 구축 완료 (Phase 2)");
-        model.addAttribute("phase", "Phase 2: 콘텐츠 통합 조회");
-        model.addAttribute("nextPhase", "Phase 3: 실제 대시보드 데이터");
+        model.addAttribute("message", "Admin 영역 구축 완료 (Phase 3)");
+        model.addAttribute("phase", "Phase 3: 대시보드 완성");
+        model.addAttribute("nextPhase", "Phase 4: 방문자 통계");
         
         // Phase 2: 콘텐츠 요약 통계
         model.addAttribute("noticeSummary", adminContentQueryService.getNoticeSummary());
@@ -51,6 +52,12 @@ public class AdminViewController {
         // Phase 2: 최근 공지사항/설교 목록 (각 5개)
         model.addAttribute("recentNotices", noticeQueryService.findLatestUnpinned(5));
         model.addAttribute("recentSermons", sermonQueryService.findLatest(5));
+        
+        // Phase 3: 회원 통계
+        model.addAttribute("totalUsers", userQueryService.countAllUsers());
+        model.addAttribute("approvedUsers", userQueryService.countApprovedUsers());
+        model.addAttribute("pendingUsers", userQueryService.countPendingUsers());
+        model.addAttribute("rejectedUsers", userQueryService.countRejectedUsers());
 
         return "admin/dashboard";
     }

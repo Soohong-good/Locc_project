@@ -84,7 +84,23 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                         </svg>
                     </div>
-                    <p class="text-sm text-slate-600 mb-4">회원 승인 및 정보 관리</p>
+                    <div class="mb-4">
+                        <div class="text-3xl font-bold text-slate-900" th:text="${totalUsers}">0</div>
+                        <div class="space-y-1 mt-2 text-xs text-slate-600">
+                            <div class="flex justify-between">
+                                <span>승인 완료</span>
+                                <span class="font-medium text-green-600" th:text="${approvedUsers}">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>승인 대기</span>
+                                <span class="font-medium text-orange-600" th:text="${pendingUsers}">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>반려</span>
+                                <span class="font-medium text-red-600" th:text="${rejectedUsers}">0</span>
+                            </div>
+                        </div>
+                    </div>
                     <a href="/admin/users"
                        class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
                         회원 관리
@@ -110,9 +126,9 @@
                                         공지사항 제목
                                     </a>
                                     <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                                        <span th:text="${notice.author}">작성자</span>
+                                        <span th:text="${notice.authorName}">작성자</span>
                                         <span th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}">2024-01-01</span>
-                                        <span>조회 <span th:text="${notice.views}">0</span></span>
+                                        <span>조회 <span th:text="${notice.viewCount}">0</span></span>
                                     </div>
                                 </div>
                                 <div class="flex gap-2 flex-shrink-0">
@@ -120,12 +136,12 @@
                                             class="px-3 py-1 text-xs border border-red-300 text-red-600 rounded hover:bg-red-50">
                                         삭제
                                     </button>
-                                    <button th:if="${!notice.pinned}"
+                                    <button th:if="${!notice.isPinned}"
                                             onclick="togglePin('notice', [[${notice.id}]])"
                                             class="px-3 py-1 text-xs border border-blue-300 text-blue-600 rounded hover:bg-blue-50">
                                         고정
                                     </button>
-                                    <button th:if="${notice.pinned}"
+                                    <button th:if="${notice.isPinned}"
                                             onclick="togglePin('notice', [[${notice.id}]])"
                                             class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
                                         고정됨
@@ -201,31 +217,31 @@
 
                         <!-- Phase 2 -->
                         <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold">
-                                2
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
+                                ✓
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-slate-600 mb-1">Phase 2: 콘텐츠 통합 조회 (예정)</h3>
-                                <ul class="text-sm text-slate-500 space-y-1">
-                                    <li>• DTO 설계 (ContentSummaryItem, NoticeAdminItem 등)</li>
+                                <h3 class="font-medium text-slate-900 mb-1">Phase 2: 콘텐츠 통합 조회 (완료)</h3>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• count 메서드 추가 (Notice, Sermon)</li>
                                     <li>• AdminContentQueryService 구현</li>
-                                    <li>• /admin/notices, /admin/sermons 목록 페이지</li>
-                                    <li>• 삭제/수정 기능 연동</li>
+                                    <li>• 대시보드 통합 관리 (최근 5개 표시)</li>
+                                    <li>• 삭제/고정 기능 연동</li>
                                 </ul>
                             </div>
                         </div>
 
                         <!-- Phase 3 -->
                         <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center font-bold">
-                                3
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
+                                ✓
                             </div>
                             <div class="flex-1">
-                                <h3 class="font-medium text-slate-600 mb-1">Phase 3: 대시보드 구현 (예정)</h3>
-                                <ul class="text-sm text-slate-500 space-y-1">
-                                    <li>• AdminDashboardQueryService 구현</li>
-                                    <li>• 실제 콘텐츠 통계 연동</li>
-                                    <li>• Chart.js 그래프 추가</li>
+                                <h3 class="font-medium text-slate-900 mb-1">Phase 3: 대시보드 완성 (완료)</h3>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• 회원 통계 연동 (승인, 대기, 반려)</li>
+                                    <li>• 실제 콘텐츠 통계 표시</li>
+                                    <li>• 대시보드 데이터 완성</li>
                                 </ul>
                             </div>
                         </div>
