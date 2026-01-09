@@ -118,4 +118,19 @@ public class SermonQueryService {
         return sermonRepository.findById(id)
                 .orElseThrow(() -> new SermonNotFoundException(id));
     }
+
+    /**
+     * 전체 설교 개수 조회 (Admin용)
+     */
+    public Long countAll() {
+        return sermonRepository.count();
+    }
+
+    /**
+     * 최근 N일 이내 등록된 설교 개수 조회 (Admin용)
+     */
+    public Long countRecent(int days) {
+        java.time.LocalDateTime since = java.time.LocalDateTime.now().minusDays(days);
+        return sermonRepository.countByCreatedAtAfter(since);
+    }
 }

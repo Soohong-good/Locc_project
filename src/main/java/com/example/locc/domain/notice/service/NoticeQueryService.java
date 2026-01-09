@@ -139,4 +139,19 @@ public class NoticeQueryService {
         return noticeRepository.findById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
     }
+
+    /**
+     * 전체 공지사항 개수 조회 (Admin용)
+     */
+    public Long countAll() {
+        return noticeRepository.count();
+    }
+
+    /**
+     * 최근 N일 이내 등록된 공지사항 개수 조회 (Admin용)
+     */
+    public Long countRecent(int days) {
+        java.time.LocalDateTime since = java.time.LocalDateTime.now().minusDays(days);
+        return noticeRepository.countByCreatedAtAfter(since);
+    }
 }

@@ -1,14 +1,19 @@
 package com.example.locc.domain.admin.service;
 
+import com.example.locc.domain.admin.dto.internal.ContentSummaryItem;
 import com.example.locc.domain.admin.dto.response.ContentSummaryResponse;
+import com.example.locc.domain.notice.service.NoticeQueryService;
+import com.example.locc.domain.sermon.service.SermonQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+
 /**
  * 관리자 콘텐츠 통합 조회 서비스
- * - Phase 2에서 구현
+ * - Phase 2 구현 완료
  */
 @Slf4j
 @Service
@@ -16,55 +21,99 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class AdminContentQueryService {
     
-    // Phase 2에서 의존성 추가:
-    // private final NoticeQueryService noticeQueryService;
-    // private final SermonQueryService sermonQueryService;
-    // private final StaffQueryService staffQueryService;
-    // private final GalleryQueryService galleryQueryService;
-    // private final DepartmentQueryService departmentQueryService;
+    private final NoticeQueryService noticeQueryService;
+    private final SermonQueryService sermonQueryService;
     
     /**
      * 공지사항 요약 (대시보드용)
-     * Phase 2에서 구현
      */
     public ContentSummaryResponse getNoticeSummary() {
-        log.info("공지사항 요약 조회 (Phase 2: 미구현)");
-        throw new UnsupportedOperationException("Phase 2에서 구현 예정");
+        log.debug("공지사항 요약 조회");
+        
+        Long totalCount = noticeQueryService.countAll();
+        Long recentCount = noticeQueryService.countRecent(7);
+        
+        // TODO Phase 3: 최근 5개 목록 조회 추가
+        
+        return ContentSummaryResponse.of(
+                "NOTICE",
+                "공지사항",
+                totalCount,
+                recentCount,
+                Collections.emptyList(),  // Phase 3에서 구현
+                "/admin/notices"
+        );
     }
     
     /**
      * 설교 요약 (대시보드용)
-     * Phase 2에서 구현
      */
     public ContentSummaryResponse getSermonSummary() {
-        log.info("설교 요약 조회 (Phase 2: 미구현)");
-        throw new UnsupportedOperationException("Phase 2에서 구현 예정");
+        log.debug("설교 요약 조회");
+        
+        Long totalCount = sermonQueryService.countAll();
+        Long recentCount = sermonQueryService.countRecent(7);
+        
+        // TODO Phase 3: 최근 5개 목록 조회 추가
+        
+        return ContentSummaryResponse.of(
+                "SERMON",
+                "설교",
+                totalCount,
+                recentCount,
+                Collections.emptyList(),  // Phase 3에서 구현
+                "/admin/sermons"
+        );
     }
     
     /**
      * 섬김이 요약 (대시보드용)
-     * Phase 2에서 구현
+     * Phase 3에서 구현
      */
     public ContentSummaryResponse getStaffSummary() {
-        log.info("섬김이 요약 조회 (Phase 2: 미구현)");
-        throw new UnsupportedOperationException("Phase 2에서 구현 예정");
+        log.debug("섬김이 요약 조회 (Phase 3: 미구현)");
+        
+        return ContentSummaryResponse.of(
+                "STAFF",
+                "섬김이",
+                0L,
+                0L,
+                Collections.emptyList(),
+                "/admin/staff"
+        );
     }
     
     /**
      * 갤러리 요약 (대시보드용)
-     * Phase 2에서 구현
+     * Phase 3에서 구현
      */
     public ContentSummaryResponse getGallerySummary() {
-        log.info("갤러리 요약 조회 (Phase 2: 미구현)");
-        throw new UnsupportedOperationException("Phase 2에서 구현 예정");
+        log.debug("갤러리 요약 조회 (Phase 3: 미구현)");
+        
+        return ContentSummaryResponse.of(
+                "GALLERY",
+                "갤러리",
+                0L,
+                0L,
+                Collections.emptyList(),
+                "/admin/galleries"
+        );
     }
     
     /**
      * 부서 요약 (대시보드용)
-     * Phase 2에서 구현
+     * Phase 3에서 구현
      */
     public ContentSummaryResponse getDepartmentSummary() {
-        log.info("부서 요약 조회 (Phase 2: 미구현)");
-        throw new UnsupportedOperationException("Phase 2에서 구현 예정");
+        log.debug("부서 요약 조회 (Phase 3: 미구현)");
+        
+        return ContentSummaryResponse.of(
+                "DEPARTMENT",
+                "부서",
+                0L,
+                0L,
+                Collections.emptyList(),
+                "/admin/departments"
+        );
     }
 }

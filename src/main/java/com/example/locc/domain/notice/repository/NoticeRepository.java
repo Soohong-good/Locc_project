@@ -64,4 +64,9 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
            "WHERE n.isPinned = false " +
            "ORDER BY n.createdAt DESC")
     Page<Notice> findUnpinnedList(Pageable pageable);
+
+    /**
+     * 특정 날짜 이후 생성된 공지사항 개수 (Admin용)
+     */
+    Long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
 }

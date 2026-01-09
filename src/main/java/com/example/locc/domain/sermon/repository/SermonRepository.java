@@ -72,4 +72,9 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
     @EntityGraph(attributePaths = {"author"})
     @Query("SELECT s FROM Sermon s ORDER BY s.sermonDate DESC, s.createdAt DESC")
     List<Sermon> findLatest(Pageable pageable);
+
+    /**
+     * 특정 날짜 이후 생성된 설교 개수 (Admin용)
+     */
+    Long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
 }
