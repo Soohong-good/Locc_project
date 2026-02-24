@@ -1,9 +1,10 @@
 package com.example.locc.domain.auth.controller;
 
+import com.example.locc.common.ApiResponse;
 import com.example.locc.domain.auth.dto.request.NewPasswordRequest;
 import com.example.locc.domain.auth.dto.request.PasswordResetRequest;
-import com.example.locc.domain.auth.dto.response.EmailVerificationResponse;
 import com.example.locc.domain.auth.service.PasswordResetService;
+import com.example.locc.exception.InvalidInputException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,73 +23,37 @@ public class PasswordResetApiController {
     private final PasswordResetService passwordResetService;
 
     /**
-     * 비밀번호 재설정 요청
-     * 이메일로 재설정 링크 발송
+     * 비밀번호 재설정 이메일 발송
+     * IllegalArgumentException/IllegalStateException → RestExceptionHandler(400) 처리
      */
     @PostMapping("/reset-request")
-    public ResponseEntity<EmailVerificationResponse> requestPasswordReset(
+    public ResponseEntity<ApiResponse<Void>> requestPasswordReset(
             @Valid @RequestBody PasswordResetRequest request) {
-        
-        try {
-            passwordResetService.requestPasswordReset(request.getEmail());
-            return ResponseEntity.ok(
-                    EmailVerificationResponse.success("비밀번호 재설정 링크가 이메일로 발송되었습니다.")
-            );
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(
-                    EmailVerificationResponse.error(e.getMessage())
-            );
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(
-                    EmailVerificationResponse.error(e.getMessage())
-            );
-        } catch (Exception e) {
-            log.error("비밀번호 재설정 요청 실패", e);
-            return ResponseEntity.internalServerError().body(
-                    EmailVerificationResponse.error("비밀번호 재설정 요청에 실패했습니다. 잠시 후 다시 시도해주세요.")
-            );
-        }
+
+        passwordResetService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.ok(null, "비밀번호 재설정 링크가 이메일로 발송되었습니다."));
     }
 
     /**
      * 토큰 검증
      */
     @GetMapping("/validate-token")
-    public ResponseEntity<EmailVerificationResponse> validateToken(@RequestParam String token) {
+    public ResponseEntity<ApiResponse<Void>> validateToken(@RequestParam String token) {
         boolean isValid = passwordResetService.validateToken(token);
-        
-        if (isValid) {
-            return ResponseEntity.ok(
-                    EmailVerificationResponse.success("유효한 토큰입니다.")
-            );
-        } else {
-            return ResponseEntity.badRequest().body(
-                    EmailVerificationResponse.error("유효하지 않거나 만료된 토큰입니다.")
-            );
+        if (!isValid) {
+            throw new InvalidInputException("유효하지 않거나 만료된 토큰입니다.");
         }
+        return ResponseEntity.ok(ApiResponse.ok(null, "유효한 토큰입니다."));
     }
 
     /**
      * 비밀번호 재설정
      */
     @PostMapping("/reset")
-    public ResponseEntity<EmailVerificationResponse> resetPassword(
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
             @Valid @RequestBody NewPasswordRequest request) {
-        
-        try {
-            passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
-            return ResponseEntity.ok(
-                    EmailVerificationResponse.success("비밀번호가 성공적으로 변경되었습니다.")
-            );
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(
-                    EmailVerificationResponse.error(e.getMessage())
-            );
-        } catch (Exception e) {
-            log.error("비밀번호 재설정 실패", e);
-            return ResponseEntity.internalServerError().body(
-                    EmailVerificationResponse.error("비밀번호 재설정에 실패했습니다. 잠시 후 다시 시도해주세요.")
-            );
-        }
+
+        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.ok(null, "비밀번호가 성공적으로 변경되었습니다."));
     }
 }
