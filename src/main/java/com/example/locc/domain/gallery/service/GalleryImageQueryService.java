@@ -47,6 +47,30 @@ public class GalleryImageQueryService {
     }
 
     /**
+     * 부서별 갤러리 이미지 목록 조회 (게시판 형태)
+     * groupId별로 그룹화하여 첫 번째 이미지만 표시, 이미지 개수 포함
+     */
+    public Page<GalleryImageResponse> getImageListForBoard(String departmentCode, int page) {
+        PageRequest pageRequest = PageRequest.of(page, 10);
+
+        Page<GalleryImage> imagePage = galleryImageRepository.findByDepartmentCodeForBoard(
+                departmentCode,
+                pageRequest
+        );
+
+        // 각 그룹별 이미지 개수 계산
+        Map<String, Integer> imageCountMap = new HashMap<>();
+        for (GalleryImage image : imagePage.getContent()) {
+            int count = galleryImageRepository.findAllByGroupId(image.getGroupId()).size();
+            imageCountMap.put(image.getGroupId(), count);
+        }
+
+        return imagePage.map(image ->
+                GalleryImageResponse.from(image, imageCountMap.get(image.getGroupId()))
+        );
+    }
+
+    /**
      * 인스타그램 스타일: 부서별 갤러리 그룹 목록 조회 (title 기준 + 페이징)
      * 최적화: DTO 프로젝션으로 필요한 데이터만 조회 (1개 쿼리)
      */
@@ -83,5 +107,15 @@ public class GalleryImageQueryService {
      */
     public List<String> getTitles(String departmentCode) {
         return galleryImageRepository.findTitlesByDepartmentCode(departmentCode);
+    }
+    
+    /**
+     * groupId로 모든 이미지 조회 (상세 페이지용)
+     */
+    public List<GalleryImageResponse> getImagesByGroupId(String groupId) {
+        return galleryImageRepository.findAllByGroupId(groupId)
+                .stream()
+                .map(image -> GalleryImageResponse.from(image, 1))
+                .toList();
     }
 }

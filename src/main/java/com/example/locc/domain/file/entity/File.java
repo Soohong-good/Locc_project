@@ -60,6 +60,7 @@ public class File extends BaseEntity {
     public enum EntityType {
         NOTICE("공지사항"),
         SERMON("설교"),
+        BULLETIN("주보"),
         GALLERY("갤러리"),
         DEPARTMENT("부서"),
         STAFF("교역자");

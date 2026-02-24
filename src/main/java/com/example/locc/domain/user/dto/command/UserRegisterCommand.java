@@ -22,4 +22,9 @@ public class UserRegisterCommand {
     private final LocalDate birth;
     private final String registrationPath;
     private final User.UserType userType;
+
+    // 약관 동의
+    private final Boolean agreedToTerms;
+    private final Boolean agreedToPrivacy;
+    private final Boolean agreedToMarketing;
 }

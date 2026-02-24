@@ -5,6 +5,7 @@ import com.example.locc.domain.user.dto.request.UserRegisterRequest;
 import com.example.locc.domain.user.dto.response.UserAuthResponse;
 import com.example.locc.domain.user.dto.response.UserDetailResponse;
 import com.example.locc.domain.user.dto.response.UserResponse;
+import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.service.UserCommandService;
 import com.example.locc.domain.user.service.UserQueryService;
 import com.example.locc.domain.user.repository.UserRepository;
@@ -43,6 +44,16 @@ public class UserApiController {
     @PostMapping("/auth/register")
     public ResponseEntity<UserAuthResponse> register(@Valid @RequestBody UserRegisterRequest request) {
         log.info("Register request for email: {}", request.getEmail());
+        UserAuthResponse response = userCommandService.register(request.toCommand());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 회원가입 (대체 경로)
+     */
+    @PostMapping("/users/register")
+    public ResponseEntity<UserAuthResponse> registerAlternative(@Valid @RequestBody UserRegisterRequest request) {
+        log.info("Register request (alternative path) for email: {}", request.getEmail());
         UserAuthResponse response = userCommandService.register(request.toCommand());
         return ResponseEntity.ok(response);
     }
@@ -101,7 +112,7 @@ public class UserApiController {
         }
 
         String email = authentication.getName();
-        var user = userQueryService.findByEmail(email);
+        User user = userQueryService.findByEmail(email);
         return ResponseEntity.ok(UserDetailResponse.from(user));
     }
 
@@ -135,49 +146,6 @@ public class UserApiController {
         log.info("Getting user detail: {}", id);
         UserDetailResponse user = userQueryService.getUserDetail(id);
         return ResponseEntity.ok(user);
-    }
-
-    /**
-     * 회원 승인
-     */
-    @PostMapping("/admin/users/{id}/approve")
-    public ResponseEntity<Void> approveUser(@PathVariable UUID id) {
-        log.info("Approving user: {}", id);
-        userCommandService.approve(id);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 회원 반려
-     */
-    @PostMapping("/admin/users/{id}/reject")
-    public ResponseEntity<Void> rejectUser(
-            @PathVariable UUID id,
-            @RequestBody Map<String, String> request) {
-        String reason = request.get("reason");
-        log.info("Rejecting user: {} - Reason: {}", id, reason);
-        userCommandService.reject(id, reason);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * 회원 삭제 (논리적 삭제)
-     */
-    @DeleteMapping("/admin/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        log.info("Deleting user: {}", id);
-        userCommandService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * 회원 복구
-     */
-    @PostMapping("/admin/users/{id}/restore")
-    public ResponseEntity<Void> restoreUser(@PathVariable UUID id) {
-        log.info("Restoring user: {}", id);
-        userCommandService.restore(id);
-        return ResponseEntity.ok().build();
     }
 
     /**

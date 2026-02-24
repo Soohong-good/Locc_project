@@ -163,7 +163,7 @@ const QuillEditor = (function() {
         }
         
         const formData = new FormData();
-        formData.append('upload', imageFile);
+        formData.append('image', imageFile);
         
         const token = localStorage.getItem('accessToken');
         

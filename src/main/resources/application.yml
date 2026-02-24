@@ -11,12 +11,14 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: 5  # 10 → 5 (메모리 절약)
-      minimum-idle: 2  # 5 → 2
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+      minimum-idle: ${DB_POOL_MIN:2}
       connection-timeout: 30000
   
   jpa:
     show-sql: false
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
     properties:
       hibernate:
         format_sql: true
@@ -28,22 +30,72 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID:dummy}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Kakao
+            scope:
+              - account_email
+          naver:
+            client-id: ${NAVER_CLIENT_ID:dummy}
+            client-secret: ${NAVER_CLIENT_SECRET:dummy}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-name: Naver
+            scope:
+              - email
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+          naver:
+            authorization-uri: https://nid.naver.com/oauth2.0/authorize
+            token-uri: https://nid.naver.com/oauth2.0/token
+            user-info-uri: https://openapi.naver.com/v1/nid/me
+            user-name-attribute: response
 
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
     encoding: UTF-8
+    cache: ${THYMELEAF_CACHE:true}
   
   servlet:
     multipart:
       enabled: true
-      max-file-size: 10MB
-      max-request-size: 50MB
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:50MB}
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:18000000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+app:
+  url: ${APP_URL:http://localhost:8080}
 
 kakao:
   map:
@@ -52,18 +104,47 @@ kakao:
 # YouTube Data API 설정
 youtube:
   api-key: ${YOUTUBE_API_KEY}
+  playlists:
+    # 주일오전 2부 예배 재생목록 (메인)
+    sunday-morning-2: ${YOUTUBE_PLAYLIST_SUNDAY_MORNING_2:PLj3rgPIpeTF10nn1D8bSg_kwD3P1o5wA0}
+    # 주일오전 1부 예배 재생목록
+    sunday-morning-1: ${YOUTUBE_PLAYLIST_SUNDAY_MORNING_1:PLj3rgPIpeTF2mjKcq_zGjeJAPP-Ewu4Dq}
+    # 주일오후 예배 재생목록
+    sunday-afternoon: ${YOUTUBE_PLAYLIST_SUNDAY_AFTERNOON:PLj3rgPIpeTF3wwDXBqNRvvbo6u48D3VNf}
+    # 수요예배 재생목록
+    wednesday: ${YOUTUBE_PLAYLIST_WEDNESDAY:PLj3rgPIpeTF1UT1T-9yPnzcnZBQBSGkaT}
+    # 금요기도회 재생목록
+    friday: ${YOUTUBE_PLAYLIST_FRIDAY:PLj3rgPIpeTF0xu1vRW8R5Det5MD_IrMYu}
 
 # 파일 업로드 설정
 file:
-  upload-dir: ${FILE_UPLOAD_DIR:uploads}
+  # 기본값을 상대경로 uploads -> user.home 기반 절대경로로 변경
+  # 필요하면 환경변수 FILE_UPLOAD_DIR 로 덮어써서 운영/개발 각각 분리 가능
+  upload-dir: ${FILE_UPLOAD_DIR:${user.home}/locc-data/uploads}
+
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   servlet:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
+  error:
+    include-message: ${ERROR_INCLUDE_MESSAGE:never}
+    include-stacktrace: ${ERROR_INCLUDE_STACKTRACE:never}
+
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.example.locc: ${LOG_LEVEL_APP:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL_SQL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level - %msg%n"
+  file:
+    name: ${LOG_FILE_NAME:logs/application.log}
+    max-size: ${LOG_FILE_MAX_SIZE:10MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
 
 management:
   endpoints:

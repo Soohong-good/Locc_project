@@ -1,5 +1,6 @@
 package com.example.locc.domain.staff.controller;
 
+import com.example.locc.config.FileProperties;
 import com.example.locc.domain.staff.dto.command.StaffCreateCommand;
 import com.example.locc.domain.staff.dto.command.StaffUpdateCommand;
 import com.example.locc.domain.staff.dto.request.StaffRequest;
@@ -10,7 +11,6 @@ import com.example.locc.domain.staff.service.StaffQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -40,9 +40,7 @@ public class StaffApiController {
 
     private final StaffCommandService staffCommandService;
     private final StaffQueryService staffQueryService;
-    
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
+    private final FileProperties fileProperties;
 
     /**
      * 전체 목록 조회
@@ -242,7 +240,7 @@ public class StaffApiController {
      */
     private String saveImage(MultipartFile file) throws IOException {
         // 업로드 디렉토리 생성
-        Path uploadPath = Paths.get(uploadDir, "staff");
+        Path uploadPath = Paths.get(fileProperties.getUploadDir(), "staff");
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }

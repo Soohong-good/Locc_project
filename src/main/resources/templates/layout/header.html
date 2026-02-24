@@ -20,44 +20,64 @@
             <div class="hidden lg:flex items-center gap-8">
                 <!-- 네비게이션 메뉴 -->
                 <nav class="flex items-center space-x-8">
-                    <a href="/salvation" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium">구원의 길</a>
+                    <a href="/salvation" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium">복음말씀</a>
+
+
 
                     <div class="dropdown">
-                        <a href="/about" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                        <button type="button" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1 bg-transparent border-0 cursor-pointer">
                             그리스도 사랑 교회
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
-                        </a>
-                        <div class="dropdown-menu">
-                            <a href="/church/about">교회 소개</a>
+                        </button>
+                        <div class="dropdown-menu" style="min-width: 210px;">
+                            <a href="/church/about">교회소개</a>
+                            <a href="/church/confession">신앙고백</a>
+                            <a href="/church/first-visit">처음 교회에 방문하신 분</a>
                             <a href="/church/staff">섬기는 분들</a>
-                            <a href="/church/notice">공지</a>
+                            <a href="/church/mission">선교</a>
                             <a href="/church/contact">오시는 길</a>
                         </div>
                     </div>
 
                     <div class="dropdown">
-                        <a href="/worship/sermon" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                        <button type="button" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1 bg-transparent border-0 cursor-pointer">
                             예배
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
-                        </a>
+                        </button>
                         <div class="dropdown-menu">
-                            <a href="/worship/sermon">설교</a>
-                            <a href="/worship/message">담임목사 메시지</a>
-                            <a href="/worship/training">훈련</a>
+                            <a href="/worship/newyear">송구영신예배</a>
+                            <a href="/worship/sermon/sunday-morning">주일오전예배</a>
+                            <a href="/worship/sermon/sunday-afternoon">주일오후예배</a>
+                            <a href="/worship/sermon/weekday">기타예배</a>
+                            <a href="/worship/training-intro">훈련소개</a>
+                            <a href="/worship/sermon/training-message">훈련용 메시지</a>
                         </div>
                     </div>
 
                     <div class="dropdown">
-                        <a href="/department/nursery" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1">
+                        <button type="button" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1 bg-transparent border-0 cursor-pointer">
+                            공지 및 자료실
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" style="min-width: 210px;">
+                            <a href="/church/notice">공지</a>
+                            <a href="/church/bulletin">주보</a>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <button type="button" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium flex items-center gap-1 bg-transparent border-0 cursor-pointer">
                             부서
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
-                        </a>
+                        </button>
                         <div class="dropdown-menu">
                             <a href="/department/nursery">태영아부</a>
                             <a href="/department/preschool">유아유치부</a>
@@ -66,8 +86,11 @@
                             <a href="/department/young-adults">대학청년부</a>
                             <a href="/department/newcomers">새가족부</a>
                             <a href="/department/multiethnic">다민족부</a>
+                            <a href="/department/healing">치유부</a>
                         </div>
                     </div>
+
+                    <a href="/training" class="text-gray-700 hover:text-gray-900 hover:font-semibold transition font-medium">훈련신청</a>
                 </nav>
 
                 <!-- 로그인/회원가입 버튼 -->
@@ -95,6 +118,7 @@
                             </button>
                             <div class="dropdown-menu">
                                 <a href="/mypage">마이페이지</a>
+                                <a href="/training/application/my">내 신청내역</a>
                                 <a id="adminLink" href="/admin" style="display: none;">관리자</a>
                                 <a href="#" onclick="logout(); return false;">로그아웃</a>
                             </div>
@@ -117,7 +141,7 @@
         <!-- 모바일 메뉴 -->
         <nav id="mobileMenu" class="mobile-menu lg:hidden overflow-y-auto border-t border-gray-200 mt-2 pt-4" style="max-height: calc(100vh - 100px);">
             <div class="space-y-2 pb-6">
-                <a href="/salvation" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">구원의 길</a>
+                <a href="/salvation" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">복음말씀</a>
 
                 <!-- 그리스도 사랑 교회 드롭다운 -->
                 <div class="mobile-dropdown">
@@ -128,9 +152,11 @@
                         </svg>
                     </button>
                     <div class="mobile-dropdown-content hidden pl-4">
-                        <a href="/church/about" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">교회 소개</a>
+                        <a href="/church/about" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">교회소개</a>
+                        <a href="/church/confession" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">신앙고백</a>
+                        <a href="/church/first-visit" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">처음 교회에 방문하신 분</a>
                         <a href="/church/staff" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">섬기는 분들</a>
-                        <a href="/church/notice" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">공지</a>
+                        <a href="/church/mission" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">선교</a>
                         <a href="/church/contact" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">오시는 길</a>
                     </div>
                 </div>
@@ -144,12 +170,27 @@
                         </svg>
                     </button>
                     <div class="mobile-dropdown-content hidden pl-4">
-                        <a href="/worship/sermon" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">설교</a>
-                        <a href="/worship/message" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">담임목사 메시지</a>
-                        <a href="/worship/training" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">훈련</a>
+                        <a href="/worship/newyear" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">송구영신예배</a>
+                        <a href="/worship/sermon/sunday-morning" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">주일오전예배</a>
+                        <a href="/worship/sermon/sunday-afternoon" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">주일오후예배</a>
+                        <a href="/worship/sermon/weekday" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">기타예배</a>
+                        <a href="/worship/training-intro" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">훈련소개</a>
+                        <a href="/worship/sermon/training-message" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">훈련용 메시지</a>
                     </div>
                 </div>
-
+                <!-- 공지 및 자료실 드롭다운 -->
+                <div class="mobile-dropdown">
+                    <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">
+                        <span class="font-medium">공지 및 자료실</span>
+                        <svg class="mobile-dropdown-icon w-5 h-5 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div class="mobile-dropdown-content hidden pl-4">
+                        <a href="/church/notice" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">공지</a>
+                        <a href="/church/bulletin" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">주보</a>
+                    </div>
+                </div>
                 <!-- 부서 드롭다운 -->
                 <div class="mobile-dropdown">
                     <button class="mobile-dropdown-btn w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition">
@@ -166,8 +207,11 @@
                         <a href="/department/young-adults" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">대학청년부</a>
                         <a href="/department/newcomers" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">새가족부</a>
                         <a href="/department/multiethnic" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">다민족부</a>
+                        <a href="/department/healing" class="block px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition">치유부</a>
                     </div>
                 </div>
+
+                <a href="/training" class="block px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium">훈련신청</a>
 
                 <!-- 모바일 로그인/회원가입 -->
                 <div class="border-t border-gray-200 mt-4 pt-4" style="opacity: 0; transition: opacity 0.2s;" id="mobileAuthButtons">
@@ -184,6 +228,7 @@
                             <span id="mobileAdminBadge" class="text-xs text-blue-600 font-medium ml-1" style="display: none;">[관리자]</span>
                         </p>
                         <a href="/mypage" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">마이페이지</a>
+                        <a href="/training/application/my" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">내 신청내역</a>
                         <a id="mobileAdminLink" href="/admin" style="display: none;" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition">관리자</a>
                         <a href="#" onclick="logout(); return false;" class="block px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition">로그아웃</a>
                     </div>

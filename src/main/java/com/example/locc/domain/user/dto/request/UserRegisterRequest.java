@@ -49,6 +49,15 @@ public class UserRegisterRequest {
     @Size(max = 500, message = "등록 경로는 500자를 초과할 수 없습니다")
     private String registrationPath;
 
+    // 약관 동의
+    @NotNull(message = "서비스 이용약관 동의는 필수입니다")
+    private Boolean agreedToTerms;
+
+    @NotNull(message = "개인정보 처리방침 동의는 필수입니다")
+    private Boolean agreedToPrivacy;
+
+    private Boolean agreedToMarketing;
+
     /**
      * Request → Command 변환
      */
@@ -63,6 +72,9 @@ public class UserRegisterRequest {
                 .birth(birth)
                 .registrationPath(registrationPath)
                 .userType(userType != null ? userType : User.UserType.REGISTERED)
+                .agreedToTerms(agreedToTerms)
+                .agreedToPrivacy(agreedToPrivacy)
+                .agreedToMarketing(agreedToMarketing != null ? agreedToMarketing : false)
                 .build();
     }
 }

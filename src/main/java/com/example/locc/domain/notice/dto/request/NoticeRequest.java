@@ -2,10 +2,10 @@ package com.example.locc.domain.notice.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * Notice 생성/수정 요청 DTO
@@ -13,7 +13,8 @@ import lombok.NoArgsConstructor;
  * - Validation은 여기서만
  * - Controller에서 Command로 변환
  */
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,4 +29,9 @@ public class NoticeRequest {
 
     @Builder.Default
     private Boolean isPinned = false;
+
+    /**
+     * 첨부파일 목록
+     */
+    private List<MultipartFile> files;
 }

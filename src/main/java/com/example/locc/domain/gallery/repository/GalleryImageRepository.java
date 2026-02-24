@@ -23,6 +23,31 @@ public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long
     Slice<GalleryImage> findByDepartmentCode(@Param("departmentCode") String departmentCode, Pageable pageable);
 
     /**
+     * 부서별 갤러리 이미지 목록 조회 (게시판용 Page)
+     * groupId별로 첫 번째 이미지만 표시 (1 업로드 = 1 게시물)
+     */
+    @EntityGraph(attributePaths = {"department", "uploader"})
+    @Query("""
+        SELECT gi FROM GalleryImage gi
+        WHERE gi.department.code = :departmentCode
+        AND gi.id IN (
+            SELECT MIN(gi2.id)
+            FROM GalleryImage gi2
+            WHERE gi2.department.code = :departmentCode
+            GROUP BY gi2.groupId
+        )
+        ORDER BY gi.createdAt DESC
+        """)
+    Page<GalleryImage> findByDepartmentCodeForBoard(@Param("departmentCode") String departmentCode, Pageable pageable);
+    
+    /**
+     * groupId로 모든 이미지 조회 (상세 페이지용)
+     */
+    @EntityGraph(attributePaths = {"department", "uploader"})
+    @Query("SELECT gi FROM GalleryImage gi WHERE gi.groupId = :groupId ORDER BY gi.displayOrder, gi.id")
+    List<GalleryImage> findAllByGroupId(@Param("groupId") String groupId);
+
+    /**
      * 갤러리 이미지 상세 조회
      */
     @EntityGraph(attributePaths = {"department", "uploader"})

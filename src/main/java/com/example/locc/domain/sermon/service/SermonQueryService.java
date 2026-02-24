@@ -7,7 +7,7 @@ import com.example.locc.domain.sermon.entity.Sermon;
 import com.example.locc.domain.sermon.repository.SermonRepository;
 import com.example.locc.domain.file.dto.FileDto;
 import com.example.locc.domain.file.entity.File;
-import com.example.locc.exception.SermonNotFoundException;
+import com.example.locc.exception.NotFoundException;
 import com.example.locc.domain.file.service.FileQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +75,7 @@ public class SermonQueryService {
         log.debug("Finding sermon detail: {}", id);
         
         Sermon sermon = sermonRepository.findDetailById(id)
-                .orElseThrow(() -> new SermonNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("설교를 찾을 수 없습니다. ID: " + id));
         
         // 파일 정보 조회
         List<FileDto> files = fileQueryService.getFilesByEntityWithUploader(
@@ -112,11 +112,40 @@ public class SermonQueryService {
     }
 
     /**
+     * 카테고리 + 부 구분 최신 설교 조회 (주일오전 1부/2부 등)
+     */
+    public List<SermonResponse> findLatestByCategoryAndServiceNumber(String category, Integer serviceNumber, int limit) {
+        log.debug("Finding latest {} sermons by category: {} and serviceNumber: {}", limit, category, serviceNumber);
+        
+        return sermonRepository.findLatestByCategoryAndServiceNumber(
+                        category, 
+                        serviceNumber, 
+                        PageRequest.of(0, limit))
+                .stream()
+                .map(SermonResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 카테고리 + 부 구분 페이징 조회
+     */
+    public Page<SermonResponse> findByCategoryAndServiceNumber(String category, Integer serviceNumber, int page, int size) {
+        log.debug("Finding sermons by category: {} and serviceNumber: {}, page: {}, size: {}", 
+                  category, serviceNumber, page, size);
+        
+        return sermonRepository.findByCategoryAndServiceNumber(
+                        category, 
+                        serviceNumber, 
+                        PageRequest.of(page, size))
+                .map(SermonResponse::from);
+    }
+
+    /**
      * ID로 조회 (내부용)
      */
     Sermon findById(Long id) {
         return sermonRepository.findById(id)
-                .orElseThrow(() -> new SermonNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("설교를 찾을 수 없습니다. ID: " + id));
     }
 
     /**

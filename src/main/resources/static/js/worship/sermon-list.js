@@ -212,7 +212,14 @@ const SermonList = (function() {
         preacherInput.placeholder = '설교자 이름';
         
         document.getElementById('sermonDate').value = getTodayDate();
-        document.getElementById('sermonCategory').value = '주일강단';
+        
+        // 카테고리 설정: 페이지의 hidden input에서 가져오기
+        const categoryInput = document.getElementById('sermonCategory');
+        if (categoryInput) {
+            // 이미 value가 설정되어 있으면 그대로 사용 (템플릿에서 설정됨)
+            console.log('현재 카테고리:', categoryInput.value);
+        }
+        
         document.getElementById('sermonVideoUrl').value = '';
         
         // 설교자 select 박스 채우기
@@ -361,7 +368,7 @@ const SermonList = (function() {
             preacherInput.placeholder = '설교자 이름';
             
             document.getElementById('sermonDate').value = '';
-            document.getElementById('sermonCategory').value = '주일강단';
+            // 카테고리는 초기화하지 않음 (템플릿에서 설정된 값 유지)
             document.getElementById('sermonVideoUrl').value = '';
             
             currentSermonId = null;
@@ -412,6 +419,14 @@ const SermonList = (function() {
         formData.append('sermonDate', sermonDate);
         formData.append('content', content);
         formData.append('category', category);
+        
+        // serviceNumber 추가 (있는 경우)
+        const serviceNumberElement = document.getElementById('sermonServiceNumber');
+        if (serviceNumberElement && serviceNumberElement.value) {
+            formData.append('serviceNumber', serviceNumberElement.value);
+            console.log('serviceNumber:', serviceNumberElement.value);
+        }
+        
         if (videoUrl) {
             formData.append('videoUrl', videoUrl);
         }
@@ -727,8 +742,8 @@ const SermonList = (function() {
      * @param {string} category - 카테고리명
      */
     async function loadLatestSermon(category) {
-        // 전체 카테고리인 경우 주일강단의 최신 설교 표시
-        const targetCategory = category || '주일강단';
+        // 전체 카테고리인 경우 주일오전의 최신 설교 표시
+        const targetCategory = category || '주일오전';
         const apiUrl = `/api/sermons/category/${encodeURIComponent(targetCategory)}/latest`;
         
         try {

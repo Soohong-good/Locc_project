@@ -69,4 +69,13 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
      * 특정 날짜 이후 생성된 공지사항 개수 (Admin용)
      */
     Long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
+
+    /**
+     * 관리자용 전체 공지사항 목록 조회 (고정/비고정 모두 포함)
+     * - @EntityGraph로 author fetch
+     * - 고정 우선, 최신순 정렬
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT n FROM Notice n ORDER BY n.isPinned DESC, n.createdAt DESC")
+    Page<Notice> findAllForAdmin(Pageable pageable);
 }

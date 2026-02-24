@@ -1,0 +1,24 @@
+{
+  "name": "locc",
+  "version": "1.0.0",
+  "description": "- **프로젝트명**: locc (Love Of Christ Church)\r - **프레임워크**: Spring Boot 3.5.7\r - **Java 버전**: 17\r - **템플릿 엔진**: Thymeleaf\r - **데이터베이스**: MariaDB\r - **빌드 도구**: Gradle",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Soohong-good/Locc_project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Soohong-good/Locc_project/issues"
+  },
+  "homepage": "https://github.com/Soohong-good/Locc_project#readme",
+  "dependencies": {
+    "playwright": "^1.57.0"
+  }
+}

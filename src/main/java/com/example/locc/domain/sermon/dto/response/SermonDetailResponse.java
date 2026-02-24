@@ -28,6 +28,7 @@ public class SermonDetailResponse {
     private final String thumbnailUrl;
     private final LocalDate sermonDate;
     private final String category;
+    private final Integer serviceNumber;  // 1부, 2부 구분
     
     // 작성자 정보
     private final String authorName;
@@ -58,6 +59,7 @@ public class SermonDetailResponse {
                 .thumbnailUrl(sermon.getThumbnailUrl())
                 .sermonDate(sermon.getSermonDate())
                 .category(sermon.getCategory())
+                .serviceNumber(sermon.getServiceNumber())
                 .authorName(sermon.getAuthor() != null ? sermon.getAuthor().getName() : "알 수 없음")
                 .authorEmail(sermon.getAuthor() != null ? sermon.getAuthor().getEmail() : null)
                 .createdAt(sermon.getCreatedAt())

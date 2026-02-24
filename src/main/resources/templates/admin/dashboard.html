@@ -10,377 +10,644 @@
 <body>
 
 <main layout:fragment="content">
-    <section class="py-32 px-6">
+    <section class="py-10 px-6 min-h-screen bg-slate-50">
         <div class="max-w-7xl mx-auto">
-            <!-- 헤더 -->
-            <div class="mb-10">
-                <h1 class="text-4xl md:text-5xl font-light text-slate-900 mb-4">관리자 대시보드</h1>
-                <p class="text-slate-600 font-light">그리스도 사랑교회 통합 관리 시스템</p>
-            </div>
 
-            <!-- Phase 1 상태 표시 -->
-            <div class="mb-10 bg-green-50 border border-green-200 rounded-lg p-6">
-                <div class="flex items-center gap-3 mb-3">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <!-- =============================================
+                 헤더
+            ============================================= -->
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-1">Admin Dashboard</p>
+                    <h1 class="text-3xl font-bold text-slate-900">관리자 대시보드</h1>
+                    <p class="text-slate-500 text-sm mt-1">그리스도 사랑교회 통합 관리 시스템</p>
+                </div>
+                <div class="hidden md:flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-200 shadow-sm text-sm text-slate-500">
+                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <h2 class="text-xl font-medium text-green-900" th:text="${phase}">Phase 1: 기반 구축</h2>
-                </div>
-                <p class="text-green-800 mb-2" th:text="${message}">Admin 영역 구축 완료</p>
-                <p class="text-sm text-green-700">
-                    <strong>다음 단계:</strong> <span th:text="${nextPhase}">Phase 2: 콘텐츠 통합 조회</span>
-                </p>
-            </div>
-
-            <!-- 방문자 통계 (Phase 4) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-blue-100 text-sm font-medium">오늘 방문자</span>
-                        <svg class="w-6 h-6 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                    </div>
-                    <div class="text-4xl font-bold" th:text="${visitorStats.todayCount}">0</div>
-                    <p class="text-blue-100 text-xs mt-2">실시간 집계</p>
-                </div>
-
-                <div class="bg-white border border-slate-200 rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-slate-600 text-sm font-medium">어제 방문자</span>
-                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <div class="text-4xl font-bold text-slate-900" th:text="${visitorStats.yesterdayCount}">0</div>
-                    <p class="text-slate-500 text-xs mt-2">확정 통계</p>
-                </div>
-
-                <div class="bg-white border border-slate-200 rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-slate-600 text-sm font-medium">주간 방문자</span>
-                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                    <div class="text-4xl font-bold text-slate-900" th:text="${visitorStats.weekCount}">0</div>
-                    <p class="text-slate-500 text-xs mt-2">최근 7일</p>
+                    <span id="currentDateTime">--</span>
                 </div>
             </div>
 
-            <!-- 관리 메뉴 그리드 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                <!-- 공지사항 -->
-                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-slate-900">공지사항</h3>
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
-                        </svg>
+            <!-- =============================================
+                 KPI 통계 카드 4열
+            ============================================= -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+
+                <!-- 오늘 방문자 -->
+                <div class="relative bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl p-6 shadow-lg shadow-indigo-200 overflow-hidden">
+                    <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                    <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white/5 rounded-full"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-indigo-100 text-xs font-semibold uppercase tracking-wide">오늘 방문자</span>
+                            <div class="p-2 bg-white/20 rounded-xl">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-4xl font-bold tabular-nums" th:text="${visitorStats.todayCount}">0</div>
+                        <div class="flex items-center gap-1.5 mt-2">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 text-xs text-white font-medium">
+                                <span class="w-1.5 h-1.5 bg-emerald-300 rounded-full mr-1 animate-pulse"></span>
+                                실시간 집계
+                            </span>
+                        </div>
                     </div>
-                    <div class="mb-4">
-                        <div class="text-3xl font-bold text-slate-900" th:text="${noticeSummary.totalCount}">0</div>
-                        <p class="text-sm text-slate-600">
-                            전체 <span th:text="${noticeSummary.totalCount}">0</span>개
-                            (최근 7일: <span th:text="${noticeSummary.recentCount}" class="text-blue-600 font-medium">0</span>개)
-                        </p>
-                    </div>
-                    <a th:href="@{/church/notice}"
-                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
-                        전체보기
-                    </a>
                 </div>
 
-                <!-- 설교 -->
-                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-slate-900">설교</h3>
-                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
+                <!-- 주간 방문자 -->
+                <div class="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-sky-200 transition-all duration-300 overflow-hidden">
+                    <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-slate-50 rounded-full"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wide">주간 방문자</span>
+                            <div class="p-2 bg-sky-50 rounded-xl">
+                                <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-4xl font-bold text-slate-900 tabular-nums" th:text="${visitorStats.weekCount}">0</div>
+                        <p class="text-slate-400 text-xs mt-2 font-medium">최근 7일 누적</p>
                     </div>
-                    <div class="mb-4">
-                        <div class="text-3xl font-bold text-slate-900" th:text="${sermonSummary.totalCount}">0</div>
-                        <p class="text-sm text-slate-600">
-                            전체 <span th:text="${sermonSummary.totalCount}">0</span>개
-                            (최근 7일: <span th:text="${sermonSummary.recentCount}" class="text-purple-600 font-medium">0</span>개)
-                        </p>
-                    </div>
-                    <a th:href="@{/worship/sermon}"
-                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
-                        전체보기
-                    </a>
                 </div>
+
+                <!-- 전체 회원 -->
+                <div class="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all duration-300 overflow-hidden">
+                    <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-slate-50 rounded-full"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wide">전체 회원</span>
+                            <div class="p-2 bg-orange-50 rounded-xl">
+                                <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-4xl font-bold text-slate-900 tabular-nums" th:text="${totalUsers}">0</div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="text-xs text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full"
+                                  th:text="'✓ ' + ${approvedUsers}">✓ 0</span>
+                            <span class="text-xs text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-full"
+                                  th:text="'⏳ ' + ${pendingUsers}">⏳ 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 도움요청 -->
+                <div class="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-300 overflow-hidden">
+                    <div class="absolute -bottom-4 -right-4 w-24 h-24 bg-slate-50 rounded-full"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-slate-500 text-xs font-semibold uppercase tracking-wide">도움요청</span>
+                            <div class="p-2 bg-rose-50 rounded-xl">
+                                <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-4xl font-bold text-slate-900 tabular-nums" th:text="${totalHelpRequests}">0</div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="text-xs text-rose-600 font-semibold bg-rose-50 px-2 py-0.5 rounded-full"
+                                  th:text="'미처리 ' + ${pendingHelpRequests}">미처리 0</span>
+                            <span class="text-xs text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full"
+                                  th:text="'처리중 ' + ${inProgressHelpRequests}">처리중 0</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- =============================================
+                 관리 메뉴 카드 그리드
+            ============================================= -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
 
                 <!-- 회원 관리 -->
-                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-slate-900">회원 관리</h3>
-                        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
+                <div class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300 p-6 flex flex-col">
+                    <div class="flex items-start justify-between mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Members</p>
+                            <h3 class="text-lg font-bold text-slate-900">회원 관리</h3>
+                        </div>
+                        <div class="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
+                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                        </div>
                     </div>
-                    <div class="mb-4">
-                        <div class="text-3xl font-bold text-slate-900" th:text="${totalUsers}">0</div>
-                        <div class="space-y-1 mt-2 text-xs text-slate-600">
-                            <div class="flex justify-between">
-                                <span>승인 완료</span>
-                                <span class="font-medium text-green-600" th:text="${approvedUsers}">0</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>승인 대기</span>
-                                <span class="font-medium text-orange-600" th:text="${pendingUsers}">0</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>반려</span>
-                                <span class="font-medium text-red-600" th:text="${rejectedUsers}">0</span>
-                            </div>
+                    <div class="text-4xl font-bold text-slate-900 tabular-nums mb-4" th:text="${totalUsers}">0</div>
+                    <div class="space-y-1 mb-5 flex-1">
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-slate-100">
+                            <span class="flex items-center gap-2 text-slate-600">
+                                <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>승인 완료
+                            </span>
+                            <span class="font-semibold text-emerald-600 tabular-nums" th:text="${approvedUsers}">0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-slate-100">
+                            <span class="flex items-center gap-2 text-slate-600">
+                                <span class="w-2 h-2 bg-amber-400 rounded-full"></span>승인 대기
+                            </span>
+                            <span class="font-semibold text-amber-600 tabular-nums" th:text="${pendingUsers}">0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2">
+                            <span class="flex items-center gap-2 text-slate-600">
+                                <span class="w-2 h-2 bg-rose-400 rounded-full"></span>반려
+                            </span>
+                            <span class="font-semibold text-rose-600 tabular-nums" th:text="${rejectedUsers}">0</span>
                         </div>
                     </div>
                     <a href="/admin/users"
-                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">
-                        회원 관리
+                       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-slate-700 border-2 border-slate-200 rounded-xl hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200">
+                        전체 회원 보기
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
                     </a>
                 </div>
+
+                <!-- 승인 대기 -->
+                <div class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-amber-300 transition-all duration-300 p-6 flex flex-col">
+                    <div class="flex items-start justify-between mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Pending</p>
+                            <h3 class="text-lg font-bold text-slate-900">승인 대기</h3>
+                        </div>
+                        <div class="relative p-3 bg-amber-50 rounded-2xl group-hover:bg-amber-100 transition-colors">
+                            <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span th:if="${pendingUsers > 0}"
+                                  class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+                                  th:text="${pendingUsers}">0</span>
+                        </div>
+                    </div>
+                    <div class="text-4xl font-bold text-slate-900 tabular-nums mb-2" th:text="${pendingUsers}">0</div>
+                    <p class="text-sm text-slate-500 mb-4">가입 승인 요청</p>
+                    <div class="flex-1 flex items-center mb-5">
+                        <div th:if="${pendingUsers > 0}"
+                             class="w-full px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                            <span class="font-bold" th:text="${pendingUsers}">0</span>명의 회원이 승인을 기다리고 있습니다
+                        </div>
+                        <div th:if="${pendingUsers == 0}"
+                             class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            승인 대기 중인 회원이 없습니다
+                        </div>
+                    </div>
+                    <a href="/admin/users/pending"
+                       th:classappend="${pendingUsers > 0} ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-200' : 'border-2 border-slate-200 text-slate-700 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50'"
+                       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200">
+                        승인 요청 확인
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- 도움요청 -->
+                <div class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all duration-300 p-6 flex flex-col">
+                    <div class="flex items-start justify-between mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Help</p>
+                            <h3 class="text-lg font-bold text-slate-900">도움요청</h3>
+                        </div>
+                        <div class="relative p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
+                            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span th:if="${pendingHelpRequests > 0}"
+                                  class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+                                  th:text="${pendingHelpRequests}">0</span>
+                        </div>
+                    </div>
+                    <div class="text-4xl font-bold text-slate-900 tabular-nums mb-4" th:text="${totalHelpRequests}">0</div>
+                    <div class="space-y-1 mb-5 flex-1">
+                        <div class="flex items-center justify-between text-sm py-2 border-b border-slate-100">
+                            <span class="flex items-center gap-2 text-slate-600">
+                                <span class="w-2 h-2 bg-rose-400 rounded-full"></span>미처리
+                            </span>
+                            <span class="font-semibold text-rose-600 tabular-nums" th:text="${pendingHelpRequests}">0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-2">
+                            <span class="flex items-center gap-2 text-slate-600">
+                                <span class="w-2 h-2 bg-blue-400 rounded-full"></span>처리중
+                            </span>
+                            <span class="font-semibold text-blue-600 tabular-nums" th:text="${inProgressHelpRequests}">0</span>
+                        </div>
+                    </div>
+                    <a href="/admin/help-requests"
+                       th:classappend="${pendingHelpRequests > 0} ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm shadow-blue-200' : 'border-2 border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50'"
+                       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200">
+                        도움요청 확인
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- 팝업 관리 -->
+                <div class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-purple-300 transition-all duration-300 p-6 flex flex-col">
+                    <div class="flex items-start justify-between mb-5">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Popup</p>
+                            <h3 class="text-lg font-bold text-slate-900">팝업 관리</h3>
+                        </div>
+                        <div class="p-3 bg-purple-50 rounded-2xl group-hover:bg-purple-100 transition-colors">
+                            <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4 flex-1">메인 페이지 공지/광고 팝업을 관리합니다</p>
+                    <div class="mb-5">
+                        <div class="px-4 py-3 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-700 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            중요한 공지나 이벤트를 팝업으로 노출하세요
+                        </div>
+                    </div>
+                    <a href="/admin/popups"
+                       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 text-sm font-semibold text-slate-700 border-2 border-slate-200 rounded-xl hover:border-purple-400 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200">
+                        팝업 목록 보기
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+
             </div>
 
-            <!-- 최근 콘텐츠 관리 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-                <!-- 최근 공지사항 -->
-                <div class="bg-white shadow-sm rounded-lg">
-                    <div class="p-6 border-b flex items-center justify-between">
-                        <h2 class="text-xl font-light text-slate-900">최근 공지사항</h2>
-                        <a th:href="@{/church/notice}" class="text-sm text-blue-600 hover:text-blue-800">전체보기 →</a>
-                    </div>
-                    <div class="divide-y">
-                        <div th:each="notice : ${recentNotices}" class="p-4 hover:bg-slate-50 transition">
-                            <div class="flex items-start justify-between gap-4">
-                                <div class="flex-1 min-w-0">
-                                    <a th:href="@{/church/notice/{id}(id=${notice.id})}"
-                                       class="block font-medium text-slate-900 hover:text-blue-600 truncate"
-                                       th:text="${notice.title}">
-                                        공지사항 제목
-                                    </a>
-                                    <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                                        <span th:text="${notice.authorName}">작성자</span>
-                                        <span th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}">2024-01-01</span>
-                                        <span>조회 <span th:text="${notice.viewCount}">0</span></span>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2 flex-shrink-0">
-                                    <button onclick="confirmDelete('notice', [[${notice.id}]])"
-                                            class="px-3 py-1 text-xs border border-red-300 text-red-600 rounded hover:bg-red-50">
-                                        삭제
-                                    </button>
-                                    <button th:if="${!notice.isPinned}"
-                                            onclick="togglePin('notice', [[${notice.id}]])"
-                                            class="px-3 py-1 text-xs border border-blue-300 text-blue-600 rounded hover:bg-blue-50">
-                                        고정
-                                    </button>
-                                    <button th:if="${notice.isPinned}"
-                                            onclick="togglePin('notice', [[${notice.id}]])"
-                                            class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
-                                        고정됨
-                                    </button>
-                                </div>
+            <!-- =============================================
+                 콘텐츠 관리 (공지사항 + 설교)
+            ============================================= -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- 공지사항 패널 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden" style="height: 580px;">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-indigo-50 rounded-xl">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
                             </div>
+                            <h2 class="text-base font-bold text-slate-900">공지사항</h2>
                         </div>
-                        <div th:if="${#lists.isEmpty(recentNotices)}" class="p-8 text-center text-slate-500">
-                            등록된 공지사항이 없습니다
+                        <a th:href="@{/church/notice}"
+                           class="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
+                            전체보기
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <div id="noticeList" class="divide-y divide-slate-100 overflow-y-auto flex-1">
+                        <div class="p-8 text-center">
+                            <div class="inline-block w-6 h-6 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+                            <p class="text-sm text-slate-400">공지사항 불러오는 중...</p>
                         </div>
+                    </div>
+                    <div class="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+                        <button id="noticePrevBtn" onclick="loadNotices(currentNoticePage - 1)"
+                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                disabled>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            이전
+                        </button>
+                        <span id="noticePageInfo" class="text-xs font-semibold text-slate-500 bg-white px-4 py-1.5 rounded-lg border border-slate-200">1</span>
+                        <button id="noticeNextBtn" onclick="loadNotices(currentNoticePage + 1)"
+                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                disabled>
+                            다음
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                <!-- 최근 설교 -->
-                <div class="bg-white shadow-sm rounded-lg">
-                    <div class="p-6 border-b flex items-center justify-between">
-                        <h2 class="text-xl font-light text-slate-900">최근 설교</h2>
-                        <a th:href="@{/worship/sermon}" class="text-sm text-blue-600 hover:text-blue-800">전체보기 →</a>
-                    </div>
-                    <div class="divide-y">
-                        <div th:each="sermon : ${recentSermons}" class="p-4 hover:bg-slate-50 transition">
-                            <div class="flex items-start justify-between gap-4">
-                                <div class="flex-1 min-w-0">
-                                    <a th:href="@{/worship/sermon/{id}(id=${sermon.id})}"
-                                       class="block font-medium text-slate-900 hover:text-blue-600 truncate"
-                                       th:text="${sermon.title}">
-                                        설교 제목
-                                    </a>
-                                    <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                                        <span th:text="${sermon.preacher}">설교자</span>
-                                        <span th:text="${#temporals.format(sermon.sermonDate, 'yyyy-MM-dd')}">2024-01-01</span>
-                                        <span th:text="${sermon.category}">주일예배</span>
-                                    </div>
-                                </div>
-                                <div class="flex gap-2 flex-shrink-0">
-                                    <button onclick="confirmDelete('sermon', [[${sermon.id}]])"
-                                            class="px-3 py-1 text-xs border border-red-300 text-red-600 rounded hover:bg-red-50">
-                                        삭제
-                                    </button>
-                                </div>
+                <!-- 설교 패널 -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden" style="height: 580px;">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-emerald-50 rounded-xl">
+                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
                             </div>
+                            <h2 class="text-base font-bold text-slate-900">설교</h2>
                         </div>
-                        <div th:if="${#lists.isEmpty(recentSermons)}" class="p-8 text-center text-slate-500">
-                            등록된 설교가 없습니다
+                        <a th:href="@{/worship/sermon}"
+                           class="flex items-center gap-1 text-xs font-semibold text-emerald-600 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors">
+                            전체보기
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <div id="sermonList" class="divide-y divide-slate-100 overflow-y-auto flex-1">
+                        <div class="p-8 text-center">
+                            <div class="inline-block w-6 h-6 border-2 border-emerald-300 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+                            <p class="text-sm text-slate-400">설교 목록 불러오는 중...</p>
                         </div>
+                    </div>
+                    <div class="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+                        <button id="sermonPrevBtn" onclick="loadSermons(currentSermonPage - 1)"
+                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                disabled>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            이전
+                        </button>
+                        <span id="sermonPageInfo" class="text-xs font-semibold text-slate-500 bg-white px-4 py-1.5 rounded-lg border border-slate-200">1</span>
+                        <button id="sermonNextBtn" onclick="loadSermons(currentSermonPage + 1)"
+                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                disabled>
+                            다음
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
+
             </div>
 
-            <!-- Phase 진행 상황 -->
-            <div class="bg-white shadow-sm rounded-lg">
-                <div class="p-6 border-b">
-                    <h2 class="text-2xl font-light text-slate-900">Admin 영역 구축 로드맵</h2>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        <!-- Phase 1 -->
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
-                                ✓
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="font-medium text-slate-900 mb-1">Phase 1: 기반 구축 (완료)</h3>
-                                <ul class="text-sm text-slate-600 space-y-1">
-                                    <li>• 패키지 구조 생성</li>
-                                    <li>• Security 설정 강화 (/api/admin/** 권한 체크)</li>
-                                    <li>• 관리자 전용 API Controller 생성</li>
-                                    <li>• 공개 API 정리 (조회만)</li>
-                                    <li>• AdminViewController 및 더미 대시보드</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Phase 2 -->
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
-                                ✓
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="font-medium text-slate-900 mb-1">Phase 2: 콘텐츠 통합 조회 (완료)</h3>
-                                <ul class="text-sm text-slate-600 space-y-1">
-                                    <li>• count 메서드 추가 (Notice, Sermon)</li>
-                                    <li>• AdminContentQueryService 구현</li>
-                                    <li>• 대시보드 통합 관리 (최근 5개 표시)</li>
-                                    <li>• 삭제/고정 기능 연동</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Phase 3 -->
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
-                                ✓
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="font-medium text-slate-900 mb-1">Phase 3: 대시보드 완성 (완료)</h3>
-                                <ul class="text-sm text-slate-600 space-y-1">
-                                    <li>• 회원 통계 연동 (승인, 대기, 반려)</li>
-                                    <li>• 실제 콘텐츠 통계 표시</li>
-                                    <li>• 대시보드 데이터 완성</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Phase 4 -->
-                        <div class="flex items-start gap-4">
-                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center font-bold">
-                                ✓
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="font-medium text-slate-900 mb-1">Phase 4: 방문자 통계 (완료)</h3>
-                                <ul class="text-sm text-slate-600 space-y-1">
-                                    <li>• Redis 기반 실시간 카운팅</li>
-                                    <li>• VisitorStatistics Entity</li>
-                                    <li>• 배치 스케줄러 (DB flush)</li>
-                                    <li>• 대시보드 통계 연동</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- API 엔드포인트 안내 -->
-            <div class="mt-10 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 class="text-lg font-medium text-blue-900 mb-3">🔐 새로운 API 구조</h3>
-                <div class="space-y-3 text-sm text-blue-800">
-                    <div>
-                        <strong class="block mb-1">공개 API (조회만):</strong>
-                        <code class="bg-white px-2 py-1 rounded">GET /api/notices</code>,
-                        <code class="bg-white px-2 py-1 rounded">GET /api/sermons</code>
-                    </div>
-                    <div>
-                        <strong class="block mb-1">관리자 API (행동만, ADMIN 권한 필수):</strong>
-                        <code class="bg-white px-2 py-1 rounded">DELETE /api/admin/notices/{id}</code>,
-                        <code class="bg-white px-2 py-1 rounded">PATCH /api/admin/notices/{id}/pin</code>
-                    </div>
-                    <div>
-                        <strong class="block mb-1">관리자 View:</strong>
-                        <code class="bg-white px-2 py-1 rounded">/admin</code> (대시보드),
-                        <code class="bg-white px-2 py-1 rounded">/admin/notices</code> (Phase 2)
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 </main>
 
-<script layout:fragment="script" th:inline="javascript">
-    // 삭제 확인
-    function confirmDelete(type, id) {
-        const typeName = type === 'notice' ? '공지사항' : '설교';
-        if (!confirm(`이 ${typeName}을(를) 삭제하시겠습니까?`)) {
-            return;
-        }
-
-        const endpoint = type === 'notice'
-            ? `/api/admin/notices/${id}`
-            : `/api/admin/sermons/${id}`;
-
-        fetch(endpoint, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+<th:block layout:fragment="extra-scripts">
+    <script th:src="@{/js/admin/dashboard.js}"></script>
+    <script>
+        (function () {
+            const daysKo = ["일", "월", "화", "수", "목", "금", "토"];
+            function tick() {
+                const now = new Date();
+                const y   = now.getFullYear();
+                const m   = String(now.getMonth() + 1).padStart(2, "0");
+                const d   = String(now.getDate()).padStart(2, "0");
+                const day = daysKo[now.getDay()];
+                const h   = String(now.getHours()).padStart(2, "0");
+                const min = String(now.getMinutes()).padStart(2, "0");
+                const el  = document.getElementById("currentDateTime");
+                if (el) el.textContent = y + ". " + m + ". " + d + " (" + day + ") " + h + ":" + min;
             }
-        })
-        .then(response => {
-            if (response.ok) {
-                alert(`${typeName}이(가) 삭제되었습니다.`);
-                location.reload();
-            } else {
-                alert('삭제에 실패했습니다.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('삭제 중 오류가 발생했습니다.');
-        });
-    }
-
-    // 공지사항 고정 토글
-    function togglePin(type, id) {
-        if (type !== 'notice') return;
-
-        fetch(`/api/admin/notices/${id}/pin`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert('고정 설정 변경에 실패했습니다.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('고정 설정 변경 중 오류가 발생했습니다.');
-        });
-    }
-</script>
+            tick();
+            setInterval(tick, 60000);
+        })();
+    </script>
+</th:block>
 
 </body>
 </html>
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="ko"-->
+<!--      xmlns:th="http://www.thymeleaf.org"-->
+<!--      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"-->
+<!--      layout:decorate="~{layout/default}">-->
+<!--<head>-->
+<!--    <title>관리자 대시보드 - LOCC</title>-->
+<!--</head>-->
+
+<!--<body>-->
+
+<!--<main layout:fragment="content">-->
+<!--    <section class="py-32 px-6">-->
+<!--        <div class="max-w-7xl mx-auto">-->
+<!--            &lt;!&ndash; 헤더 &ndash;&gt;-->
+<!--            <div class="mb-10">-->
+<!--                <h1 class="text-4xl md:text-5xl font-light text-slate-900 mb-4">관리자 대시보드</h1>-->
+<!--                <p class="text-slate-600 font-light">그리스도 사랑교회 통합 관리 시스템</p>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 방문자 통계 &ndash;&gt;-->
+<!--            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">-->
+<!--                <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-6">-->
+<!--                    <div class="flex items-center justify-between mb-2">-->
+<!--                        <span class="text-blue-100 text-sm font-medium">오늘 방문자</span>-->
+<!--                        <svg class="w-6 h-6 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>-->
+<!--                        </svg>-->
+<!--                    </div>-->
+<!--                    <div class="text-4xl font-bold" th:text="${visitorStats.todayCount}">0</div>-->
+<!--                    <p class="text-blue-100 text-xs mt-2">실시간 집계</p>-->
+<!--                </div>-->
+
+<!--                <div class="bg-white border border-slate-200 rounded-lg p-6">-->
+<!--                    <div class="flex items-center justify-between mb-2">-->
+<!--                        <span class="text-slate-600 text-sm font-medium">주간 방문자</span>-->
+<!--                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>-->
+<!--                        </svg>-->
+<!--                    </div>-->
+<!--                    <div class="text-4xl font-bold text-slate-900" th:text="${visitorStats.weekCount}">0</div>-->
+<!--                    <p class="text-slate-500 text-xs mt-2">최근 7일</p>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 관리 메뉴 그리드 &ndash;&gt;-->
+<!--            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">-->
+<!--                &lt;!&ndash; 회원 관리 &ndash;&gt;-->
+<!--                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">-->
+<!--                    <div class="flex items-center justify-between mb-4">-->
+<!--                        <h3 class="text-lg font-medium text-slate-900">회원 관리</h3>-->
+<!--                        <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>-->
+<!--                        </svg>-->
+<!--                    </div>-->
+<!--                    <div class="mb-4">-->
+<!--                        <div class="text-3xl font-bold text-slate-900" th:text="${totalUsers}">0</div>-->
+<!--                        <div class="space-y-1 mt-2 text-xs text-slate-600">-->
+<!--                            <div class="flex justify-between">-->
+<!--                                <span>승인 완료</span>-->
+<!--                                <span class="font-medium text-green-600" th:text="${approvedUsers}">0</span>-->
+<!--                            </div>-->
+<!--                            <div class="flex justify-between">-->
+<!--                                <span>승인 대기</span>-->
+<!--                                <span class="font-medium text-orange-600" th:text="${pendingUsers}">0</span>-->
+<!--                            </div>-->
+<!--                            <div class="flex justify-between">-->
+<!--                                <span>반려</span>-->
+<!--                                <span class="font-medium text-red-600" th:text="${rejectedUsers}">0</span>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <a href="/admin/users"-->
+<!--                       class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">-->
+<!--                        전체 회원-->
+<!--                    </a>-->
+<!--                </div>-->
+
+<!--                &lt;!&ndash; 승인 대기 &ndash;&gt;-->
+<!--                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">-->
+<!--                    <div class="flex items-center justify-between mb-4">-->
+<!--                        <h3 class="text-lg font-medium text-slate-900">승인 대기</h3>-->
+<!--                        <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>-->
+<!--                        </svg>-->
+<!--                    </div>-->
+<!--                    <div class="mb-4">-->
+<!--                        <div class="text-3xl font-bold text-slate-900" th:text="${pendingUsers}">0</div>-->
+<!--                        <p class="text-sm text-slate-600 mt-2">가입 승인 요청</p>-->
+<!--                        <div th:if="${pendingUsers > 0}" class="mt-3">-->
+<!--                            <div class="px-3 py-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-700">-->
+<!--                                <span class="font-medium" th:text="${pendingUsers}">0</span>명의 회원이 승인을 기다리고 있습니다-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div th:if="${pendingUsers == 0}" class="mt-3">-->
+<!--                            <div class="px-3 py-2 bg-slate-50 border border-slate-200 rounded text-xs text-slate-600">-->
+<!--                                승인 대기 중인 회원이 없습니다-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <a href="/admin/users/pending"-->
+<!--                       th:classappend="${pendingUsers > 0} ? 'bg-amber-600 text-white hover:bg-amber-700' : 'border-2 border-slate-300 text-slate-700 hover:border-slate-900'"-->
+<!--                       class="block px-4 py-2 text-center rounded transition font-medium">-->
+<!--                        승인 요청 확인-->
+<!--                    </a>-->
+<!--                </div>-->
+
+<!--                &lt;!&ndash; 도움요청 &ndash;&gt;-->
+<!--                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">-->
+<!--                    <div class="flex items-center justify-between mb-4">-->
+<!--                        <h3 class="text-lg font-medium text-slate-900">도움요청</h3>-->
+<!--                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>-->
+<!--                        </svg>-->
+<!--                    </div>-->
+<!--                    <div class="mb-4">-->
+<!--                        <div class="text-3xl font-bold text-slate-900" th:text="${totalHelpRequests}">0</div>-->
+<!--                        <div class="space-y-1 mt-2 text-xs text-slate-600">-->
+<!--                            <div class="flex justify-between">-->
+<!--                                <span>미처리</span>-->
+<!--                                <span class="font-medium text-red-600" th:text="${pendingHelpRequests}">0</span>-->
+<!--                            </div>-->
+<!--                            <div class="flex justify-between">-->
+<!--                                <span>처리중</span>-->
+<!--                                <span class="font-medium text-blue-600" th:text="${inProgressHelpRequests}">0</span>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <a href="/admin/help-requests"-->
+<!--                       th:classappend="${pendingHelpRequests > 0} ? 'bg-blue-600 text-white hover:bg-blue-700' : 'border-2 border-slate-300 text-slate-700 hover:border-slate-900'"-->
+<!--                       class="block px-4 py-2 text-center rounded transition font-medium">-->
+<!--                        도움요청 확인-->
+<!--                    </a>-->
+<!--                </div>-->
+
+<!--                &lt;!&ndash; 팝업 관리 &ndash;&gt;-->
+<!--                <div class="bg-white border border-slate-200 rounded-lg p-6 hover:border-slate-900 transition">-->
+<!--                    <div class="flex items-center justify-between mb-4">-->
+<!--                        <h3 class="text-lg font-medium text-slate-900">팝업 관리</h3>-->
+<!--                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>-->
+<!--                        </svg>-->
+<!--                    </div>-->
+<!--                    <div class="mb-4">-->
+<!--                        <div class="text-3xl font-bold text-slate-900">팝업</div>-->
+<!--                        <p class="text-sm text-slate-600 mt-2">메인 페이지 공지/광고</p>-->
+<!--                        <div class="mt-3">-->
+<!--                            <div class="px-3 py-2 bg-purple-50 border border-purple-200 rounded text-xs text-purple-700">-->
+<!--                                중요한 공지나 이벤트를 팝업으로 노출하세요-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="space-y-2">-->
+<!--                        <a href="/admin/popups"-->
+<!--                           class="block px-4 py-2 text-center border-2 border-slate-300 text-slate-700 rounded hover:border-slate-900 transition font-medium">-->
+<!--                            팝업 목록-->
+<!--                        </a>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+<!--            &lt;!&ndash; 콘텐츠 관리 &ndash;&gt;-->
+<!--            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">-->
+<!--                &lt;!&ndash; 공지사항 &ndash;&gt;-->
+<!--                <div class="bg-white shadow-sm rounded-lg flex flex-col" style="height: 600px;">-->
+<!--                    <div class="p-6 border-b flex items-center justify-between flex-shrink-0">-->
+<!--                        <h2 class="text-xl font-light text-slate-900">공지사항</h2>-->
+<!--                        <a th:href="@{/church/notice}" class="text-sm text-blue-600 hover:text-blue-800">전체보기 →</a>-->
+<!--                    </div>-->
+<!--                    <div id="noticeList" class="divide-y overflow-y-auto flex-1">-->
+<!--                        &lt;!&ndash; 초기 로딩 &ndash;&gt;-->
+<!--                        <div class="p-8 text-center text-slate-500">-->
+<!--                            로딩 중...-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="p-4 border-t flex justify-center gap-2 flex-shrink-0">-->
+<!--                        <button id="noticePrevBtn" onclick="loadNotices(currentNoticePage - 1)"-->
+<!--                                class="px-4 py-2 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"-->
+<!--                                disabled>-->
+<!--                            이전-->
+<!--                        </button>-->
+<!--                        <span id="noticePageInfo" class="px-4 py-2 text-sm text-slate-600">1 / 1</span>-->
+<!--                        <button id="noticeNextBtn" onclick="loadNotices(currentNoticePage + 1)"-->
+<!--                                class="px-4 py-2 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"-->
+<!--                                disabled>-->
+<!--                            다음-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                </div>-->
+
+<!--                &lt;!&ndash; 설교 &ndash;&gt;-->
+<!--                <div class="bg-white shadow-sm rounded-lg flex flex-col" style="height: 600px;">-->
+<!--                    <div class="p-6 border-b flex items-center justify-between flex-shrink-0">-->
+<!--                        <h2 class="text-xl font-light text-slate-900">설교</h2>-->
+<!--                        <a th:href="@{/worship/sermon}" class="text-sm text-blue-600 hover:text-blue-800">전체보기 →</a>-->
+<!--                    </div>-->
+<!--                    <div id="sermonList" class="divide-y overflow-y-auto flex-1">-->
+<!--                        &lt;!&ndash; 초기 로딩 &ndash;&gt;-->
+<!--                        <div class="p-8 text-center text-slate-500">-->
+<!--                            로딩 중...-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="p-4 border-t flex justify-center gap-2 flex-shrink-0">-->
+<!--                        <button id="sermonPrevBtn" onclick="loadSermons(currentSermonPage - 1)"-->
+<!--                                class="px-4 py-2 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"-->
+<!--                                disabled>-->
+<!--                            이전-->
+<!--                        </button>-->
+<!--                        <span id="sermonPageInfo" class="px-4 py-2 text-sm text-slate-600">1 / 1</span>-->
+<!--                        <button id="sermonNextBtn" onclick="loadSermons(currentSermonPage + 1)"-->
+<!--                                class="px-4 py-2 border rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"-->
+<!--                                disabled>-->
+<!--                            다음-->
+<!--                        </button>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </section>-->
+<!--</main>-->
+
+<!--<th:block layout:fragment="extra-scripts">-->
+<!--    <script th:src="@{/js/admin/dashboard.js}"></script>-->
+<!--</th:block>-->
+
+<!--</body>-->
+<!--</html>-->

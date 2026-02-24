@@ -248,7 +248,7 @@ async function deleteSermon() {
             
             // 목록 페이지로 이동
             setTimeout(() => {
-                window.location.href = '/worship/sermon';
+                window.location.href = '/worship';
             }, 500);
         } else {
             const error = await response.json().catch(() => ({ message: '삭제에 실패했습니다.' }));

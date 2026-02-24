@@ -1,6 +1,8 @@
 package com.example.locc.controller;
 
 import com.example.locc.config.KakaoProperties;
+import com.example.locc.domain.newyear.entity.NewYear;
+import com.example.locc.domain.newyear.service.NewYearService;
 import com.example.locc.domain.notice.dto.response.NoticeResponse;
 import com.example.locc.domain.notice.service.NoticeQueryService;
 import com.example.locc.domain.sermon.dto.response.SermonResponse;
@@ -15,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -25,15 +28,24 @@ public class MainController {
     private final NoticeQueryService noticeQueryService;
     private final StaffQueryService staffQueryService;
     private final KakaoProperties kakaoProperties;
+    private final NewYearService newYearService;
      
 
     @GetMapping("/")
     public String home(Model model) {
         log.info("Accessing main page");
 
-        // 주일강단 최신 설교 1개
-        List<SermonResponse> sundaySermons = sermonQueryService.findLatestByCategory("주일강단", 1);
+        // 송구영신예배 최신 정보
+        NewYear newYearVideo = newYearService.getLatest();
+        model.addAttribute("newYearVideo", newYearVideo);
+        
+        // 주일오전 최신 설교 1개
+        List<SermonResponse> sundaySermons = sermonQueryService.findLatestByCategory("주일오전", 1);
         model.addAttribute("latestSermon", sundaySermons.isEmpty() ? null : sundaySermons.get(0));
+        
+        // 주일오전 최근 설교 5개 (썸네일용)
+        List<SermonResponse> recentSundaySermons = sermonQueryService.findLatestByCategory("주일오전", 5);
+        model.addAttribute("recentSundaySermons", recentSundaySermons);
 
         // 고정 공지사항 조회
         List<NoticeResponse> pinnedNotices = noticeQueryService.findPinned();
@@ -113,11 +125,6 @@ public class MainController {
                         && "협력목사".equals(staff.getCustomPosition()))
                 .toList();
         
-        // 선교사 (MISSIONARY)
-        List<StaffResponse> missionaries = allMinisterStaff.stream()
-                .filter(staff -> staff.getPosition() == Staff.StaffPosition.MISSIONARY)
-                .toList();
-        
         // 협력단체 (OTHER 중 협력목사가 아닌 것들)
         List<StaffResponse> others = allMinisterStaff.stream()
                 .filter(staff -> staff.getPosition() == Staff.StaffPosition.OTHER 
@@ -128,7 +135,6 @@ public class MainController {
         model.addAttribute("pastors", pastors);
         model.addAttribute("evangelists", evangelists);
         model.addAttribute("associatePastors", associatePastors);
-        model.addAttribute("missionaries", missionaries);
         model.addAttribute("others", others);
         
         return "church/staff/minister-section :: content";
@@ -146,6 +152,12 @@ public class MainController {
         return "church/staff/employee-section :: content";
     }
 
+    @GetMapping("/church/first-visit")
+    public String firstVisit() {
+        log.info("Accessing first visit section");
+        return "church/first-visit";
+    }
+
     @GetMapping("/church/contact")
     public String contact(Model model) {
         log.info("Accessing contact page");
@@ -153,44 +165,51 @@ public class MainController {
         return "church/contact";
     }
 
+    @GetMapping("/church/confession")
+    public String confession() {
+        log.info("Accessing Westminster Confession page");
+        return "church/confession";
+    }
+
+    @GetMapping("/church/mission")
+    public String mission() {
+        log.info("Accessing mission page");
+        return "church/mission";
+    }
+
     // ==================== 예배 ====================
 
     // 단축 경로 (호환성)
     @GetMapping("/sermon")
     public String sermonShort() {
-        return "redirect:/worship/sermon";
-    }
-
-    @GetMapping("/message")
-    public String messageShort() {
-        return "redirect:/worship/message";
+        return "redirect:/worship/sermon/sunday-morning/list";
     }
 
     // 실제 경로
     @GetMapping("/worship")
     public String worship() {
         log.info("Accessing worship page");
-        return "worship/message";
+        return "redirect:/worship/sermon/sunday-morning";
     }
 
-    @GetMapping("/worship/message")
-    public String message() {
-        log.info("Accessing message page");
-        return "worship/message";
-    }
 
-    @GetMapping("/worship/training")
-    public String training() {
-        log.info("Accessing training page");
-        return "worship/training";
+    @GetMapping("/worship/training-intro")
+    public String trainingIntro() {
+        log.info("Accessing training intro page");
+        return "worship/training-intro";
     }
 
     // ==================== 부서 ====================
 
-    @GetMapping("/ministry")
-    public String ministry() {
-        log.info("Accessing ministry page");
-        return "department/ministry";
+//    GetMapping("/department") # 추후에 부서 전체 소개페이지 작업
+//    public String department(){
+//    log.info("Accessing Department Page");
+//    return "department/about";
+//    }
+    @GetMapping("/department")
+    public String department() {
+        log.info("Accessing Department page");
+        return "department/department";
     }
 
     // ==================== 구원의 길 ====================

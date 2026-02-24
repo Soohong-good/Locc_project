@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>팝업 상세</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- 페이지 헤더 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>팝업 상세</h2>
+            <div class="btn-group">
+                <a th:href="@{/admin/popups}" class="btn btn-outline-secondary">
+                    <i class="bi bi-list"></i> 목록
+                </a>
+                <a th:href="@{/admin/popups/{id}/edit(id=${popup.id})}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> 수정
+                </a>
+                <button type="button" class="btn btn-outline-danger" th:onclick="|deletePopup(${popup.id})|">
+                    <i class="bi bi-trash"></i> 삭제
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 팝업 정보 -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" th:text="${popup.title}">팝업 제목</h5>
+                        <span class="badge"
+                              th:classappend="${popup.isActive} ? 'bg-success' : 'bg-secondary'"
+                              th:text="${popup.isActive} ? '활성화' : '비활성화'">
+                            활성화
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <!-- 이미지 -->
+                        <div th:if="${popup.imageUrl != null && !popup.imageUrl.isEmpty()}" class="mb-3">
+                            <img th:src="${popup.imageUrl}" alt="팝업 이미지" class="img-fluid rounded">
+                        </div>
+
+                        <!-- 내용 -->
+                        <div class="popup-content-detail" th:utext="${popup.content}">
+                            팝업 내용
+                        </div>
+
+                        <!-- 링크 -->
+                        <div th:if="${popup.linkUrl != null && !popup.linkUrl.isEmpty()}" class="mt-3">
+                            <a th:href="${popup.linkUrl}" target="_blank" class="btn btn-primary">
+                                자세히 보기 →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 설정 정보 -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">팝업 설정</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">노출 대상</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge"
+                                      th:classappend="${popup.targetType.name() == 'ALL'} ? 'bg-primary' : 
+                                                     (${popup.targetType.name() == 'MEMBER_ONLY'} ? 'bg-success' : 'bg-warning')"
+                                      th:text="${popup.targetTypeDescription}">
+                                    전체
+                                </span>
+                            </dd>
+
+                            <dt class="col-sm-5">우선순위</dt>
+                            <dd class="col-sm-7" th:text="${popup.priority}">0</dd>
+
+                            <dt class="col-sm-5">노출 시작</dt>
+                            <dd class="col-sm-7" th:text="${#temporals.format(popup.displayStartDate, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</dd>
+
+                            <dt class="col-sm-5">노출 종료</dt>
+                            <dd class="col-sm-7" th:text="${#temporals.format(popup.displayEndDate, 'yyyy-MM-dd HH:mm')}">2024-12-31 23:59</dd>
+
+                            <dt class="col-sm-5">팝업 크기</dt>
+                            <dd class="col-sm-7" th:text="${popup.popupWidth + ' × ' + popup.popupHeight + ' px'}">500 × 400 px</dd>
+
+                            <dt class="col-sm-5">팝업 위치</dt>
+                            <dd class="col-sm-7" th:text="${'X: ' + popup.positionX + ', Y: ' + popup.positionY}">X: 100, Y: 100</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- 작성 정보 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">작성 정보</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">작성자</dt>
+                            <dd class="col-sm-7" th:text="${popup.createdByName}">작성자</dd>
+
+                            <dt class="col-sm-5">작성일</dt>
+                            <dd class="col-sm-7" th:text="${#temporals.format(popup.createdAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</dd>
+
+                            <dt class="col-sm-5">수정자</dt>
+                            <dd class="col-sm-7" th:text="${popup.updatedByName}">수정자</dd>
+
+                            <dt class="col-sm-5">수정일</dt>
+                            <dd class="col-sm-7" th:text="${#temporals.format(popup.updatedAt, 'yyyy-MM-dd HH:mm')}">2024-01-01 00:00</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function deletePopup(popupId) {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            fetch(`/api/popups/${popupId}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (response.ok || response.status === 204) {
+                        alert('삭제되었습니다.');
+                        location.href = '/admin/popups';
+                    } else {
+                        throw new Error('삭제 실패');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('삭제 중 오류가 발생했습니다.');
+                });
+        }
+    </script>
+</div>
+</body>
+</html>

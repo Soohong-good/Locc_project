@@ -25,8 +25,8 @@ import java.util.Map;
 
 /**
  * Notice API Controller
- * - 공개 API: 조회만 담당
- * - 수정/삭제는 /api/admin/notices/** 사용
+ * - 공개 API: 조회
+ * - 관리자 API: 생성, 수정, 삭제, 고정 (ADMIN 권한 필요)
  */
 @Slf4j
 @RestController
@@ -72,5 +72,97 @@ public class NoticeApiController {
     public ResponseEntity<Void> increaseViews(@PathVariable Long id) {
         noticeCommandService.increaseViews(id);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 공지사항 생성 (관리자 전용)
+     */
+    @PostMapping
+    public ResponseEntity<NoticeDetailResponse> create(
+            @Valid @ModelAttribute NoticeRequest request,
+            Authentication authentication) {
+        
+        log.info("공지사항 생성: title={}, user={}", request.getTitle(), authentication.getName());
+        
+        NoticeCreateCommand command = NoticeCreateCommand.builder()
+                .title(request.getTitle())
+                .content(request.getContent())
+                .files(request.getFiles())
+                .createdByEmail(authentication.getName())
+                .build();
+        
+        NoticeDetailResponse response = noticeCommandService.create(command);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 공지사항 수정 (관리자 전용)
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<NoticeDetailResponse> update(
+            @PathVariable Long id,
+            @Valid @ModelAttribute NoticeRequest request,
+            Authentication authentication) {
+        
+        log.info("공지사항 수정: id={}, user={}", id, authentication.getName());
+        
+        NoticeUpdateCommand command = NoticeUpdateCommand.builder()
+                .noticeId(id)
+                .title(request.getTitle())
+                .content(request.getContent())
+                .files(request.getFiles())
+                .updatedByEmail(authentication.getName())
+                .build();
+        
+        NoticeDetailResponse response = noticeCommandService.update(command);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 이미지 업로드 (에디터용, 관리자 전용)
+     */
+    @PostMapping("/upload-image")
+    public ResponseEntity<Map<String, String>> uploadImage(
+            @RequestParam("image") MultipartFile image,
+            Authentication authentication) {
+        
+        log.debug("에디터 이미지 업로드: filename={}, size={}", 
+                image.getOriginalFilename(), image.getSize());
+        
+        String imageUrl = fileCommandService.uploadContentImage(
+                image,
+                File.EntityType.NOTICE,
+                authentication.getName()
+        );
+        
+        return ResponseEntity.ok(Map.of("url", imageUrl));
+    }
+
+    /**
+     * 고정 토글 (관리자 전용)
+     */
+    @PatchMapping("/{id}/pin")
+    public ResponseEntity<Void> togglePin(
+            @PathVariable Long id,
+            Authentication authentication) {
+        
+        log.info("공지사항 고정 토글: id={}, user={}", id, authentication.getName());
+        noticeCommandService.togglePin(id, authentication.getName());
+        
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 삭제 (관리자 전용)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            Authentication authentication) {
+        
+        log.info("공지사항 삭제: id={}, user={}", id, authentication.getName());
+        noticeCommandService.delete(id, authentication.getName());
+        
+        return ResponseEntity.noContent().build();
     }
 }

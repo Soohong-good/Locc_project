@@ -22,6 +22,7 @@ public class SermonResponse {
     private final String preacher;
     private final LocalDate sermonDate;
     private final String category;
+    private final Integer serviceNumber;  // 1부, 2부 구분
     private final String audioUrl;
     private final String videoUrl;
     private final String thumbnailUrl;
@@ -40,6 +41,7 @@ public class SermonResponse {
                 .preacher(sermon.getPreacher())
                 .sermonDate(sermon.getSermonDate())
                 .category(sermon.getCategory())
+                .serviceNumber(sermon.getServiceNumber())
                 .audioUrl(sermon.getAudioUrl())
                 .videoUrl(sermon.getVideoUrl())
                 .thumbnailUrl(sermon.getThumbnailUrl())

@@ -53,6 +53,9 @@ public class GalleryImage {
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 
+    @Column(name = "group_id", length = 50)
+    private String groupId; // 같은 업로드에서 생성된 이미지들을 그룹화
+
     @Column(name = "view_count")
     private Integer viewCount = 0;
 
@@ -75,7 +78,8 @@ public class GalleryImage {
             String storedFilename,
             String thumbnailFilename,
             Long fileSize,
-            Integer displayOrder
+            Integer displayOrder,
+            String groupId     // 그룹 ID 추가
     ) {
         GalleryImage image = new GalleryImage();
         image.department = department;
@@ -87,6 +91,7 @@ public class GalleryImage {
         image.thumbnailFilename = thumbnailFilename;
         image.fileSize = fileSize;
         image.displayOrder = displayOrder != null ? displayOrder : 0;
+        image.groupId = groupId;
         image.viewCount = 0;
         return image;
     }

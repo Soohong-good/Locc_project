@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Sermon 생성/수정 요청 DTO
@@ -25,7 +27,7 @@ public class SermonRequest {
     @Size(max = 200, message = "제목은 200자를 초과할 수 없습니다")
     private String title;
 
-    @Size(max = 100, message = "본문은 100자를 초과할 수 없습니다")
+    @Size(max = 100, message = "성경 구절은 100자를 초과할 수 없습니다")
     private String scripture;
 
     @Size(max = 50, message = "설교자명은 50자를 초과할 수 없습니다")
@@ -43,4 +45,11 @@ public class SermonRequest {
 
     @Size(max = 50, message = "카테고리는 50자를 초과할 수 없습니다")
     private String category;
+
+    private Integer serviceNumber;  // 1부, 2부 구분 (주일오전/주일오후 등에서 사용)
+
+    /**
+     * 첨부파일 목록
+     */
+    private List<MultipartFile> files;
 }

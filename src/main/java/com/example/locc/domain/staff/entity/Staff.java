@@ -47,7 +47,7 @@ public class Staff extends BaseEntity {
     @Column(length = 50)
     private String customPosition;
 
-    @Column(length = 200)
+    @Column(length = 1000)
     private String responsibility;
 
     @Column(length = 500)
@@ -61,7 +61,6 @@ public class Staff extends BaseEntity {
     public enum StaffPosition {
         PASTOR,         // 목사
         EVANGELIST,     // 전도사
-        MISSIONARY,     // 선교사
         OTHER           // 기타
     }
 

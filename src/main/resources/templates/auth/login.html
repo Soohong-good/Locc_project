@@ -48,11 +48,47 @@
                 </form>
 
                 <!-- 추가 링크 -->
-                <div class="mt-6 text-center space-y-2">
+                <div class="mt-6 text-center space-y-3">
+                    <p class="text-sm text-slate-600">
+                        <a href="/auth/forgot-password" class="text-slate-900 font-medium hover:underline">비밀번호를 잊으셨나요?</a>
+                    </p>
                     <p class="text-sm text-slate-600">
                         계정이 없으신가요?
                         <a href="/auth/register" class="text-slate-900 font-medium hover:underline">회원가입</a>
                     </p>
+                </div>
+
+                <!-- 구분선 -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-slate-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-slate-500">또는</span>
+                    </div>
+                </div>
+
+                <!-- 소셜 로그인 버튼 -->
+                <div class="space-y-3">
+                    <!-- 카카오 로그인 -->
+                    <a href="/oauth2/authorization/kakao"
+                       class="flex items-center justify-center w-full py-3 px-4 border border-slate-300 hover:border-slate-400 transition font-medium"
+                       style="background-color: #FEE500; color: #000000;">
+                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 3C6.48 3 2 6.58 2 11c0 2.78 1.83 5.23 4.58 6.81-.2.73-.75 2.81-.86 3.26-.14.57.21.56.44.41.18-.13 2.96-2.02 3.43-2.34.47.07.95.11 1.44.11 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
+                        </svg>
+                        카카오 로그인 / 회원가입
+                    </a>
+
+                    <!-- 네이버 로그인 -->
+                    <a href="/oauth2/authorization/naver"
+                       class="flex items-center justify-center w-full py-3 px-4 border border-slate-300 hover:border-slate-400 transition font-medium"
+                       style="background-color: #03C75A; color: #FFFFFF;">
+                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
+                        </svg>
+                        네이버 로그인 / 회원가입
+                    </a>
                 </div>
             </div>
 
@@ -66,16 +102,29 @@
 </main>
 
 <th:block layout:fragment="extra-scripts">
-    <script>
+    <script th:inline="javascript">
+        // URL 파라미터에서 메시지 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const authError = urlParams.get('error');
+        const message = urlParams.get('message');
+        const returnUrl = urlParams.get('returnUrl');
+
+        // 인증 필요 메시지가 있으면 alert 표시
+        if (authError === 'auth_required' && message) {
+            alert(decodeURIComponent(message));
+            // URL에서 파라미터 제거
+            window.history.replaceState({}, document.title, '/auth/login');
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.classList.add('hidden');
-            
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
+
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -84,10 +133,10 @@
                     },
                     body: JSON.stringify({ email, password })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     // JWT 토큰 저장 (localStorage + 쿠키)
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('refreshToken', data.refreshToken);
@@ -95,9 +144,10 @@
                     // 쿠키에도 저장 (관리자 페이지 접근용)
                     document.cookie = `accessToken=${data.accessToken}; path=/; max-age=86400; SameSite=Lax`;
                     document.cookie = `refreshToken=${data.refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-                    
-                    // 홈으로 리다이렉트
-                    window.location.href = '/';
+
+                    // returnUrl이 있으면 해당 페이지로, 없으면 홈으로 리다이렉트
+                    const redirectUrl = /*[[${param.returnUrl}]]*/ null;
+                    window.location.href = redirectUrl ? decodeURIComponent(redirectUrl) : '/';
                 } else {
                     const error = await response.json();
                     let errorMessage = '';

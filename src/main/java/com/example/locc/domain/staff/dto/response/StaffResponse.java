@@ -68,7 +68,6 @@ public class StaffResponse {
         return switch (position) {
             case PASTOR -> "목사";
             case EVANGELIST -> "전도사";
-            case MISSIONARY -> "선교사";
             case OTHER -> "기타";
         };
     }

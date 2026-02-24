@@ -15,6 +15,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -44,14 +45,26 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean emailVerified = false;
+
     @NotBlank(message = "비밀번호는 필수입니다")
     @Column(nullable = false)
     private String password;
+
+    // 소셜 로그인 연결 (1:N 관계)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @NotBlank(message = "이름은 필수입니다")
     @Size(max = 50, message = "이름은 50자를 초과할 수 없습니다")
     @Column(nullable = false, length = 50)
     private String name;
+
+    @Column(unique = true, length = 50)
+    private String username;  // 로그인용 아이디 (소셜 로그인 시 필수)
 
     @Column(length = 10)
     private String gender;
@@ -95,6 +108,16 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false, name = "is_deleted")
     private Boolean deleted = false;
 
+    // 약관 동의
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean agreedToTerms = false;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean agreedToPrivacy = false;
+
+
     // ===== Enum 정의 =====
 
     public enum Role {
@@ -123,6 +146,7 @@ public class User extends BaseEntity implements UserDetails {
                 .email(command.getEmail())
                 .password(encodedPassword)
                 .name(command.getName())
+                .username(command.getEmail()) // 기본값으로 이메일 사용
                 .gender(command.getGender())
                 .phoneNumber(command.getPhoneNumber())
                 .address(command.getAddress())
@@ -132,7 +156,62 @@ public class User extends BaseEntity implements UserDetails {
                 .userType(command.getUserType())
                 .approvalStatus(ApprovalStatus.PENDING)
                 .enabled(false)  // 승인 대기 상태
+                .emailVerified(false)
+                .agreedToTerms(command.getAgreedToTerms())
+                .agreedToPrivacy(command.getAgreedToPrivacy())
                 .build();
+    }
+
+    /**
+     * OAuth2 소셜 로그인 임시 사용자 생성 (추가 정보 입력 필요)
+     * SocialAccount는 별도로 생성하여 연결
+     */
+    public static User createOAuthTemporaryUser(String email, String name) {
+        return User.builder()
+                .email(email)
+                .password("OAUTH2_NO_PASSWORD")  // 소셜 로그인은 비밀번호 불필요 (validation 통과용)
+                .name(name != null && !name.isBlank() ? name : "소셜로그인사용자")
+                .role(Role.USER)
+                .userType(UserType.REGISTERED)
+                .approvalStatus(ApprovalStatus.PENDING)  // 추가 정보 입력 필요
+                .enabled(false)
+                .emailVerified(true)  // 소셜 계정 이메일은 이미 인증됨
+                .build();
+    }
+
+    /**
+     * OAuth2 추가 정보로 회원가입 완료
+     */
+    public void completeOAuthRegistration(String name, String username, String phoneNumber, LocalDate birth, String gender,
+                                          String address, String registrationPath,
+                                          Boolean agreedToTerms, Boolean agreedToPrivacy) {
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+        this.username = username;
+        this.phoneNumber = phoneNumber;
+        this.birth = birth;
+        this.gender = gender;
+        this.address = address;
+        this.registrationPath = registrationPath;
+        this.agreedToTerms = agreedToTerms;
+        this.agreedToPrivacy = agreedToPrivacy;
+        this.approvalStatus = ApprovalStatus.PENDING;  // 관리자 승인 대기
+    }
+
+    /**
+     * 이메일 인증 완료
+     */
+    public void verifyEmail() {
+        this.emailVerified = true;
+    }
+
+    /**
+     * 소셜 로그인 사용자 여부
+     * SocialAccount가 연결되어 있으면 소셜 로그인 사용자
+     */
+    public boolean isOAuthUser() {
+        return socialAccounts != null && !socialAccounts.isEmpty();
     }
 
     // ===== 비즈니스 메서드 =====
@@ -197,6 +276,27 @@ public class User extends BaseEntity implements UserDetails {
     public void restore() {
         this.deleted = false;
         this.enabled = true;
+    }
+
+    /**
+     * 회원 차단 (비활성화)
+     */
+    public void disable() {
+        this.enabled = false;
+    }
+
+    /**
+     * 회원 차단 해제 (활성화)
+     */
+    public void enable() {
+        this.enabled = true;
+    }
+
+    /**
+     * 교인 구분 변경
+     */
+    public void changeUserType(UserType userType) {
+        this.userType = userType;
     }
 
     /**

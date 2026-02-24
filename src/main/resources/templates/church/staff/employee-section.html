@@ -22,73 +22,31 @@
             </div>
 
             <!-- 등록된 직원이 있을 때 -->
-            <div th:if="${!employees.isEmpty()}" class="minister-grid">
-                <div th:each="staff : ${employees}" class="minister-card">
-                    <div sec:authorize="hasRole('ADMIN')" class="absolute top-4 right-4 flex gap-2">
+            <div th:if="${!employees.isEmpty()}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div th:each="staff : ${employees}" class="relative bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <!-- 관리자 버튼 -->
+                    <div sec:authorize="hasRole('ADMIN')" class="absolute top-3 right-3 flex gap-2">
                         <button th:onclick="'StaffPage.openEditModal(' + ${staff.id} + ')'"
-                                class="btn-edit">
+                                class="text-xs px-2 py-1 text-slate-600 hover:text-slate-900 border border-slate-300 hover:border-slate-900 rounded transition">
                             수정
                         </button>
                         <button th:onclick="'StaffPage.deleteStaff(' + ${staff.id} + ')'"
-                                class="btn-delete">
+                                class="text-xs px-2 py-1 text-red-600 hover:text-red-700 border border-red-300 hover:border-red-600 rounded transition">
                             삭제
                         </button>
                     </div>
 
-                    <!-- 이미지 영역 -->
-                    <div class="relative w-32 md:w-40 mx-auto mb-4" style="aspect-ratio: 3/4;">
-                        <div class="w-full h-full rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center">
-                            <img th:if="${staff.imagePath}"
-                                 th:src="${staff.imagePath}"
-                                 th:alt="${staff.name}"
-                                 class="staff-image">
-                            <div th:unless="${staff.imagePath}" class="image-placeholder w-full h-full">
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                     fill="none"
-                                     viewBox="0 0 24 24"
-                                     stroke="currentColor"
-                                     class="w-12 h-12 text-slate-300">
-                                    <path stroke-linecap="round"
-                                          stroke-linejoin="round"
-                                          stroke-width="2"
-                                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                        </div>
+                    <!-- 직원 정보 -->
+                    <div class="space-y-2">
+                        <h3 class="text-lg font-semibold text-slate-900" th:text="${staff.name}">홍길동</h3>
+                        <p class="text-sm text-slate-500" th:text="${staff.englishName}">Gil-dong Hong</p>
 
-                        <!-- 이미지 변경 버튼 -->
-                        <div sec:authorize="hasRole('ADMIN')"
-                             class="absolute -bottom-2 right-0 flex gap-1">
-                            <label th:for="'upload-' + ${staff.id}"
-                                   class="btn-image-upload">
-                                변경
-                            </label>
-                            <input th:id="'upload-' + ${staff.id}"
-                                   type="file"
-                                   accept="image/*"
-                                   class="hidden"
-                                   th:onchange="'StaffPage.uploadImage(' + ${staff.id} + ', this)'">
-                            <button th:if="${staff.imagePath}"
-                                    th:onclick="'StaffPage.deleteImage(' + ${staff.id} + ')'"
-                                    class="btn-image-delete">
-                                삭제
-                            </button>
+                        <!-- 담당업무 -->
+                        <div th:if="${staff.responsibility != null && !staff.responsibility.isEmpty()}"
+                             class="pt-3 border-t border-slate-100">
+                            <p class="text-sm text-slate-600 leading-relaxed" th:text="${staff.responsibility}">담당업무</p>
                         </div>
                     </div>
-
-                    <!-- 텍스트 영역 -->
-                    <div class="text-center">
-                        <h3 class="text-xl font-medium text-slate-900 mb-2"
-                            th:text="${staff.name}"></h3>
-                        <p class="text-base text-slate-600 mb-4 font-light"
-                           th:text="${staff.englishName}"></p>
-                        <div th:if="${staff.responsibility}"
-                             class="border-t border-slate-200 pt-4">
-                            <p class="text-sm text-slate-600 leading-relaxed"
-                               th:text="${staff.responsibility}"></p>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 

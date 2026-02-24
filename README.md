@@ -18,8 +18,8 @@ locc/
 │   │   │   ├── LoccApplication.java              # 메인 애플리케이션 클래스
 │   │   │   ├── controller/                       # 컨트롤러 레이어
 │   │   │   │   ├── MainController.java           # 메인 페이지 컨트롤러
-│   │   │   │   ├── SermonController.java         # 설교 관련 컨트롤러
-│   │   │   │   └── NoticeController.java         # 공지사항 컨트롤러
+│   │   │   │   ├── SermonViewController.java     # 설교 뷰 컨트롤러
+│   │   │   │   └── NoticeViewController.java     # 공지사항 뷰 컨트롤러
 │   │   │   ├── service/                          # 서비스 레이어
 │   │   │   │   ├── SermonService.java            # 설교 비즈니스 로직
 │   │   │   │   └── NoticeService.java            # 공지사항 비즈니스 로직
@@ -55,8 +55,8 @@ locc/
 
 ### 1. Controller Layer
 - **MainController**: 메인 페이지, 교회 소개, 예배 안내, 부서 안내, 오시는 길 등 정적 페이지 처리
-- **SermonController**: 설교 목록 조회, 상세 조회, 최신 설교 조회
-- **NoticeController**: 공지사항 목록 조회, 상세 조회
+- **SermonViewController**: 설교 목록 조회, 상세 조회, 최신 설교 조회
+- **NoticeViewController**: 공지사항 목록 조회, 상세 조회
 
 ### 2. Service Layer
 - **SermonService**: 설교 관련 비즈니스 로직 처리 (조회, 변환)
@@ -143,6 +143,89 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 ```
+
+## 환경 설정
+
+### 1. 환경 변수 설정
+
+프로젝트는 민감한 정보를 환경 변수로 관리합니다. `.env.example` 파일을 복사하여 `.env` 파일을 생성하고 실제 값으로 변경하세요.
+
+```bash
+cp .env.example .env
+```
+
+### 2. 필수 환경 변수
+
+**데이터베이스:**
+```bash
+DB_URL=jdbc:mariadb://localhost:3306/locc
+DB_USERNAME=loccuser
+DB_PASSWORD=your-password
+```
+
+**JWT 설정:**
+```bash
+# ⚠️ 운영 환경에서는 반드시 강력한 키로 변경!
+JWT_SECRET=your-secret-key-minimum-256-bits
+```
+
+**이메일 (Gmail SMTP):**
+```bash
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+```
+
+**외부 API:**
+```bash
+KAKAO_MAP_API_KEY=your-kakao-map-api-key
+YOUTUBE_API_KEY=your-youtube-api-key
+```
+
+### 3. 환경별 프로파일
+
+**로컬 개발 환경:**
+```bash
+SPRING_PROFILES_ACTIVE=local
+JPA_DDL_AUTO=update
+THYMELEAF_CACHE=false
+ERROR_INCLUDE_STACKTRACE=always
+LOG_LEVEL_APP=DEBUG
+```
+
+**운영 환경:**
+```bash
+SPRING_PROFILES_ACTIVE=prod
+JPA_DDL_AUTO=validate
+THYMELEAF_CACHE=true
+ERROR_INCLUDE_STACKTRACE=never
+LOG_LEVEL_APP=INFO
+```
+
+### 4. 설정 파일 구조
+
+```
+resources/
+├── application.yml           # 공통 설정 (환경변수 기반)
+├── application-local.yml     # 로컬 개발 전용 설정
+└── application-prod.yml      # 운영 환경 전용 설정
+```
+
+**특징:**
+- 민감한 정보는 모두 환경변수로 관리
+- `application-local.yml`과 `application-prod.yml`은 Git에 추적되지 않음
+- 환경별 차이만 각 파일에 정의
+
+### 5. OAuth2 설정 (선택사항)
+
+소셜 로그인 기능 사용 시:
+
+**Kakao:**
+- https://developers.kakao.com 에서 앱 생성
+- REST API 키를 `KAKAO_CLIENT_ID`에 설정
+
+**Naver:**
+- https://developers.naver.com 에서 앱 생성
+- Client ID와 Secret을 설정
 
 ## 실행 방법
 

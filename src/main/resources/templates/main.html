@@ -5,79 +5,294 @@
       layout:decorate="~{layout/default}">
 <head>
     <title>그리스도 사랑교회</title>
+    <style>
+        /* 페이드인 업 애니메이션 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 1s ease-out forwards;
+        }
+    </style>
 </head>
 <body>
 
 <main layout:fragment="content">
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20">
+        <!-- 배경 이미지 -->
+        <div class="absolute inset-0 z-0" style="background-image: url('https://images.unsplash.com/photo-1517837016564-bfc3ffd67455?q=80&w=2012&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+            <!-- 패턴 오버레이 -->
+            <div class="absolute inset-0 opacity-5"
+                 style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+        </div>
 
-    <!-- Hero Section -->
-    <section class="min-h-screen flex items-center justify-center bg-white pt-24 px-6">
-        <div class="max-w-4xl w-full">
-            <div class="text-center mb-16">
-                <div class="inline-block mb-8">
-                    <p class="text-sm tracking-[0.3em] text-slate-400 uppercase mb-2">Isaiah 43:19</p>
+        <!-- 어두운 오버레이 -->
+        <div class="absolute inset-0 bg-black bg-opacity-70 z-10"></div>
+
+        <!-- 컨텐츠 -->
+        <div class="relative z-20 max-w-5xl w-full px-4 sm:px-6 py-12 sm:py-16 pb-20 sm:pb-24">
+            <div class="text-center text-white">
+                <!-- 연도 라벨 -->
+                <div class="inline-block px-4 py-2 border border-white border-opacity-30 rounded-full mb-8 sm:mb-10 backdrop-blur-sm bg-white bg-opacity-10 animate-fade-in-up">
+                    <p class="text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.3em] uppercase font-light">2026 Church Motto</p>
                 </div>
-                <h1 class="text-5xl md:text-6xl lg:text-6xl font-light text-slate-900 leading-[1.4] mb-20 tracking-tight">
-                    "보라 내가 새 일을 행하리니<br>
-                    이제 나타낼 것이라<br>
-                    너희가 그것을 알지 못하겠느냐<br>
-                    반드시 내가 광야에 길을<br>
-                    사막에 강을 내리니"
+
+                <!-- 메인 표어 -->
+                <h1 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light leading-tight mb-8 sm:mb-10 tracking-tight animate-fade-in-up px-2" style="animation-delay: 0.2s;">
+                    여호와의 거룩한 이름을
+                    <br class="sm:hidden">
+                    위함이라
                 </h1>
 
-                <div class="h-px w-12 bg-slate-300 mx-auto mb-16"></div>
-
-                <p class="text-xl md:text-2xl text-slate-600 leading-relaxed max-w-2xl mx-auto font-light">
-                    우리는 교회의 기능 중 예배를 가장 소중하게 여깁니다.<br>
-                    살아계신 하나님께 예배하며, 하나님의 말씀을 통해<br>
-                    체험하고 하나님을 닮기를 원합니다.
+                <!-- 성경 구절 -->
+                <p class="text-base sm:text-lg md:text-xl tracking-wide sm:tracking-wider mb-10 sm:mb-12 text-slate-200 animate-fade-in-up" style="animation-delay: 0.3s;">
+                    에스겔 36:22
                 </p>
-            </div>
 
-            <div class="flex justify-center mt-20 mb-12">
-                <a href="/salvation" class="group relative inline-flex items-center px-10 py-4 overflow-hidden text-slate-900 transition-all duration-300 ease-out border-2 border-slate-900 hover:text-white text-lg">
-                    <span class="absolute inset-0 bg-slate-900 transition-all duration-300 ease-out transform translate-y-full group-hover:translate-y-0"></span>
-                    <span class="relative font-medium tracking-wide">구원의 길</span>
-                </a>
+                <!-- 구분선 -->
+                <div class="w-12 sm:w-16 h-px bg-white bg-opacity-40 mx-auto mb-10 sm:mb-14 animate-fade-in-up" style="animation-delay: 0.4s;"></div>
+
+                <!-- 성경 본문 -->
+                <blockquote class="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl leading-relaxed font-light max-w-4xl mx-auto mb-12 sm:mb-16 animate-fade-in-up px-4" style="animation-delay: 0.5s;">
+                    "그러므로 너는 이스라엘 족속에게 이르기를
+                    <br class="hidden sm:block">
+                    주 여호와께서 이같이 말씀하시되
+                    <br class="hidden sm:block">
+                    이스라엘 족속아 내가 이렇게 행함은
+                    <br class="hidden sm:block">
+                    <span class="font-medium text-white">너희를 위함이 아니요</span>
+                    <br class="hidden sm:block">
+                    너희가 들어간 그 이방 중에서
+                    <br class="hidden sm:block">
+                    더럽힌 <span class="font-medium text-white">나의 거룩한 이름을 위함이라</span>"
+                </blockquote>
+
+                <!-- CTA 버튼 -->
+                <div class="animate-fade-in-up mb-0" style="animation-delay: 0.7s;">
+                    <a href="/salvation" class="group relative inline-flex items-center px-6 sm:px-10 py-3 sm:py-4 overflow-hidden text-white transition-all duration-300 ease-out border-2 border-white hover:text-slate-900 text-base sm:text-lg backdrop-blur-sm bg-white bg-opacity-10 hover:bg-opacity-100 rounded-sm">
+                        <span class="relative font-medium tracking-wide flex items-center">
+                            복음말씀
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                            </svg>
+                        </span>
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- About Section -->
-    <section id="about" class="py-32 bg-slate-50 px-6">
+    <section id="about" class="py-20 sm:py-24 md:py-32 bg-slate-50 px-6">
         <div class="max-w-4xl mx-auto">
-            <div class="mb-20">
+            <div class="mb-16 sm:mb-20">
                 <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">About Church</p>
-                <h2 class="text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
                     그리스도 사랑교회의 예배
                 </h2>
             </div>
 
-            <div class="space-y-20">
+            <div class="space-y-16">
                 <div>
                     <h3 class="text-2xl font-medium text-slate-900 mb-6">우리의 믿음</h3>
                     <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light">
-                        우리는 교회의 기능 중 예배를 가장 소중하게 여깁니다.
-                        이 시간을 통해서 살아계신 하나님께 예배하며, 기도하고,
-                        하나님의 말씀인 성경을 통해 선포되는 강해설교를 듣습니다.
+                        "하나님을 영화롭게 하며 그를 영원토록 즐거워하는 것"을<br>
+                        삶의 제일 되는 목적으로 삼은 성도들이 모여<br>
+                        영과 진리로 예배를 드립니다.
+                    </p>
+                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light mt-6">
+                        우리는 교회의 여러 사역 중 예배를 가장 소중히 여기며,<br>
+                        살아계신 삼위일체 하나님을 경배하고 기도하며,<br>
+                        선포되는 강해 설교를 통해 하나님의 말씀을 듣습니다.
                     </p>
                 </div>
 
-                <div>
-                    <h3 class="text-2xl font-medium text-slate-900 mb-6">우리의 추구</h3>
-                    <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light">
-                        우리는 이 시간을 통해 듣고 이해할 뿐 아니라,
-                        체험하고 하나님을 닮기를 원합니다.
-                        하나님과의 친밀한 교제와 성도들과의 진실한 사랑의 교제를 추구합니다.
-                    </p>
+                <!-- 성구 섹션 -->
+                <div class="space-y-12 pt-8">
+                    <!-- 이사야 43:7 -->
+                    <div class="border-l-4 border-slate-300 pl-8 py-2">
+                        <p class="text-sm text-slate-500 font-medium mb-3">이사야 43:7</p>
+                        <p class="text-lg md:text-xl text-slate-700 leading-relaxed font-light">
+                            내 이름으로 불려지는 모든 자 곧<br>
+                            내가 내 영광을 위하여 창조한 자를 오게 하라<br>
+                            그를 내가 지었고 그를 내가 만들었느니라
+                        </p>
+                    </div>
+
+                    <!-- 시편 16:11 -->
+                    <div class="border-l-4 border-slate-300 pl-8 py-2">
+                        <p class="text-sm text-slate-500 font-medium mb-3">시편 16:11</p>
+                        <p class="text-lg md:text-xl text-slate-700 leading-relaxed font-light">
+                            주께서 생명의 길을 내게 보이시리니<br>
+                            주의 앞에는 충만한 기쁨이 있고<br>
+                            주의 오른쪽에는 영원한 즐거움이 있나이다
+                        </p>
+                    </div>
+
+                    <!-- 요한복음 4:23 -->
+                    <div class="border-l-4 border-slate-300 pl-8 py-2">
+                        <p class="text-sm text-slate-500 font-medium mb-3">요한복음 4:23</p>
+                        <p class="text-lg md:text-xl text-slate-700 leading-relaxed font-light">
+                            아버지께 참되게 예배하는 자들은<br>
+                            영과 진리로 예배할 때가 오나니 곧 이 때라<br>
+                            아버지께서는 자기에게 이렇게 예배하는 자들을 찾으시느니라
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sermon Section -->
+    <section id="sermon" class="py-32 bg-slate-900 text-white px-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- 헤더 영역 -->
+            <div class="mb-8">
+                <p id="section-title" class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">New Year's Eve Service</p>
+                <h2 id="sermon-title" class="text-4xl md:text-5xl font-light tracking-tight mb-6">송구영신예배</h2>
+
+                <!-- 카테고리 버튼 -->
+                <div class="flex gap-3">
+                    <button onclick="switchCategory('newyear')"
+                            id="category-newyear"
+                            class="category-btn px-6 py-2.5 rounded-sm transition-all text-sm font-medium bg-white text-slate-900">
+                        송구영신예배
+                    </button>
+                    <button onclick="switchCategory('sermon')"
+                            id="category-sermon"
+                            class="category-btn px-6 py-2.5 rounded-sm transition-all text-sm font-medium bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">
+                        주일강단
+                    </button>
+                </div>
+            </div>
+
+            <!-- 영상 영역 (중앙 배치) -->
+            <div class="max-w-5xl mx-auto">
+                <!-- 송구영신예배 영상 -->
+                <div id="newyear-video" class="sermon-video" th:if="${newYearVideo != null and newYearVideo.latestVideoId != null}">
+                    <div class="relative cursor-pointer group overflow-hidden rounded-lg"
+                         th:data-video-id="${newYearVideo.latestVideoId}"
+                         onclick="openVideoModal(this.dataset.videoId)">
+
+                        <!-- YouTube 썸네일 -->
+                        <div class="aspect-video bg-black">
+                            <img th:src="'https://img.youtube.com/vi/' + ${newYearVideo.latestVideoId} + '/maxresdefault.jpg'"
+                                 alt="송구영신예배"
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        </div>
+
+                        <!-- 어두운 오버레이 -->
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300"></div>
+
+                        <!-- 재생 버튼 -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <div class="w-20 h-20 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-300 shadow-2xl">
+                                <svg class="w-10 h-10 text-slate-900 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <h3 class="text-2xl font-light text-white mb-2" th:text="${newYearVideo.latestVideoTitle}">송구영신예배</h3>
+                        <p class="text-slate-400">송구영신예배 · <span th:text="${newYearVideo.year}">2025</span></p>
+                    </div>
                 </div>
 
-                <div class="border-l-2 border-slate-900 pl-8 py-2">
-                    <p class="text-xl md:text-2xl text-slate-700 leading-relaxed font-light italic">
-                        하나님과의 친밀한 교제이며,<br class="hidden md:block">
-                        그분의 자녀들인 성도들과의 진실한 사랑의 교제입니다.
-                    </p>
+                <!-- 주일강단 영상 -->
+                <div id="sermon-video" class="sermon-video hidden" th:if="${latestSermon != null and latestSermon.videoUrl != null}">
+                    <div class="relative cursor-pointer group overflow-hidden rounded-lg"
+                         th:with="videoId=${#strings.contains(latestSermon.videoUrl, 'youtube.com') ?
+                                          (#strings.substringAfter(#strings.substringBefore(latestSermon.videoUrl + '&', '&'), 'v=')) :
+                                          (#strings.substringAfterLast(latestSermon.videoUrl, '/'))}"
+                         th:data-video-id="${videoId}"
+                         onclick="openVideoModal(this.dataset.videoId)">
+
+                        <!-- YouTube 썸네일 -->
+                        <div class="aspect-video bg-black">
+                            <img th:src="'https://img.youtube.com/vi/' + ${videoId} + '/maxresdefault.jpg'"
+                                 th:alt="${latestSermon.title}"
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        </div>
+
+                        <!-- 어두운 오버레이 -->
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300"></div>
+
+                        <!-- 재생 버튼 -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <div class="w-20 h-20 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-300 shadow-2xl">
+                                <svg class="w-10 h-10 text-slate-900 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <h3 class="text-2xl font-light text-white mb-2" th:text="${latestSermon.title}">설교 제목</h3>
+                        <p class="text-slate-400">
+                            주일강단 · <span th:text="${#temporals.format(latestSermon.sermonDate, 'yyyy.MM.dd')}"></span>
+                        </p>
+                    </div>
                 </div>
+
+                <!-- 주일강단 슬라이드 (주일강단 선택 시에만 표시) -->
+                <div id="sermon-thumbnails" class="mt-12 hidden">
+                    <h3 class="text-lg font-light text-slate-300 mb-6 text-center">최근 주일강단</h3>
+                    <div class="relative overflow-hidden">
+                        <!-- 슬라이드 컨테이너 -->
+                        <div id="thumbnail-slider" class="flex gap-4 transition-transform duration-300 ease-out">
+                            <div th:each="sermon : ${recentSundaySermons}"
+                                 th:if="${sermon != null and sermon.videoUrl != null}"
+                                 class="flex-shrink-0 w-64 cursor-pointer group"
+                                 th:with="videoId=${#strings.contains(sermon.videoUrl, 'youtube.com') ?
+                          (#strings.substringAfter(#strings.substringBefore(sermon.videoUrl + '&', '&'), 'v=')) :
+                          (#strings.substringAfterLast(sermon.videoUrl, '/'))}"
+                                 th:data-video-id="${videoId}"
+                                 onclick="openVideoModal(this.dataset.videoId)">
+
+                                <div class="relative overflow-hidden rounded">
+                                    <div class="aspect-video bg-black">
+                                        <img th:src="'https://img.youtube.com/vi/' + ${videoId} + '/mqdefault.jpg'"
+                                             th:alt="${sermon.title}"
+                                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    </div>
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
+                                        <svg class="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-300 mt-2 line-clamp-2" th:text="${sermon.title}">설교 제목</p>
+                                <p class="text-xs text-slate-500" th:text="${#temporals.format(sermon.sermonDate, 'yyyy.MM.dd')}">2025.01.05</p>
+                            </div>
+                        </div>
+
+                        <!-- 슬라이드 버튼 -->
+                        <button id="prev-btn" class="absolute left-0 top-1/3 -translate-y-1/2 -translate-x-4 w-10 h-10 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full flex items-center justify-center transition-all backdrop-blur-sm">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button id="next-btn" class="absolute right-0 top-1/3 -translate-y-1/2 translate-x-4 w-10 h-10 bg-white bg-opacity-10 hover:bg-opacity-20 rounded-full flex items-center justify-center transition-all backdrop-blur-sm">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 데이터 없을 때 -->
+            <div th:if="${newYearVideo == null and latestSermon == null}" class="py-16 text-center">
+                <p class="text-slate-400 font-light text-lg">최근 설교가 없습니다.</p>
             </div>
         </div>
     </section>
@@ -119,7 +334,7 @@
                                 <p class="text-lg font-medium text-slate-900 mb-1">주일 오후 예배</p>
                                 <p class="text-base text-slate-500 font-light">본당</p>
                             </div>
-                            <p class="text-3xl font-light text-slate-900 tabular-nums">14:00</p>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">15:00</p>
                         </div>
                     </div>
                 </div>
@@ -149,9 +364,9 @@
                         <div class="flex justify-between items-baseline">
                             <div>
                                 <p class="text-lg font-medium text-slate-900 mb-1">새벽기도</p>
-                                <p class="text-base text-slate-500 font-light">본당</p>
+                                <p class="text-base text-slate-500 font-light">101호실</p>
                             </div>
-                            <p class="text-3xl font-light text-slate-900 tabular-nums">05:00</p>
+                            <p class="text-3xl font-light text-slate-900 tabular-nums">05:30</p>
                         </div>
                     </div>
                 </div>
@@ -159,52 +374,9 @@
         </div>
     </section>
 
-    <!-- Sermon Section -->
-    <section id="sermon" class="py-32 bg-slate-900 text-white px-6">
-        <div class="max-w-6xl mx-auto">
-            <div class="mb-16">
-                <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">This Week's Message</p>
-                <h2 class="text-4xl md:text-5xl font-light tracking-tight">이번 주 설교</h2>
-            </div>
 
-            <div th:if="${latestSermon != null}">
-                <!-- 설교 썸네일만 표시 (클릭 시 영상 모달) -->
-                <div th:if="${latestSermon.videoUrl != null}"
-                     class="relative w-full max-w-4xl mx-auto cursor-pointer group overflow-hidden"
-                     th:with="videoId=${#strings.contains(latestSermon.videoUrl, 'youtube.com') ?
-                                      (#strings.substringAfter(#strings.substringBefore(latestSermon.videoUrl + '&', '&'), 'v=')) :
-                                      (#strings.substringAfterLast(latestSermon.videoUrl, '/'))}"
-                     th:data-video-id="${videoId}"
-                     onclick="openVideoModal(this.dataset.videoId)">
 
-                    <!-- YouTube 썸네일 -->
-                    <div class="aspect-video bg-black">
-                        <img th:src="'https://img.youtube.com/vi/' + ${videoId} + '/maxresdefault.jpg'"
-                             th:alt="${latestSermon.title}"
-                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                    </div>
-
-                    <!-- 어두운 오버레이 (호버 시만 표시) -->
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300"></div>
-
-                    <!-- 재생 버튼 (우하단 - 호버 시만 표시) -->
-                    <div class="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div class="w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center group-hover:bg-opacity-100 group-hover:scale-110 transition-all duration-300 shadow-lg">
-                            <svg class="w-5 h-5 text-slate-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div th:unless="${latestSermon != null}" class="py-16 text-center">
-                <p class="text-slate-400 font-light text-lg">최근 설교가 없습니다.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Notice Section -->
+<!--     Notice Section -->
     <section id="notice" class="py-32 bg-white px-6">
         <div class="max-w-4xl mx-auto">
             <div class="mb-16">
@@ -244,7 +416,7 @@
         </div>
     </section>
 
-    <!-- Ministry Section -->
+    <!-- Department Section -->
     <section id="ministry" class="py-32 bg-slate-50 px-6">
         <div class="max-w-4xl mx-auto text-center">
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-slate-900 leading-relaxed mb-12">
@@ -253,13 +425,13 @@
             </h2>
 
             <p class="text-lg md:text-xl text-slate-600 leading-relaxed font-light max-w-3xl mx-auto mb-12">
-                시광교회는 예배를 통하여, 그리고 예배가 지배하는 삶을 통해 하나님의 보상을 기대합니다.
+                그리스도 사랑교회는 예배를 통하여, 그리고 예배가 지배하는 삶을 통해 하나님의 보상을 기대합니다.
                 그 보상은 세상도 줄 수 있는 잠시의 위안이나 물질적인 복, 건강, 명예와 같은 보잘것없는 것이 아니라
                 오히려 그 보상은 궁극적인 모든 선의 근원이 되시는 하나님과의 친밀한 교제이며,
                 그분의 자녀들인 성도들과의 진실한 사랑의 교제입니다.
             </p>
 
-            <a href="/ministry" class="group relative inline-flex items-center px-10 py-4 overflow-hidden text-slate-900 transition-all duration-300 ease-out border border-slate-900 hover:text-white text-lg">
+            <a href="/department/nursery" class="group relative inline-flex items-center px-10 py-4 overflow-hidden text-slate-900 transition-all duration-300 ease-out border border-slate-900 hover:text-white text-lg">
                 <span class="absolute inset-0 bg-slate-900 transition-all duration-300 ease-out transform translate-y-full group-hover:translate-y-0"></span>
                 <span class="relative font-medium tracking-wide">부서 소개</span>
             </a>
@@ -355,6 +527,31 @@
     <!-- 카카오맵 초기화 모듈 -->
     <script th:src="@{/js/common/kakao-map.js}"></script>
 
+    <!-- 스크롤 애니메이션 -->
+    <script>
+        // Intersection Observer로 스크롤 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+            const observerOptions = {
+                threshold: 0.2,
+                rootMargin: '0px 0px -100px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.animation = 'fadeInUp 1s ease-out forwards';
+                    }
+                });
+            }, observerOptions);
+
+            // 애니메이션 대상 요소 관찰
+            document.querySelectorAll('.animate-fade-in-up').forEach(el => {
+                observer.observe(el);
+            });
+        });
+    </script>
+
     <!-- 영상 모달 스크립트 -->
     <script>
         function openVideoModal(videoId) {
@@ -392,6 +589,101 @@
         document.getElementById('videoModal')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeVideoModal();
+            }
+        });
+
+        // 카테고리 전환 기능
+        function switchCategory(category) {
+            const newyearVideo = document.getElementById('newyear-video');
+            const sermonVideo = document.getElementById('sermon-video');
+            const sermonThumbnails = document.getElementById('sermon-thumbnails');
+            const sermonTitle = document.getElementById('sermon-title');
+            const sectionTitle = document.getElementById('section-title');
+
+            // 모든 카테고리 버튼
+            const buttons = {
+                newyear: document.getElementById('category-newyear'),
+                sermon: document.getElementById('category-sermon'),
+                weekly: document.getElementById('category-weekly'),
+                wednesday: document.getElementById('category-wednesday')
+            };
+
+            // 모든 비디오 숨기기
+            if (newyearVideo) newyearVideo.classList.add('hidden');
+            if (sermonVideo) sermonVideo.classList.add('hidden');
+            if (sermonThumbnails) sermonThumbnails.classList.add('hidden');
+
+            // 모든 버튼 스타일 초기화
+            Object.values(buttons).forEach(btn => {
+                if (btn) {
+                    btn.classList.remove('bg-white', 'text-slate-900');
+                    btn.classList.add('bg-slate-800', 'text-slate-400');
+                }
+            });
+
+            // 선택된 카테고리 표시
+            if (category === 'newyear') {
+                if (newyearVideo) newyearVideo.classList.remove('hidden');
+                if (sectionTitle) sectionTitle.textContent ="New Year's Eve Service";
+                if (sermonTitle) sermonTitle.textContent = '송구영신예배';
+                if (buttons.newyear) {
+                    buttons.newyear.classList.remove('bg-slate-800', 'text-slate-400');
+                    buttons.newyear.classList.add('bg-white', 'text-slate-900');
+                }
+            } else if (category === 'sermon') {
+                if (sermonVideo) sermonVideo.classList.remove('hidden');
+                if (sermonThumbnails) sermonThumbnails.classList.remove('hidden');
+                if (sectionTitle) sectionTitle.textContent ="This Week's Message";
+                if (sermonTitle) sermonTitle.textContent = '이번 주 설교';
+                if (buttons.sermon) {
+                    buttons.sermon.classList.remove('bg-slate-800', 'text-slate-400');
+                    buttons.sermon.classList.add('bg-white', 'text-slate-900');
+                }
+            }
+        }
+
+        // OAuth2 소셜 로그인 후 토큰 처리
+        const urlParams = new URLSearchParams(window.location.search);
+        const accessToken = urlParams.get('accessToken');
+        const refreshToken = urlParams.get('refreshToken');
+
+        if (accessToken && refreshToken) {
+            // localStorage에 토큰 저장
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+
+            // 쿠키에도 저장 (관리자 페이지 접근용)
+            document.cookie = `accessToken=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+            document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+
+            // URL에서 토큰 제거 (보안)
+            window.history.replaceState({}, document.title, window.location.pathname);
+
+            console.log('OAuth2 로그인 완료');
+        }
+
+        // 슬라이드 기능
+        document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.getElementById('thumbnail-slider');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (slider && prevBtn && nextBtn) {
+                let scrollPosition = 0;
+                const scrollAmount = 280; // 썸네일 너비 + gap
+
+                prevBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    scrollPosition = Math.max(0, scrollPosition - scrollAmount);
+                    slider.style.transform = `translateX(-${scrollPosition}px)`;
+                });
+
+                nextBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const maxScroll = slider.scrollWidth - slider.parentElement.clientWidth;
+                    scrollPosition = Math.min(maxScroll, scrollPosition + scrollAmount);
+                    slider.style.transform = `translateX(-${scrollPosition}px)`;
+                });
             }
         });
     </script>

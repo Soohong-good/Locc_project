@@ -171,10 +171,18 @@ async function confirmBlockAction() {
         : `/api/admin/users/${currentUserId}/enable`;
 
     try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            window.location.href = '/login';
+            return;
+        }
+
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
         });
 
@@ -182,6 +190,9 @@ async function confirmBlockAction() {
             const action = currentUserEnabled ? '차단' : '차단 해제';
             alert(`회원이 ${action}되었습니다.`);
             window.location.reload();
+        } else if (response.status === 401 || response.status === 403) {
+            alert('권한이 없습니다.');
+            window.location.href = '/login';
         } else {
             const error = await response.json();
             alert(error.message || '처리에 실패했습니다.');

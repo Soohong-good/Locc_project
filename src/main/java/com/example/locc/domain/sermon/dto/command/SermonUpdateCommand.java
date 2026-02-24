@@ -25,6 +25,7 @@ public class SermonUpdateCommand {
     private final String thumbnailUrl;
     private final LocalDate sermonDate;
     private final String category;
+    private final Integer serviceNumber;  // 1부, 2부 구분
     private final String updatedByEmail;
     private final List<MultipartFile> files;
 }

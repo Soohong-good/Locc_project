@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title th:text="${popup != null} ? '팝업 수정' : '팝업 등록'">팝업 관리</title>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- 페이지 헤더 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 th:text="${popup != null} ? '팝업 수정' : '팝업 등록'">팝업 관리</h2>
+            <a th:href="@{/admin/popups}" class="btn btn-outline-secondary">
+                <i class="bi bi-list"></i> 목록
+            </a>
+        </div>
+
+        <!-- 폼 -->
+        <div class="card">
+            <div class="card-body">
+                <form id="popupForm" th:action="${popup != null} ? @{/api/popups/{id}(id=${popup.id})} : @{/api/popups}"
+                      method="post">
+                    <!-- 수정 시 PUT -->
+                    <input type="hidden" name="_method" th:if="${popup != null}" value="put">
+
+                    <div class="row">
+                        <!-- 기본 정보 -->
+                        <div class="col-md-8">
+                            <!-- 제목 -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label">제목 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="title" name="title"
+                                       th:value="${popup?.title}" required maxlength="200">
+                            </div>
+
+                            <!-- 내용 -->
+                            <div class="mb-3">
+                                <label for="content" class="form-label">내용 <span class="text-danger">*</span></label>
+                                <div id="editor" style="height: 300px;"></div>
+                                <input type="hidden" id="content" name="content" th:value="${popup?.content}">
+                            </div>
+                        </div>
+
+                        <!-- 설정 -->
+                        <div class="col-md-4">
+                            <!-- 노출 기간 -->
+                            <div class="mb-3">
+                                <label for="displayStartDate" class="form-label">노출 시작일 <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="displayStartDate" name="displayStartDate"
+                                       th:value="${popup != null} ? ${#temporals.format(popup.displayStartDate, 'yyyy-MM-dd\'T\'HH:mm')} : ''"
+                                       required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="displayEndDate" class="form-label">노출 종료일 <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="displayEndDate" name="displayEndDate"
+                                       th:value="${popup != null} ? ${#temporals.format(popup.displayEndDate, 'yyyy-MM-dd\'T\'HH:mm')} : ''"
+                                       required>
+                            </div>
+
+                            <!-- 노출 대상 -->
+                            <div class="mb-3">
+                                <label for="targetType" class="form-label">노출 대상 <span class="text-danger">*</span></label>
+                                <select class="form-select" id="targetType" name="targetType" required>
+                                    <option th:each="type : ${targetTypes}"
+                                            th:value="${type.name()}"
+                                            th:text="${type.description}"
+                                            th:selected="${popup?.targetType?.name() == type.name()}">
+                                        전체
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- 우선순위 -->
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">우선순위</label>
+                                <input type="number" class="form-control" id="priority" name="priority"
+                                       th:value="${popup?.priority} ?: 0" min="0">
+                                <small class="text-muted">숫자가 클수록 먼저 표시됩니다</small>
+                            </div>
+
+                            <!-- 팝업 크기 -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label for="popupWidth" class="form-label">너비(px)</label>
+                                    <input type="number" class="form-control" id="popupWidth" name="popupWidth"
+                                           th:value="${popup?.popupWidth} ?: 500" min="300" max="1200">
+                                </div>
+                                <div class="col-6">
+                                    <label for="popupHeight" class="form-label">높이(px)</label>
+                                    <input type="number" class="form-control" id="popupHeight" name="popupHeight"
+                                           th:value="${popup?.popupHeight} ?: 400" min="200" max="800">
+                                </div>
+                            </div>
+
+                            <!-- 팝업 위치 -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label for="positionX" class="form-label">X 좌표</label>
+                                    <input type="number" class="form-control" id="positionX" name="positionX"
+                                           th:value="${popup?.positionX} ?: 100" min="0">
+                                </div>
+                                <div class="col-6">
+                                    <label for="positionY" class="form-label">Y 좌표</label>
+                                    <input type="number" class="form-control" id="positionY" name="positionY"
+                                           th:value="${popup?.positionY} ?: 100" min="0">
+                                </div>
+                            </div>
+
+                            <!-- 이미지 URL -->
+                            <div class="mb-3">
+                                <label for="imageUrl" class="form-label">이미지 URL</label>
+                                <input type="url" class="form-control" id="imageUrl" name="imageUrl"
+                                       th:value="${popup?.imageUrl}" placeholder="https://">
+                            </div>
+
+                            <!-- 링크 URL -->
+                            <div class="mb-3">
+                                <label for="linkUrl" class="form-label">링크 URL</label>
+                                <input type="url" class="form-control" id="linkUrl" name="linkUrl"
+                                       th:value="${popup?.linkUrl}" placeholder="https://">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 버튼 -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a th:href="@{/admin/popups}" class="btn btn-secondary">취소</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i>
+                            <span th:text="${popup != null} ? '수정' : '등록'">등록</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script th:inline="javascript">
+        // Quill 에디터 초기화
+        const quill = new Quill('#editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'align': [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        // 기존 내용이 있으면 설정
+        const existingContent = /*[[${popup?.content}]]*/ '';
+        if (existingContent) {
+            quill.root.innerHTML = existingContent;
+        }
+
+        // 폼 제출
+        document.getElementById('popupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Quill 내용을 hidden input에 저장
+            document.getElementById('content').value = quill.root.innerHTML;
+
+            const formData = new FormData(this);
+            const method = formData.get('_method') || 'POST';
+            formData.delete('_method');
+
+            fetch(this.action, {
+                method: method,
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('저장되었습니다.');
+                        location.href = '/admin/popups';
+                    } else {
+                        throw new Error('저장 실패');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('저장 중 오류가 발생했습니다.');
+                });
+        });
+    </script>
+</div>
+</body>
+</html>

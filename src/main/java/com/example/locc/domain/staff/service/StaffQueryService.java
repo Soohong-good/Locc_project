@@ -3,7 +3,7 @@ package com.example.locc.domain.staff.service;
 import com.example.locc.domain.staff.dto.response.StaffResponse;
 import com.example.locc.domain.staff.entity.Staff;
 import com.example.locc.domain.staff.repository.StaffRepository;
-import com.example.locc.exception.StaffNotFoundException;
+import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -95,7 +95,7 @@ public class StaffQueryService {
         log.debug("Finding staff: {}", id);
         
         Staff staff = staffRepository.findById(id)
-                .orElseThrow(() -> new StaffNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("교역자/직원을 찾을 수 없습니다. ID: " + id));
         
         return StaffResponse.from(staff);
     }
@@ -105,6 +105,6 @@ public class StaffQueryService {
      */
     Staff findEntityById(Long id) {
         return staffRepository.findById(id)
-                .orElseThrow(() -> new StaffNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("교역자/직원을 찾을 수 없습니다. ID: " + id));
     }
 }

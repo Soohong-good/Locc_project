@@ -60,24 +60,15 @@ public class GalleryImageApiController {
     }
 
     /**
-     * 갤러리 이미지 목록 조회 (무한 스크롤)
-     * GET /api/departments/{departmentCode}/gallery?page=0&size=12&groupName=2024여름수련회
+     * 갤러리 이미지 목록 조회 (게시판 형태)
+     * GET /api/departments/{departmentCode}/gallery?page=0
      */
     @GetMapping
-    public ResponseEntity<Slice<GalleryImageResponse>> getImageList(
+    public ResponseEntity<Page<GalleryImageResponse>> getImageListForBoard(
             @PathVariable String departmentCode,
-            @RequestParam(required = false) String groupName,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
+            @RequestParam(defaultValue = "0") int page
     ) {
-        GalleryImageSearchCondition condition = new GalleryImageSearchCondition(
-                departmentCode,
-                groupName,
-                page,
-                size
-        );
-
-        Slice<GalleryImageResponse> images = queryService.getImageList(condition);
+        Page<GalleryImageResponse> images = queryService.getImageListForBoard(departmentCode, page);
         return ResponseEntity.ok(images);
     }
 

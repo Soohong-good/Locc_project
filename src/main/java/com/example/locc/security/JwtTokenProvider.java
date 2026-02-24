@@ -1,9 +1,9 @@
 package com.example.locc.security;
 
+import com.example.locc.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -22,13 +22,22 @@ public class JwtTokenProvider {
     private final long jwtExpiration;
     private final long refreshExpiration;
 
-    public JwtTokenProvider(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration}") long jwtExpiration,
-            @Value("${jwt.refresh-expiration}") long refreshExpiration) {
-        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.jwtExpiration = jwtExpiration;
-        this.refreshExpiration = refreshExpiration;
+    public JwtTokenProvider(JwtProperties jwtProperties) {
+        this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
+        this.jwtExpiration = jwtProperties.getExpiration();
+        this.refreshExpiration = jwtProperties.getRefreshExpiration();
+    }
+
+    /**
+     * OAuth2 임시 토큰 생성 (추가 정보 입력용)
+     * 10분 유효, type=oauth_temp
+     */
+    public String generateOAuthTempToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "oauth_temp");
+        
+        long tempExpiration = 1000L * 60 * 10; // 10분
+        return createToken(claims, email, tempExpiration);
     }
 
     /**
@@ -77,6 +86,26 @@ public class JwtTokenProvider {
     }
 
     /**
+     * OAuth2 임시 토큰에서 이메일 추출 (type 검증 포함)
+     * OAuth2 추가 정보 입력 전용
+     */
+    public String getEmailFromOAuthTemp(String token) {
+        String raw = token == null ? "" : token.trim();
+        if (raw.startsWith("Bearer ")) {
+            raw = raw.substring(7);
+        }
+
+        Claims claims = extractAllClaims(raw);
+
+        String type = (String) claims.get("type");
+        if (!"oauth_temp".equals(type)) {
+            throw new IllegalStateException("OAuth2 임시 토큰이 아닙니다.");
+        }
+
+        return claims.getSubject(); // email
+    }
+
+    /**
      * 토큰에서 만료일 추출
      */
     public Date extractExpiration(String token) {
@@ -121,16 +150,4 @@ public class JwtTokenProvider {
         }
     }
 
-    /**
-     * 토큰 유효성 검증
-     */
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        try {
-            final String username = extractUsername(token);
-            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-        } catch (JwtException | IllegalArgumentException e) {
-            log.error("Token validation failed: {}", e.getMessage());
-            return false;
-        }
-    }
 }

@@ -1,5 +1,6 @@
 package com.example.locc.domain.user.service;
 
+import com.example.locc.config.JwtProperties;
 import com.example.locc.domain.user.dto.command.UserLoginCommand;
 import com.example.locc.domain.user.dto.command.UserRegisterCommand;
 import com.example.locc.domain.user.dto.response.UserAuthResponse;
@@ -13,7 +14,6 @@ import com.example.locc.exception.TokenRefreshException;
 import com.example.locc.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,12 +41,7 @@ public class UserCommandService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
-
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
-
-    @Value("${jwt.refresh-expiration}")
-    private long refreshExpiration;
+    private final JwtProperties jwtProperties;
 
     /**
      * 회원가입 (승인 대기 상태로)
@@ -58,12 +53,16 @@ public class UserCommandService {
         if (userRepository.existsByEmail(command.getEmail())) {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
+        
+        // 이메일 인증 여부는 프론트엔드에서 체크하므로 여기서는 생략
+        // (이메일 인증 완료된 상태로 가정)
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(command.getPassword());
 
         // 사용자 생성 (팩토리 메서드 사용)
         User user = User.register(command, encodedPassword);
+        user.verifyEmail(); // 이메일 인증 완료 처리
         userRepository.save(user);
 
         log.info("User registered successfully (pending approval): {}", user.getEmail());
@@ -106,7 +105,7 @@ public class UserCommandService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(jwtExpiration)
+                .expiresIn(jwtProperties.getExpiration())
                 .username(user.getName())
                 .role(user.getRole().name())
                 .message("로그인에 성공했습니다.")
@@ -156,7 +155,7 @@ public class UserCommandService {
                 .accessToken(newAccessToken)
                 .refreshToken(refreshTokenValue)  // 기존 RefreshToken 유지
                 .tokenType("Bearer")
-                .expiresIn(jwtExpiration)
+                .expiresIn(jwtProperties.getExpiration())
                 .username(user.getName())
                 .role(user.getRole().name())
                 .build();
@@ -221,6 +220,33 @@ public class UserCommandService {
         log.info("User restored: {}", user.getEmail());
     }
 
+    /**
+     * 회원 차단 (비활성화)
+     */
+    public void disable(UUID userId) {
+        log.info("Disabling user: {}", userId);
+
+        User user = userQueryService.findById(userId);
+        user.disable();
+
+        // RefreshToken 삭제 (재로그인 방지)
+        refreshTokenRepository.deleteByUser(user);
+
+        log.info("User disabled: {}", user.getEmail());
+    }
+
+    /**
+     * 회원 차단 해제 (활성화)
+     */
+    public void enable(UUID userId) {
+        log.info("Enabling user: {}", userId);
+
+        User user = userQueryService.findById(userId);
+        user.enable();
+
+        log.info("User enabled: {}", user.getEmail());
+    }
+
     // ===== Private Helper Methods =====
 
     /**
@@ -255,7 +281,7 @@ public class UserCommandService {
      */
     private void saveOrUpdateRefreshToken(User user, String token) {
         LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(refreshExpiration / 1000);
+                .plusSeconds(jwtProperties.getRefreshExpiration() / 1000);
 
         refreshTokenRepository.findByUser(user)
                 .ifPresentOrElse(

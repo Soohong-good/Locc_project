@@ -1,5 +1,7 @@
 package com.example.locc.domain.gallery.controller;
 
+import com.example.locc.domain.gallery.dto.response.GalleryImageDetailResponse;
+import com.example.locc.domain.gallery.dto.response.GalleryImageResponse;
 import com.example.locc.domain.gallery.service.GalleryImageQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,5 +40,27 @@ public class GalleryImageViewController {
         model.addAttribute("titles", titles);
 
         return "gallery/gallery";
+    }
+
+    /**
+     * 갤러리 이미지 상세 페이지
+     * GET /departments/{departmentCode}/gallery/{imageId}
+     */
+    @GetMapping("/{imageId}")
+    public String galleryDetail(
+            @PathVariable String departmentCode,
+            @PathVariable Long imageId,
+            Model model
+    ) {
+        GalleryImageDetailResponse image = queryService.getImageDetail(imageId);
+        
+        // 같은 그룹의 모든 이미지 조회 (한 업로드의 모든 이미지)
+        List<GalleryImageResponse> groupImages = queryService.getImagesByGroupId(image.groupId());
+
+        model.addAttribute("departmentCode", departmentCode);
+        model.addAttribute("image", image);
+        model.addAttribute("groupImages", groupImages);
+
+        return "department/gallery-detail";
     }
 }

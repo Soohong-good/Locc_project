@@ -1,17 +1,19 @@
 package com.example.locc.domain.file.service;
 
+import com.example.locc.config.FileProperties;
 import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.repository.FileRepository;
+import com.example.locc.domain.file.util.PdfThumbnailGenerator;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,9 +37,8 @@ public class FileCommandService {
     private final FileRepository fileRepository;
     private final FileQueryService fileQueryService;
     private final UserRepository userRepository;
-
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
+    private final PdfThumbnailGenerator pdfThumbnailGenerator;
+    private final FileProperties fileProperties;
 
     // 파일 검증 상수
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -304,10 +305,80 @@ public class FileCommandService {
      * 업로드 경로 생성
      */
     private Path createUploadPath(File.EntityType entityType) throws IOException {
-        Path uploadPath = Paths.get(uploadDir, entityType.name().toLowerCase());
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+        Path uploadPath = fileProperties.resolve(entityType.name().toLowerCase());
+
+        if (Files.exists(uploadPath) && !Files.isDirectory(uploadPath)) {
+            throw new IllegalStateException("업로드 경로가 디렉토리가 아닙니다: " + uploadPath);
         }
+
+        Files.createDirectories(uploadPath);
         return uploadPath;
+    }
+
+
+    /**
+     * PDF 업로드 및 썸네일 자동 생성
+     * 
+     * @param pdfFile PDF 파일
+     * @param entityType 엔티티 타입
+     * @param entityId 엔티티 ID
+     * @param user 업로드 사용자
+     * @return 썸네일 파일 다운로드 URL
+     */
+    public String uploadPdfWithThumbnail(
+            MultipartFile pdfFile,
+            File.EntityType entityType,
+            Long entityId,
+            User user
+    ) {
+        // PDF 파일 검증
+        if (pdfFile == null || pdfFile.isEmpty()) {
+            throw new IllegalArgumentException("PDF 파일이 비어있습니다.");
+        }
+
+        String contentType = pdfFile.getContentType();
+        if (!"application/pdf".equals(contentType)) {
+            throw new IllegalArgumentException("PDF 파일만 업로드 가능합니다.");
+        }
+
+        try {
+            // 1. PDF 파일 저장
+            File savedPdf = uploadFile(pdfFile, entityType, entityId, File.FileCategory.ATTACHMENT, user);
+
+            // 2. PDF 첫 페이지를 썸네일 이미지로 변환
+            InputStream thumbnailStream = pdfThumbnailGenerator.generateThumbnail(pdfFile.getInputStream());
+
+            // 3. 썸네일 이미지 저장
+            String thumbnailFilename = generateStoredFilename(pdfFile.getOriginalFilename()) + ".jpg";
+            Path uploadPath = createUploadPath(entityType);
+            Path thumbnailPath = uploadPath.resolve(thumbnailFilename);
+
+            Files.copy(thumbnailStream, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
+
+            // 4. 썸네일 메타데이터 저장
+            File thumbnailFile = File.create(
+                    pdfFile.getOriginalFilename() + "_thumbnail.jpg",
+                    thumbnailFilename,
+                    thumbnailPath.toString(),
+                    Files.size(thumbnailPath),
+                    "image/jpeg",
+                    entityType,
+                    entityId,
+                    File.FileCategory.THUMBNAIL,
+                    user
+            );
+
+            File savedThumbnail = fileRepository.save(thumbnailFile);
+
+            log.info("PDF 업로드 및 썸네일 생성 완료: PDF={}, 썸네일={}", 
+                    savedPdf.getId(), savedThumbnail.getId());
+
+            // 썸네일 다운로드 URL 반환
+            return "/api/files/download/" + savedThumbnail.getId();
+
+        } catch (IOException e) {
+            log.error("PDF 업로드 및 썸네일 생성 실패", e);
+            throw new RuntimeException("PDF 업로드에 실패했습니다: " + e.getMessage(), e);
+        }
     }
 }

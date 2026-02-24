@@ -12,6 +12,28 @@
 <body>
 
 <main layout:fragment="content">
+    <!-- 부서 없음 안내 메시지 -->
+    <div th:if="${notFound}" class="min-h-screen flex items-center justify-center px-6">
+        <div class="text-center max-w-md">
+            <div class="mb-8">
+                <svg class="w-24 h-24 mx-auto text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-light text-slate-900 mb-4">부서 준비 중</h1>
+            <p class="text-slate-600 mb-8">
+                요청하신 <strong th:text="${departmentCode}">부서</strong>는 현재 준비 중입니다.<br>
+                빠른 시일 내에 정보를 제공하도록 하겠습니다.
+            </p>
+            <a href="/" class="inline-block px-6 py-3 bg-slate-900 text-white hover:bg-slate-800 transition rounded">
+                홈으로 돌아가기
+            </a>
+        </div>
+    </div>
+
+    <!-- 부서 정보 있을 때만 표시 -->
+    <div th:unless="${notFound}">
     <!-- Hero Section -->
     <section class="pt-32 pb-16 bg-slate-900 text-white px-6">
         <div class="max-w-6xl mx-auto">
@@ -61,7 +83,7 @@
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-8 mb-16">
-                    <div class="text-center p-8" th:if="${department.feature1 != null}">
+                    <div class="text-center p-8" th:if="${department != null and department.feature1 != null}">
                         <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -74,7 +96,7 @@
                         </p>
                     </div>
 
-                    <div class="text-center p-8" th:if="${department.feature2 != null}">
+                    <div class="text-center p-8" th:if="${department != null and department.feature2 != null}">
                         <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -87,7 +109,7 @@
                         </p>
                     </div>
 
-                    <div class="text-center p-8" th:if="${department.feature3 != null}">
+                    <div class="text-center p-8" th:if="${department != null and department.feature3 != null}">
                         <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4">
                             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -236,36 +258,53 @@
                     </div>
                     <!-- 관리자 업로드 버튼 -->
                     <button
-                        id="galleryUploadBtn"
-                        class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors" sec:authorize="hasRole('ADMIN')">
+                        id="deptUploadBtn"
+                        class="px-6 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium" sec:authorize="hasRole('ADMIN')">
                         + 이미지 업로드
                     </button>
                 </div>
 
-                <!-- 갤러리 그리드 -->
-                <div id="deptGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <!-- JavaScript로 동적 로드 -->
+                <!-- 갤러리 목록 (테이블 형식) -->
+                <div id="deptGalleryContainer">
+                    <!-- 목록이 없을 때 -->
+                    <div id="deptEmptyGallery" class="hidden text-center py-20">
+                        <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <p class="text-slate-500 font-light">등록된 이미지가 없습니다.</p>
+                    </div>
+
+                    <!-- 테이블 헤더 -->
+                    <div id="deptGalleryHeader" class="hidden md:grid grid-cols-12 gap-4 py-4 px-4 border-b-2 border-slate-900 text-base font-medium text-slate-700">
+                        <div class="col-span-1 text-center">No</div>
+                        <div class="col-span-1 text-center">썸네일</div>
+                        <div class="col-span-4">제목</div>
+                        <div class="col-span-2 text-center">작성자</div>
+                        <div class="col-span-2 text-center">작성일</div>
+                        <div class="col-span-2 text-center">조회수</div>
+                    </div>
+
+                    <!-- 테이블 바디 -->
+                    <div id="deptGalleryList">
+                        <!-- JavaScript로 동적 로드 -->
+                    </div>
                 </div>
 
-                <!-- 갤러리가 비어있을 때 -->
-                <div id="deptEmptyGallery" class="bg-slate-50 border border-slate-200 p-12 text-center hidden">
-                    <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <p class="text-slate-600 mb-4">아직 등록된 이미지가 없습니다.</p>
-                    <p class="text-sm text-slate-500" sec:authorize="hasRole('ADMIN')">상단의 "이미지 업로드" 버튼을 눌러 첫 이미지를 등록해보세요.</p>
+                <!-- 페이지네이션 -->
+                <div id="deptGalleryPagination" class="flex justify-center mt-12">
+                    <!-- JavaScript로 동적 로드 -->
                 </div>
             </div>
         </section>
 
-        <!-- 라이트박스 모달 (인스타그램 스타일) -->
-        <div id="deptLightboxModal" class="fixed inset-0 bg-black z-50 hidden">
+        <!-- 라이트박스 모달 -->
+        <div id="deptLightbox" class="fixed inset-0 bg-black z-50 hidden">
             <div class="relative h-full flex flex-col">
                 <!-- 상단 바 -->
                 <div class="flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm">
                     <div class="flex items-center gap-3">
-                        <button id="closeLightbox" class="text-white hover:text-slate-300 text-2xl">
+                        <button id="lightboxClose" class="text-white hover:text-slate-300 text-2xl">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -314,69 +353,80 @@
 
         <!-- 업로드 모달 (관리자만) -->
         <div id="deptUploadModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" sec:authorize="hasRole('ADMIN')">
-            <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
-                <h2 class="text-2xl font-bold text-slate-900 mb-6">이미지 업로드</h2>
+            <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+                <h2 class="text-2xl font-bold text-slate-900 px-8 py-6 border-b border-slate-200">이미지 업로드</h2>
 
-                <form id="deptUploadForm" enctype="multipart/form-data">
-                    <div class="space-y-4">
-                        <!-- 제목 -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">제목 *</label>
-                            <input
-                                type="text"
-                                name="title"
-                                required
-                                placeholder="예: 2024 여름수련회"
-                                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <p class="text-xs text-slate-500 mt-1">같은 제목의 이미지들이 하나의 그룹으로 표시됩니다</p>
+                <!-- 스크롤 가능한 폼 영역 -->
+                <div class="overflow-y-auto flex-1 px-8 py-6">
+                    <form id="deptUploadForm" enctype="multipart/form-data">
+                        <div class="space-y-4">
+                            <!-- 제목 -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">제목 *</label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    required
+                                    placeholder="예: 2024 여름수련회"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-xs text-slate-500 mt-1">같은 제목의 이미지들이 하나의 그룹으로 표시됩니다</p>
+                            </div>
+
+                            <!-- 설명 -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">설명</label>
+                                <textarea
+                                    name="description"
+                                    rows="3"
+                                    placeholder="이미지에 대한 설명을 입력하세요"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                            </div>
+
+                            <!-- 이미지 파일 -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">이미지 파일 *</label>
+                                <input
+                                    type="file"
+                                    name="imageFiles"
+                                    accept="image/*"
+                                    multiple
+                                    required
+                                    onchange="previewImages(this)"
+                                    class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <p class="text-sm text-slate-500 mt-1">JPG, PNG, GIF, WEBP (최대 5MB, 여러 장 선택 가능)</p>
+                            </div>
+
+
+                            <!-- 이미지 미리보기 (스택 형태) -->
+                            <div id="imagePreview" class="hidden">
+                                <p class="text-sm font-medium text-slate-700 mb-3">선택한 이미지</p>
+                                <div class="relative w-full h-48">
+                                    <!-- JavaScript로 동적 생성 -->
+                                </div>
+                            </div>
                         </div>
+                    </form>
+                </div>
 
-                        <!-- 설명 -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">설명</label>
-                            <textarea
-                                name="description"
-                                rows="3"
-                                placeholder="이미지에 대한 설명을 입력하세요 (라이트박스에 표시됩니다)"
-                                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                        </div>
-
-                        <!-- 이미지 파일 -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">이미지 파일 *</label>
-                            <input
-                                type="file"
-                                name="imageFiles"
-                                accept="image/*"
-                                multiple
-                                required
-                                onchange="previewImages(this)"
-                                class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <p class="text-sm text-slate-500 mt-1">JPG, PNG, GIF, WEBP (최대 5MB, 여러 장 선택 가능)</p>
-                        </div>
-
-                        <!-- 이미지 미리보기 -->
-                        <div id="imagePreview" class="grid grid-cols-4 gap-2 hidden"></div>
-                    </div>
-
-                    <!-- 버튼 -->
-                    <div class="flex gap-4 mt-6">
-                        <button
-                            type="submit"
-                            class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                            업로드
-                        </button>
-                        <button
-                            type="button"
-                            id="deptCancelUpload"
-                            class="flex-1 px-6 py-3 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300 transition-colors">
-                            취소
-                        </button>
-                    </div>
-                </form>
+                <!-- 고정 버튼 영역 -->
+                <div class="flex gap-4 px-8 py-6 border-t border-slate-200 bg-slate-50">
+                    <button
+                        type="button"
+                        onclick="document.getElementById('deptUploadForm').dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}))"
+                        class="flex-1 px-6 py-3 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors">
+                        업로드
+                    </button>
+                    <button
+                        type="button"
+                        id="deptCancelUpload"
+                        class="flex-1 px-6 py-3 bg-slate-200 text-slate-700 rounded-lg font-medium hover:bg-slate-300 transition-colors">
+                        취소
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+    </div> <!-- notFound 조건부 닫는 태그 -->
 </main>
 
 <th:block layout:fragment="extra-scripts">
@@ -414,7 +464,7 @@
             showTab('about');
         });
     </script>
-    <script src="/js/gallery/department-gallery-v3.js?v=3"></script>
+    <script src="/js/gallery/department-gallery-board.js"></script>
 </th:block>
 
 </body>

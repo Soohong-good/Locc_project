@@ -2,20 +2,19 @@ package com.example.locc.config;
 
 import com.example.locc.domain.admin.interceptor.VisitorCounterInterceptor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.file.Path;
 
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
     private final VisitorCounterInterceptor visitorCounterInterceptor;
-    
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
+    private final FileProperties fileProperties;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -42,15 +41,22 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/js/");
 
         // ===== 업로드된 파일 (filesystem) =====
-        String uploadLocation = uploadDir.endsWith("/") ? "file:" + uploadDir + "/" : "file:" + uploadDir + "/";
-        
-        // Staff 이미지
+        // Path.toUri() 를 사용하면 Windows/Unix 모두 안전한 file:/// URI가 만들어짐
+        Path uploadRoot = fileProperties.getUploadRootPath();
+        String uploadRootUri = ensureTrailingSlash(uploadRoot.toUri().toString());
+
+        // Staff 이미지 (예: /images/staff/xxx.png -> <uploadRoot>/staff/xxx.png)
         registry.addResourceHandler("/images/staff/**")
-                .addResourceLocations(uploadLocation + "staff/")
+                .addResourceLocations(ensureTrailingSlash(uploadRoot.resolve("staff").toUri().toString()))
                 .setCachePeriod(3600);
 
-        // Notice 첨부파일 및 에디터 이미지
+        // 업로드 전체 접근 (예: /uploads/gallery/xxx.png -> <uploadRoot>/gallery/xxx.png)
+        // 즉, URL의 /uploads/** 는 uploadRoot 하위로 직접 매핑됨
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadLocation);
+                .addResourceLocations(uploadRootUri);
+    }
+
+    private String ensureTrailingSlash(String uri) {
+        return uri.endsWith("/") ? uri : uri + "/";
     }
 }

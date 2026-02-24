@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/default}">
+
+<head>
+    <title>성경학교 - 그리스도 사랑교회</title>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 bg-slate-900 text-white px-6">
+        <div class="max-w-6xl mx-auto">
+            <p class="text-xs tracking-[0.3em] text-slate-400 uppercase mb-3">Bible School</p>
+            <h1 class="text-4xl md:text-5xl font-light tracking-tight mb-4"
+                th:text="${bibleSchool != null ? bibleSchool.title : '성경학교'}">성경학교</h1>
+            <p class="text-lg text-slate-300 font-light"
+               th:text="${bibleSchool != null ? bibleSchool.description : '하나님의 말씀으로 배우고 자라나는 시간'}">
+                하나님의 말씀으로 배우고 자라나는 시간
+            </p>
+        </div>
+    </section>
+
+    <!-- 관리자 컨트롤 -->
+    <section sec:authorize="hasRole('ADMIN')" class="py-4 bg-slate-50 px-6 border-b border-slate-200">
+        <div class="max-w-6xl mx-auto flex justify-end gap-3">
+            <button onclick="updateLatestVideo()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm font-medium">
+                최신 영상 불러오기
+            </button>
+        </div>
+    </section>
+    <!-- 성경학교 소개 -->
+    <section class="py-16 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-sm tracking-[0.2em] text-slate-400 uppercase mb-4">About</h2>
+                <h3 class="text-3xl font-light text-slate-900 mb-8">성경학교란?</h3>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white p-8 rounded-lg shadow-sm">
+                    <div class="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-medium text-slate-900 mb-3">말씀 중심</h4>
+                    <p class="text-slate-600 leading-relaxed">
+                        성경의 핵심 진리를 체계적으로 배우고 삶에 적용하는 시간입니다.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg shadow-sm">
+                    <div class="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-medium text-slate-900 mb-3">공동체 훈련</h4>
+                    <p class="text-slate-600 leading-relaxed">
+                        함께 배우고 나누며 신앙의 공동체로 성장합니다.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg shadow-sm">
+                    <div class="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-medium text-slate-900 mb-3">실천적 적용</h4>
+                    <p class="text-slate-600 leading-relaxed">
+                        배운 말씀을 일상에서 실천하고 적용하는 방법을 익힙니다.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-lg shadow-sm">
+                    <div class="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                    <h4 class="text-xl font-medium text-slate-900 mb-3">세대별 맞춤</h4>
+                    <p class="text-slate-600 leading-relaxed">
+                        각 세대에 맞는 눈높이 교육으로 누구나 쉽게 이해할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <p class="text-lg text-slate-600 leading-relaxed">
+                    성경학교는 정기적으로 진행되는 말씀 훈련 프로그램입니다.<br>
+                    하나님의 말씀을 더 깊이 이해하고 싶으신 분들은 누구나 참여하실 수 있습니다.
+                </p>
+            </div>
+        </div>
+    </section>
+    <!-- YouTube 영상 Section -->
+    <section class="py-16 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-sm tracking-[0.2em] text-slate-400 uppercase mb-4">Latest Video</h2>
+                <h3 class="text-3xl font-light text-slate-900 mb-4">최신 영상</h3>
+                <p class="text-lg text-slate-600" th:if="${bibleSchool != null && bibleSchool.latestVideoTitle != null}"
+                   th:text="${bibleSchool.latestVideoTitle}">영상 제목</p>
+            </div>
+
+            <!-- YouTube 플레이어 -->
+            <div th:if="${bibleSchool != null && bibleSchool.latestVideoId != null}" class="relative pb-[56.25%] h-0 rounded-lg overflow-hidden shadow-lg mb-8">
+                <iframe th:src="'https://www.youtube.com/embed/' + ${bibleSchool.latestVideoId}"
+                        class="absolute top-0 left-0 w-full h-full"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+
+            <!-- 전체 재생목록 보기 버튼 -->
+            <div th:if="${bibleSchool != null && bibleSchool.youtubePlaylistId != null}" class="text-center">
+                <a th:href="'https://www.youtube.com/playlist?list=' + ${bibleSchool.youtubePlaylistId}"
+                   target="_blank"
+                   class="inline-flex items-center gap-2 px-8 py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-300 text-lg font-medium shadow-lg hover:shadow-xl">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                    </svg>
+                    전체 재생목록 보기 (YouTube)
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- 영상이 없을 때 -->
+            <div th:if="${bibleSchool == null || bibleSchool.latestVideoId == null}" class="text-center py-16 bg-slate-50 rounded-lg">
+                <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-slate-500">아직 등록된 영상이 없습니다</p>
+                <p sec:authorize="hasRole('ADMIN')" class="text-sm text-slate-400 mt-2">
+                    관리자 페이지에서 YouTube 재생목록을 설정하고 영상을 불러오세요
+                </p>
+            </div>
+        </div>
+    </section>
+
+
+</main>
+
+<th:block layout:fragment="extra-scripts">
+    <script>
+        // 최신 영상 업데이트 (관리자)
+        async function updateLatestVideo() {
+            if (!confirm('YouTube에서 최신 영상을 불러오시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/bibleschool/update-video', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.message || '영상 업데이트에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('영상 업데이트 중 오류가 발생했습니다.');
+            }
+        }
+    </script>
+</th:block>
+
+</body>
+</html>

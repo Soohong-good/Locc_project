@@ -11,18 +11,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NoticeNotFoundException.class)
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleNoticeNotFoundException(NoticeNotFoundException e, Model model) {
-        log.error("Notice not found: {}", e.getMessage());
-        model.addAttribute("errorMessage", e.getMessage());
-        return "error/404";
-    }
-
-    @ExceptionHandler(SermonNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleSermonNotFoundException(SermonNotFoundException e, Model model) {
-        log.error("Sermon not found: {}", e.getMessage());
+    public String handleNotFoundException(NotFoundException e, Model model) {
+        log.error("Resource not found: {}", e.getMessage());
         model.addAttribute("errorMessage", e.getMessage());
         return "error/404";
     }

@@ -66,8 +66,7 @@
                         </thead>
                         <tbody class="divide-y">
                         <tr th:each="user : ${users}"
-                            class="hover:bg-slate-50"
-                            th:classappend="${!user.enabled} ? 'opacity-50' : ''">
+                            class="hover:bg-slate-50">
                             <td class="px-6 py-4 text-sm text-slate-900">
                                 <span th:text="${user.name}"></span>
                                 <span th:if="${!user.enabled}" class="ml-2 text-xs text-red-600">(차단됨)</span>
@@ -200,6 +199,59 @@
 </main>
 
 <th:block layout:fragment="extra-scripts">
+    <!-- 테스트: 인라인 스크립트 -->
+    <script>
+        console.log('>>> JavaScript 로드됨');
+
+        function confirmBlock(button) {
+            console.log('>>> confirmBlock 호출됨');
+            const userId = button.getAttribute('data-user-id');
+            const enabled = button.getAttribute('data-user-enabled') === 'true';
+            const action = enabled ? 'disable' : 'enable';
+
+            if (!confirm(`회원을 ${enabled ? '차단' : '차단 해제'}하시겠습니까?`)) {
+                return;
+            }
+
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/login';
+                return;
+            }
+
+            console.log(`>>> API 호출: /api/admin/users/${userId}/${action}`);
+
+            fetch(`/api/admin/users/${userId}/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                console.log('>>> 응답:', response.status);
+                if (response.ok) {
+                    alert('처리되었습니다.');
+                    window.location.reload();
+                } else if (response.status === 401 || response.status === 403) {
+                    alert('권한이 없습니다.');
+                    window.location.href = '/login';
+                } else {
+                    alert('처리에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('>>> 에러:', error);
+                alert('처리 중 오류가 발생했습니다.');
+            });
+        }
+
+        function showUserDetail(button) {
+            alert('상세보기 기능은 나중에 구현');
+        }
+    </script>
+
     <!-- 모듈 JS 로드 -->
     <script th:src="@{/js/common/utils.js}"></script>
     <script th:src="@{/js/common/api.js}"></script>

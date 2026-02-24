@@ -7,7 +7,7 @@ import com.example.locc.domain.notice.dto.response.NoticeResponse;
 import com.example.locc.domain.notice.repository.NoticeRepository;
 import com.example.locc.domain.file.dto.FileDto;
 import com.example.locc.domain.file.entity.File;
-import com.example.locc.exception.NoticeNotFoundException;
+import com.example.locc.exception.NotFoundException;
 import com.example.locc.domain.file.service.FileQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +64,7 @@ public class NoticeQueryService {
         log.debug("Finding notice detail: {}", id);
         
         Notice notice = noticeRepository.findDetailById(id)
-                .orElseThrow(() -> new NoticeNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다. ID: " + id));
         
         // 파일 정보 조회
         List<FileDto> files = fileQueryService.getFilesByEntityWithUploader(
@@ -137,7 +137,7 @@ public class NoticeQueryService {
      */
     Notice findById(Long id) {
         return noticeRepository.findById(id)
-                .orElseThrow(() -> new NoticeNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다. ID: " + id));
     }
 
     /**
@@ -153,5 +153,29 @@ public class NoticeQueryService {
     public Long countRecent(int days) {
         java.time.LocalDateTime since = java.time.LocalDateTime.now().minusDays(days);
         return noticeRepository.countByCreatedAtAfter(since);
+    }
+
+    /**
+     * 관리자용 전체 공지사항 목록 조회 (고정/비고정 모두 포함)
+     * - 고정 우선, 최신순 정렬
+     */
+    public Page<NoticeResponse> findAllForAdmin(NoticeSearchCondition condition) {
+        log.debug("Finding all notices for admin with condition: {}", condition);
+        
+        Page<Notice> notices = noticeRepository.findAllForAdmin(condition.toPageable());
+        
+        // 공지사항 ID 목록 추출
+        List<Long> noticeIds = notices.getContent().stream()
+                .map(Notice::getId)
+                .collect(Collectors.toList());
+        
+        // 첨부파일 개수를 한 번에 조회 (N+1 방지)
+        java.util.Map<Long, Long> fileCountMap = fileQueryService.countByEntities(
+                File.EntityType.NOTICE, noticeIds);
+        
+        return notices.map(notice -> {
+            long fileCount = fileCountMap.getOrDefault(notice.getId(), 0L);
+            return NoticeResponse.from(notice, fileCount > 0);
+        });
     }
 }

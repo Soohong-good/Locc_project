@@ -20,9 +20,13 @@ public class UserResponse {
     private final String name;
     private final String gender;
     private final String phoneNumber;
+    private final String address;
+    private final LocalDate birth;  // 추가
+    private final String registrationPath;  // 추가
     private final User.Role role;
     private final User.UserType userType;
     private final User.ApprovalStatus approvalStatus;
+    private final String rejectionReason;  // 추가
     private final Boolean enabled;
     private final Boolean deleted;
     private final LocalDateTime createdAt;
@@ -37,9 +41,13 @@ public class UserResponse {
                 .name(user.getName())
                 .gender(user.getGender())
                 .phoneNumber(user.getPhoneNumber())
+                .address(user.getAddress())
+                .birth(user.getBirth())  // 추가
+                .registrationPath(user.getRegistrationPath())  // 추가
                 .role(user.getRole())
                 .userType(user.getUserType())
                 .approvalStatus(user.getApprovalStatus())
+                .rejectionReason(user.getRejectionReason())  // 추가
                 .enabled(user.getEnabled())
                 .deleted(user.getDeleted())
                 .createdAt(user.getCreatedAt())

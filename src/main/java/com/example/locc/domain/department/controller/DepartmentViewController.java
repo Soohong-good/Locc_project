@@ -36,8 +36,13 @@ public class DepartmentViewController {
             model.addAttribute("boards", boards.getContent());
         } catch (Exception e) {
             log.warn("Department data not found: {}", e.getMessage());
+            // 빈 부서 정보 표시 (Fallback)
+            model.addAttribute("department", null);
+            model.addAttribute("boards", java.util.Collections.emptyList());
+            model.addAttribute("notFound", true);
+            model.addAttribute("departmentCode", departmentCode);
         }
-        
+
         return "department/department";
     }
 

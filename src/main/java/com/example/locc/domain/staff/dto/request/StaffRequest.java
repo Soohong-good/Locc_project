@@ -41,7 +41,7 @@ public class StaffRequest {
     @Size(max = 50, message = "기타 직분명은 50자를 초과할 수 없습니다")
     private String customPosition;
 
-    @Size(max = 200, message = "담당 업무는 200자를 초과할 수 없습니다")
+    @Size(max = 1000, message = "담당 업무는 1000자를 초과할 수 없습니다")
     private String responsibility;
 
     private String imagePath;

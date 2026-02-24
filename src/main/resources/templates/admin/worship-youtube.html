@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>예배 YouTube 관리</title>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+    <section class="pt-32 pb-16 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-3xl font-light text-slate-900 mb-8">예배 YouTube 영상 관리</h1>
+
+            <!-- 송구영신예배 -->
+            <div class="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-medium text-slate-900">송구영신예배</h2>
+                        <p class="text-sm text-slate-600">New Year Service</p>
+                    </div>
+                    <span class="px-3 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">수동 업데이트</span>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- 현재 상태 -->
+                    <div class="bg-white p-4 rounded border border-slate-200">
+                        <div class="text-sm text-slate-600 mb-2">현재 영상</div>
+                        <div id="newyear-current" class="text-slate-900">
+                            로딩 중...
+                        </div>
+                    </div>
+
+                    <!-- 재생목록 ID 설정 -->
+                    <div class="flex gap-2">
+                        <input type="text"
+                               id="newyear-playlist-id"
+                               placeholder="YouTube 재생목록 ID 입력"
+                               class="flex-1 px-4 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="updateNewYearPlaylist()"
+                                class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition text-sm">
+                            재생목록 설정
+                        </button>
+                    </div>
+
+                    <!-- 업데이트 버튼 -->
+                    <button onclick="updateNewYearVideo()"
+                            class="w-full px-6 py-3 bg-slate-900 text-white rounded hover:bg-slate-700 transition">
+                        최신 영상 불러오기
+                    </button>
+                </div>
+            </div>
+
+            <!-- 성경학교 -->
+            <div class="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-lg">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-xl font-medium text-slate-900">성경학교</h2>
+                        <p class="text-sm text-slate-600">Bible School</p>
+                    </div>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">매일 오전 6시 자동</span>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- 현재 상태 -->
+                    <div class="bg-white p-4 rounded border border-slate-200">
+                        <div class="text-sm text-slate-600 mb-2">현재 영상</div>
+                        <div id="bibleschool-current" class="text-slate-900">
+                            로딩 중...
+                        </div>
+                    </div>
+
+                    <!-- 재생목록 ID 설정 -->
+                    <div class="flex gap-2">
+                        <input type="text"
+                               id="bibleschool-playlist-id"
+                               placeholder="YouTube 재생목록 ID 입력"
+                               class="flex-1 px-4 py-2 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="updateBibleSchoolPlaylist()"
+                                class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition text-sm">
+                            재생목록 설정
+                        </button>
+                    </div>
+
+                    <!-- 업데이트 버튼 -->
+                    <button onclick="updateBibleSchoolVideo()"
+                            class="w-full px-6 py-3 bg-slate-900 text-white rounded hover:bg-slate-700 transition">
+                        최신 영상 불러오기 (수동)
+                    </button>
+
+                    <p class="text-xs text-slate-500">
+                        ℹ️ 성경학교는 매일 오전 6시에 자동으로 최신 영상이 업데이트됩니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 안내 -->
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="font-medium text-blue-900 mb-2">YouTube 재생목록 ID 찾는 방법</h3>
+                <div class="space-y-4 text-sm text-blue-800">
+                    <div>
+                        <p class="font-medium mb-1">📋 재생목록 ID 찾는 방법</p>
+                        <ol class="list-decimal list-inside space-y-1 ml-2">
+                            <li>YouTube 재생목록 페이지로 이동</li>
+                            <li>URL에서 <code class="bg-blue-100 px-1 py-0.5 rounded">list=</code> 뒤의 문자열이 재생목록 ID입니다</li>
+                            <li>예: <code class="bg-blue-100 px-1 py-0.5 rounded">youtube.com/playlist?list=PLxxxxxxxxxxxxx</code></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 결과 메시지 -->
+            <div id="result-message" class="mt-8 p-4 rounded hidden"></div>
+        </div>
+    </section>
+</main>
+
+<th:block layout:fragment="extra-scripts">
+    <script>
+        // 페이지 로드 시 현재 상태 가져오기
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentStatus();
+        });
+
+        // 현재 상태 로드
+        async function loadCurrentStatus() {
+            // 송구영신예배 상태 (임시로 페이지에서 가져옴)
+            try {
+                const response = await fetch('/worship/newyear');
+                // 실제로는 API를 만들어야 하지만, 일단 간단히 처리
+                document.getElementById('newyear-current').textContent = '페이지에서 확인하세요';
+            } catch (error) {
+                document.getElementById('newyear-current').textContent = '상태 확인 불가';
+            }
+
+            // 성경학교 상태
+            try {
+                const response = await fetch('/worship/bibleschool');
+                document.getElementById('bibleschool-current').textContent = '페이지에서 확인하세요';
+            } catch (error) {
+                document.getElementById('bibleschool-current').textContent = '상태 확인 불가';
+            }
+        }
+
+        // 송구영신예배 재생목록 설정
+        async function updateNewYearPlaylist() {
+            const playlistId = document.getElementById('newyear-playlist-id').value.trim();
+
+            if (!playlistId) {
+                showMessage('재생목록 ID를 입력해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/newyear/playlist', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ playlistId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    document.getElementById('newyear-playlist-id').value = '';
+                } else {
+                    showMessage(data.message || '재생목록 설정 실패', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('재생목록 설정 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 송구영신예배 영상 업데이트
+        async function updateNewYearVideo() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '업데이트 중...';
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/newyear/update-video', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    loadCurrentStatus();
+                } else {
+                    showMessage(data.message || '영상 업데이트 실패', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('영상 업데이트 중 오류가 발생했습니다.', 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '최신 영상 불러오기';
+            }
+        }
+
+        // 성경학교 재생목록 설정
+        async function updateBibleSchoolPlaylist() {
+            const playlistId = document.getElementById('bibleschool-playlist-id').value.trim();
+
+            if (!playlistId) {
+                showMessage('재생목록 ID를 입력해주세요.', 'error');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/bibleschool/playlist', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ playlistId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    document.getElementById('bibleschool-playlist-id').value = '';
+                } else {
+                    showMessage(data.message || '재생목록 설정 실패', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('재생목록 설정 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 성경학교 영상 업데이트
+        async function updateBibleSchoolVideo() {
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '업데이트 중...';
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch('/api/bibleschool/update-video', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(data.message, 'success');
+                    loadCurrentStatus();
+                } else {
+                    showMessage(data.message || '영상 업데이트 실패', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('영상 업데이트 중 오류가 발생했습니다.', 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = '최신 영상 불러오기 (수동)';
+            }
+        }
+
+        // 메시지 표시
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('result-message');
+            messageDiv.className = `mt-8 p-4 rounded ${type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'}`;
+            messageDiv.textContent = message;
+            messageDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                messageDiv.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</th:block>
+
+</body>
+</html>

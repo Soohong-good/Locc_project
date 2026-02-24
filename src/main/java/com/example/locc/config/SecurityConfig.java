@@ -1,7 +1,9 @@
 package com.example.locc.config;
 
+import com.example.locc.security.CustomOAuth2UserService;
 import com.example.locc.security.JwtAuthenticationEntryPoint;
 import com.example.locc.security.JwtAuthenticationFilter;
+import com.example.locc.security.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +38,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final UserDetailsService userDetailsService;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,6 +50,11 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         // ========== 정적 리소스 ==========
                         .requestMatchers("/favicon.ico").permitAll()
@@ -60,6 +69,20 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         
                         // ========== 로그인 필수 ==========
+                        // 마이페이지
+                        .requestMatchers("/mypage/**").authenticated()
+                        .requestMatchers("/api/mypage/**").authenticated()
+                        
+                        // 훈련 신청 관련
+                        .requestMatchers("/training/application/my").authenticated()
+                        .requestMatchers("/training/application/apply/**").authenticated()
+                        .requestMatchers("/api/applications").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/applications/*").authenticated()
+                        
+                        // 주보 (로그인 필수)
+                        .requestMatchers("/church/bulletin/**").authenticated()
+                        .requestMatchers("/api/bulletin/**").authenticated()
+                        
                         // 파일 다운로드
                         .requestMatchers("/api/files/download/**").authenticated()
                         .requestMatchers("/download/**").authenticated()
@@ -70,6 +93,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasRole("ADMIN")
+
+                        // 주보 생성/수정/삭제
+                        .requestMatchers(HttpMethod.POST, "/api/bulletins/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/bulletins/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/bulletins/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/bulletins/**").hasRole("ADMIN")
 
                         // 설교 생성/수정/삭제
                         .requestMatchers(HttpMethod.POST, "/api/sermons/**").hasRole("ADMIN")
@@ -85,6 +114,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/departments/*/gallery/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/departments/*/gallery/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/departments/*/gallery/**").hasRole("ADMIN")
+
+                        // 송구영신예배 관리
+                        .requestMatchers("/api/newyear/**").hasRole("ADMIN")
+
+                        // 성경학교 관리
+                        .requestMatchers("/api/bibleschool/**").hasRole("ADMIN")
+
+                        // 훈련 관리
+                        .requestMatchers(HttpMethod.POST, "/api/trainings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/trainings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/trainings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/trainings/**").hasRole("ADMIN")
+
+                        // 훈련 신청 관리
+                        .requestMatchers(HttpMethod.POST, "/api/applications/*/confirm").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/applications/*/reset").hasRole("ADMIN")
 
                         // ========== 공개 영역 (조회만 허용, 비로그인 OK) ==========
                         .anyRequest().permitAll()

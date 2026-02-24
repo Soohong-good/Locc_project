@@ -13,13 +13,14 @@ public record GalleryImageDetailResponse(
         String departmentCode,
         String departmentName,
         String uploaderName,
-        String title,          // 제목 = 앨범 그룹화
+        String title,
         String description,
         String originalFilename,
         String storedFilename,
         String thumbnailFilename,
         Long fileSize,
         Integer displayOrder,
+        String groupId,        // groupId 추가
         Integer viewCount,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime createdAt,
@@ -39,6 +40,7 @@ public record GalleryImageDetailResponse(
                 image.getThumbnailFilename(),
                 image.getFileSize(),
                 image.getDisplayOrder(),
+                image.getGroupId(),
                 image.getViewCount(),
                 image.getCreatedAt(),
                 image.getUpdatedAt()

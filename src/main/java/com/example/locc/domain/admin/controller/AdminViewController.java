@@ -1,6 +1,8 @@
 package com.example.locc.domain.admin.controller;
 
 import com.example.locc.domain.admin.service.AdminContentQueryService;
+import com.example.locc.domain.admin.service.AdminStatisticsQueryService;
+import com.example.locc.domain.helprequest.service.HelpRequestQueryService;
 import com.example.locc.domain.notice.service.NoticeQueryService;
 import com.example.locc.domain.sermon.service.SermonQueryService;
 import com.example.locc.domain.user.service.UserQueryService;
@@ -32,28 +34,30 @@ public class AdminViewController {
     private final SermonQueryService sermonQueryService;
     private final AdminContentQueryService adminContentQueryService;
     private final AdminStatisticsQueryService adminStatisticsQueryService;
+    private final HelpRequestQueryService helpRequestQueryService;
 
     /**
      * 관리자 대시보드 (통합 관리)
      * Phase 2: 콘텐츠 통계 + 최근 목록
      * Phase 3: 회원 통계 추가
      * Phase 4: 방문자 통계 추가
+     * Phase 5: 도움요청 통계 추가
      */
     @GetMapping
     public String dashboard(Model model) {
         log.info("관리자 대시보드 접근");
 
-        model.addAttribute("message", "Admin 영역 구축 완료 (Phase 4)");
-        model.addAttribute("phase", "Phase 4: 방문자 통계");
+        model.addAttribute("message", "Admin 영역 구축 완료 (Phase 5)");
+        model.addAttribute("phase", "Phase 5: 도움요청 통계");
         model.addAttribute("nextPhase", "완료!");
         
         // Phase 2: 콘텐츠 요약 통계
         model.addAttribute("noticeSummary", adminContentQueryService.getNoticeSummary());
         model.addAttribute("sermonSummary", adminContentQueryService.getSermonSummary());
         
-        // Phase 2: 최근 공지사항/설교 목록 (각 5개)
-        model.addAttribute("recentNotices", noticeQueryService.findLatestUnpinned(5));
-        model.addAttribute("recentSermons", sermonQueryService.findLatest(5));
+        // Phase 2: 공지사항/설교 목록 (각 10개, 페이징)
+        model.addAttribute("recentNotices", noticeQueryService.findLatestUnpinned(10));
+        model.addAttribute("recentSermons", sermonQueryService.findLatest(10));
         
         // Phase 3: 회원 통계
         model.addAttribute("totalUsers", userQueryService.countAllUsers());
@@ -63,6 +67,11 @@ public class AdminViewController {
         
         // Phase 4: 방문자 통계
         model.addAttribute("visitorStats", adminStatisticsQueryService.getVisitorStatistics());
+        
+        // Phase 5: 도움요청 통계
+        model.addAttribute("totalHelpRequests", helpRequestQueryService.countAll());
+        model.addAttribute("pendingHelpRequests", helpRequestQueryService.countPending());
+        model.addAttribute("inProgressHelpRequests", helpRequestQueryService.countInProgress());
 
         return "admin/dashboard";
     }
@@ -99,12 +108,36 @@ public class AdminViewController {
     }
 
     /**
+     * 도움요청 관리 페이지
+     */
+    @GetMapping("/help-requests")
+    public String helpRequests(Model model) {
+        log.debug("도움요청 관리 페이지 진입");
+
+        // 통계 데이터
+        model.addAttribute("totalCount", helpRequestQueryService.countAll());
+        model.addAttribute("pendingCount", helpRequestQueryService.countPending());
+        model.addAttribute("inProgressCount", helpRequestQueryService.countInProgress());
+
+        return "admin/help-request/list";
+    }
+
+    /**
      * 부서 YouTube 관리 페이지
      */
     @GetMapping("/department/youtube")
     public String departmentYouTube() {
         log.debug("부서 YouTube 관리 페이지 진입");
         return "admin/department-youtube";
+    }
+
+    /**
+     * 예배 YouTube 관리 페이지
+     */
+    @GetMapping("/worship/youtube")
+    public String worshipYouTube() {
+        log.debug("예배 YouTube 관리 페이지 진입");
+        return "admin/worship-youtube";
     }
 }
 

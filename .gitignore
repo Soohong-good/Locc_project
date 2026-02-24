@@ -52,6 +52,12 @@ Thumbs.db
 # Uploads (사용자 업로드 파일)
 uploads/
 
+# Node
+node_modules/
+package-lock.json
+dist/
+.env.local
+
 # Gradle
 .gradle/
 

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/default}">
+<head>
+    <title th:text="${bulletin.title} + ' - 주보'">주보</title>
+</head>
+
+<body>
+
+<main layout:fragment="content">
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+                <a th:href="@{/church/bulletin}" class="hover:text-slate-900 transition">주보</a>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+                <span class="text-slate-900" th:text="${bulletin.title}">제목</span>
+            </div>
+
+            <h1 class="text-3xl md:text-4xl font-light text-slate-900 tracking-tight mb-6" 
+                th:text="${bulletin.title}">주보 제목</h1>
+
+            <div class="flex items-center justify-between text-sm text-slate-500 pb-6 border-b border-slate-200">
+                <div class="flex items-center gap-4">
+                    <span th:text="${bulletin.authorName}">작성자</span>
+                    <span>·</span>
+                    <span th:text="${#temporals.format(bulletin.createdAt, 'yyyy년 MM월 dd일')}">2025년 01월 26일</span>
+                    <span>·</span>
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <span th:text="${bulletin.viewCount}">0</span>
+                    </span>
+                </div>
+
+                <!-- 다운로드 & 관리자 버튼 -->
+                <div class="flex gap-2">
+                    <!-- 다운로드 버튼 -->
+                    <a th:if="${bulletin.fileId != null}"
+                       th:href="@{/api/files/download/{fileId}(fileId=${bulletin.fileId})}"
+                       class="px-4 py-2 text-sm bg-blue-600 text-white hover:bg-blue-700 transition font-medium flex items-center gap-2"
+                       download>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        주보 다운로드
+                    </a>
+
+                    <!-- 관리자 삭제 버튼 -->
+                    <button sec:authorize="hasRole('ADMIN')"
+                            onclick="BulletinDetail.confirmDelete()"
+                            class="px-4 py-2 text-sm bg-red-600 text-white hover:bg-red-700 transition font-medium">
+                        삭제
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 본문 -->
+    <section class="py-16 bg-white px-6">
+        <div class="max-w-4xl mx-auto">
+            <!-- 썸네일 이미지 (있을 경우) -->
+            <div th:if="${bulletin.thumbnailUrl != null && !bulletin.thumbnailUrl.isEmpty()}" 
+                 class="mb-12">
+                <img th:src="${bulletin.thumbnailUrl}" 
+                     th:alt="${bulletin.title}"
+                     class="w-full h-auto max-w-2xl mx-auto shadow-lg">
+            </div>
+
+            <!-- 본문 내용 -->
+            <div class="prose prose-slate max-w-none">
+                <div th:if="${bulletin.content != null && !bulletin.content.isEmpty()}"
+                     class="text-slate-700 leading-relaxed whitespace-pre-wrap"
+                     th:text="${bulletin.content}">
+                    본문 내용
+                </div>
+                <div th:unless="${bulletin.content != null && !bulletin.content.isEmpty()}"
+                     class="text-slate-400 text-center py-12">
+                    작성된 내용이 없습니다.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 하단 버튼 -->
+    <section class="py-12 bg-slate-50 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-center gap-4">
+                <!-- 다운로드 버튼 (모바일용 추가) -->
+                <a th:if="${bulletin.fileId != null}"
+                   th:href="@{/api/files/download/{fileId}(fileId=${bulletin.fileId})}"
+                   class="px-8 py-3 bg-blue-600 text-white hover:bg-blue-700 transition font-medium flex items-center gap-2"
+                   download>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    주보 다운로드
+                </a>
+
+                <a th:href="@{/church/bulletin}"
+                   class="px-8 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium">
+                    목록으로
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- 삭제 확인 모달 -->
+<th:block layout:fragment="modals">
+<div id="deleteModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    
+    <div class="relative bg-white max-w-md w-full shadow-2xl">
+        <div class="p-8">
+            <h3 class="text-xl font-light text-slate-900 mb-2">주보 삭제</h3>
+            <p class="text-slate-600 font-light mb-1">이 주보를 삭제하시겠습니까?</p>
+            <p class="text-slate-900 font-medium" th:text="${bulletin.title}">제목</p>
+        </div>
+        
+        <div class="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-200">
+            <button onclick="BulletinDetail.closeDeleteModal()"
+                    class="px-6 py-3 text-slate-600 hover:bg-slate-100 transition font-medium">
+                취소
+            </button>
+            <button onclick="BulletinDetail.deleteBulletin()"
+                    class="px-6 py-3 bg-red-600 text-white hover:bg-red-700 transition font-medium">
+                삭제
+            </button>
+        </div>
+    </div>
+</div>
+</th:block>
+
+<th:block layout:fragment="extra-scripts">
+    <!-- 공통 모듈 JS 로드 -->
+    <script th:src="@{/js/common/utils.js}"></script>
+    <script th:src="@{/js/common/api.js}"></script>
+
+    <!-- 페이지 전용 스크립트 -->
+    <script th:src="@{/js/church/bulletin-detail.js}"></script>
+
+    <!-- 주보 ID 전달 -->
+    <script th:inline="javascript">
+        window.BULLETIN_ID = /*[[${bulletin.id}]]*/ null;
+    </script>
+</th:block>
+
+</body>
+</html>

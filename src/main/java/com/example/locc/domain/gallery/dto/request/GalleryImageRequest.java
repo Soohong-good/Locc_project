@@ -27,14 +27,18 @@ public record GalleryImageRequest(
             return List.of();
         }
         
+        // 같은 업로드의 이미지들을 그룹화할 ID 생성
+        String groupId = "group_" + System.currentTimeMillis();
+        
         return imageFiles.stream()
                 .filter(file -> file != null && !file.isEmpty())
                 .map(file -> new GalleryImageCreateCommand(
                         departmentCode,
-                        title,         // 제목 = 앨범 그룹화
+                        title,
                         description,
                         file,
-                        null  // displayOrder는 서비스에서 자동 설정
+                        null,      // displayOrder는 서비스에서 자동 설정
+                        groupId    // 같은 그룹 ID
                 ))
                 .toList();
     }

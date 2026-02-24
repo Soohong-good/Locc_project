@@ -5,13 +5,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Permissions-Policy" content="unload=()">
   <title layout:title-pattern="$CONTENT_TITLE">그리스도 사랑교회</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" th:href="@{/title_icon.ico}">
 
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Pretendard Font (깔끔한 한글 산세리프) -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" th:href="@{/css/main.css}">
+  <link rel="stylesheet" th:href="@{/css/common/main.css}">
+
+  <!-- 팝업 CSS -->
+  <link rel="stylesheet" th:href="@{/css/popup.css}">
+
+  <!-- OAuth2 토큰 핸들러 -->
+  <script th:src="@{/js/auth/oauth2-token-handler.js}"></script>
 
   <!-- 추가 헤드 컨텐츠 영역 -->
   <th:block layout:fragment="extra-head"></th:block>
@@ -33,7 +48,10 @@
 <th:block th:replace="~{layout/footer :: footer}"></th:block>
 
 <!-- 기본 스크립트 -->
-<script th:src="@{/js/main.js}"></script>
+<script th:src="@{/js/common/main.js}"></script>
+
+<!-- 팝업 스크립트 -->
+<script th:src="@{/js/popup.js}"></script>
 
 <!-- 추가 스크립트 영역 -->
 <th:block layout:fragment="extra-scripts"></th:block>
