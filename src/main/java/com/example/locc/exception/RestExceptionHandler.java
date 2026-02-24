@@ -1,135 +1,156 @@
 package com.example.locc.exception;
 
+import com.example.locc.common.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * REST API 전용 예외 핸들러
+ *
+ * 처리 범위:
+ *   - 검증 예외 (400)
+ *   - 도메인 예외 (400, 403, 404)
+ *   - 인증/보안 예외 (401, 403)
+ *   - 서버 예외 (500)
+ *
+ * GlobalExceptionHandler(Thymeleaf용)보다 우선순위 높게 설정
+ */
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestExceptionHandler {
 
-    // 404 - 리소스를 찾을 수 없음
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException e) {
-        log.warn("NotFoundException: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(e.getMessage(), HttpStatus.NOT_FOUND.value());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    // ───── 400 검증 오류 ─────
+
+    /**
+     * @Valid, @Validated - @RequestBody 검증 실패
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(MethodArgumentNotValidException e) {
+        log.warn("Validation failed: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.ofValidation(
+                ErrorResponse.FieldError.of(e.getBindingResult())
+        );
+        return ResponseEntity.badRequest().body(response);
     }
 
-    // 403 - 권한 없음
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
-        log.warn("AccessDeniedException: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(e.getMessage(), HttpStatus.FORBIDDEN.value());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    /**
+     * @ModelAttribute 검증 실패
+     */
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleBindException(BindException e) {
+        log.warn("Bind failed: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.ofValidation(
+                ErrorResponse.FieldError.of(e.getBindingResult())
+        );
+        return ResponseEntity.badRequest().body(response);
     }
 
-    // 400 - 잘못된 입력
+    /**
+     * 잘못된 입력값
+     */
     @ExceptionHandler(InvalidInputException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidInputException(InvalidInputException e) {
+    public ResponseEntity<ErrorResponse> handleInvalidInput(InvalidInputException e) {
         log.warn("InvalidInputException: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(e.getMessage(), HttpStatus.BAD_REQUEST.value());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_INPUT, e.getMessage());
+        return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(AccountNotApprovedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccountNotApprovedException(AccountNotApprovedException e) {
-        log.warn("Account not approved: {}", e.getMessage());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "ACCOUNT_NOT_APPROVED");
-        response.put("message", e.getMessage());
-        response.put("approvalStatus", e.getApprovalStatus());
-        
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    /**
+     * IllegalArgumentException
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException e) {
+        log.warn("IllegalArgumentException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_REQUEST, e.getMessage());
+        return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(AccountDeletedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccountDeletedException(AccountDeletedException e) {
-        log.warn("Account deleted: {}", e.getMessage());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "ACCOUNT_DELETED");
-        response.put("message", e.getMessage());
-        
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-    }
+    // ───── 401 인증 오류 ─────
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException e) {
-        log.warn("Bad credentials exception caught");
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "INVALID_CREDENTIALS");
-        response.put("message", "이메일 또는 비밀번호가 올바르지 않습니다.");
-        
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException e) {
+        log.warn("Bad credentials");
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_CREDENTIALS);
+        return ResponseEntity.status(ErrorCode.INVALID_CREDENTIALS.getHttpStatus()).body(response);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUsernameNotFoundException(UsernameNotFoundException e) {
+    public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException e) {
         log.warn("Username not found: {}", e.getMessage());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "USER_NOT_FOUND");
-        response.put("message", e.getMessage());
-        
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-
-    @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<Map<String, Object>> handleDisabledException(DisabledException e) {
-        log.warn("Account disabled: {}", e.getMessage());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "ACCOUNT_DISABLED");
-        response.put("message", "비활성화된 계정입니다. 관리자에게 문의해주세요.");
-        
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.USER_NOT_FOUND_AUTH, e.getMessage());
+        return ResponseEntity.status(ErrorCode.USER_NOT_FOUND_AUTH.getHttpStatus()).body(response);
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Map<String, Object>> handleAuthenticationException(AuthenticationException e) {
-        log.warn("Authentication exception: {}", e.getClass().getSimpleName());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "AUTHENTICATION_FAILED");
-        response.put("message", "인증에 실패했습니다.");
-        
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException e) {
+        log.warn("AuthenticationException: {}", e.getClass().getSimpleName());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.AUTHENTICATION_FAILED);
+        return ResponseEntity.status(ErrorCode.AUTHENTICATION_FAILED.getHttpStatus()).body(response);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.warn("Illegal argument: {}", e.getMessage());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "INVALID_REQUEST");
-        response.put("message", e.getMessage());
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    @ExceptionHandler(TokenRefreshException.class)
+    public ResponseEntity<ErrorResponse> handleTokenRefresh(TokenRefreshException e) {
+        log.warn("TokenRefreshException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.TOKEN_EXPIRED, e.getMessage());
+        return ResponseEntity.status(ErrorCode.TOKEN_EXPIRED.getHttpStatus()).body(response);
     }
+
+    // ───── 403 권한 오류 ─────
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException e) {
+        log.warn("AccessDeniedException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCESS_DENIED, e.getMessage());
+        return ResponseEntity.status(ErrorCode.ACCESS_DENIED.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(AccountNotApprovedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountNotApproved(AccountNotApprovedException e) {
+        log.warn("AccountNotApprovedException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCOUNT_NOT_APPROVED, e.getMessage());
+        return ResponseEntity.status(ErrorCode.ACCOUNT_NOT_APPROVED.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(AccountDeletedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountDeleted(AccountDeletedException e) {
+        log.warn("AccountDeletedException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCOUNT_DELETED, e.getMessage());
+        return ResponseEntity.status(ErrorCode.ACCOUNT_DELETED.getHttpStatus()).body(response);
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException e) {
+        log.warn("DisabledException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCOUNT_DISABLED);
+        return ResponseEntity.status(ErrorCode.ACCOUNT_DISABLED.getHttpStatus()).body(response);
+    }
+
+    // ───── 404 리소스 없음 ─────
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e) {
+        log.warn("NotFoundException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.NOT_FOUND, e.getMessage());
+        return ResponseEntity.status(ErrorCode.NOT_FOUND.getHttpStatus()).body(response);
+    }
+
+    // ───── 500 서버 오류 ─────
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleException(Exception e) {
-        log.error("Unexpected error - Class: {}, Message: {}", e.getClass().getName(), e.getMessage());
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("error", "INTERNAL_SERVER_ERROR");
-        response.put("message", "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("Unexpected error - {}: {}", e.getClass().getName(), e.getMessage(), e);
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(response);
     }
 }
