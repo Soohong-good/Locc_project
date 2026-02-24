@@ -1,4 +1,4 @@
-spring:
+﻿spring:
   application:
     name: locc
   
@@ -95,11 +95,11 @@ jwt:
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 app:
-  url: ${APP_URL:http://localhost:8080}
-  # CORS 허용 오리진 (콤마 구분 환경변수 또는 yml 리스트 모두 지원)
+  url: ${APP_URL:}
   cors-origins:
     - ${APP_CORS_ORIGIN_1:http://localhost:3000}
     - ${APP_CORS_ORIGIN_2:http://localhost:8080}
+  oauth2-redirect-url: ${APP_OAUTH2_REDIRECT_URL:/oauth2/callback}
 
 kakao:
   map:

@@ -166,10 +166,34 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
+        // 허용 오리진: application-local.yml / application-prod.yml 에서 설정
         configuration.setAllowedOrigins(appProperties.getCorsOrigins());
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+
+        // 허용 HTTP 메서드
+        configuration.setAllowedMethods(
+                Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+        // 허용 헤더 명시 (와일드카드 대신 실제 필요한 헤더만)
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",       // JWT 토큰
+                "Content-Type",        // JSON, multipart
+                "Accept",
+                "Origin",
+                "X-Requested-With",
+                "Cache-Control"
+        ));
+
+        // 노출 헤더: 프론트에서 읽을 수 있는 응답 헤더
+        configuration.setExposedHeaders(List.of(
+                "Authorization",
+                "Content-Disposition"  // 파일 다운로드 시 파일명
+        ));
+
+        // 자격증명(쿠키, Authorization 헤더) 허용
         configuration.setAllowCredentials(true);
+
+        // Preflight 캐시 시간 (초)
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -24,36 +24,28 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Static resources (개발자가 직접 추가한 정적 리소스)
+        // Static resources
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/");
-
-        // Images (classpath - 정적 이미지: 로고, 아이콘 등)
         registry.addResourceHandler("/images/**")
                 .addResourceLocations("classpath:/static/images/");
-
-        // CSS
         registry.addResourceHandler("/css/**")
                 .addResourceLocations("classpath:/static/css/");
-
-        // JavaScript
         registry.addResourceHandler("/js/**")
                 .addResourceLocations("classpath:/static/js/");
 
-        // ===== 업로드된 파일 (filesystem) =====
-        // Path.toUri() 를 사용하면 Windows/Unix 모두 안전한 file:/// URI가 만들어짐
         Path uploadRoot = fileProperties.getUploadRootPath();
-        String uploadRootUri = ensureTrailingSlash(uploadRoot.toUri().toString());
 
-        // Staff 이미지 (예: /images/staff/xxx.png -> <uploadRoot>/staff/xxx.png)
+        // Staff 이미지 직접 접근 (Thymeleaf 뷰에서 사용)
         registry.addResourceHandler("/images/staff/**")
                 .addResourceLocations(ensureTrailingSlash(uploadRoot.resolve("staff").toUri().toString()))
                 .setCachePeriod(3600);
 
-        // 업로드 전체 접근 (예: /uploads/gallery/xxx.png -> <uploadRoot>/gallery/xxx.png)
-        // 즉, URL의 /uploads/** 는 uploadRoot 하위로 직접 매핑됨
+        // TODO: Thymeleaf 퇴출 후 아래 핸들러 제거 예정
+        //   React 전환 완료 이후에는 파일 접근을 /api/files/image/** 로만 허용
+        //   /uploads/** 직접 노출은 파일 접근 정책 우회 가능성이 있음
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadRootUri);
+                .addResourceLocations(ensureTrailingSlash(uploadRoot.toUri().toString()));
     }
 
     private String ensureTrailingSlash(String uri) {
