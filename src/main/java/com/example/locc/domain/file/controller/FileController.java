@@ -5,8 +5,8 @@ import com.example.locc.domain.file.dto.FileResponse;
 import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.file.service.FileQueryService;
+import com.example.locc.domain.file.service.FileUrlResolver;
 import com.example.locc.exception.AccessDeniedException;
-import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -37,6 +37,7 @@ public class FileController {
 
     private final FileCommandService fileCommandService;
     private final FileQueryService fileQueryService;
+    private final FileUrlResolver fileUrlResolver;
 
     // ───── 공개 이미지 접근 (인증 불필요) ─────
 
@@ -90,26 +91,17 @@ public class FileController {
     @GetMapping("/{fileId}")
     public ResponseEntity<ApiResponse<FileResponse>> getFile(@PathVariable Long fileId) {
         File file = fileQueryService.getFileWithUploader(fileId);
-        if (file == null) {
-            throw new NotFoundException("파일을 찾을 수 없습니다. ID: " + fileId);
-        }
-        return ResponseEntity.ok(ApiResponse.ok(FileResponse.from(file)));
+        return ResponseEntity.ok(ApiResponse.ok(fileUrlResolver.toResponse(file)));
     }
 
-    /**
-     * 특정 엔티티의 파일 목록 조회
-     */
     @GetMapping("/entity/{entityType}/{entityId}")
     public ResponseEntity<ApiResponse<List<FileResponse>>> getFilesByEntity(
             @PathVariable File.EntityType entityType,
             @PathVariable Long entityId) {
 
-        List<FileResponse> files = fileQueryService
-                .getFilesByEntityWithUploader(entityType, entityId)
-                .stream()
-                .map(FileResponse::from)
-                .toList();
-
+        List<FileResponse> files = fileUrlResolver.toResponses(
+                fileQueryService.getFilesByEntityWithUploader(entityType, entityId)
+        );
         return ResponseEntity.ok(ApiResponse.ok(files));
     }
 

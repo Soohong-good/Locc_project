@@ -84,12 +84,13 @@ public class SecurityConfig {
                         .requestMatchers("/church/bulletin/**").authenticated()
                         .requestMatchers("/api/bulletin/**").authenticated()
                         
-                        // 파일 다운로드 (인증 필요)
+                        // ===== 파일 접근 정책 (순서 중요: 구체적인 경로 먼저) =====
+                        // 공개 이미지 - 인증 불필요 (에디터 본문 이미지, 썸네일, 갤러리)
+                        .requestMatchers("/api/files/image/**").permitAll()
+
+                        // 보호 파일 다운로드 - 로그인 필요
                         .requestMatchers("/api/files/download/**").authenticated()
                         .requestMatchers("/download/**").authenticated()
-
-                        // 공개 이미지 (인증 불필요 - 에디터 본문 이미지, 썸네일, 갤러리)
-                        .requestMatchers("/api/files/image/**").permitAll()
 
                         // ========== 도메인별 관리 API (ADMIN 권한 필수) ==========
                         // 공지사항 생성/수정/삭제
