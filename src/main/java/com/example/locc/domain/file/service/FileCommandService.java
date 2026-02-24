@@ -174,8 +174,8 @@ public class FileCommandService {
                 user
         );
 
-        // 다운로드 URL 반환
-        return "/api/files/download/" + uploadedFile.getId();
+        // 공개 이미지 URL 반환 (인증 없이 접근 가능한 /api/files/image/ 엔드포인트)
+        return "/api/files/image/" + uploadedFile.getId();
     }
 
     /**
@@ -373,8 +373,8 @@ public class FileCommandService {
             log.info("PDF 업로드 및 썸네일 생성 완료: PDF={}, 썸네일={}", 
                     savedPdf.getId(), savedThumbnail.getId());
 
-            // 썸네일 다운로드 URL 반환
-            return "/api/files/download/" + savedThumbnail.getId();
+            // 썸네일 공개 이미지 URL 반환
+            return "/api/files/image/" + savedThumbnail.getId();
 
         } catch (IOException e) {
             log.error("PDF 업로드 및 썸네일 생성 실패", e);

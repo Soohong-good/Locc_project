@@ -2,6 +2,7 @@ package com.example.locc.domain.file.service;
 
 import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.repository.FileRepository;
+import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -31,15 +32,12 @@ public class FileQueryService {
      */
     public File getFile(Long fileId) {
         return fileRepository.findById(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다. ID: " + fileId));
+                .orElseThrow(() -> new NotFoundException("파일을 찾을 수 없습니다. ID: " + fileId));
     }
 
-    /**
-     * 파일 조회 (업로더 정보 포함)
-     */
     public File getFileWithUploader(Long fileId) {
         return fileRepository.findByIdWithUploader(fileId)
-                .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다. ID: " + fileId));
+                .orElseThrow(() -> new NotFoundException("파일을 찾을 수 없습니다. ID: " + fileId));
     }
 
     /**
