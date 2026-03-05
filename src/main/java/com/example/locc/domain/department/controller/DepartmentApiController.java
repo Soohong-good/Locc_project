@@ -3,7 +3,10 @@ package com.example.locc.domain.department.controller;
 import com.example.locc.common.ApiResponse;
 import com.example.locc.domain.department.dto.request.DepartmentBoardRequest;
 import com.example.locc.domain.department.dto.response.DepartmentBoardDetailResponse;
+import com.example.locc.domain.department.dto.response.DepartmentBoardResponse;
+import com.example.locc.domain.department.dto.response.DepartmentResponse;
 import com.example.locc.domain.department.service.DepartmentCommandService;
+import com.example.locc.domain.department.service.DepartmentQueryService;
 import com.example.locc.domain.department.service.DepartmentYouTubeUpdateService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -20,7 +25,36 @@ import org.springframework.web.bind.annotation.*;
 public class DepartmentApiController {
 
     private final DepartmentCommandService commandService;
+    private final DepartmentQueryService queryService;
     private final DepartmentYouTubeUpdateService youTubeUpdateService;
+
+    // ── 조회 ──────────────────────────────────────────────────────────────
+
+    /** 부서 정보 조회 */
+    @GetMapping("/{departmentCode}")
+    public ResponseEntity<ApiResponse<DepartmentResponse>> getDepartment(
+            @PathVariable String departmentCode) {
+        return ResponseEntity.ok(ApiResponse.ok(queryService.getDepartmentByCode(departmentCode)));
+    }
+
+    /** 부서 게시판 목록 조회 (최대 5개, 핀 우선) */
+    @GetMapping("/{departmentCode}/board")
+    public ResponseEntity<ApiResponse<List<DepartmentBoardResponse>>> getBoardList(
+            @PathVariable String departmentCode) {
+        List<DepartmentBoardResponse> boards = queryService.getBoardList(departmentCode).getContent();
+        return ResponseEntity.ok(ApiResponse.ok(boards));
+    }
+
+    /** 게시판 글 상세 조회 */
+    @GetMapping("/{departmentCode}/board/{boardId}")
+    public ResponseEntity<ApiResponse<DepartmentBoardDetailResponse>> getBoardDetail(
+            @PathVariable String departmentCode,
+            @PathVariable Long boardId) {
+        commandService.incrementViewCount(boardId);
+        return ResponseEntity.ok(ApiResponse.ok(queryService.getBoardDetail(boardId)));
+    }
+
+    // ── 쓰기 (ADMIN) ──────────────────────────────────────────────────────
 
     @PostMapping("/{departmentCode}/board")
     public ResponseEntity<ApiResponse<DepartmentBoardDetailResponse>> createBoard(
@@ -68,6 +102,8 @@ public class DepartmentApiController {
         commandService.togglePin(boardId, departmentCode, authentication.getName());
         return ResponseEntity.ok(ApiResponse.ok());
     }
+
+    // ── YouTube ───────────────────────────────────────────────────────────
 
     @PostMapping("/{departmentCode}/youtube/update")
     public ResponseEntity<ApiResponse<Void>> updateYouTubeVideo(
