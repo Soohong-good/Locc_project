@@ -1,7 +1,3 @@
-// 토큰 localStorage 키
-export const TOKEN_KEY = 'accessToken'
-export const REFRESH_TOKEN_KEY = 'refreshToken'
-
 // API 응답 에러 코드 (백엔드 ErrorCode enum과 동기화)
 export const ERROR_CODE = {
   INVALID_INPUT: 'INVALID_INPUT',

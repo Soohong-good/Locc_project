@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getBulletin, increaseBulletinViews, deleteBulletin } from '@/api/bulletins'
 import { downloadFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
+import LoadingSpinner from '@/components/common/LoadingSpinner'
+import toast from '@/utils/toast'
 
 /* ── 날짜 포맷 ─────────────────────────────────────── */
 const formatDate = (val) => {
@@ -58,10 +60,12 @@ const BulletinDetailPage = () => {
   const { id }    = useParams()
   const navigate  = useNavigate()
   const queryClient = useQueryClient()
-  const { isAdmin: isAdminFn } = useAuthStore()
+  const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const isAdmin = isAdminFn()
+  const canWrite = isAdminOrOperatorFn()
+  const userId = getUserId()
 
-  const [deleteOpen, setDeleteOpen] = React.useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   const { data: bulletin, isLoading, isError } = useQuery({
     queryKey: ['bulletins', id],
@@ -79,16 +83,12 @@ const BulletinDetailPage = () => {
       queryClient.invalidateQueries({ queryKey: ['bulletins'] })
       navigate('/bulletin')
     },
-    onError: (e) => alert(e?.response?.data?.message ?? '삭제에 실패했습니다.'),
+    onError: (e) => toast.error(e?.response?.data?.message ?? '삭제에 실패했습니다.'),
   })
 
-  if (isLoading) return (
-    <main className="pt-32 pb-16 px-6">
-      <div className="max-w-4xl mx-auto text-slate-400 font-light">불러오는 중...</div>
-    </main>
-  )
+  if (isLoading) return <LoadingSpinner />
   if (isError) return (
-    <main className="pt-32 pb-16 px-6">
+    <main className="pt-page pb-16 px-6">
       <div className="max-w-4xl mx-auto text-red-500">주보를 불러올 수 없습니다.</div>
     </main>
   )
@@ -96,7 +96,7 @@ const BulletinDetailPage = () => {
   return (
     <main>
       {/* Hero */}
-      <section className="pt-32 pb-16 bg-slate-50 px-6">
+      <section className="pt-page pb-16 bg-slate-50 px-6">
         <div className="max-w-4xl mx-auto">
           {/* 빵부스러기 */}
           <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
@@ -118,8 +118,6 @@ const BulletinDetailPage = () => {
 
           <div className="flex items-center justify-between text-sm text-slate-500 pb-6 border-b border-slate-200 flex-wrap gap-4">
             <div className="flex items-center gap-4 flex-wrap">
-              <span>{bulletin.authorName}</span>
-              <span>·</span>
               <span>{formatDate(bulletin.createdAt)}</span>
               <span>·</span>
               <span className="flex items-center gap-1">
@@ -136,7 +134,7 @@ const BulletinDetailPage = () => {
             {/* 다운로드 + 관리자 삭제 */}
             <div className="flex gap-2">
               <DownloadButton fileId={bulletin.fileId} title={bulletin.title} />
-              {isAdmin && (
+              {canWrite && (isAdmin || bulletin?.authorId === userId) && (
                 <button
                   onClick={() => setDeleteOpen(true)}
                   className="px-4 py-2 text-sm bg-red-600 text-white hover:bg-red-700 transition font-medium"
@@ -182,11 +180,6 @@ const BulletinDetailPage = () => {
       <section className="py-12 bg-slate-50 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-center gap-4 flex-wrap">
-            <DownloadButton
-              fileId={bulletin.fileId}
-              title={bulletin.title}
-              className="px-8 py-3 text-base"
-            />
             <button
               onClick={() => navigate('/bulletin')}
               className="px-8 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium"

@@ -20,6 +20,7 @@ public class NoticeResponse {
     private final Boolean isPinned;
     private final Integer viewCount;
     private final String authorName;
+    private final String authorId;   // 작성자 UUID — 프론트 본인 여부 판단용
     private final LocalDateTime createdAt;
     private final boolean isNew;
     private final boolean hasAttachments; // 첨부파일 존재 여부
@@ -36,6 +37,7 @@ public class NoticeResponse {
                 .isPinned(notice.getIsPinned())
                 .viewCount(notice.getViewCount())
                 .authorName(notice.getAuthor() != null ? notice.getAuthor().getName() : "알 수 없음")
+                .authorId(notice.getAuthor() != null ? notice.getAuthor().getId().toString() : null)
                 .createdAt(notice.getCreatedAt())
                 .isNew(isNew(notice.getCreatedAt()))
                 .hasAttachments(hasAttachments)

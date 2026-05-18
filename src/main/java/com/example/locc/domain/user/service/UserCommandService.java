@@ -1,6 +1,8 @@
 package com.example.locc.domain.user.service;
 
+import com.example.locc.common.ErrorCode;
 import com.example.locc.config.JwtProperties;
+import com.example.locc.domain.auth.service.EmailVerificationService;
 import com.example.locc.domain.user.dto.command.UserLoginCommand;
 import com.example.locc.domain.user.dto.command.UserRegisterCommand;
 import com.example.locc.domain.user.dto.response.UserAuthResponse;
@@ -10,6 +12,7 @@ import com.example.locc.domain.user.repository.RefreshTokenRepository;
 import com.example.locc.domain.user.repository.UserRepository;
 import com.example.locc.exception.AccountDeletedException;
 import com.example.locc.exception.AccountNotApprovedException;
+import com.example.locc.exception.InvalidInputException;
 import com.example.locc.exception.TokenRefreshException;
 import com.example.locc.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +41,7 @@ public class UserCommandService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserQueryService userQueryService;
+    private final EmailVerificationService emailVerificationService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
@@ -47,27 +51,28 @@ public class UserCommandService {
      * 회원가입 (승인 대기 상태로)
      */
     public UserAuthResponse register(UserRegisterCommand command) {
-        log.info("Registering new user: {}", command.getEmail());
+        log.debug("Registering new user");
 
-        // 중복 체크
+        // 이메일 중복 체크
         if (userRepository.existsByEmail(command.getEmail())) {
             throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
         }
-        
-        // 이메일 인증 여부는 프론트엔드에서 체크하므로 여기서는 생략
-        // (이메일 인증 완료된 상태로 가정)
+
+        // 서버가 발급한 이메일 인증 완료 여부 확인 (1회용 소비)
+        if (!emailVerificationService.consumeVerification(command.getEmail())) {
+            throw new InvalidInputException("이메일 인증을 먼저 완료해주세요.");
+        }
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(command.getPassword());
 
         // 사용자 생성 (팩토리 메서드 사용)
         User user = User.register(command, encodedPassword);
-        user.verifyEmail(); // 이메일 인증 완료 처리
+        user.verifyEmail(); // 인증 완료가 서버에서 확인됐으므로 처리
         userRepository.save(user);
 
-        log.info("User registered successfully (pending approval): {}", user.getEmail());
+        log.debug("User registered successfully (pending approval)");
 
-        // 가입 신청 완료 응답 (토큰 없이)
         return UserAuthResponse.builder()
                 .message("회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.")
                 .build();
@@ -77,7 +82,7 @@ public class UserCommandService {
      * 로그인
      */
     public UserAuthResponse login(UserLoginCommand command) {
-        log.info("User login attempt: {}", command.getEmail());
+        log.debug("User login attempt");
 
         // 인증 (비밀번호 검증)
         Authentication authentication = authenticationManager.authenticate(
@@ -99,7 +104,7 @@ public class UserCommandService {
         // RefreshToken 저장 또는 갱신
         saveOrUpdateRefreshToken(user, refreshToken);
 
-        log.info("User logged in successfully: {}", user.getEmail());
+        log.info("User logged in successfully");
 
         return UserAuthResponse.builder()
                 .accessToken(accessToken)
@@ -116,16 +121,23 @@ public class UserCommandService {
      * 로그아웃
      */
     public void logout(String email) {
-        log.info("User logout: {}", email);
+        log.debug("User logout");
 
         User user = userQueryService.findByEmail(email);
         refreshTokenRepository.deleteByUser(user);
 
-        log.info("User logged out successfully: {}", email);
+        log.debug("User logged out successfully");
     }
 
     /**
-     * 토큰 갱신
+     * 토큰 갱신 (Refresh Token Rotation)
+     *
+     * Rotation 적용 이유:
+     *   - 기존 RT를 재사용하면 탈취된 RT로 무기한 갱신 가능
+     *   - 매 갱신마다 새 RT를 발급하면 탈취된 RT는 한 번 사용 후 무효화
+     *   - DB에 저장된 RT와 다른 값이 들어오면 탈취 감지 가능
+     *
+     * 반환값: 새 AccessToken + 새 RefreshToken (둘 다 쿠키로 재설정 필요)
      */
     public UserAuthResponse refreshToken(String refreshTokenValue) {
         log.debug("Refreshing token");
@@ -134,31 +146,64 @@ public class UserCommandService {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> new TokenRefreshException(
                         refreshTokenValue,
-                        "유효하지 않은 RefreshToken입니다."
+                        ErrorCode.TOKEN_EXPIRED.getDefaultMessage()
                 ));
 
         if (refreshToken.isExpired()) {
             refreshTokenRepository.delete(refreshToken);
             throw new TokenRefreshException(
                     refreshTokenValue,
-                    "RefreshToken이 만료되었습니다. 다시 로그인해주세요."
+                    ErrorCode.TOKEN_EXPIRED.getDefaultMessage()
             );
         }
 
-        // 새 AccessToken 생성
         User user = refreshToken.getUser();
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user);
 
-        log.debug("Token refreshed successfully for user: {}", user.getEmail());
+        // 새 AccessToken + 새 RefreshToken 발급 (Rotation)
+        String newAccessToken  = jwtTokenProvider.generateAccessToken(user);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        // DB의 RefreshToken 교체
+        LocalDateTime newExpiresAt = LocalDateTime.now()
+                .plusSeconds(jwtProperties.getRefreshExpiration() / 1000);
+        refreshToken.refresh(newRefreshToken, newExpiresAt);
+
+        log.debug("Token rotated successfully");
 
         return UserAuthResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(refreshTokenValue)  // 기존 RefreshToken 유지
+                .refreshToken(newRefreshToken)  // 새 RefreshToken 반환
                 .tokenType("Bearer")
                 .expiresIn(jwtProperties.getExpiration())
                 .username(user.getName())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    /**
+     * 운영자 권한 부여 (총관리자 전용)
+     */
+    public void grantOperator(UUID userId) {
+        log.info("Granting operator role: {}", userId);
+        User user = userQueryService.findById(userId);
+        if (user.getRole() == User.Role.ADMIN) {
+            throw new IllegalStateException("총관리자 계정의 권한은 변경할 수 없습니다.");
+        }
+        user.grantOperator();
+        log.info("Operator role granted: {}", userId);
+    }
+
+    /**
+     * 운영자 권한 회수 (총관리자 전용)
+     */
+    public void revokeOperator(UUID userId) {
+        log.info("Revoking operator role: {}", userId);
+        User user = userQueryService.findById(userId);
+        if (user.getRole() == User.Role.ADMIN) {
+            throw new IllegalStateException("총관리자 계정의 권한은 변경할 수 없습니다.");
+        }
+        user.revokeOperator();
+        log.info("Operator role revoked: {}", userId);
     }
 
     /**
@@ -174,7 +219,7 @@ public class UserCommandService {
         }
 
         user.approve();
-        log.info("User approved: {}", user.getEmail());
+        log.info("User approved: {}", userId);
     }
 
     /**
@@ -190,7 +235,7 @@ public class UserCommandService {
         }
 
         user.reject(reason);
-        log.info("User rejected: {}", user.getEmail());
+        log.info("User rejected: {}", userId);
     }
 
     /**
@@ -205,7 +250,7 @@ public class UserCommandService {
         // RefreshToken 삭제
         refreshTokenRepository.deleteByUser(user);
 
-        log.info("User deleted: {}", user.getEmail());
+        log.info("User deleted: {}", userId);
     }
 
     /**
@@ -217,7 +262,7 @@ public class UserCommandService {
         User user = userQueryService.findById(userId);
         user.restore();
 
-        log.info("User restored: {}", user.getEmail());
+        log.info("User restored: {}", userId);
     }
 
     /**
@@ -232,7 +277,7 @@ public class UserCommandService {
         // RefreshToken 삭제 (재로그인 방지)
         refreshTokenRepository.deleteByUser(user);
 
-        log.info("User disabled: {}", user.getEmail());
+        log.info("User disabled: {}", userId);
     }
 
     /**
@@ -244,7 +289,7 @@ public class UserCommandService {
         User user = userQueryService.findById(userId);
         user.enable();
 
-        log.info("User enabled: {}", user.getEmail());
+        log.info("User enabled: {}", userId);
     }
 
     // ===== Private Helper Methods =====
@@ -255,24 +300,23 @@ public class UserCommandService {
     private void validateAccountStatus(User user) {
         // 삭제된 계정
         if (user.isDeleted()) {
-            throw new AccountDeletedException("삭제된 계정입니다. 관리자에게 문의해주세요.");
+            throw new AccountDeletedException(ErrorCode.ACCOUNT_DELETED.getDefaultMessage());
         }
 
         // 승인 대기 중
         if (user.getApprovalStatus() == User.ApprovalStatus.PENDING) {
             throw new AccountNotApprovedException(
-                    "회원가입 승인 대기 중입니다. 관리자 승인 후 로그인이 가능합니다.",
+                    ErrorCode.ACCOUNT_NOT_APPROVED.getDefaultMessage(),
                     "PENDING"
             );
         }
 
         // 반려된 계정
         if (user.getApprovalStatus() == User.ApprovalStatus.REJECTED) {
-            String message = "회원가입이 반려되었습니다.";
-            if (user.getRejectionReason() != null) {
-                message += " 사유: " + user.getRejectionReason();
-            }
-            throw new AccountNotApprovedException(message, "REJECTED");
+            throw new AccountNotApprovedException(
+                    ErrorCode.ACCOUNT_NOT_APPROVED.getDefaultMessage(),
+                    "REJECTED"
+            );
         }
     }
 

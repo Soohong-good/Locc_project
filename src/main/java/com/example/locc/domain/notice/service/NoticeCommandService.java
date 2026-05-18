@@ -5,17 +5,18 @@ import com.example.locc.domain.notice.dto.command.NoticeCreateCommand;
 import com.example.locc.domain.notice.dto.command.NoticeUpdateCommand;
 import com.example.locc.domain.notice.dto.response.NoticeDetailResponse;
 import com.example.locc.domain.notice.repository.NoticeRepository;
-import com.example.locc.domain.file.dto.FileDto;
-import com.example.locc.domain.file.entity.File;
+import com.example.locc.domain.file.dto.response.AttachmentInfo;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.file.service.FileQueryService;
+import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ public class NoticeCommandService {
      * Notice 생성
      */
     public NoticeDetailResponse create(NoticeCreateCommand command) {
-        log.info("Creating notice: {} by {}", command.getTitle(), command.getCreatedByEmail());
+        log.debug("Creating notice: {}", command.getTitle());
 
         // 사용자 조회
         User author = findUserByEmail(command.getCreatedByEmail());
@@ -51,7 +52,7 @@ public class NoticeCommandService {
         Notice savedNotice = noticeRepository.save(notice);
 
         // 파일 업로드
-        List<FileDto> files = uploadFiles(savedNotice.getId(), command);
+        List<AttachmentInfo> files = uploadFiles(savedNotice.getId(), command);
 
         return NoticeDetailResponse.from(savedNotice, files);
     }
@@ -60,7 +61,7 @@ public class NoticeCommandService {
      * Notice 수정
      */
     public NoticeDetailResponse update(NoticeUpdateCommand command) {
-        log.info("Updating notice: {} by {}", command.getNoticeId(), command.getUpdatedByEmail());
+        log.debug("Updating notice: {}", command.getNoticeId());
 
         // Notice 조회
         Notice notice = noticeQueryService.findById(command.getNoticeId());
@@ -73,7 +74,7 @@ public class NoticeCommandService {
         notice.update(command);
 
         // 파일 업로드
-        List<FileDto> files = uploadFiles(notice.getId(), command);
+        List<AttachmentInfo> files = uploadFiles(notice.getId(), command);
 
         return NoticeDetailResponse.from(notice, files);
     }
@@ -82,7 +83,7 @@ public class NoticeCommandService {
      * Notice 삭제
      */
     public void delete(Long noticeId, String email) {
-        log.info("Deleting notice: {} by {}", noticeId, email);
+        log.debug("Deleting notice: {}", noticeId);
 
         Notice notice = noticeQueryService.findById(noticeId);
         User user = findUserByEmail(email);
@@ -91,10 +92,17 @@ public class NoticeCommandService {
         validateModifyPermission(notice, user);
 
         // 파일 먼저 삭제
-        fileCommandService.deleteAllByEntity(File.EntityType.NOTICE, noticeId);
+        fileCommandService.deleteNoticeFiles(noticeId);
 
         // Notice 삭제
         noticeRepository.delete(notice);
+    }
+
+    /**
+     * 본문 이미지 업로드 (에디터용)
+     */
+    public String uploadContentImage(MultipartFile image, String email) {
+        return fileCommandService.uploadNoticeContentImage(image, email);
     }
 
     /**
@@ -111,9 +119,10 @@ public class NoticeCommandService {
      * 고정 토글
      */
     public void togglePin(Long noticeId, String email) {
-        log.info("Toggling pin for notice: {} by {}", noticeId, email);
+        log.debug("Toggling pin for notice: {}", noticeId);
 
-        Notice notice = noticeQueryService.findById(noticeId);
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다. ID: " + noticeId));
         User user = findUserByEmail(email);
 
         // 관리자 권한 확인
@@ -122,6 +131,7 @@ public class NoticeCommandService {
         }
 
         notice.togglePin();
+        noticeRepository.save(notice);
     }
 
     // ===== Private Helper Methods =====
@@ -129,45 +139,36 @@ public class NoticeCommandService {
     /**
      * 파일 업로드
      */
-    private List<FileDto> uploadFiles(Long noticeId, NoticeCreateCommand command) {
+    private List<AttachmentInfo> uploadFiles(Long noticeId, NoticeCreateCommand command) {
         if (command.getFiles() == null || command.getFiles().isEmpty()) {
             return List.of();
         }
 
-        return fileCommandService.uploadFiles(
+        return fileCommandService.uploadNoticeAttachments(
                         command.getFiles(),
-                        File.EntityType.NOTICE,
                         noticeId,
-                        File.FileCategory.ATTACHMENT,
                         command.getCreatedByEmail()
                 )
                 .stream()
-                .map(FileDto::fromEntity)
+                .map(AttachmentInfo::from)
                 .collect(Collectors.toList());
     }
 
     /**
      * 파일 업로드 (수정용)
      */
-    private List<FileDto> uploadFiles(Long noticeId, NoticeUpdateCommand command) {
+    private List<AttachmentInfo> uploadFiles(Long noticeId, NoticeUpdateCommand command) {
         if (command.getFiles() == null || command.getFiles().isEmpty()) {
-            // 기존 파일 조회
-            return fileQueryService.getFilesByEntityWithUploader(File.EntityType.NOTICE, noticeId)
-                    .stream()
-                    .map(FileDto::fromEntity)
-                    .collect(Collectors.toList());
+            return fileQueryService.getNoticeAttachments(noticeId);
         }
 
-        // 새 파일 업로드
-        return fileCommandService.uploadFiles(
+        return fileCommandService.uploadNoticeAttachments(
                         command.getFiles(),
-                        File.EntityType.NOTICE,
                         noticeId,
-                        File.FileCategory.ATTACHMENT,
                         command.getUpdatedByEmail()
                 )
                 .stream()
-                .map(FileDto::fromEntity)
+                .map(AttachmentInfo::from)
                 .collect(Collectors.toList());
     }
 
@@ -176,7 +177,7 @@ public class NoticeCommandService {
      */
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     /**

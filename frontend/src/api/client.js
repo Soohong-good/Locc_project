@@ -1,35 +1,30 @@
 import axios from 'axios'
-import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/lib/constants'
 
 /**
  * Axios 인스턴스
  *
  * 개발 환경: vite.config.js proxy 설정으로 /api → localhost:8080 포워딩
  * 운영 환경: 같은 도메인이므로 baseURL 불필요
+ *
+ * 토큰 전달 방식: HttpOnly 쿠키 (withCredentials: true)
+ * - 요청 인터셉터에서 토큰을 직접 주입하지 않음 (브라우저가 쿠키 자동 전송)
+ * - CSRF: JWT + Stateless 구조이므로 /api/** 전체 비활성화 (SecurityConfig 참고)
  */
 const client = axios.create({
   baseURL: '',
   headers: { 'Content-Type': 'application/json' },
-  withCredentials: false,  // JWT Bearer 방식 사용, 쿠키 불필요
-})
-
-// ───── 요청 인터셉터: Authorization 헤더 자동 주입 ─────
-client.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_KEY)
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
+  withCredentials: true,  // HttpOnly 쿠키 자동 전송
+  timeout: 15000,
 })
 
 // ───── 응답 인터셉터: 토큰 만료 시 자동 갱신 ─────
 let isRefreshing = false
 let refreshQueue = []  // 갱신 중 대기 중인 요청들
 
-const processQueue = (error, token = null) => {
+const processQueue = (error) => {
   refreshQueue.forEach(({ resolve, reject }) => {
     if (error) reject(error)
-    else resolve(token)
+    else resolve()
   })
   refreshQueue = []
 }
@@ -39,10 +34,18 @@ client.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // 401 + 토큰 만료 → 자동 갱신 시도
+    // 401 + 최초 시도 → 자동 갱신 시도
+    // 아래 URL은 갱신 시도 제외
+    //   - /api/auth/login    : 로그인 실패 401은 갱신 대상이 아님
+    //   - /api/auth/me       : 비로그인 상태에서 401이 정상 응답 (AuthInitializer)
+    //   - /api/auth/refresh  : 갱신 자체가 실패한 것 → 재시도 불필요
+    const skipRefreshUrls = ['/api/auth/me', '/api/auth/refresh', '/api/auth/login']
+    const isSkipUrl = skipRefreshUrls.some((url) => originalRequest.url?.includes(url))
+
     const isTokenExpired =
       error.response?.status === 401 &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !isSkipUrl
 
     if (!isTokenExpired) {
       return Promise.reject(error)
@@ -52,51 +55,28 @@ client.interceptors.response.use(
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         refreshQueue.push({ resolve, reject })
-      }).then((token) => {
-        originalRequest.headers.Authorization = `Bearer ${token}`
-        return client(originalRequest)
-      })
+      }).then(() => client(originalRequest))
     }
 
     originalRequest._retry = true
     isRefreshing = true
 
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
-
-    if (!refreshToken) {
-      // 리프레시 토큰 없음 → 로그아웃 처리
-      clearTokens()
-      window.location.href = '/login'
-      return Promise.reject(error)
-    }
-
     try {
-      const { data } = await axios.post('/api/auth/refresh', { refreshToken })
-      const newToken = data.data.accessToken
-      const newRefresh = data.data.refreshToken
+      // refreshToken 쿠키는 브라우저가 자동 전송 — body 불필요
+      await client.post('/api/auth/refresh', null)
 
-      localStorage.setItem(TOKEN_KEY, newToken)
-      if (newRefresh) localStorage.setItem(REFRESH_TOKEN_KEY, newRefresh)
-
-      client.defaults.headers.common.Authorization = `Bearer ${newToken}`
-      originalRequest.headers.Authorization = `Bearer ${newToken}`
-
-      processQueue(null, newToken)
+      processQueue(null)
       return client(originalRequest)
     } catch (refreshError) {
-      processQueue(refreshError, null)
-      clearTokens()
-      window.location.href = '/login'
+      processQueue(refreshError)
+      // window.location.href 강제 이동 제거
+      // → 라우트 이동은 React Router(PrivateRoute)가 담당
+      //   clearAuth()는 AuthInitializer의 isError 핸들러에서 처리됨
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false
     }
   }
 )
-
-function clearTokens() {
-  localStorage.removeItem(TOKEN_KEY)
-  localStorage.removeItem(REFRESH_TOKEN_KEY)
-}
 
 export default client

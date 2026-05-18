@@ -76,6 +76,6 @@ public class SocialRegistrationService {
                 request.getAgreedToPrivacy()
         );
 
-        log.info("소셜 추가 정보 입력 완료: {}", user.getEmail());
+        log.info("소셜 추가 정보 입력 완료");
     }
 }

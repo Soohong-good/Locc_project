@@ -9,12 +9,11 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 /**
  * 비동기 이메일 발송 전용 서비스
  * - @Async 프록시가 제대로 작동하도록 별도 클래스로 분리
+ * - Thymeleaf 제거: 이메일 HTML을 Java Text Block으로 직접 관리
  */
 @Slf4j
 @Service
@@ -22,17 +21,15 @@ import org.thymeleaf.context.Context;
 public class AsyncEmailSender {
 
     private final JavaMailSender mailSender;
-    private final TemplateEngine templateEngine;
     private final AppProperties appProperties;
 
     /**
      * 비동기 이메일 발송 - 인증 코드
-     * 백그라운드 스레드에서 실행되므로 API 응답이 즉시 반환됨
      */
     @Async
     public void sendVerificationEmail(String to, String code) {
         long startTime = System.currentTimeMillis();
-        log.info("[비동기 이메일] 인증 코드 발송 시작 (스레드: {}): {}", Thread.currentThread().getName(), to);
+        log.debug("[비동기 이메일] 인증 코드 발송 시작 (스레드: {})", Thread.currentThread().getName());
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -40,18 +37,15 @@ public class AsyncEmailSender {
 
             helper.setTo(to);
             helper.setSubject("[그리스도 사랑교회] 이메일 인증 코드");
-
-            // Thymeleaf 템플릿으로 HTML 생성
-            String htmlContent = buildVerificationCodeHtml(code);
-            helper.setText(htmlContent, true);
+            helper.setText(buildVerificationCodeHtml(code), true);
 
             mailSender.send(message);
 
             long totalTime = System.currentTimeMillis() - startTime;
-            log.info("[비동기 이메일] 인증 코드 발송 완료 ({}ms): {}", totalTime, to);
+            log.info("[비동기 이메일] 인증 코드 발송 완료 ({}ms)", totalTime);
 
         } catch (MessagingException e) {
-            log.error("[비동기 이메일] 인증 코드 발송 실패: {}", to, e);
+            log.error("[비동기 이메일] 인증 코드 발송 실패", e);
         }
     }
 
@@ -61,7 +55,7 @@ public class AsyncEmailSender {
     @Async
     public void sendPasswordResetEmail(String to, String token, String name) {
         long startTime = System.currentTimeMillis();
-        log.info("[비동기 이메일] 비밀번호 재설정 발송 시작 (스레드: {}): {}", Thread.currentThread().getName(), to);
+        log.debug("[비동기 이메일] 비밀번호 재설정 발송 시작 (스레드: {})", Thread.currentThread().getName());
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -70,37 +64,157 @@ public class AsyncEmailSender {
             helper.setTo(to);
             helper.setSubject("[그리스도 사랑교회] 비밀번호 재설정");
 
-            // Thymeleaf 템플릿으로 HTML 생성
-            String resetUrl = appProperties.getUrl() + "/auth/reset-password?token=" + token;
-            String htmlContent = buildPasswordResetHtml(name, resetUrl);
-            helper.setText(htmlContent, true);
+            String baseUrl = appProperties.getFrontendUrl().isBlank()
+                    ? appProperties.getUrl()
+                    : appProperties.getFrontendUrl();
+            String resetUrl = baseUrl + "/reset-password?token=" + token;
+
+            helper.setText(buildPasswordResetHtml(name, resetUrl), true);
 
             mailSender.send(message);
 
             long totalTime = System.currentTimeMillis() - startTime;
-            log.info("[비동기 이메일] 비밀번호 재설정 발송 완료 ({}ms): {}", totalTime, to);
+            log.info("[비동기 이메일] 비밀번호 재설정 발송 완료 ({}ms)", totalTime);
 
         } catch (MessagingException e) {
-            log.error("[비동기 이메일] 비밀번호 재설정 발송 실패: {}", to, e);
+            log.error("[비동기 이메일] 비밀번호 재설정 발송 실패", e);
         }
     }
 
-    /**
-     * HTML 이메일 내용 생성 - 인증 코드
-     */
+    // ── HTML 빌더 ────────────────────────────────────────────────────────
+
     private String buildVerificationCodeHtml(String code) {
-        Context context = new Context();
-        context.setVariable("code", code);
-        return templateEngine.process("email/verification-code", context);
+        return """
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="margin:0;padding:0;font-family:'Malgun Gothic','맑은 고딕',Arial,sans-serif;background-color:#f5f5f5;">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
+                    <tr>
+                      <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0"
+                               style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                          <!-- 헤더 -->
+                          <tr>
+                            <td style="padding:40px 40px 30px;text-align:center;border-bottom:1px solid #e5e5e5;">
+                              <h1 style="margin:0;font-size:24px;font-weight:300;color:#1e293b;">그리스도 사랑교회</h1>
+                            </td>
+                          </tr>
+                          <!-- 본문 -->
+                          <tr>
+                            <td style="padding:40px;">
+                              <h2 style="margin:0 0 20px;font-size:20px;font-weight:500;color:#0f172a;">이메일 인증 코드</h2>
+                              <p style="margin:0 0 30px;font-size:15px;line-height:1.6;color:#475569;">
+                                회원가입을 위한 이메일 인증 코드를 안내해 드립니다.<br>
+                                아래 인증 코드를 입력하여 이메일 인증을 완료해주세요.
+                              </p>
+                              <!-- 인증 코드 박스 -->
+                              <div style="background-color:#f8fafc;border:2px solid #e2e8f0;border-radius:8px;padding:30px;text-align:center;margin:30px 0;">
+                                <div style="font-size:14px;color:#64748b;margin-bottom:10px;font-weight:500;">인증 코드</div>
+                                <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#0f172a;font-family:'Courier New',monospace;">
+                                  %s
+                                </div>
+                              </div>
+                              <!-- 안내 -->
+                              <div style="background-color:#fef3c7;border-left:4px solid #f59e0b;padding:15px 20px;margin:30px 0;border-radius:4px;">
+                                <p style="margin:0;font-size:14px;color:#92400e;line-height:1.6;">
+                                  <strong>⏱️ 유효 시간:</strong> 이 코드는 <strong>5분간</strong> 유효합니다.<br>
+                                  <strong>🔒 보안:</strong> 본인이 요청하지 않았다면 이 메일을 무시하세요.
+                                </p>
+                              </div>
+                              <p style="margin:30px 0 0;font-size:14px;color:#64748b;line-height:1.6;">
+                                감사합니다.<br>
+                                <strong style="color:#475569;">그리스도 사랑교회</strong> 드림
+                              </p>
+                            </td>
+                          </tr>
+                          <!-- 푸터 -->
+                          <tr>
+                            <td style="padding:30px;background-color:#f8fafc;border-top:1px solid #e5e5e5;text-align:center;border-radius:0 0 8px 8px;">
+                              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
+                                이 이메일은 회원가입 시 자동으로 발송된 메일입니다.<br>
+                                문의사항이 있으시면 교회로 연락 주시기 바랍니다.
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """.formatted(code);
     }
 
-    /**
-     * HTML 이메일 내용 생성 - 비밀번호 재설정
-     */
     private String buildPasswordResetHtml(String name, String resetUrl) {
-        Context context = new Context();
-        context.setVariable("name", name);
-        context.setVariable("resetUrl", resetUrl);
-        return templateEngine.process("email/password-reset", context);
+        return """
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="margin:0;padding:0;font-family:'Malgun Gothic','맑은 고딕',Arial,sans-serif;background-color:#f5f5f5;">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
+                    <tr>
+                      <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0"
+                               style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                          <!-- 헤더 -->
+                          <tr>
+                            <td style="padding:40px 40px 30px;text-align:center;border-bottom:1px solid #e5e5e5;">
+                              <h1 style="margin:0;font-size:24px;font-weight:300;color:#1e293b;">그리스도 사랑교회</h1>
+                            </td>
+                          </tr>
+                          <!-- 본문 -->
+                          <tr>
+                            <td style="padding:40px;">
+                              <h2 style="margin:0 0 10px;font-size:20px;font-weight:500;color:#0f172a;">비밀번호 재설정</h2>
+                              <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#475569;">
+                                안녕하세요, <strong>%s</strong>님
+                              </p>
+                              <p style="margin:0 0 30px;font-size:15px;line-height:1.6;color:#475569;">
+                                비밀번호 재설정을 요청하셨습니다.<br>
+                                아래 버튼을 클릭하여 새로운 비밀번호를 설정해주세요.
+                              </p>
+                              <!-- 버튼 -->
+                              <div style="text-align:center;margin:40px 0;">
+                                <a href="%s"
+                                   style="display:inline-block;padding:16px 40px;background-color:#1e293b;color:#ffffff;text-decoration:none;border-radius:6px;font-size:16px;font-weight:500;">
+                                  비밀번호 재설정하기
+                                </a>
+                              </div>
+                              <!-- 안내 -->
+                              <div style="background-color:#fef3c7;border-left:4px solid #f59e0b;padding:15px 20px;margin:30px 0;border-radius:4px;">
+                                <p style="margin:0;font-size:14px;color:#92400e;line-height:1.6;">
+                                  <strong>⏱️ 유효 시간:</strong> 이 링크는 <strong>30분간</strong> 유효합니다.<br>
+                                  <strong>🔒 보안:</strong> 본인이 요청하지 않았다면 이 메일을 무시하세요.
+                                </p>
+                              </div>
+                              <p style="margin:30px 0 0;font-size:14px;color:#64748b;line-height:1.6;">
+                                감사합니다.<br>
+                                <strong style="color:#475569;">그리스도 사랑교회</strong> 드림
+                              </p>
+                            </td>
+                          </tr>
+                          <!-- 푸터 -->
+                          <tr>
+                            <td style="padding:30px;background-color:#f8fafc;border-top:1px solid #e5e5e5;text-align:center;border-radius:0 0 8px 8px;">
+                              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
+                                이 이메일은 비밀번호 재설정 요청 시 자동으로 발송된 메일입니다.<br>
+                                문의사항이 있으시면 교회로 연락 주시기 바랍니다.
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """.formatted(name, resetUrl);
     }
 }

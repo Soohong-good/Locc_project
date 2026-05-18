@@ -32,18 +32,28 @@ public class PasswordResetService {
 
     /**
      * 비밀번호 재설정 요청
-     * 이메일로 재설정 링크 발송
+     *
+     * 계정 열거(Account Enumeration) 방지:
+     *   - 이메일 존재 여부와 관계없이 동일한 200 응답 반환
+     *   - 미존재 이메일이면 이메일만 발송하지 않고 조용히 종료
+     *   - 공격자가 응답만으로 가입 여부를 확인할 수 없음
      */
     public void requestPasswordReset(String email) {
-        log.info("비밀번호 재설정 요청: {}", email);
+        log.debug("비밀번호 재설정 요청 수신");
 
-        // 사용자 존재 확인
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 이메일입니다."));
+        // 사용자 존재 확인 — 미존재 시 예외 없이 종료 (계정 열거 방지)
+        var userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            log.debug("비밀번호 재설정 요청: 미등록 이메일 (정상 응답 반환)");
+            return;
+        }
 
-        // 삭제된 계정 체크
+        User user = userOpt.get();
+
+        // 삭제된 계정은 조용히 종료 (계정 존재 여부 노출 방지)
         if (user.isDeleted()) {
-            throw new IllegalStateException("삭제된 계정입니다. 관리자에게 문의해주세요.");
+            log.debug("비밀번호 재설정 요청: 삭제된 계정 (정상 응답 반환)");
+            return;
         }
 
         // 재설정 토큰 생성
@@ -56,7 +66,7 @@ public class PasswordResetService {
         // 비동기로 이메일 발송
         asyncEmailSender.sendPasswordResetEmail(email, token, user.getName());
 
-        log.info("비밀번호 재설정 링크 발송 완료: {}", email);
+        log.debug("비밀번호 재설정 링크 발송 완료");
     }
 
     /**
@@ -93,14 +103,6 @@ public class PasswordResetService {
         // 토큰 삭제 (재사용 방지)
         redisTemplate.delete(key);
 
-        log.info("비밀번호 재설정 완료: {}", email);
-    }
-
-    /**
-     * 토큰으로 이메일 조회
-     */
-    public String getEmailByToken(String token) {
-        String key = RESET_TOKEN_PREFIX + token;
-        return redisTemplate.opsForValue().get(key);
+        log.debug("비밀번호 재설정 완료");
     }
 }

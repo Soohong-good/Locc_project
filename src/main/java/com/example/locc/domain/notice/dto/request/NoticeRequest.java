@@ -1,5 +1,7 @@
 package com.example.locc.domain.notice.dto.request;
 
+import com.example.locc.domain.notice.dto.command.NoticeCreateCommand;
+import com.example.locc.domain.notice.dto.command.NoticeUpdateCommand;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -34,4 +36,25 @@ public class NoticeRequest {
      * 첨부파일 목록
      */
     private List<MultipartFile> files;
+
+    public NoticeCreateCommand toCreateCommand(String createdByEmail) {
+        return NoticeCreateCommand.builder()
+                .title(this.title)
+                .content(this.content)
+                .isPinned(this.isPinned)
+                .files(this.files)
+                .createdByEmail(createdByEmail)
+                .build();
+    }
+
+    public NoticeUpdateCommand toUpdateCommand(Long noticeId, String updatedByEmail) {
+        return NoticeUpdateCommand.builder()
+                .noticeId(noticeId)
+                .title(this.title)
+                .content(this.content)
+                .isPinned(this.isPinned)
+                .files(this.files)
+                .updatedByEmail(updatedByEmail)
+                .build();
+    }
 }

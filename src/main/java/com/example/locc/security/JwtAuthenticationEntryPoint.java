@@ -24,10 +24,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
 
-        log.error("Unauthorized error: {}", authException.getMessage());
-
         String requestURI = request.getRequestURI();
-        
+        String method = request.getMethod();
+        log.error("Unauthorized error: [{}] {} — {}", method, requestURI, authException.getMessage());
+
         // API 요청인 경우 JSON 응답
         if (requestURI.startsWith("/api/")) {
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);

@@ -25,6 +25,7 @@ public class TrainingDetailResponse {
     private final int maxParticipants;
     private final TrainingStatus status;
     private final String creatorName;
+    private final String creatorId;   // 프론트 본인 여부 판단용
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final boolean canApply;
@@ -45,6 +46,8 @@ public class TrainingDetailResponse {
                 .status(training.getCurrentStatus())  // 동적 상태 사용
                 .creatorName(training.getCreatedBy() != null ? 
                         training.getCreatedBy().getName() : "알 수 없음")
+                .creatorId(training.getCreatedBy() != null ?
+                        training.getCreatedBy().getId().toString() : null)
                 .createdAt(training.getCreatedAt())
                 .updatedAt(training.getUpdatedAt())
                 .canApply(training.canApply())

@@ -14,13 +14,14 @@ public class DepartmentBoardDetailResponse {
     private final String title;
     private final String content;
     private final String authorName;
+    private final String authorId;   // 프론트 본인 여부 판단용
     private final Integer viewCount;
     private final Boolean isPinned;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
     private DepartmentBoardDetailResponse(Long id, String departmentCode, String departmentName,
-                                         String title, String content, String authorName,
+                                         String title, String content, String authorName, String authorId,
                                          Integer viewCount, Boolean isPinned,
                                          LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -29,6 +30,7 @@ public class DepartmentBoardDetailResponse {
         this.title = title;
         this.content = content;
         this.authorName = authorName;
+        this.authorId = authorId;
         this.viewCount = viewCount;
         this.isPinned = isPinned;
         this.createdAt = createdAt;
@@ -43,6 +45,7 @@ public class DepartmentBoardDetailResponse {
             board.getTitle(),
             board.getContent(),
             board.getAuthor().getName(),
+            board.getAuthor().getId().toString(),
             board.getViewCount(),
             board.getIsPinned(),
             board.getCreatedAt(),

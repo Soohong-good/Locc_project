@@ -6,7 +6,9 @@ import com.example.locc.domain.helprequest.repository.HelpRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,18 @@ public class HelpRequestQueryService {
     public Page<HelpRequestResponse> findByStatus(HelpRequestStatus status, Pageable pageable) {
         return helpRequestRepository.findByStatus(status, pageable)
                 .map(HelpRequestResponse::from);
+    }
+
+    /**
+     * 관리자용 도움요청 목록 조회 (status 없으면 전체, 있으면 상태 필터)
+     * - 정렬: createdAt DESC
+     */
+    public Page<HelpRequestResponse> getList(HelpRequestStatus status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        if (status != null) {
+            return findByStatus(status, pageable);
+        }
+        return findAll(pageable);
     }
 
     /**

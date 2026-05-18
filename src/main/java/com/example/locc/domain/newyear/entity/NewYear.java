@@ -43,6 +43,9 @@ public class NewYear {
     @Column(columnDefinition = "LONGTEXT")
     private String transcript; // 녹취본 전문
 
+    @Column
+    private Long pdfFileId; // 업로드된 설교 PDF 파일 ID (files 테이블 참조)
+
     // 정적 팩토리 메서드
     public static NewYear create(String title, String youtubePlaylistId, Integer year) {
         NewYear newYear = new NewYear();
@@ -76,5 +79,10 @@ public class NewYear {
     // 녹취본 업데이트
     public void updateTranscript(String transcript) {
         this.transcript = transcript;
+    }
+
+    // PDF 파일 ID 업데이트
+    public void updatePdfFileId(Long pdfFileId) {
+        this.pdfFileId = pdfFileId;
     }
 }

@@ -2,17 +2,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { login as loginApi, logout as logoutApi, getMe } from '@/api/auth'
 import useAuthStore from '@/stores/authStore'
-import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/lib/constants'
 
 /**
  * 로그인 뮤테이션
  *
- * 백엔드 UserAuthResponse 구조:
- *   { accessToken, refreshToken, tokenType, expiresIn, username, role, message }
+ * 토큰 저장 방식: HttpOnly 쿠키 (서버가 Set-Cookie로 처리)
+ * 클라이언트에서는 토큰을 직접 저장하지 않는다.
  *
  * 로그인 성공 흐름:
- *   1. 토큰 localStorage 저장
- *   2. /api/auth/me 호출로 전체 유저 정보 세팅 (UserDetailResponse)
+ *   1. 서버가 accessToken / refreshToken 을 HttpOnly 쿠키로 발급
+ *   2. /api/auth/me 호출로 전체 유저 정보 세팅 (쿠키 자동 전송)
  *   3. 이전 페이지 또는 / 로 이동
  */
 export const useLogin = () => {
@@ -23,12 +22,9 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: loginApi,
     onSuccess: async (data) => {
-      localStorage.setItem(TOKEN_KEY, data.accessToken)
-      if (data.refreshToken) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken)
-      }
+      // 토큰은 이미 HttpOnly 쿠키로 설정됨 — localStorage 저장 없음
 
-      // 토큰 저장 후 전체 유저 정보 조회
+      // 쿠키 기반으로 유저 정보 조회
       try {
         const user = await getMe()
         setUser(user)
@@ -46,7 +42,7 @@ export const useLogin = () => {
 
 /**
  * 로그아웃 뮤테이션
- * 성공/실패 모두 클라이언트 토큰 삭제 후 로그인 페이지로 이동
+ * 서버가 쿠키 만료 처리 → 클라이언트는 상태만 초기화
  */
 export const useLogout = () => {
   const { clearAuth } = useAuthStore()

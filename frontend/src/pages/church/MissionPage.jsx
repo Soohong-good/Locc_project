@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import PageHero from '@/components/ui/PageHero'
 
 const MissionCard = ({ title, children, tags }) => (
   <div className="bg-white p-8 md:p-12 rounded-lg shadow-sm">
@@ -24,7 +25,7 @@ const FieldCard = ({ number, accent, title, badge, badgeColor, description, tags
         <div className="flex items-center gap-3 mb-4 flex-wrap">
           <h4 className="text-2xl font-medium text-slate-900">{title}</h4>
           {badge && (
-            <span className={`px-3 py-1 text-sm rounded-full font-medium ${badgeColor}`}>
+            <span className={`px-3 py-1 text-xl rounded-full font-semibold ${badgeColor}`}>
               {badge}
             </span>
           )}
@@ -46,29 +47,19 @@ const FieldCard = ({ number, accent, title, badge, badgeColor, description, tags
 
 export default function MissionPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero */}
-      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-24 pb-32 px-6">
-        <div className="max-w-4xl w-full text-center">
-          <div className="mb-16">
-            <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Mission</p>
-            <h1 className="text-5xl md:text-7xl font-light text-white leading-[1.2] tracking-tight mb-8">
-              선교
-            </h1>
-            <div className="h-px w-16 bg-slate-600 mx-auto mb-12" />
-            <p className="text-xl md:text-2xl text-slate-300 leading-[1.8] font-light max-w-2xl mx-auto">
-              모든 민족에게 복음을 전하라는<br />
-              주님의 지상 명령을 실천합니다
-            </p>
-          </div>
-        </div>
-      </section>
+    <div className="bg-white">
+      <PageHero
+        eyebrow="Mission"
+        title="선교"
+        subtitle="모든 민족에게 복음을 전하라는 주님의 지상 명령을 실천합니다"
+        bgImage="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1600&q=80&auto=format&fit=crop"
+      />
 
       {/* 선교 비전 */}
       <section className="py-32 bg-white px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-20 text-center">
-            <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Vision</p>
+            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Vision</p>
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">선교 비전</h2>
             <div className="h-px w-16 bg-slate-300 mx-auto" />
           </div>
@@ -129,7 +120,7 @@ export default function MissionPage() {
       <section className="py-32 bg-slate-50 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-20 text-center">
-            <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Activities</p>
+            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Activities</p>
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">선교 활동</h2>
             <div className="h-px w-16 bg-slate-300 mx-auto" />
           </div>
@@ -156,7 +147,7 @@ export default function MissionPage() {
       <section className="py-32 bg-white px-6">
         <div className="max-w-5xl mx-auto">
           <div className="mb-20 text-center">
-            <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Mission Field</p>
+            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Mission Field</p>
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">선교 현황</h2>
             <div className="h-px w-16 bg-slate-300 mx-auto mb-8" />
             <p className="text-lg text-slate-600 font-light max-w-2xl mx-auto">
@@ -208,7 +199,15 @@ export default function MissionPage() {
                 description="미국 내 한인 디아스포라와 현지인을 대상으로 복음 전파와 교회 개척 사역을 감당하고 있습니다."
               />
               <FieldCard
-                number="2"
+                  number="2"
+                  accent="border-slate-700"
+                  title="필리핀"
+                  badge="신남선 선교사"
+                  badgeColor="bg-purple-100 text-purple-800"
+                  description="필리핀 중부지역(central Luzon)에서 성경적 교회를 세우고, 후대를 치유하며, 현지인 교회를 살리는 사역을 하고 있습니다."
+              />
+                <FieldCard
+                number="3"
                 accent="border-slate-700"
                 title="성경번역 선교회"
                 badge="임오랑 선교사"
@@ -216,10 +215,11 @@ export default function MissionPage() {
                 description="자국어 성경이 없는 소수민족들을 위한 성경 번역 및 문자 개발 사역을 지원하고 있습니다."
                 tags={['성경 번역', '문자 개발', '소수민족 사역']}
               />
+
               <div className="bg-slate-50 p-8 md:p-10 rounded-lg border-l-4 border-slate-700">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white font-medium">3</span>
+                    <span className="text-white font-medium">4</span>
                   </div>
                   <div className="flex-1">
                     <h4 className="text-2xl font-medium text-slate-900 mb-2">액츠신학 연구원 후원</h4>
@@ -268,7 +268,7 @@ export default function MissionPage() {
       <section className="py-32 bg-white px-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-20 text-center">
-            <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Support</p>
+            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Support</p>
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">선교 후원</h2>
             <div className="h-px w-16 bg-slate-300 mx-auto" />
           </div>

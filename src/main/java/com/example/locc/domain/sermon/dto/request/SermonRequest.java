@@ -1,5 +1,7 @@
 package com.example.locc.domain.sermon.dto.request;
 
+import com.example.locc.domain.sermon.dto.command.SermonCreateCommand;
+import com.example.locc.domain.sermon.dto.command.SermonUpdateCommand;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -52,4 +54,24 @@ public class SermonRequest {
      * 첨부파일 목록
      */
     private List<MultipartFile> files;
+
+    public SermonCreateCommand toCreateCommand(String createdByEmail) {
+        return SermonCreateCommand.builder()
+                .title(title).scripture(scripture).preacher(preacher)
+                .content(content).audioUrl(audioUrl).videoUrl(videoUrl)
+                .thumbnailUrl(thumbnailUrl).sermonDate(sermonDate)
+                .category(category).serviceNumber(serviceNumber)
+                .files(files).createdByEmail(createdByEmail)
+                .build();
+    }
+
+    public SermonUpdateCommand toUpdateCommand(Long sermonId, String updatedByEmail) {
+        return SermonUpdateCommand.builder()
+                .sermonId(sermonId).title(title).scripture(scripture).preacher(preacher)
+                .content(content).audioUrl(audioUrl).videoUrl(videoUrl)
+                .thumbnailUrl(thumbnailUrl).sermonDate(sermonDate)
+                .category(category).serviceNumber(serviceNumber)
+                .files(files).updatedByEmail(updatedByEmail)
+                .build();
+    }
 }

@@ -10,12 +10,13 @@ import java.time.LocalDateTime;
  */
 public record GalleryImageResponse(
         Long id,
-        String title,          // 제목 = 앨범 그룹화
+        String title,
         String description,
         String thumbnailFilename,
         String storedFilename,
-        String uploaderName,   // 업로더 이름
-        Integer imageCount,    // 같은 제목의 이미지 개수
+        String uploaderName,
+        String uploaderId,     // 업로더 UUID — 프론트 본인 여부 판단용
+        Integer imageCount,
         Integer viewCount,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime createdAt
@@ -28,15 +29,13 @@ public record GalleryImageResponse(
                 image.getThumbnailFilename(),
                 image.getStoredFilename(),
                 image.getUploader().getName(),
-                1,  // 기본값, QueryService에서 설정
+                image.getUploader().getId().toString(),
+                1,
                 image.getViewCount(),
                 image.getCreatedAt()
         );
     }
-    
-    /**
-     * 이미지 개수 포함 생성
-     */
+
     public static GalleryImageResponse from(GalleryImage image, int imageCount) {
         return new GalleryImageResponse(
                 image.getId(),
@@ -45,6 +44,7 @@ public record GalleryImageResponse(
                 image.getThumbnailFilename(),
                 image.getStoredFilename(),
                 image.getUploader().getName(),
+                image.getUploader().getId().toString(),
                 imageCount,
                 image.getViewCount(),
                 image.getCreatedAt()

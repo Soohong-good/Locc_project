@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react'
+﻿import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getNotice, createNotice, updateNotice, uploadNoticeImage } from '@/api/notices'
-import useQuillEditor from '@/hooks/useQuillEditor'
+import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import { getErrorMessage } from '@/lib/apiError'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
+import toast from '@/utils/toast'
 
 /**
  * 관리자 공지사항 생성·수정 폼 (통합)
@@ -12,32 +12,31 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
  * - /admin/notices/:id/edit → 수정 모드
  */
 const AdminNoticeFormPage = () => {
-  const { id } = useParams()           // 수정 모드일 때만 존재
+  const { id } = useParams()
   const isEdit  = Boolean(id)
-  const navigate  = useNavigate()
-  const queryClient = useQueryClient()
+  const navigate      = useNavigate()
+  const queryClient   = useQueryClient()
 
-  // ── 필드 상태 ──
   const [title,    setTitle]    = useState('')
   const [isPinned, setIsPinned] = useState(false)
-  const [files,    setFiles]    = useState([])         // 새로 첨부할 파일 목록
+  const [files,    setFiles]    = useState([])
   const [content,  setContent]  = useState('')
-  const [initDone, setInitDone] = useState(false)      // 수정 모드 초기값 세팅 완료 여부
 
   // ── 수정 모드: 기존 데이터 로드 ──
-  const { isLoading: isDetailLoading } = useQuery({
+  const { data: detail, isLoading: isDetailLoading } = useQuery({
     queryKey: ['notices', id],
     queryFn: () => getNotice(id),
     enabled: isEdit,
-    onSuccess: (data) => {
-      if (!initDone) {
-        setTitle(data.title ?? '')
-        setIsPinned(data.isPinned ?? false)
-        setContent(data.content ?? '')
-        setInitDone(true)
-      }
-    },
   })
+
+  // v5 호환: 데이터 로드 후 폼 초기값 세팅
+  useEffect(() => {
+    if (detail) {
+      setTitle(detail.title ?? '')
+      setIsPinned(detail.isPinned ?? false)
+      setContent(detail.content ?? '')
+    }
+  }, [detail])
 
   // ── Quill 에디터 ──
   const handleUpload = useCallback((file) => uploadNoticeImage(file), [])
@@ -51,10 +50,10 @@ const AdminNoticeFormPage = () => {
   const saveMutation = useMutation({
     mutationFn: (formData) =>
       isEdit ? updateNotice({ id, formData }) : createNotice(formData),
-    onSuccess: (saved) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] })
       queryClient.invalidateQueries({ queryKey: ['notices'] })
-      navigate(`/admin/notices`)
+      navigate('/admin/notices')
     },
   })
 
@@ -62,28 +61,30 @@ const AdminNoticeFormPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault()
     const html = getHTML()
-    if (!title.trim()) return alert('제목을 입력해주세요.')
-    if (!html)          return alert('내용을 입력해주세요.')
+    if (!title.trim()) return toast.error('제목을 입력해주세요.')
+    if (!html)          return toast.error('내용을 입력해주세요.')
 
     const formData = new FormData()
     formData.append('title',    title.trim())
     formData.append('content',  html)
     formData.append('isPinned', isPinned)
     files.forEach((f) => formData.append('files', f))
-
     saveMutation.mutate(formData)
   }
 
-  // ── 파일 추가 ──
   const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files)
-    setFiles((prev) => [...prev, ...selected])
+    setFiles((prev) => [...prev, ...Array.from(e.target.files)])
     e.target.value = ''
   }
-
   const removeFile = (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx))
 
-  if (isEdit && isDetailLoading) return <LoadingSpinner fullScreen={false} />
+  if (isEdit && isDetailLoading) return (
+    <div className="p-8 max-w-3xl space-y-6">
+      <div className="skeleton-shimmer h-7 w-40 rounded mb-8" />
+      <div className="skeleton-shimmer h-10 w-full rounded" />
+      <div className="skeleton-shimmer h-64 w-full rounded" />
+    </div>
+  )
 
   return (
     <div className="p-8 max-w-3xl">
@@ -117,9 +118,7 @@ const AdminNoticeFormPage = () => {
             onChange={(e) => setIsPinned(e.target.checked)}
             className="w-4 h-4 accent-blue-600"
           />
-          <label htmlFor="isPinned" className="text-sm text-gray-700">
-            공지사항 상단 고정
-          </label>
+          <label htmlFor="isPinned" className="text-sm text-gray-700">공지사항 상단 고정</label>
         </div>
 
         {/* 내용 (Quill) */}
@@ -128,35 +127,28 @@ const AdminNoticeFormPage = () => {
             내용 <span className="text-red-500">*</span>
           </label>
           <div className="border border-gray-300 rounded-lg overflow-hidden">
-            <div
-              ref={containerRef}
-              style={{ minHeight: '300px' }}
-              className="text-sm"
-            />
+            <div ref={containerRef} style={{ minHeight: '300px' }} className="text-sm" />
           </div>
         </div>
 
         {/* 첨부파일 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">첨부파일</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-4 file:border file:border-gray-300 file:rounded-lg file:text-sm file:bg-gray-50 hover:file:bg-gray-100 file:cursor-pointer"
-          />
+          <label className="flex items-center gap-3 w-full border border-dashed border-gray-300 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+            <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            <span className="text-sm text-gray-500">파일 선택하기</span>
+            <span className="ml-auto text-xs text-gray-400 shrink-0">PDF, HWP, JPG, PNG · 최대 10MB</span>
+            <input type="file" multiple onChange={handleFileChange} className="hidden" />
+          </label>
           {files.length > 0 && (
             <ul className="mt-2 space-y-1">
               {files.map((f, idx) => (
                 <li key={idx} className="flex items-center justify-between text-xs text-gray-600 bg-gray-50 rounded px-3 py-1.5">
                   <span className="truncate">{f.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeFile(idx)}
-                    className="ml-2 text-gray-400 hover:text-red-500 shrink-0"
-                  >
-                    ✕
-                  </button>
+                  <button type="button" onClick={() => removeFile(idx)} className="ml-2 text-gray-400 hover:text-red-500 shrink-0">✕</button>
                 </li>
               ))}
             </ul>

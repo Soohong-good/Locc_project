@@ -2,6 +2,7 @@ package com.example.locc.domain.popup.repository;
 
 import com.example.locc.domain.popup.entity.Popup;
 import com.example.locc.domain.popup.entity.TargetType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,10 +42,12 @@ public interface PopupRepository extends JpaRepository<Popup, Long> {
     /**
      * 전체 목록 조회 (관리자용 - 최신순)
      */
+    @EntityGraph(attributePaths = {"createdBy", "updatedBy"})
     List<Popup> findAllByOrderByCreatedAtDesc();
 
     /**
      * 활성화 상태별 조회
      */
+    @EntityGraph(attributePaths = {"createdBy", "updatedBy"})
     List<Popup> findByIsActiveOrderByPriorityDescCreatedAtDesc(Boolean isActive);
 }

@@ -18,4 +18,18 @@ public class UserAuthResponse {
     private final String username;
     private final String role;
     private final String message;
+
+    /**
+     * 토큰을 제외한 사용자 식별 정보만 담은 응답 생성
+     * - HttpOnly 쿠키로 토큰을 전달하는 경우 바디에서 토큰 제거 용도
+     */
+    public UserAuthResponse withoutTokens() {
+        return UserAuthResponse.builder()
+                .tokenType(this.tokenType)
+                .expiresIn(this.expiresIn)
+                .username(this.username)
+                .role(this.role)
+                .message(this.message)
+                .build();
+    }
 }

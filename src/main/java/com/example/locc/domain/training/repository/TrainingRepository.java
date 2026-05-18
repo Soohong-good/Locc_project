@@ -40,12 +40,14 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
     Page<Training> findByStatus(@Param("status") TrainingStatus status, Pageable pageable);
 
     /**
-     * 신청 가능한 훈련 목록 (OPEN 상태)
+     * 신청 가능한 훈련 목록 (OPEN 상태, 훈련 종료일이 오늘 이후)
+     * - status = OPEN (수동 마감되지 않은 것)
+     * - endDate >= 오늘 (훈련 자체가 아직 끝나지 않은 것)
      */
     @EntityGraph(attributePaths = {"createdBy"})
     @Query("SELECT t FROM Training t " +
            "WHERE t.status = 'OPEN' " +
-           "AND t.applicationDeadline > CURRENT_TIMESTAMP " +
+           "AND t.endDate >= CURRENT_DATE " +
            "ORDER BY t.startDate ASC")
     List<Training> findOpenTrainings();
 

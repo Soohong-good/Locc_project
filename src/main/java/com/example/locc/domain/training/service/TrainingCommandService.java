@@ -34,7 +34,7 @@ public class TrainingCommandService {
      * 훈련 생성
      */
     public TrainingDetailResponse create(CreateTrainingCommand command, String email) {
-        log.info("Creating training: {} by {}", command.title(), email);
+        log.debug("Creating training: {}", command.title());
 
         User creator = findUserByEmail(email);
 
@@ -48,7 +48,7 @@ public class TrainingCommandService {
      * 훈련 수정
      */
     public TrainingDetailResponse update(Long trainingId, UpdateTrainingCommand command, String email) {
-        log.info("Updating training: {} by {}", trainingId, email);
+        log.debug("Updating training: {}", trainingId);
 
         Training training = trainingQueryService.findDetailById(trainingId);
         User user = findUserByEmail(email);
@@ -72,7 +72,7 @@ public class TrainingCommandService {
      * 훈련 삭제
      */
     public void delete(Long trainingId, String email) {
-        log.info("Deleting training: {} by {}", trainingId, email);
+        log.debug("Deleting training: {}", trainingId);
 
         Training training = trainingQueryService.findDetailById(trainingId);
         User user = findUserByEmail(email);
@@ -86,7 +86,7 @@ public class TrainingCommandService {
      * 신청 마감
      */
     public void close(Long trainingId, String email) {
-        log.info("Closing training application: {} by {}", trainingId, email);
+        log.debug("Closing training application: {}", trainingId);
 
         Training training = trainingQueryService.findDetailById(trainingId);
         User user = findUserByEmail(email);
@@ -103,7 +103,7 @@ public class TrainingCommandService {
      */
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     /**

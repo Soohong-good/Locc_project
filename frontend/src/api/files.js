@@ -10,6 +10,22 @@ import client from './client'
  * @param {number|string} fileId - 파일 ID
  * @param {string} fileName - 다운로드 시 저장될 파일명 (Content-Disposition 없을 경우 폴백)
  */
+export const deleteFile = async (fileId) => {
+  await client.delete(`/api/files/${fileId}`)
+}
+
+export const downloadByPath = async (apiPath, filename = 'download') => {
+  const res = await client.get(apiPath, { responseType: 'blob' })
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
 export const downloadFile = async (fileId, fileName = '첨부파일') => {
   const response = await client.get(`/api/files/download/${fileId}`, {
     responseType: 'blob',

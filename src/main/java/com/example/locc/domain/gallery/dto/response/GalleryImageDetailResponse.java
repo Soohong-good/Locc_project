@@ -13,6 +13,7 @@ public record GalleryImageDetailResponse(
         String departmentCode,
         String departmentName,
         String uploaderName,
+        String uploaderId,     // 업로더 UUID — 프론트 본인 여부 판단용
         String title,
         String description,
         String originalFilename,
@@ -20,7 +21,7 @@ public record GalleryImageDetailResponse(
         String thumbnailFilename,
         Long fileSize,
         Integer displayOrder,
-        String groupId,        // groupId 추가
+        String groupId,
         Integer viewCount,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime createdAt,
@@ -33,6 +34,7 @@ public record GalleryImageDetailResponse(
                 image.getDepartment().getCode(),
                 image.getDepartment().getName(),
                 image.getUploader().getName(),
+                image.getUploader().getId().toString(),
                 image.getTitle(),
                 image.getDescription(),
                 image.getOriginalFilename(),

@@ -1,5 +1,6 @@
 package com.example.locc.domain.popup.controller;
 
+import com.example.locc.common.ApiResponse;
 import com.example.locc.domain.popup.dto.request.PopupCreateRequest;
 import com.example.locc.domain.popup.dto.request.PopupUpdateRequest;
 import com.example.locc.domain.popup.dto.response.PopupDetailResponse;
@@ -13,7 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * 팝업 API Controller
@@ -27,87 +31,54 @@ public class PopupApiController {
     private final PopupCommandService popupCommandService;
     private final PopupQueryService popupQueryService;
 
-    /**
-     * 현재 활성 팝업 조회 (프론트엔드용)
-     * GET /api/popups/active
-     */
     @GetMapping("/active")
-    public ResponseEntity<List<PopupResponse>> getActivePopups(Authentication authentication) {
-        boolean isLoggedIn = authentication != null && authentication.isAuthenticated()
+    public ResponseEntity<ApiResponse<List<PopupResponse>>> getActivePopups(Authentication authentication) {
+        boolean isLoggedIn = authentication != null
+                && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal());
-
-        List<PopupResponse> popups = popupQueryService.getActivePopups(isLoggedIn);
-        return ResponseEntity.ok(popups);
+        return ResponseEntity.ok(ApiResponse.ok(popupQueryService.getActivePopups(isLoggedIn)));
     }
 
-    /**
-     * 팝업 생성
-     * POST /api/popups
-     */
-    @PostMapping
-    public ResponseEntity<PopupDetailResponse> createPopup(
-            @Valid @ModelAttribute PopupCreateRequest request,
+    @PostMapping("/upload-image")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadImage(
+            @RequestParam("image") MultipartFile image,
             Authentication authentication) {
 
-        String username = authentication.getName();
-        PopupDetailResponse response = popupCommandService.createPopup(request.toCommand(), username);
-
-        return ResponseEntity.ok(response);
+        log.debug("팝업 에디터 이미지 업로드: filename={}, size={}", image.getOriginalFilename(), image.getSize());
+        String imageUrl = popupCommandService.uploadContentImage(image, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("url", imageUrl)));
     }
 
-    /**
-     * 팝업 수정
-     * PUT /api/popups/{id}
-     */
+    @PostMapping
+    public ResponseEntity<ApiResponse<PopupDetailResponse>> createPopup(
+            @Valid @ModelAttribute PopupCreateRequest request, Authentication authentication) {
+        PopupDetailResponse response = popupCommandService.createPopup(request.toCommand(), authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<PopupDetailResponse> updatePopup(
+    public ResponseEntity<ApiResponse<PopupDetailResponse>> updatePopup(
             @PathVariable Long id,
             @Valid @ModelAttribute PopupUpdateRequest request,
             Authentication authentication) {
-
-        String username = authentication.getName();
-        PopupDetailResponse response = popupCommandService.updatePopup(id, request.toCommand(), username);
-
-        return ResponseEntity.ok(response);
+        PopupDetailResponse response = popupCommandService.updatePopup(id, request.toCommand(), authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /**
-     * 팝업 삭제
-     * DELETE /api/popups/{id}
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePopup(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        String username = authentication.getName();
-        popupCommandService.deletePopup(id, username);
-
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<Void>> deletePopup(@PathVariable Long id, Authentication authentication) {
+        popupCommandService.deletePopup(id, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 
-    /**
-     * 팝업 활성화 토글
-     * PATCH /api/popups/{id}/toggle
-     */
     @PatchMapping("/{id}/toggle")
-    public ResponseEntity<PopupDetailResponse> toggleActive(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        String username = authentication.getName();
-        PopupDetailResponse response = popupCommandService.toggleActive(id, username);
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<PopupDetailResponse>> toggleActive(@PathVariable Long id, Authentication authentication) {
+        PopupDetailResponse response = popupCommandService.toggleActive(id, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /**
-     * 팝업 상세 조회
-     * GET /api/popups/{id}
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<PopupDetailResponse> getPopupDetail(@PathVariable Long id) {
-        PopupDetailResponse response = popupQueryService.getPopupDetail(id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<PopupDetailResponse>> getPopupDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(popupQueryService.getPopupDetail(id)));
     }
 }

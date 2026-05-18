@@ -11,7 +11,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +21,11 @@ import java.util.Map;
 
 /**
  * OAuth2 사용자 정보 처리 서비스
- * - 소셜 로그인 후 사용자 정보 저장/업데이트
- * - SocialAccount를 통해 소셜 계정 연결 관리
+ *
+ * 소셜 로그인 처리 정책:
+ *   1. 이미 소셜 계정으로 가입된 경우 → 기존 계정으로 로그인 (소셜 정보 업데이트)
+ *   2. 소셜 이메일과 동일한 이메일의 일반 계정이 존재 → 해당 계정에 소셜 연결 후 로그인 (자동 전환)
+ *   3. 신규 사용자 → 임시 계정 생성 후 추가 정보 입력 페이지로 이동
  */
 @Slf4j
 @Service
@@ -37,110 +39,89 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(userRequest);
-        
+
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         log.info("OAuth2 로그인 시도: {}", registrationId);
 
-        // 제공자별 사용자 정보 추출
         OAuth2UserInfo userInfo = getOAuth2UserInfo(registrationId, oAuth2User.getAttributes());
-        
         if (userInfo == null) {
             throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 제공자입니다.");
         }
 
-        // AuthProvider enum으로 변환
         AuthProvider provider = AuthProvider.valueOf(registrationId.toUpperCase());
+        return handleLoginMode(provider, userInfo, oAuth2User, registrationId);
+    }
 
-        // 소셜 계정 조회
+    // ─── 로그인 모드 ─────────────────────────────────────────────────────────
+
+    private OAuth2User handleLoginMode(AuthProvider provider, OAuth2UserInfo userInfo,
+                                       OAuth2User oAuth2User, String registrationId) {
+        // 케이스 1: 이미 이 소셜 계정으로 가입된 경우 → 기존 계정 로그인
         SocialAccount socialAccount = socialAccountRepository
                 .findByProviderAndProviderId(provider, userInfo.getProviderId())
                 .orElse(null);
 
-        User user;
-        
         if (socialAccount != null) {
-            // 기존 소셜 계정 존재 → 연결된 User 사용
-            user = socialAccount.getUser();
-            // 소셜 정보 업데이트 (이메일/이름이 변경될 수 있음)
             socialAccount.updateInfo(userInfo.getEmail(), userInfo.getName());
-            log.info("기존 소셜 계정 정보 업데이트: {}", user.getEmail());
-        } else {
-            // 신규 소셜 로그인
-            if (userInfo.getEmail() != null) {
-                // 이메일이 있는 경우: 기존 User 찾기
-                user = userRepository.findByEmail(userInfo.getEmail())
-                        .orElseGet(() -> createNewUser(userInfo.getEmail(), userInfo.getName()));
-            } else {
-                // 이메일이 없는 경우: 임시 이메일로 User 생성 (추가 정보 입력에서 실제 이메일 받음)
-                String tempEmail = provider.name().toLowerCase() + "_" + userInfo.getProviderId() + "@temp.local";
-                user = createNewUser(tempEmail, userInfo.getName());
-            }
-            
-            // SocialAccount 생성 및 연결
-            SocialAccount newSocialAccount = SocialAccount.link(
-                    provider,
-                    userInfo.getProviderId(),
-                    userInfo.getEmail(),
-                    userInfo.getName(),
-                    user
-            );
-            socialAccountRepository.save(newSocialAccount);
-            log.info("신규 소셜 계정 연결 완료: {} - {}", provider, user.getEmail());
+            log.debug("기존 소셜 계정 정보 업데이트");
+            return createOAuth2User(socialAccount.getUser(), oAuth2User.getAttributes(), registrationId);
         }
 
-        // User를 OAuth2User로 래핑하여 반환
-        return createOAuth2User(user, oAuth2User.getAttributes(), registrationId);
+        // 케이스 2: 소셜 이메일과 동일한 일반 계정 존재 → 자동 전환 (소셜 연결)
+        if (userInfo.getEmail() != null) {
+            User existingUser = userRepository.findByEmail(userInfo.getEmail()).orElse(null);
+
+            if (existingUser != null) {
+                log.info("소셜 이메일과 일치하는 일반 계정 발견 → 소셜 계정 자동 연결: email={}, provider={}",
+                        userInfo.getEmail(), provider);
+                existingUser.convertToSocialLinked();
+                SocialAccount newSocialAccount = SocialAccount.link(
+                        provider, userInfo.getProviderId(), userInfo.getEmail(),
+                        userInfo.getName(), existingUser);
+                socialAccountRepository.save(newSocialAccount);
+                return createOAuth2User(existingUser, oAuth2User.getAttributes(), registrationId);
+            }
+        }
+
+        // 케이스 3: 신규 사용자 → 임시 계정 생성
+        String email = userInfo.getEmail() != null
+                ? userInfo.getEmail()
+                : provider.name().toLowerCase() + "_" + userInfo.getProviderId() + "@temp.local";
+
+        User newUser = userRepository.save(User.createOAuthTemporaryUser(email, userInfo.getName()));
+        SocialAccount newSocialAccount = SocialAccount.link(
+                provider, userInfo.getProviderId(), userInfo.getEmail(),
+                userInfo.getName(), newUser);
+        socialAccountRepository.save(newSocialAccount);
+        log.debug("신규 소셜 사용자 생성 완료: provider={}", provider);
+
+        return createOAuth2User(newUser, oAuth2User.getAttributes(), registrationId);
     }
 
-    /**
-     * 제공자별 사용자 정보 추출
-     */
+    // ─── 공통 유틸 ───────────────────────────────────────────────────────────
+
     private OAuth2UserInfo getOAuth2UserInfo(String registrationId, Map<String, Object> attributes) {
-        if ("kakao".equals(registrationId)) {
-            return new KakaoUserInfo(attributes);
-        } else if ("naver".equals(registrationId)) {
-            return new NaverUserInfo(attributes);
-        }
+        if ("kakao".equals(registrationId)) return new KakaoUserInfo(attributes);
+        else if ("naver".equals(registrationId)) return new NaverUserInfo(attributes);
         return null;
     }
 
-    /**
-     * 신규 사용자 생성
-     */
-    private User createNewUser(String email, String name) {
-        log.info("신규 OAuth2 사용자 생성: {}", email);
-        
-        User user = User.createOAuthTemporaryUser(email, name);
-        return userRepository.save(user);
-    }
-
-    /**
-     * User를 OAuth2User로 래핑
-     */
     private OAuth2User createOAuth2User(User user, Map<String, Object> attributes, String registrationId) {
         Map<String, Object> modifiedAttributes = new HashMap<>(attributes);
         modifiedAttributes.put("email", user.getEmail());
         modifiedAttributes.put("name", user.getName());
-        
-        String nameAttributeKey = getNameAttributeKey(registrationId);
-        
+
         return new CustomOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
                 modifiedAttributes,
-                nameAttributeKey,
+                getNameAttributeKey(registrationId),
                 user
         );
     }
 
-    /**
-     * 제공자별 nameAttributeKey 반환
-     */
     private String getNameAttributeKey(String registrationId) {
-        if ("kakao".equals(registrationId)) {
-            return "id";
-        } else if ("naver".equals(registrationId)) {
-            return "response";
-        }
+        if ("kakao".equals(registrationId)) return "id";
+        else if ("naver".equals(registrationId)) return "response";
         return "id";
     }
 }

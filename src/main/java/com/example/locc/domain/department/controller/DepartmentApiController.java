@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -106,6 +107,7 @@ public class DepartmentApiController {
     // ── YouTube ───────────────────────────────────────────────────────────
 
     @PostMapping("/{departmentCode}/youtube/update")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> updateYouTubeVideo(
             @PathVariable String departmentCode,
             Authentication authentication) {
@@ -116,6 +118,7 @@ public class DepartmentApiController {
     }
 
     @PostMapping("/youtube/update-all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> updateAllYouTubeVideos(Authentication authentication) {
         log.info("Manual YouTube video update requested for all departments");
         youTubeUpdateService.updateAllDepartmentVideos();

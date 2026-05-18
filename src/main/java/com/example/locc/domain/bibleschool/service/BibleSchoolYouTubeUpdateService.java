@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BibleSchoolYouTubeUpdateService {
 
-    private final BibleSchoolService bibleSchoolService;
+    private final BibleSchoolCommandService bibleSchoolCommandService;
 
     /**
      * 성경학교 최신 유튜브 영상 자동 업데이트
@@ -27,7 +27,7 @@ public class BibleSchoolYouTubeUpdateService {
         log.info("[성경학교] YouTube 최신 영상 자동 업데이트 시작 (매주 토요일)");
         
         try {
-            bibleSchoolService.updateLatestVideo();
+            bibleSchoolCommandService.updateLatestVideo();
             log.info("[성경학교] YouTube 최신 영상 자동 업데이트 완료");
         } catch (IllegalStateException e) {
             log.warn("[성경학교] YouTube 영상 업데이트 건너뜀: {}", e.getMessage());

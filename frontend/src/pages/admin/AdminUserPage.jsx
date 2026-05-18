@@ -1,8 +1,8 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getUsers, getPendingUsers, approveUser, rejectUser, disableUser, enableUser, deleteUser } from '@/api/users'
+import { getUsers, getPendingUsers, approveUser, rejectUser, disableUser, enableUser, deleteUser, grantOperator, revokeOperator } from '@/api/users'
 import ErrorMessage from '@/components/common/ErrorMessage'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
+import { SkeletonRow } from '@/components/ui/SkeletonCard'
 
 /**
  * 관리자 회원 관리 페이지
@@ -14,6 +14,12 @@ const STATUS_LABEL = {
   PENDING: { label: '대기', cls: 'bg-yellow-100 text-yellow-700' },
   APPROVED: { label: '승인', cls: 'bg-green-100 text-green-700' },
   REJECTED: { label: '반려', cls: 'bg-red-100 text-red-600' },
+}
+
+const ROLE_LABEL = {
+  ADMIN:    { label: '총관리자', cls: 'bg-purple-100 text-purple-700' },
+  OPERATOR: { label: '운영자',   cls: 'bg-blue-100 text-blue-700' },
+  USER:     null,
 }
 
 const AdminUserPage = () => {
@@ -42,6 +48,8 @@ const AdminUserPage = () => {
   const disableMutation = useMutation({ mutationFn: disableUser, onSuccess: invalidate })
   const enableMutation = useMutation({ mutationFn: enableUser, onSuccess: invalidate })
   const deleteMutation = useMutation({ mutationFn: deleteUser, onSuccess: invalidate })
+  const grantOperatorMutation = useMutation({ mutationFn: grantOperator, onSuccess: invalidate })
+  const revokeOperatorMutation = useMutation({ mutationFn: revokeOperator, onSuccess: invalidate })
 
   const handleDelete = (userId, name) => {
     if (!confirm(`"${name}" 회원을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return
@@ -49,7 +57,7 @@ const AdminUserPage = () => {
   }
 
   const users = data?.content ?? []
-  const totalPages = data?.totalPages ?? 0
+  const totalPages = data?.pageInfo?.totalPages ?? 0
 
   return (
     <div className="p-8">
@@ -83,7 +91,9 @@ const AdminUserPage = () => {
       )}
 
       {isLoading ? (
-        <LoadingSpinner fullScreen={false} />
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden p-4 space-y-2">
+          {[...Array(8)].map((_, i) => <SkeletonRow key={i} />)}
+        </div>
       ) : error ? (
         <ErrorMessage error={error} fallback="회원 목록을 불러올 수 없습니다." />
       ) : users.length === 0 ? (
@@ -93,29 +103,46 @@ const AdminUserPage = () => {
       ) : (
         <>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col className="w-32" />
+                <col />
+                <col className="w-20" />
+                <col className="w-28" />
+                <col className="w-24" />
+              </colgroup>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">이름</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 hidden sm:table-cell">이메일</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-20">상태</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-28 hidden md:table-cell">가입일</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-48">관리</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">상태</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 hidden md:table-cell">가입일</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {users.map((u) => {
                   const status = STATUS_LABEL[u.approvalStatus] ?? { label: u.approvalStatus, cls: 'bg-gray-100 text-gray-600' }
+                  const roleLabel = ROLE_LABEL[u.role] ?? null
+                  const isOperator = u.role === 'OPERATOR'
+                  const isAdminAccount = u.role === 'ADMIN'
                   return (
                     <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${u.deleted ? 'opacity-50' : ''}`}>
                       <td className="px-4 py-3 font-medium text-gray-800">
-                        {u.name}
-                        {!u.enabled && !u.deleted && (
-                          <span className="ml-1.5 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
-                        )}
-                        {u.deleted && (
-                          <span className="ml-1.5 text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">삭제됨</span>
-                        )}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {u.name}
+                          {roleLabel && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleLabel.cls}`}>
+                              {roleLabel.label}
+                            </span>
+                          )}
+                          {!u.enabled && !u.deleted && (
+                            <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
+                          )}
+                          {u.deleted && (
+                            <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">삭제됨</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{u.email}</td>
                       <td className="px-4 py-3">
@@ -126,49 +153,69 @@ const AdminUserPage = () => {
                       <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap items-center gap-2">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {u.approvalStatus === 'PENDING' && !u.deleted && (
                             <>
                               <button
                                 onClick={() => approveMutation.mutate(u.id)}
                                 disabled={approveMutation.isPending}
-                                className="text-xs text-green-600 hover:text-green-800 font-medium disabled:opacity-50"
+                                className="text-xs font-medium text-green-600 hover:text-green-800 transition-colors disabled:opacity-40"
                               >
                                 승인
                               </button>
                               <button
                                 onClick={() => { setRejectModal({ userId: u.id, name: u.name }); setRejectReason('') }}
-                                className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                className="text-xs font-medium text-orange-500 hover:text-orange-700 transition-colors"
                               >
                                 반려
                               </button>
                             </>
                           )}
-                          {u.approvalStatus === 'APPROVED' && !u.deleted && (
-                            u.enabled ? (
-                              <button
-                                onClick={() => disableMutation.mutate(u.id)}
-                                disabled={disableMutation.isPending}
-                                className="text-xs text-orange-500 hover:text-orange-700 disabled:opacity-50"
-                              >
-                                차단
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => enableMutation.mutate(u.id)}
-                                disabled={enableMutation.isPending}
-                                className="text-xs text-blue-500 hover:text-blue-700 disabled:opacity-50"
-                              >
-                                해제
-                              </button>
-                            )
+                          {u.approvalStatus === 'APPROVED' && !u.deleted && !isAdminAccount && (
+                            <>
+                              {u.enabled ? (
+                                <button
+                                  onClick={() => disableMutation.mutate(u.id)}
+                                  disabled={disableMutation.isPending}
+                                  className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-40"
+                                >
+                                  차단
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => enableMutation.mutate(u.id)}
+                                  disabled={enableMutation.isPending}
+                                  className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-40"
+                                >
+                                  해제
+                                </button>
+                              )}
+                              {/* 운영자 권한 부여/회수 */}
+                              {isOperator ? (
+                                <button
+                                  onClick={() => revokeOperatorMutation.mutate(u.id)}
+                                  disabled={revokeOperatorMutation.isPending}
+                                  className="text-xs font-medium text-purple-500 hover:text-purple-700 transition-colors disabled:opacity-40"
+                                >
+                                  운영자 해제
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => grantOperatorMutation.mutate(u.id)}
+                                  disabled={grantOperatorMutation.isPending}
+                                  className="text-xs font-medium text-purple-500 hover:text-purple-700 transition-colors disabled:opacity-40"
+                                >
+                                  운영자 지정
+                                </button>
+                              )}
+                            </>
                           )}
-                          {!u.deleted && (
+                          {!u.deleted && !isAdminAccount && (
                             <button
                               onClick={() => handleDelete(u.id, u.name)}
                               disabled={deleteMutation.isPending}
-                              className="text-xs text-gray-400 hover:text-red-500 disabled:opacity-50"
+                              className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
                             >
                               삭제
                             </button>

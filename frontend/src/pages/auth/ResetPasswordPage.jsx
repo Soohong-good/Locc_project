@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { validateResetToken, resetPassword } from '@/api/auth'
+import toast from '@/utils/toast'
 
 const PW_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
 
@@ -25,12 +26,13 @@ const ResetPasswordPage = () => {
   useEffect(() => {
     if (token) validate()
     else       setTokenValid(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
   const { mutate: doReset, isPending, error: apiError } = useMutation({
     mutationFn: () => resetPassword({ token, newPassword: form.newPassword }),
     onSuccess: () => {
-      alert('비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요.')
+      toast.success('비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인해주세요.')
       navigate('/login')
     },
   })

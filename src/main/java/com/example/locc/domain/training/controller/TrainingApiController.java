@@ -1,5 +1,7 @@
 package com.example.locc.domain.training.controller;
 
+import com.example.locc.common.ApiResponse;
+import com.example.locc.common.PageResponse;
 import com.example.locc.domain.training.dto.request.TrainingRequest;
 import com.example.locc.domain.training.dto.response.TrainingDetailResponse;
 import com.example.locc.domain.training.dto.response.TrainingResponse;
@@ -34,122 +36,67 @@ public class TrainingApiController {
     private final TrainingCommandService trainingCommandService;
     private final TrainingQueryService trainingQueryService;
 
-    /**
-     * 훈련 목록 조회
-     */
     @GetMapping
-    public ResponseEntity<Page<TrainingResponse>> list(
+    public ResponseEntity<ApiResponse<PageResponse<TrainingResponse>>> list(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<TrainingResponse> trainings = trainingQueryService.getList(pageable);
-        return ResponseEntity.ok(trainings);
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.from(trainingQueryService.getList(pageable))));
     }
 
-    /**
-     * 상태별 훈련 목록 조회
-     */
     @GetMapping("/status/{status}")
-    public ResponseEntity<Page<TrainingResponse>> listByStatus(
+    public ResponseEntity<ApiResponse<PageResponse<TrainingResponse>>> listByStatus(
             @PathVariable TrainingStatus status,
             @PageableDefault(size = 20) Pageable pageable) {
-        Page<TrainingResponse> trainings = trainingQueryService.getListByStatus(status, pageable);
-        return ResponseEntity.ok(trainings);
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.from(trainingQueryService.getListByStatus(status, pageable))));
     }
 
-    /**
-     * 신청 가능한 훈련 목록
-     */
     @GetMapping("/open")
-    public ResponseEntity<List<TrainingResponse>> openTrainings() {
-        List<TrainingResponse> trainings = trainingQueryService.getOpenTrainings();
-        return ResponseEntity.ok(trainings);
+    public ResponseEntity<ApiResponse<List<TrainingResponse>>> openTrainings() {
+        return ResponseEntity.ok(ApiResponse.ok(trainingQueryService.getOpenTrainings()));
     }
 
-    /**
-     * 훈련 상세 조회
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<TrainingDetailResponse> detail(@PathVariable Long id) {
-        TrainingDetailResponse training = trainingQueryService.getDetail(id);
-        return ResponseEntity.ok(training);
+    public ResponseEntity<ApiResponse<TrainingDetailResponse>> detail(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.ok(trainingQueryService.getDetail(id)));
     }
 
-    /**
-     * 훈련 검색
-     */
     @GetMapping("/search")
-    public ResponseEntity<Page<TrainingResponse>> search(
+    public ResponseEntity<ApiResponse<PageResponse<TrainingResponse>>> search(
             @RequestParam String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
-        Page<TrainingResponse> trainings = trainingQueryService.search(keyword, pageable);
-        return ResponseEntity.ok(trainings);
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.from(trainingQueryService.search(keyword, pageable))));
     }
 
-    /**
-     * 훈련 생성 (관리자 전용)
-     */
     @PostMapping
-    public ResponseEntity<TrainingDetailResponse> create(
+    public ResponseEntity<ApiResponse<TrainingDetailResponse>> create(
             @Valid @RequestBody TrainingRequest request,
             Authentication authentication) {
-
-        log.info("훈련 생성: title={}, user={}", request.getTitle(), authentication.getName());
-
-        TrainingDetailResponse response = trainingCommandService.create(
-                request.toCreateCommand(),
-                authentication.getName()
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        log.debug("훈련 생성 요청: title={}", request.getTitle());
+        TrainingDetailResponse response = trainingCommandService.create(request.toCreateCommand(), authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response));
     }
 
-    /**
-     * 훈련 수정 (관리자 전용)
-     */
     @PutMapping("/{id}")
-    public ResponseEntity<TrainingDetailResponse> update(
+    public ResponseEntity<ApiResponse<TrainingDetailResponse>> update(
             @PathVariable Long id,
             @Valid @RequestBody TrainingRequest request,
             Authentication authentication) {
-
-        log.info("훈련 수정: id={}, user={}", id, authentication.getName());
-
-        TrainingDetailResponse response = trainingCommandService.update(
-                id,
-                request.toUpdateCommand(),
-                authentication.getName()
-        );
-
-        return ResponseEntity.ok(response);
+        log.debug("훈련 수정 요청: id={}", id);
+        TrainingDetailResponse response = trainingCommandService.update(id, request.toUpdateCommand(), authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    /**
-     * 훈련 삭제 (관리자 전용)
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        log.info("훈련 삭제: id={}, user={}", id, authentication.getName());
-
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id, Authentication authentication) {
+        log.debug("훈련 삭제 요청: id={}", id);
         trainingCommandService.delete(id, authentication.getName());
-
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 
-    /**
-     * 신청 마감 (관리자 전용)
-     */
     @PostMapping("/{id}/close")
-    public ResponseEntity<Void> close(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        log.info("훈련 신청 마감: id={}, user={}", id, authentication.getName());
-
+    public ResponseEntity<ApiResponse<Void>> close(@PathVariable Long id, Authentication authentication) {
+        log.debug("훈련 신청 마감 요청: id={}", id);
         trainingCommandService.close(id, authentication.getName());
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 
 }

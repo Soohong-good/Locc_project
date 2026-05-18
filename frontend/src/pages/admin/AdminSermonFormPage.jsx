@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react'
+﻿import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSermon, createSermon, updateSermon, uploadSermonImage } from '@/api/sermons'
-import useQuillEditor from '@/hooks/useQuillEditor'
+import useQuillEditor from '@/hooks/useQuillEditor.jsx'
+import { DateInput } from '@/components/ui/DateInput'
 import { getErrorMessage } from '@/lib/apiError'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
+import toast from '@/utils/toast'
 
 const CATEGORIES = ['주일오전', '주일오후', '기타예배']
 
@@ -19,44 +20,39 @@ const AdminSermonFormPage = () => {
   const navigate      = useNavigate()
   const queryClient   = useQueryClient()
 
-  // ── 필드 상태 ──
   const [fields, setFields] = useState({
-    title:         '',
-    scripture:     '',
-    preacher:      '',
-    category:      '주일오전',
-    serviceNumber: '',
-    sermonDate:    '',
-    videoUrl:      '',
+    title: '', scripture: '', preacher: '',
+    category: '주일오전', serviceNumber: '',
+    sermonDate: '', videoUrl: '', audioUrl: '',
   })
-  const [content,  setContent]  = useState('')
-  const [files,    setFiles]    = useState([])
-  const [initDone, setInitDone] = useState(false)
+  const [content, setContent] = useState('')
+  const [files,   setFiles]   = useState([])
 
-  const set = (key) => (e) =>
-    setFields((prev) => ({ ...prev, [key]: e.target.value }))
+  const set = (key) => (e) => setFields((prev) => ({ ...prev, [key]: e.target.value }))
 
   // ── 수정 모드: 기존 데이터 로드 ──
-  const { isLoading: isDetailLoading } = useQuery({
+  const { data: detail, isLoading: isDetailLoading } = useQuery({
     queryKey: ['sermons', id],
     queryFn: () => getSermon(id),
     enabled: isEdit,
-    onSuccess: (data) => {
-      if (!initDone) {
-        setFields({
-          title:         data.title         ?? '',
-          scripture:     data.scripture     ?? '',
-          preacher:      data.preacher      ?? '',
-          category:      data.category      ?? '주일오전',
-          serviceNumber: data.serviceNumber ?? '',
-          sermonDate:    data.sermonDate    ?? '',
-          videoUrl:      data.videoUrl      ?? '',
-        })
-        setContent(data.content ?? '')
-        setInitDone(true)
-      }
-    },
   })
+
+  // v5 호환: 데이터 로드 후 폼 초기값 세팅
+  useEffect(() => {
+    if (detail) {
+      setFields({
+        title:         detail.title         ?? '',
+        scripture:     detail.scripture     ?? '',
+        preacher:      detail.preacher      ?? '',
+        category:      detail.category      ?? '주일오전',
+        serviceNumber: detail.serviceNumber ?? '',
+        sermonDate:    detail.sermonDate    ?? '',
+        videoUrl:      detail.videoUrl      ?? '',
+        audioUrl:      detail.audioUrl      ?? '',
+      })
+      setContent(detail.content ?? '')
+    }
+  }, [detail])
 
   // ── Quill ──
   const handleUpload = useCallback((file) => uploadSermonImage(file), [])
@@ -77,12 +73,10 @@ const AdminSermonFormPage = () => {
     },
   })
 
-  // ── 제출 ──
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!fields.title.trim()) return alert('제목을 입력해주세요.')
+    if (!fields.title.trim()) return toast.error('제목을 입력해주세요.')
 
-    const html = getHTML()
     const formData = new FormData()
     formData.append('title',    fields.title.trim())
     formData.append('category', fields.category)
@@ -91,24 +85,29 @@ const AdminSermonFormPage = () => {
     if (fields.serviceNumber) formData.append('serviceNumber', fields.serviceNumber)
     if (fields.sermonDate)    formData.append('sermonDate',    fields.sermonDate)
     if (fields.videoUrl)      formData.append('videoUrl',      fields.videoUrl)
-    if (html)                 formData.append('content',       html)
+    if (fields.audioUrl)      formData.append('audioUrl',      fields.audioUrl)
+    const html = getHTML()
+    if (html) formData.append('content', html)
     files.forEach((f) => formData.append('files', f))
-
     saveMutation.mutate(formData)
   }
 
   const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files)
-    setFiles((prev) => [...prev, ...selected])
+    setFiles((prev) => [...prev, ...Array.from(e.target.files)])
     e.target.value = ''
   }
-
   const removeFile = (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx))
 
-  // serviceNumber 노출 여부
   const showServiceNumber = ['주일오전', '주일오후'].includes(fields.category)
 
-  if (isEdit && isDetailLoading) return <LoadingSpinner fullScreen={false} />
+  if (isEdit && isDetailLoading) return (
+    <div className="p-8 max-w-3xl space-y-6">
+      <div className="skeleton-shimmer h-7 w-36 rounded mb-8" />
+      <div className="skeleton-shimmer h-10 w-full rounded" />
+      <div className="skeleton-shimmer h-10 w-1/2 rounded" />
+      <div className="skeleton-shimmer h-64 w-full rounded" />
+    </div>
+  )
 
   return (
     <div className="p-8 max-w-3xl">
@@ -123,12 +122,8 @@ const AdminSermonFormPage = () => {
             제목 <span className="text-red-500">*</span>
           </label>
           <input
-            type="text"
-            value={fields.title}
-            onChange={set('title')}
-            maxLength={200}
-            required
-            placeholder="설교 제목"
+            type="text" value={fields.title} onChange={set('title')}
+            maxLength={200} required placeholder="설교 제목"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -136,28 +131,17 @@ const AdminSermonFormPage = () => {
         {/* 카테고리 + 부 */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              카테고리 <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={fields.category}
-              onChange={set('category')}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
+            <label className="block text-sm font-medium text-gray-700 mb-1">카테고리 <span className="text-red-500">*</span></label>
+            <select value={fields.category} onChange={set('category')} required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           {showServiceNumber && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">예배부</label>
-              <select
-                value={fields.serviceNumber}
-                onChange={set('serviceNumber')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
+              <select value={fields.serviceNumber} onChange={set('serviceNumber')}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                 <option value="">선택 안 함</option>
                 <option value="1">1부</option>
                 <option value="2">2부</option>
@@ -170,72 +154,61 @@ const AdminSermonFormPage = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">설교자</label>
-            <input
-              type="text"
-              value={fields.preacher}
-              onChange={set('preacher')}
-              maxLength={50}
-              placeholder="설교자 이름"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" value={fields.preacher} onChange={set('preacher')} maxLength={50} placeholder="설교자 이름"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">성경 구절</label>
-            <input
-              type="text"
-              value={fields.scripture}
-              onChange={set('scripture')}
-              maxLength={100}
-              placeholder="예: 요한복음 3:16"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" value={fields.scripture} onChange={set('scripture')} maxLength={100} placeholder="예: 요한복음 3:16"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
         </div>
 
-        {/* 설교일 + YouTube URL */}
+        {/* 설교일 + YouTube */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">설교 날짜</label>
-            <input
-              type="date"
+            <DateInput
               value={fields.sermonDate}
-              onChange={set('sermonDate')}
+              onChange={(v) => setFields((p) => ({ ...p, sermonDate: v }))}
+              placeholder="설교 날짜 선택"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">YouTube URL</label>
-            <input
-              type="url"
-              value={fields.videoUrl}
-              onChange={set('videoUrl')}
-              placeholder="https://www.youtube.com/watch?v=..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="url" value={fields.videoUrl} onChange={set('videoUrl')} placeholder="https://www.youtube.com/watch?v=..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
         </div>
 
-        {/* 내용 (Quill) */}
+        {/* 음원 URL */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">음원 URL</label>
+          <input type="url" value={fields.audioUrl} onChange={set('audioUrl')} placeholder="https://..."
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        {/* 내용 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">내용</label>
           <div className="border border-gray-300 rounded-lg overflow-hidden">
-            <div
-              ref={containerRef}
-              style={{ minHeight: '280px' }}
-              className="text-sm"
-            />
+            <div ref={containerRef} style={{ minHeight: '280px' }} className="text-sm" />
           </div>
         </div>
 
         {/* 첨부파일 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">첨부파일</label>
-          <input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-4 file:border file:border-gray-300 file:rounded-lg file:text-sm file:bg-gray-50 hover:file:bg-gray-100 file:cursor-pointer"
-          />
+          <label className="flex items-center gap-3 w-full border border-dashed border-gray-300 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+            <svg className="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            <span className="text-sm text-gray-500">파일 선택하기</span>
+            <span className="ml-auto text-xs text-gray-400 shrink-0">PDF, HWP, JPG, PNG · 최대 10MB</span>
+            <input type="file" multiple onChange={handleFileChange} className="hidden" />
+          </label>
           {files.length > 0 && (
             <ul className="mt-2 space-y-1">
               {files.map((f, idx) => (
@@ -248,27 +221,19 @@ const AdminSermonFormPage = () => {
           )}
         </div>
 
-        {/* 에러 */}
         {saveMutation.error && (
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
             {getErrorMessage(saveMutation.error, '저장 중 오류가 발생했습니다.')}
           </p>
         )}
 
-        {/* 버튼 */}
         <div className="flex items-center gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={saveMutation.isPending}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors"
-          >
+          <button type="submit" disabled={saveMutation.isPending}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium px-6 py-2.5 rounded-lg transition-colors">
             {saveMutation.isPending ? '저장 중...' : isEdit ? '수정 완료' : '등록'}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/admin/sermons')}
-            className="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-5 py-2.5 rounded-lg transition-colors"
-          >
+          <button type="button" onClick={() => navigate('/admin/sermons')}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm px-5 py-2.5 rounded-lg transition-colors">
             취소
           </button>
         </div>

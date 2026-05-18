@@ -41,6 +41,16 @@ public class BulletinQueryService {
     }
 
     /**
+     * 주보 목록 조회 (keyword 있으면 검색, 없으면 전체)
+     */
+    public Page<BulletinResponse> getList(String keyword, Pageable pageable) {
+        if (keyword != null && !keyword.isBlank()) {
+            return searchBulletins(keyword, pageable);
+        }
+        return getBulletins(pageable);
+    }
+
+    /**
      * 주보 상세 조회
      */
     public BulletinDetailResponse getBulletinDetail(Long id) {

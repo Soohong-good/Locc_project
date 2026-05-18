@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { createSermon, updateSermon, deleteSermon } from '@/api/sermons'
+import { createSermon, updateSermon, deleteSermon, getSermon } from '@/api/sermons'
 
 /**
  * 설교 CRUD 공통 훅
@@ -12,6 +12,7 @@ const useSermonCrud = (invalidateKeys = []) => {
   const [editTarget, setEditTarget] = useState(null)   // null = 등록, object = 수정
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
 
   const invalidate = () => {
     invalidateKeys.forEach((key) => queryClient.invalidateQueries({ queryKey: key }))
@@ -37,9 +38,17 @@ const useSermonCrud = (invalidateKeys = []) => {
     setIsModalOpen(true)
   }
 
-  const openEdit = (sermon) => {
-    setEditTarget(sermon)
+  const openEdit = async (sermon) => {
+    setIsLoadingDetail(true)
     setIsModalOpen(true)
+    try {
+      const detail = await getSermon(sermon.id)
+      setEditTarget(detail)
+    } catch {
+      setEditTarget(sermon)  // 실패 시 기존 데이터로 fallback
+    } finally {
+      setIsLoadingDetail(false)
+    }
   }
 
   const closeModal = () => setIsModalOpen(false)
@@ -71,6 +80,7 @@ const useSermonCrud = (invalidateKeys = []) => {
     // 로딩
     isSaving: createMutation.isPending || updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isLoadingDetail,
   }
 }
 

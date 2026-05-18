@@ -5,7 +5,6 @@ import com.example.locc.domain.bulletin.dto.command.BulletinUpdateCommand;
 import com.example.locc.domain.bulletin.dto.response.BulletinDetailResponse;
 import com.example.locc.domain.bulletin.entity.Bulletin;
 import com.example.locc.domain.bulletin.repository.BulletinRepository;
-import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
@@ -41,41 +40,30 @@ public class BulletinCommandService {
             String authorEmail) {
         
         User author = userRepository.findByEmail(authorEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + authorEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
         Bulletin bulletin = Bulletin.create(command, author);
         Bulletin saved = bulletinRepository.save(bulletin);
 
         // 파일 업로드 처리 (PDF 전용)
         if (file != null && !file.isEmpty()) {
-            // PDF 파일 검증
             if (!"application/pdf".equals(file.getContentType())) {
                 throw new IllegalArgumentException("PDF 파일만 업로드 가능합니다.");
             }
-            
-            // 원본 PDF 파일 저장
-            File pdfFile = fileCommandService.uploadFile(
+
+            // PDF 저장(ATTACHMENT) + 썸네일 생성(THUMBNAIL) 을 한 번에 처리
+            // uploadFile 을 별도 호출하면 PDF 가 이중 저장되므로 이 메서드만 사용
+            FileCommandService.PdfUploadResult result = fileCommandService.uploadBulletinPdf(
                     file,
-                    File.EntityType.BULLETIN,
-                    saved.getId(),
-                    File.FileCategory.ATTACHMENT,
-                    author
-            );
-            
-            // 썸네일 생성
-            String thumbnailUrl = fileCommandService.uploadPdfWithThumbnail(
-                    file,
-                    File.EntityType.BULLETIN,
                     saved.getId(),
                     author
             );
-            
-            // 파일 ID와 썸네일 URL 업데이트
-            saved.setFileId(pdfFile.getId());
+
+            saved.setFileId(result.pdfFileId());
             saved.update(BulletinUpdateCommand.builder()
                     .title(saved.getTitle())
                     .content(saved.getContent())
-                    .thumbnailUrl(thumbnailUrl)
+                    .thumbnailUrl(result.thumbnailUrl())
                     .build());
         }
 
@@ -85,10 +73,12 @@ public class BulletinCommandService {
 
     /**
      * 주보 수정
+     * - 제목/내용 업데이트
+     * - thumbnail 파일이 있으면 PDF 재업로드 + 썸네일 재생성
      */
-    public BulletinDetailResponse updateBulletin(Long id, BulletinUpdateCommand command, String userEmail) {
+    public BulletinDetailResponse updateBulletin(Long id, BulletinUpdateCommand command, MultipartFile thumbnail, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + userEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
         Bulletin bulletin = bulletinRepository.findDetailById(id)
                 .orElseThrow(() -> new IllegalArgumentException("주보를 찾을 수 없습니다. ID: " + id));
@@ -98,7 +88,23 @@ public class BulletinCommandService {
             throw new AccessDeniedException("수정 권한이 없습니다.");
         }
 
+        // 기본 필드(제목/내용) 업데이트
         bulletin.update(command);
+
+        // 새 파일이 첨부된 경우 PDF 재업로드 + 썸네일 갱신
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+            if (!"application/pdf".equals(thumbnail.getContentType())) {
+                throw new IllegalArgumentException("PDF 파일만 업로드 가능합니다.");
+            }
+            FileCommandService.PdfUploadResult result = fileCommandService.uploadBulletinPdf(
+                    thumbnail, bulletin.getId(), user);
+            bulletin.setFileId(result.pdfFileId());
+            bulletin.update(BulletinUpdateCommand.builder()
+                    .title(bulletin.getTitle())
+                    .content(bulletin.getContent())
+                    .thumbnailUrl(result.thumbnailUrl())
+                    .build());
+        }
 
         log.info("주보 수정 완료: ID={}, 제목={}", bulletin.getId(), bulletin.getTitle());
         return BulletinDetailResponse.from(bulletin);
@@ -109,7 +115,7 @@ public class BulletinCommandService {
      */
     public void deleteBulletin(Long id, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + userEmail));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 
         Bulletin bulletin = bulletinRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("주보를 찾을 수 없습니다. ID: " + id));

@@ -21,6 +21,12 @@ export const createBulletin = (formData) =>
     headers: { 'Content-Type': 'multipart/form-data' },
   }).then((r) => r.data.data)
 
+/** 주보 수정 (ADMIN, FormData — title + content + thumbnail 선택) */
+export const updateBulletin = (id, formData) =>
+  client.put(`/api/bulletin/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data.data)
+
 /** 주보 삭제 (ADMIN) */
 export const deleteBulletin = (id) =>
   client.delete(`/api/bulletin/${id}`).then((r) => r.data)

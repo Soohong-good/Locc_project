@@ -54,9 +54,11 @@ uploads/
 
 # Node
 node_modules/
-package-lock.json
 dist/
 .env.local
+# 루트 package-lock.json만 무시 (playwright 테스트 전용)
+/package-lock.json
+# frontend/package-lock.json은 재현 가능한 빌드를 위해 추적
 
 # Gradle
 .gradle/

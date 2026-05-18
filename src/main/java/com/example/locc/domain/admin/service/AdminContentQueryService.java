@@ -2,118 +2,132 @@ package com.example.locc.domain.admin.service;
 
 import com.example.locc.domain.admin.dto.internal.ContentSummaryItem;
 import com.example.locc.domain.admin.dto.response.ContentSummaryResponse;
+import com.example.locc.domain.department.service.DepartmentQueryService;
+import com.example.locc.domain.gallery.service.GalleryImageQueryService;
 import com.example.locc.domain.notice.service.NoticeQueryService;
 import com.example.locc.domain.sermon.service.SermonQueryService;
+import com.example.locc.domain.staff.service.StaffQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.List;
 
-/**
- * 관리자 콘텐츠 통합 조회 서비스
- * - Phase 2 구현 완료
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AdminContentQueryService {
-    
+
     private final NoticeQueryService noticeQueryService;
     private final SermonQueryService sermonQueryService;
-    
-    /**
-     * 공지사항 요약 (대시보드용)
-     */
+    private final StaffQueryService staffQueryService;
+    private final GalleryImageQueryService galleryImageQueryService;
+    private final DepartmentQueryService departmentQueryService;
+
     public ContentSummaryResponse getNoticeSummary() {
         log.debug("공지사항 요약 조회");
-        
-        Long totalCount = noticeQueryService.countAll();
-        Long recentCount = noticeQueryService.countRecent(7);
-        
-        // TODO Phase 3: 최근 5개 목록 조회 추가
-        
+
+        List<ContentSummaryItem> recentItems = noticeQueryService.findLatestUnpinned(5)
+                .stream()
+                .map(n -> ContentSummaryItem.builder()
+                        .id(n.getId())
+                        .title(n.getTitle())
+                        .author(n.getAuthorName())
+                        .createdAt(n.getCreatedAt())
+                        .viewCount(n.getViewCount() != null ? n.getViewCount().longValue() : null)
+                        .detailUrl("/admin/notices/" + n.getId())
+                        .build())
+                .toList();
+
         return ContentSummaryResponse.of(
-                "NOTICE",
-                "공지사항",
-                totalCount,
-                recentCount,
-                Collections.emptyList(),  // Phase 3에서 구현
-                "/admin/notices"
-        );
+                "NOTICE", "공지사항",
+                noticeQueryService.countAll(),
+                noticeQueryService.countRecent(7),
+                recentItems,
+                "/admin/notices");
     }
-    
-    /**
-     * 설교 요약 (대시보드용)
-     */
+
     public ContentSummaryResponse getSermonSummary() {
         log.debug("설교 요약 조회");
-        
-        Long totalCount = sermonQueryService.countAll();
-        Long recentCount = sermonQueryService.countRecent(7);
-        
-        // TODO Phase 3: 최근 5개 목록 조회 추가
-        
+
+        List<ContentSummaryItem> recentItems = sermonQueryService.findLatest(5)
+                .stream()
+                .map(s -> ContentSummaryItem.builder()
+                        .id(s.getId())
+                        .title(s.getTitle())
+                        .author(s.getPreacher())
+                        .createdAt(s.getCreatedAt())
+                        .viewCount(null)
+                        .detailUrl("/admin/sermons/" + s.getId())
+                        .build())
+                .toList();
+
         return ContentSummaryResponse.of(
-                "SERMON",
-                "설교",
-                totalCount,
-                recentCount,
-                Collections.emptyList(),  // Phase 3에서 구현
-                "/admin/sermons"
-        );
+                "SERMON", "설교",
+                sermonQueryService.countAll(),
+                sermonQueryService.countRecent(7),
+                recentItems,
+                "/admin/sermons");
     }
-    
-    /**
-     * 섬김이 요약 (대시보드용)
-     * Phase 3에서 구현
-     */
+
     public ContentSummaryResponse getStaffSummary() {
-        log.debug("섬김이 요약 조회 (Phase 3: 미구현)");
-        
+        log.debug("섬김이 요약 조회");
+
+        List<ContentSummaryItem> recentItems = staffQueryService.findLatestForDashboard(5)
+                .stream()
+                .map(s -> ContentSummaryItem.builder()
+                        .id(s.getId())
+                        .title(s.getName())
+                        .author(null)
+                        .createdAt(s.getCreatedAt())
+                        .viewCount(null)
+                        .detailUrl("/admin/staff")
+                        .build())
+                .toList();
+
         return ContentSummaryResponse.of(
-                "STAFF",
-                "섬김이",
+                "STAFF", "섬김이",
+                staffQueryService.countAll(),
                 0L,
-                0L,
-                Collections.emptyList(),
-                "/admin/staff"
-        );
+                recentItems,
+                "/admin/staff");
     }
-    
-    /**
-     * 갤러리 요약 (대시보드용)
-     * Phase 3에서 구현
-     */
+
     public ContentSummaryResponse getGallerySummary() {
-        log.debug("갤러리 요약 조회 (Phase 3: 미구현)");
-        
+        log.debug("갤러리 요약 조회");
+
+        List<ContentSummaryItem> recentItems = galleryImageQueryService.getLatestGalleryForDashboard(0, 5)
+                .getContent()
+                .stream()
+                .map(g -> ContentSummaryItem.builder()
+                        .id(g.id())
+                        .title(g.title() + " (" + g.departmentName() + ")")
+                        .author(g.uploaderName())
+                        .createdAt(g.createdAt())
+                        .viewCount(null)
+                        .detailUrl("/admin/gallery")
+                        .build())
+                .toList();
+
         return ContentSummaryResponse.of(
-                "GALLERY",
-                "갤러리",
+                "GALLERY", "갤러리",
+                galleryImageQueryService.countAll(),
                 0L,
-                0L,
-                Collections.emptyList(),
-                "/admin/galleries"
-        );
+                recentItems,
+                "/admin/gallery");
     }
-    
-    /**
-     * 부서 요약 (대시보드용)
-     * Phase 3에서 구현
-     */
+
     public ContentSummaryResponse getDepartmentSummary() {
-        log.debug("부서 요약 조회 (Phase 3: 미구현)");
-        
+        log.debug("부서 요약 조회");
+
         return ContentSummaryResponse.of(
-                "DEPARTMENT",
-                "부서",
-                0L,
+                "DEPARTMENT", "부서",
+                departmentQueryService.countAll(),
                 0L,
                 Collections.emptyList(),
-                "/admin/departments"
-        );
+                "/admin/departments");
     }
 }

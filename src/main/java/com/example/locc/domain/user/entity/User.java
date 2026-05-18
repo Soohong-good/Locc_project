@@ -5,7 +5,6 @@ import com.example.locc.domain.user.dto.command.UserUpdateCommand;
 import com.example.locc.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -40,7 +39,6 @@ public class User extends BaseEntity implements UserDetails {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @NotBlank(message = "이메일은 필수입니다")
     @Email(message = "올바른 이메일 형식이 아닙니다")
     @Column(nullable = false, unique = true)
     private String email;
@@ -49,8 +47,8 @@ public class User extends BaseEntity implements UserDetails {
     @Builder.Default
     private Boolean emailVerified = false;
 
-    @NotBlank(message = "비밀번호는 필수입니다")
-    @Column(nullable = false)
+    // 소셜 전용 계정은 password = null 허용
+    @Column(nullable = true)
     private String password;
 
     // 소셜 로그인 연결 (1:N 관계)
@@ -58,7 +56,6 @@ public class User extends BaseEntity implements UserDetails {
     @Builder.Default
     private List<SocialAccount> socialAccounts = new ArrayList<>();
 
-    @NotBlank(message = "이름은 필수입니다")
     @Size(max = 50, message = "이름은 50자를 초과할 수 없습니다")
     @Column(nullable = false, length = 50)
     private String name;
@@ -122,7 +119,8 @@ public class User extends BaseEntity implements UserDetails {
 
     public enum Role {
         USER,
-        ADMIN
+        OPERATOR,  // 운영자 (게시물 CRUD 가능, 관리자 패널 접근 불가)
+        ADMIN      // 총관리자 (전체 권한)
     }
 
     public enum UserType {
@@ -164,12 +162,13 @@ public class User extends BaseEntity implements UserDetails {
 
     /**
      * OAuth2 소셜 로그인 임시 사용자 생성 (추가 정보 입력 필요)
-     * SocialAccount는 별도로 생성하여 연결
+     * - password = null (소셜 전용 계정은 비밀번호 없음)
+     * - SocialAccount는 별도로 생성하여 연결
      */
     public static User createOAuthTemporaryUser(String email, String name) {
         return User.builder()
                 .email(email)
-                .password("OAUTH2_NO_PASSWORD")  // 소셜 로그인은 비밀번호 불필요 (validation 통과용)
+                .password(null)  // 소셜 전용 계정은 비밀번호 없음
                 .name(name != null && !name.isBlank() ? name : "소셜로그인사용자")
                 .role(Role.USER)
                 .userType(UserType.REGISTERED)
@@ -207,10 +206,28 @@ public class User extends BaseEntity implements UserDetails {
     }
 
     /**
-     * 소셜 로그인 사용자 여부
-     * SocialAccount가 연결되어 있으면 소셜 로그인 사용자
+     * 소셜 로그인 전용 계정 여부
+     * - SocialAccount가 연결되어 있고 password가 null인 경우
+     * - 일반 계정에 소셜 연결이 추가된 경우는 false (비밀번호 있음)
      */
     public boolean isOAuthUser() {
+        return socialAccounts != null && !socialAccounts.isEmpty() && this.password == null;
+    }
+
+    /**
+     * 일반 계정에 소셜 계정 전환 연결
+     * - 소셜 로그인 시 이메일이 기존 일반 계정과 일치할 때 호출
+     * - 비밀번호는 유지 (로컬 로그인도 계속 가능)
+     * - 이메일 인증 완료 처리
+     */
+    public void convertToSocialLinked() {
+        this.emailVerified = true;
+    }
+
+    /**
+     * 소셜 계정 연결 여부 (일반 계정에 소셜 연결된 경우 포함)
+     */
+    public boolean hasSocialAccount() {
         return socialAccounts != null && !socialAccounts.isEmpty();
     }
 
@@ -304,6 +321,28 @@ public class User extends BaseEntity implements UserDetails {
      */
     public boolean isAdmin() {
         return this.role == Role.ADMIN;
+    }
+
+    public boolean isOperator() {
+        return this.role == Role.OPERATOR;
+    }
+
+    public boolean isAdminOrOperator() {
+        return this.role == Role.ADMIN || this.role == Role.OPERATOR;
+    }
+
+    /**
+     * 운영자 권한 부여
+     */
+    public void grantOperator() {
+        this.role = Role.OPERATOR;
+    }
+
+    /**
+     * 운영자 권한 회수 (일반 회원으로 강등)
+     */
+    public void revokeOperator() {
+        this.role = Role.USER;
     }
 
     /**

@@ -128,9 +128,9 @@ public class Staff extends BaseEntity {
     // ===== 권한 검증 =====
     
     /**
-     * 수정 권한 확인 (관리자만)
+     * 수정 권한 확인 (총관리자 또는 운영자)
      */
     public boolean canModify(User user) {
-        return user.isAdmin();
+        return user.isAdminOrOperator();
     }
 }

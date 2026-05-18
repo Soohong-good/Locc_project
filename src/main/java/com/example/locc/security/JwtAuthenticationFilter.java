@@ -1,6 +1,5 @@
 package com.example.locc.security;
 
-import com.example.locc.domain.user.entity.User;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,7 +21,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,7 +46,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (username != null && !jwtTokenProvider.isTokenExpired(jwt)) {
                     // JWT에서 권한 정보 추출
                     Claims claims = jwtTokenProvider.extractAllClaims(jwt);
-                    List<String> authorities = claims.get("authorities", List.class);
+
+                    // [SECURITY] JWT type 클레임 검증: access 토큰만 인증에 허용
+                    // refresh 토큰이나 oauth_temp 토큰으로 API 접근을 시도하는 것을 차단
+                    String tokenType = claims.get("type", String.class);
+                    if (!"access".equals(tokenType)) {
+                        // oauth_temp / refresh 등 비-access 토큰은 인증 컨텍스트에 설정하지 않고 통과
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+                    @SuppressWarnings("unchecked")
+                    List<String> authorities = (List<String>) claims.get("authorities");
                     
                     // DB 조회 없이 UserDetails 생성
                     UserDetails userDetails;

@@ -1,5 +1,6 @@
 package com.example.locc.domain.gallery.service;
 
+import com.example.locc.config.CacheConfig;
 import com.example.locc.config.FileProperties;
 import com.example.locc.domain.department.entity.Department;
 import com.example.locc.domain.department.repository.DepartmentRepository;
@@ -7,14 +8,15 @@ import com.example.locc.domain.gallery.dto.command.GalleryImageCreateCommand;
 import com.example.locc.domain.gallery.dto.response.GalleryImageDetailResponse;
 import com.example.locc.domain.gallery.entity.GalleryImage;
 import com.example.locc.domain.gallery.repository.GalleryImageRepository;
-import com.example.locc.domain.gallery.util.ImageFileValidator;
-import com.example.locc.domain.gallery.util.ThumbnailGenerator;
+import com.example.locc.domain.gallery.service.ImageFileValidator;
+import com.example.locc.domain.gallery.service.ThumbnailGenerator;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import com.example.locc.exception.NotFoundException;
 import com.example.locc.exception.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +45,7 @@ public class GalleryImageCommandService {
     /**
      * 갤러리 이미지 업로드 (다중)
      */
+    @CacheEvict(value = CacheConfig.CACHE_GALLERY_TITLES, allEntries = true)
     public List<GalleryImageDetailResponse> uploadImages(List<GalleryImageCreateCommand> commands, String userEmail) {
         log.debug("업로드 요청 - 커맨드 개수: {}, 사용자: {}", commands.size(), userEmail);
 
@@ -59,24 +62,19 @@ public class GalleryImageCommandService {
         Department department = departmentRepository.findByCode(commands.get(0).departmentCode())
                 .orElseThrow(() -> new NotFoundException("부서를 찾을 수 없습니다."));
 
-        // 3. 모든 이미지 업로드
-        List<GalleryImageDetailResponse> results = new ArrayList<>();
+        // 3. 파일 I/O (검증·저장·리사이즈·썸네일) — 성공한 엔티티만 수집
+        List<GalleryImage> entities = new ArrayList<>();
 
         for (GalleryImageCreateCommand command : commands) {
             try {
-                // 이미지 파일 검증
                 MultipartFile imageFile = command.imageFile();
                 imageFileValidator.validate(imageFile);
 
-                // 파일 저장 (gallery 하위 디렉토리)
                 String storedFilename = saveImageFile(imageFile);
+                thumbnailGenerator.resizeOriginal(getGalleryDir(), storedFilename);
+                String thumbnailFilename = thumbnailGenerator.generateThumbnail(getGalleryDir(), storedFilename);
 
-                // 썸네일 생성 (임시로 비활성화)
-                String thumbnailFilename = null;
-                // String thumbnailFilename = thumbnailGenerator.generateThumbnail(getGalleryDir(), storedFilename);
-
-                // 엔티티 생성
-                GalleryImage image = GalleryImage.create(
+                entities.add(GalleryImage.create(
                         department,
                         uploader,
                         command.title(),
@@ -86,57 +84,67 @@ public class GalleryImageCommandService {
                         thumbnailFilename,
                         imageFile.getSize(),
                         command.displayOrder(),
-                        command.groupId()        // groupId 추가
-                );
-
-                // 저장
-                GalleryImage savedImage = galleryImageRepository.save(image);
-                results.add(GalleryImageDetailResponse.from(savedImage));
-
+                        command.groupId()
+                ));
             } catch (Exception e) {
                 log.error("이미지 업로드 실패: {}", command.imageFile().getOriginalFilename(), e);
-                // 일부 실패해도 계속 진행
             }
         }
+
+        // 4. DB 저장 — saveAll()로 배치 insert
+        List<GalleryImageDetailResponse> results = galleryImageRepository.saveAll(entities)
+                .stream()
+                .map(GalleryImageDetailResponse::from)
+                .toList();
 
         log.info("갤러리 이미지 {} 개 업로드 완료 (부서: {})", results.size(), department.getName());
         return results;
     }
 
     /**
-     * 갤러리 이미지 삭제
+     * 갤러리 게시물 삭제 (같은 groupId에 속한 이미지 전체 삭제)
      */
-    public void deleteImage(Long id, String userEmail) {
-        // 1. 이미지 조회
+    /**
+     * 조회수 증가 후 상세 DTO 반환 (컨트롤러에서 findById를 두 번 호출하는 문제 방지)
+     */
+    public GalleryImageDetailResponse incrementViewCountAndGet(Long id) {
         GalleryImage image = galleryImageRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
+        image.incrementViewCount();
+        return GalleryImageDetailResponse.from(image);
+    }
 
-        // 2. 사용자 조회
+    @CacheEvict(value = CacheConfig.CACHE_GALLERY_TITLES, allEntries = true)
+    public void deleteImage(Long imageId, String userEmail) {
+        // 1. 대표 이미지 조회
+        GalleryImage representative = galleryImageRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
+
+        // 2. 사용자 조회 및 권한 확인
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-        // 3. 권한 확인
-        if (!image.canModify(user)) {
+        if (!representative.canModify(user)) {
             throw new AccessDeniedException("이미지를 삭제할 권한이 없습니다.");
         }
 
-        // 4. 파일 삭제
-        deleteImageFiles(image);
+        // 3. 같은 groupId의 이미지 전체 조회
+        String groupId = representative.getGroupId();
+        List<GalleryImage> groupImages = (groupId != null && !groupId.isBlank())
+                ? galleryImageRepository.findAllByGroupId(groupId)
+                : List.of(representative);
+
+        // 4. 파일 전체 삭제 (원본 + 썸네일)
+        groupImages.forEach(this::deleteImageFiles);
 
         // 5. DB 삭제
-        galleryImageRepository.delete(image);
+        if (groupId != null && !groupId.isBlank()) {
+            galleryImageRepository.deleteAllByGroupId(groupId);
+        } else {
+            galleryImageRepository.delete(representative);
+        }
 
-        log.info("갤러리 이미지 삭제 완료: {}", image.getTitle());
-    }
-
-    /**
-     * 조회수 증가
-     */
-    public void incrementViewCount(Long id) {
-        GalleryImage image = galleryImageRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
-
-        image.incrementViewCount();
+        log.info("갤러리 게시물 삭제 완료: groupId={}, 삭제된 이미지 수={}", groupId, groupImages.size());
     }
 
     // ===== Private Methods =====

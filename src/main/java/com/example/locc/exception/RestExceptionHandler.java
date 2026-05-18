@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *   - 도메인 예외 (400, 403, 404)
  *   - 인증/보안 예외 (401, 403)
  *   - 서버 예외 (500)
- *
- * GlobalExceptionHandler(Thymeleaf용)보다 우선순위 높게 설정
  */
 @Slf4j
 @RestControllerAdvice
@@ -78,18 +76,18 @@ public class RestExceptionHandler {
 
     // ───── 401 인증 오류 ─────
 
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException e) {
+        log.warn("Authentication failed: username not found");
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_CREDENTIALS);
+        return ResponseEntity.status(ErrorCode.INVALID_CREDENTIALS.getHttpStatus()).body(response);
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException e) {
         log.warn("Bad credentials");
         ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_CREDENTIALS);
         return ResponseEntity.status(ErrorCode.INVALID_CREDENTIALS.getHttpStatus()).body(response);
-    }
-
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUsernameNotFound(UsernameNotFoundException e) {
-        log.warn("Username not found: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(ErrorCode.USER_NOT_FOUND_AUTH, e.getMessage());
-        return ResponseEntity.status(ErrorCode.USER_NOT_FOUND_AUTH.getHttpStatus()).body(response);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -101,8 +99,8 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(TokenRefreshException.class)
     public ResponseEntity<ErrorResponse> handleTokenRefresh(TokenRefreshException e) {
-        log.warn("TokenRefreshException: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(ErrorCode.TOKEN_EXPIRED, e.getMessage());
+        log.warn("TokenRefreshException: {}", e.getMessage()); // 로그엔 토큰 포함 메시지
+        ErrorResponse response = ErrorResponse.of(ErrorCode.TOKEN_EXPIRED, e.getUserMessage()); // 응답엔 사용자 메시지만
         return ResponseEntity.status(ErrorCode.TOKEN_EXPIRED.getHttpStatus()).body(response);
     }
 
@@ -117,8 +115,15 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(AccountNotApprovedException.class)
     public ResponseEntity<ErrorResponse> handleAccountNotApproved(AccountNotApprovedException e) {
-        log.warn("AccountNotApprovedException: {}", e.getMessage());
-        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCOUNT_NOT_APPROVED, e.getMessage());
+        log.warn("AccountNotApprovedException: status={}", e.getApprovalStatus());
+
+        String message = switch (e.getApprovalStatus()) {
+            case "PENDING"  -> "승인대기중인 계정입니다.";
+            case "REJECTED" -> "회원가입이 반려되었습니다. 문의사항은 교회로 연락해주세요.";
+            default         -> ErrorCode.ACCOUNT_NOT_APPROVED.getDefaultMessage();
+        };
+
+        ErrorResponse response = ErrorResponse.of(ErrorCode.ACCOUNT_NOT_APPROVED, message, e.getApprovalStatus());
         return ResponseEntity.status(ErrorCode.ACCOUNT_NOT_APPROVED.getHttpStatus()).body(response);
     }
 

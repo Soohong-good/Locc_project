@@ -23,24 +23,31 @@ public class ErrorResponse {
     private final boolean success = false;
     private final String code;
     private final String message;
+    private final String approvalStatus; // 계정 승인 상태 (PENDING | REJECTED | null)
     private final List<FieldError> errors;
     private final LocalDateTime timestamp;
 
-    private ErrorResponse(String code, String message, List<FieldError> errors) {
+    private ErrorResponse(String code, String message, String approvalStatus, List<FieldError> errors) {
         this.code = code;
         this.message = message;
+        this.approvalStatus = approvalStatus;
         this.errors = errors;
         this.timestamp = LocalDateTime.now();
     }
 
     // ErrorCode 기반 생성
     public static ErrorResponse of(ErrorCode errorCode) {
-        return new ErrorResponse(errorCode.getCode(), errorCode.getDefaultMessage(), null);
+        return new ErrorResponse(errorCode.getCode(), errorCode.getDefaultMessage(), null, null);
     }
 
     // ErrorCode + 커스텀 메시지
     public static ErrorResponse of(ErrorCode errorCode, String message) {
-        return new ErrorResponse(errorCode.getCode(), message, null);
+        return new ErrorResponse(errorCode.getCode(), message, null, null);
+    }
+
+    // ErrorCode + 커스텀 메시지 + approvalStatus
+    public static ErrorResponse of(ErrorCode errorCode, String message, String approvalStatus) {
+        return new ErrorResponse(errorCode.getCode(), message, approvalStatus, null);
     }
 
     // 검증 오류 (BindingResult)
@@ -48,6 +55,7 @@ public class ErrorResponse {
         return new ErrorResponse(
                 ErrorCode.VALIDATION_FAILED.getCode(),
                 ErrorCode.VALIDATION_FAILED.getDefaultMessage(),
+                null,
                 fieldErrors
         );
     }

@@ -1,11 +1,14 @@
 package com.example.locc.domain.staff.service;
 
+import com.example.locc.config.CacheConfig;
 import com.example.locc.domain.staff.dto.response.StaffResponse;
 import com.example.locc.domain.staff.entity.Staff;
 import com.example.locc.domain.staff.repository.StaffRepository;
 import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +31,10 @@ public class StaffQueryService {
     /**
      * 전체 목록 조회 (표시 순서대로)
      */
+    @Cacheable(value = CacheConfig.CACHE_STAFF, key = "'all'")
     public List<StaffResponse> findAll() {
         log.debug("Finding all staff ordered by displayOrder");
-        
+
         return staffRepository.findAllOrdered()
                 .stream()
                 .map(StaffResponse::from)
@@ -40,6 +44,7 @@ public class StaffQueryService {
     /**
      * 카테고리별 조회
      */
+    @Cacheable(value = CacheConfig.CACHE_STAFF, key = "'cat_' + #category.name()")
     public List<StaffResponse> findByCategory(Staff.StaffCategory category) {
         log.debug("Finding staff by category: {}", category);
         
@@ -64,6 +69,7 @@ public class StaffQueryService {
     /**
      * 담임목사 조회
      */
+    @Cacheable(value = CacheConfig.CACHE_STAFF, key = "'seniors'")
     public List<StaffResponse> findSeniorPastors() {
         log.debug("Finding senior pastors");
         
@@ -98,6 +104,18 @@ public class StaffQueryService {
                 .orElseThrow(() -> new NotFoundException("교역자/직원을 찾을 수 없습니다. ID: " + id));
         
         return StaffResponse.from(staff);
+    }
+
+    public Long countAll() {
+        return staffRepository.count();
+    }
+
+    public List<StaffResponse> findLatestForDashboard(int limit) {
+        return staffRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .limit(limit)
+                .map(StaffResponse::from)
+                .toList();
     }
 
     /**

@@ -17,11 +17,19 @@ RUN gradle build -x test --no-daemon
 # 2단계: 실행 환경
 FROM eclipse-temurin:17-jre-alpine
 
-# 작업 디렉토리 설정
+# 보안: non-root 사용자로 실행 (컨테이너 탈출 시 호스트 영향 최소화)
+RUN addgroup -S locc && adduser -S locc -G locc
+
 WORKDIR /app
 
 # 빌드된 JAR 파일 복사
 COPY --from=build /app/build/libs/*.jar app.jar
+
+# 파일 소유권 변경
+RUN chown locc:locc app.jar
+
+# non-root 사용자로 전환
+USER locc
 
 # 환경변수 설정 (기본값)
 ENV SPRING_PROFILES_ACTIVE=prod
