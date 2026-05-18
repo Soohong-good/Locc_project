@@ -7,10 +7,11 @@ services:
     container_name: locc-mariadb
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
-      MARIADB_DATABASE: ${DB_NAME:-locc}
-      MARIADB_USER: ${DB_USER:-loccuser}
-      MARIADB_PASSWORD: ${DB_PASSWORD:-loccpassword}
+      # 기본값(fallback) 없음 — 환경변수 미설정 시 컨테이너 시작 실패로 명시적 오류 유도
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -34,19 +35,51 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME:-locc}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-loccuser}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-loccpassword}
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-this-in-production}
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      # 기본값(fallback) 없음 — 환경변수 미설정 시 컨테이너 시작 실패로 명시적 오류 유도
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      FILE_UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - locc-network
 
+  # Redis (Rate Limiting + 비밀번호 재설정 토큰)
+  redis:
+    image: redis:7.2-alpine
+    container_name: locc-redis
+    restart: unless-stopped
+    # 비밀번호 인증 필수 — 없으면 외부에서 토큰 직접 조작 가능
+    command: redis-server --requirepass ${REDIS_PASSWORD} --bind 127.0.0.1 --protected-mode yes
+    ports:
+      - "127.0.0.1:6379:6379"  # 로컬호스트에서만 접근 허용
+    volumes:
+      - redis_data:/data
+    networks:
+      - locc-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 # 데이터 영속성을 위한 볼륨
 volumes:
   mariadb_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
     driver: local
 
 # 컨테이너 간 통신을 위한 네트워크

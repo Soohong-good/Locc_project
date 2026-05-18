@@ -1,7 +1,7 @@
 package com.example.locc.domain.notice.dto.response;
 
 import com.example.locc.domain.notice.entity.Notice;
-import com.example.locc.domain.file.dto.FileDto;
+import com.example.locc.domain.file.dto.response.AttachmentInfo;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -26,13 +26,14 @@ public class NoticeDetailResponse {
     // 작성자 정보
     private final String authorName;
     private final String authorEmail;
+    private final String authorId;   // 프론트 본인 여부 판단용
     
     // 메타 정보
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     
     // 첨부파일
-    private final List<FileDto> attachments;
+    private final List<AttachmentInfo> attachments;
     
     // 추가 정보
     private final boolean isNew;
@@ -40,7 +41,7 @@ public class NoticeDetailResponse {
     /**
      * Entity to Response (파일 정보 포함)
      */
-    public static NoticeDetailResponse from(Notice notice, List<FileDto> files) {
+    public static NoticeDetailResponse from(Notice notice, List<AttachmentInfo> files) {
         return NoticeDetailResponse.builder()
                 .id(notice.getId())
                 .title(notice.getTitle())
@@ -49,6 +50,7 @@ public class NoticeDetailResponse {
                 .viewCount(notice.getViewCount())
                 .authorName(notice.getAuthor() != null ? notice.getAuthor().getName() : "알 수 없음")
                 .authorEmail(notice.getAuthor() != null ? notice.getAuthor().getEmail() : null)
+                .authorId(notice.getAuthor() != null ? notice.getAuthor().getId().toString() : null)
                 .createdAt(notice.getCreatedAt())
                 .updatedAt(notice.getUpdatedAt())
                 .attachments(files)

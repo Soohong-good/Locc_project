@@ -1,6 +1,8 @@
 package com.example.locc.domain.department.service;
 
 import com.example.locc.config.YouTubeProperties;
+import com.example.locc.domain.department.dto.response.YouTubeVideoResponse;
+import com.example.locc.exception.NotFoundException;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
@@ -73,6 +75,19 @@ public class YouTubeService {
             log.error("Error fetching YouTube video for channel: {}", channelId, e);
             return null;
         }
+    }
+
+    /**
+     * 채널의 최신 영상 정보 조회 — Response DTO 반환
+     * - null 체크 및 DTO 조립을 Service 책임으로 처리
+     * - 영상이 없으면 NotFoundException
+     */
+    public YouTubeVideoResponse getLatestVideoResponse(String channelId) {
+        String[] videoInfo = getLatestVideo(channelId);
+        if (videoInfo == null || videoInfo.length < 2) {
+            throw new NotFoundException("채널의 최신 영상을 찾을 수 없습니다.");
+        }
+        return YouTubeVideoResponse.of(videoInfo[0], videoInfo[1], channelId);
     }
 
     /**

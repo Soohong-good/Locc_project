@@ -1,84 +1,406 @@
-import { Link, NavLink } from 'react-router-dom'
+﻿import { useState, useEffect, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import useAuthStore from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuth'
 
 /**
- * 공통 헤더
- * - 비로그인: 로그인 버튼
- * - 로그인: 이름 표시 + 로그아웃
- * - ADMIN: 관리자 페이지 링크 추가
+ * 메뉴 정책:
+ *   href 있음  → 구현 완료, <Link to={href}> 사용
+ *   href 없음  → 미구현, 클릭 막음
+ *
+ * URL 통일 규칙 (App.jsx 라우트 기준):
+ *   공지사항  → /notices
+ *   주보      → /bulletin
+ *   부서      → /department/{code}
+ *   훈련신청  → /training
  */
-const Header = () => {
-  const { user } = useAuthStore()
-  const { mutate: logout, isPending } = useLogout()
-  const isAdmin = user?.role === 'ROLE_ADMIN'
+
+const NAV_MENUS = [
+  { label: '복음 말씀', href: '/salvation' },
+  {
+    label: '그리스도사랑교회',
+    minWidth: '210px',
+    children: [
+      { href: '/church/about',       label: '교회소개' },
+      { href: '/church/confession',  label: '신앙고백' },
+      { href: '/church/first-visit', label: '처음 교회에 방문하신 분' },
+      { href: '/church/staff',       label: '섬기는 분들' },
+      { href: '/church/mission',     label: '선교' },
+      { href: '/church/contact',     label: '오시는 길' },
+    ],
+  },
+  {
+    label: '예배',
+    children: [
+      { href: '/worship/newyear',                 label: '송구영신예배' },
+      { href: '/worship/sermon/sunday-morning',   label: '주일오전예배' },
+      { href: '/worship/sermon/sunday-afternoon', label: '주일오후예배' },
+      { href: '/worship/sermon/weekday',          label: '수요·금요예배' },
+      { href: '/worship/training-intro',          label: '훈련소개' },
+      { href: '/worship/sermon/training-message', label: '훈련 메시지' },
+    ],
+  },
+  {
+    label: '공지 및 자료실',
+    minWidth: '210px',
+    children: [
+      { href: '/notices',      label: '공지' },
+      { href: '/bulletin',     label: '주보' },
+      { href: '/applications', label: '시설·차량 신청' },
+    ],
+  },
+  {
+    label: '부서',
+    children: [
+      { href: '/department/nursery',      label: '태영아부' },
+      { href: '/department/preschool',    label: '유아유치부' },
+      { href: '/department/children',     label: '초등부' },
+      { href: '/department/youth',        label: '중고등부' },
+      { href: '/department/young-adults', label: '대학청년부' },
+      { href: '/department/newcomers',    label: '새가족부' },
+      { href: '/department/multiethnic',  label: '다민족부' },
+      { href: '/department/healing',      label: '치유부' },
+    ],
+  },
+  { label: '훈련 신청', href: '/training' },
+]
+
+// ── 공통: 드롭다운 아이템 ────────────────────────────
+const NavItem = ({ href, label, onClick, isActive }) => {
+  if (!href) {
+    return (
+      <span className="block px-5 py-2.5 text-base text-slate-400 cursor-not-allowed select-none" title="준비 중">
+        {label}
+      </span>
+    )
+  }
+  return (
+    <Link
+      to={href}
+      onClick={onClick}
+      className={`block px-5 py-2.5 text-base transition-colors duration-150
+        ${isActive ? 'text-slate-900 font-medium bg-slate-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
+    >
+      {label}
+    </Link>
+  )
+}
+
+const ChevronDown = () => (
+  <svg
+    className="w-3.5 h-3.5"
+    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+      d="M19 9l-7 7-7-7" />
+  </svg>
+)
+
+// ── 데스크탑 드롭다운 ─────────────────────────────────
+const DesktopDropdown = ({ label, children, minWidth, alignRight, extraBottom }) => {
+  const [open, setOpen] = useState(false)
+  const timerRef = useRef(null)
+
+  const handleEnter = () => {
+    clearTimeout(timerRef.current)
+    setOpen(true)
+  }
+
+  const handleLeave = () => {
+    timerRef.current = setTimeout(() => setOpen(false), 150)
+  }
 
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        {/* 로고 */}
-        <Link
-          to="/"
-          className="text-base font-bold text-gray-900 hover:text-blue-600 transition-colors"
+    <div
+      className={`nav-dropdown${alignRight ? ' align-right' : ''}`}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <button
+        type="button"
+        className="text-slate-700 hover:text-slate-900 transition-colors duration-150 font-medium text-base flex items-center gap-1.5 bg-transparent border-0 cursor-pointer py-1"
+      >
+        {label}
+        <ChevronDown />
+      </button>
+      <div
+        className="nav-dropdown-menu"
+        style={{
+          ...(minWidth ? { minWidth } : {}),
+          opacity: open ? 1 : 0,
+          visibility: open ? 'visible' : 'hidden',
+          transform: open ? 'translateY(0)' : 'translateY(-6px)',
+          transition: 'opacity 0.25s ease, transform 0.25s ease, visibility 0.25s',
+          pointerEvents: open ? 'auto' : 'none',
+        }}
+      >
+        {children.map(({ href, label: l }) => (
+          <NavItem key={l} href={href} label={l} />
+        ))}
+        {extraBottom}
+      </div>
+    </div>
+  )
+}
+
+// ── 모바일 아코디언 ──────────────────────────────────
+const MobileDropdown = ({ label, children, onClose }) => {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border-b border-slate-100 last:border-0">
+      <button
+        type="button"
+        className="w-full flex items-center justify-between px-5 py-4 text-slate-700 hover:text-slate-900 transition-colors"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="font-medium text-base">{label}</span>
+        <ChevronDown />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+      >
+        <div className="pb-2 bg-slate-50">
+          {children.map(({ href, label: l }) => (
+            <NavItem key={l} href={href} label={l} onClick={onClose} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── 메인 헤더 ─────────────────────────────────────────
+const Header = () => {
+  const { user, isAdmin: isAdminFn } = useAuthStore()
+  const { mutate: logout, isPending } = useLogout()
+  const isAdmin = isAdminFn()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const location = useLocation()
+
+  // 스크롤에 따라 헤더 그림자 추가
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // 라우트 변경 시 모바일 메뉴 닫기
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
+
+  return (
+    <header
+      className={`fixed w-full top-0 z-50 bg-white/95 backdrop-blur-sm border-b transition-all duration-200
+        ${scrolled ? 'border-slate-200 shadow-sm' : 'border-transparent'}`}
+    >
+      <div className="w-full px-6 lg:px-12">
+        <div className="flex items-center justify-between h-[95px]">
+
+          {/* 로고 */}
+          <Link to="/" className="flex-shrink-0">
+            <img
+              src="/logo.png"
+              style={{ width: '220px', height: 'auto' }}
+              alt="그리스도 사랑교회"
+              className="block"
+            />
+          </Link>
+
+          {/* 데스크탑 네비게이션 */}
+          <div className="hidden lg:flex items-center gap-8">
+            <nav className="flex items-center gap-6">
+              {NAV_MENUS.map((item) => {
+                if (!item.children && !item.href) {
+                  return (
+                    <span key={item.label}
+                      className="text-slate-400 font-medium text-base cursor-not-allowed select-none"
+                      title="준비 중">
+                      {item.label}
+                    </span>
+                  )
+                }
+                if (item.children) {
+                  return (
+                    <DesktopDropdown
+                      key={item.label}
+                      label={item.label}
+                      children={item.children}
+                      minWidth={item.minWidth}
+                    />
+                  )
+                }
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={`font-medium text-base transition-colors duration-150
+                      ${location.pathname === item.href
+                        ? 'text-slate-900'
+                        : 'text-slate-600 hover:text-slate-900'}`}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            {/* 인증 영역 */}
+            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+              {user ? (
+                <DesktopDropdown
+                  alignRight
+                  label={
+                    <span className="flex items-center gap-2">
+                      {/* 아바타 원 */}
+                      <span className="w-7 h-7 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center font-medium">
+                        {user.name?.charAt(0) ?? '?'}
+                      </span>
+                      <span className="text-base text-slate-700 font-medium">
+                        {user.name}
+                        {isAdmin && (
+                          <span className="ml-1.5 text-xs text-blue-500 font-medium">[관리자]</span>
+                        )}
+                      </span>
+                    </span>
+                  }
+                  children={[
+                    { href: '/mypage',      label: '마이페이지' },
+                    { href: '/training/my', label: '내 신청내역' },
+                    ...(isAdmin ? [{ href: '/admin', label: '관리자 대시보드' }] : []),
+                  ]}
+                  extraBottom={
+                    <button
+                      onClick={() => logout()}
+                      disabled={isPending}
+                      className="w-full text-left px-5 py-2.5 text-base text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border-t border-slate-100 mt-1"
+                    >
+                      로그아웃
+                    </button>
+                  }
+                />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-base font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-4 py-2 text-base font-medium bg-slate-900 text-white hover:bg-slate-700 transition-colors"
+                  >
+                    회원가입
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 모바일 햄버거 */}
+          <button
+            className="lg:hidden p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            onClick={() => setMobileOpen((v) => !v)}
+            aria-label="메뉴 열기"
+          >
+            <div className="w-5 flex flex-col gap-1.5">
+              <span className={`block h-0.5 bg-current transition-all duration-300 origin-center
+                ${mobileOpen ? 'rotate-45 translate-y-2' : ''}`} />
+              <span className={`block h-0.5 bg-current transition-all duration-300
+                ${mobileOpen ? 'opacity-0 scale-x-0' : ''}`} />
+              <span className={`block h-0.5 bg-current transition-all duration-300 origin-center
+                ${mobileOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+            </div>
+          </button>
+        </div>
+
+        {/* 모바일 메뉴 */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
+            ${mobileOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'}`}
         >
-          그리스도사랑교회
-        </Link>
-
-        {/* 네비게이션 */}
-        <nav className="hidden md:flex items-center gap-6 text-sm text-gray-600">
-          <NavLink
-            to="/sermons"
-            className={({ isActive }) =>
-              isActive ? 'text-blue-600 font-medium' : 'hover:text-gray-900 transition-colors'
-            }
-          >
-            설교
-          </NavLink>
-          <NavLink
-            to="/notices"
-            className={({ isActive }) =>
-              isActive ? 'text-blue-600 font-medium' : 'hover:text-gray-900 transition-colors'
-            }
-          >
-            공지사항
-          </NavLink>
-          {isAdmin && (
-            <NavLink
-              to="/admin"
-              className={({ isActive }) =>
-                isActive
-                  ? 'text-blue-600 font-medium'
-                  : 'hover:text-gray-900 transition-colors'
+          <nav className="overflow-y-auto py-2" style={{ maxHeight: 'calc(80vh - 0px)' }}>
+            {NAV_MENUS.map((item) => {
+              if (!item.children && !item.href) {
+                return (
+                  <span key={item.label}
+                    className="block px-5 py-4 text-base text-slate-400 cursor-not-allowed select-none border-b border-slate-100">
+                    {item.label}
+                  </span>
+                )
               }
-            >
-              관리자
-            </NavLink>
-          )}
-        </nav>
+              if (item.children) {
+                return (
+                  <MobileDropdown
+                    key={item.label}
+                    label={item.label}
+                    children={item.children}
+                    onClose={() => setMobileOpen(false)}
+                  />
+                )
+              }
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block px-5 py-4 text-base font-medium border-b border-slate-100 transition-colors
+                    ${location.pathname === item.href
+                      ? 'text-slate-900 bg-slate-50'
+                      : 'text-slate-700 hover:bg-slate-50'}`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
 
-        {/* 인증 영역 */}
-        <div className="flex items-center gap-3 text-sm">
-          {user ? (
-            <>
-              <span className="text-gray-600 hidden sm:inline">
-                {user.name}
-              </span>
-              <button
-                onClick={() => logout()}
-                disabled={isPending}
-                className="text-gray-400 hover:text-red-500 transition-colors text-xs"
-              >
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/login"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg transition-colors text-xs font-medium"
-            >
-              로그인
-            </Link>
-          )}
+            {/* 모바일 인증 */}
+            <div className="px-5 py-4 border-t border-slate-200 bg-slate-50">
+              {user ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 pb-3 mb-2 border-b border-slate-200">
+                    <span className="w-8 h-8 rounded-full bg-slate-900 text-white text-sm flex items-center justify-center font-medium">
+                      {user.name?.charAt(0) ?? '?'}
+                    </span>
+                    <div>
+                      <p className="text-base font-medium text-slate-900">{user.name}</p>
+                      {isAdmin && <p className="text-xs text-blue-500">관리자</p>}
+                    </div>
+                  </div>
+                  {[
+                    { to: '/mypage',      label: '마이페이지' },
+                    { to: '/training/my', label: '내 신청내역' },
+                    ...(isAdmin ? [{ to: '/admin', label: '관리자 대시보드' }] : []),
+                  ].map(({ to, label }) => (
+                    <Link key={to} to={to} onClick={() => setMobileOpen(false)}
+                      className="block py-2.5 text-base text-slate-700 hover:text-slate-900 transition-colors">
+                      {label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={() => { logout(); setMobileOpen(false) }}
+                    disabled={isPending}
+                    className="block w-full text-left py-2.5 text-base text-red-500 hover:text-red-600 transition-colors mt-1 pt-3 border-t border-slate-200"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link to="/login" onClick={() => setMobileOpen(false)}
+                    className="py-3 text-center text-base font-medium border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors">
+                    로그인
+                  </Link>
+                  <Link to="/register" onClick={() => setMobileOpen(false)}
+                    className="py-3 text-center text-base font-medium bg-slate-900 text-white hover:bg-slate-700 transition-colors">
+                    회원가입
+                  </Link>
+                </div>
+              )}
+            </div>
+          </nav>
         </div>
       </div>
     </header>

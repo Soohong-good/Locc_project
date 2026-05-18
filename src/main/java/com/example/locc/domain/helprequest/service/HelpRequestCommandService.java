@@ -1,8 +1,8 @@
 package com.example.locc.domain.helprequest.service;
 
+import com.example.locc.domain.helprequest.dto.command.HelpRequestCreateCommand;
 import com.example.locc.domain.helprequest.dto.command.UpdateAdminMemoCommand;
 import com.example.locc.domain.helprequest.dto.command.UpdateHelpRequestStatusCommand;
-import com.example.locc.domain.helprequest.dto.request.HelpRequestCreateRequest;
 import com.example.locc.domain.helprequest.dto.response.HelpRequestResponse;
 import com.example.locc.domain.helprequest.entity.HelpRequest;
 import com.example.locc.domain.helprequest.repository.HelpRequestRepository;
@@ -26,20 +26,19 @@ public class HelpRequestCommandService {
     /**
      * 도움 요청 생성
      */
-    public HelpRequestResponse create(HelpRequestCreateRequest request) {
+    public HelpRequestResponse create(HelpRequestCreateCommand command) {
         // 엔티티 생성
         HelpRequest helpRequest = HelpRequest.create(
-                request.getName(),
-                request.getPhone(),
-                request.getEmail(),
-                request.getContent()
+                command.getName(),
+                command.getPhone(),
+                command.getEmail(),
+                command.getContent()
         );
 
         // 저장
         HelpRequest saved = helpRequestRepository.save(helpRequest);
 
-        log.info("[도움 요청 생성] ID: {}, 이름: {}, 이메일: {}",
-                saved.getId(), saved.getName(), saved.getEmail());
+        log.info("[도움 요청 생성] ID: {}", saved.getId());
 
         return HelpRequestResponse.from(saved);
     }

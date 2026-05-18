@@ -1,5 +1,7 @@
 package com.example.locc.domain.gallery.controller;
 
+import com.example.locc.common.ApiResponse;
+import com.example.locc.common.PageResponse;
 import com.example.locc.domain.gallery.dto.request.GalleryImageRequest;
 import com.example.locc.domain.gallery.dto.request.GalleryImageSearchCondition;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupResponse;
@@ -10,10 +12,8 @@ import com.example.locc.domain.gallery.service.GalleryImageQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,106 +31,63 @@ public class GalleryImageApiController {
     private final GalleryImageCommandService commandService;
     private final GalleryImageQueryService queryService;
 
-    /**
-     * 인스타그램 스타일: 갤러리 그룹 목록 조회 (페이징)
-     * GET /api/departments/{departmentCode}/gallery/groups?page=0&size=12
-     */
     @GetMapping("/groups")
-    public ResponseEntity<Page<GalleryGroupResponse>> getGalleryGroups(
+    public ResponseEntity<ApiResponse<PageResponse<GalleryGroupResponse>>> getGalleryGroups(
             @PathVariable String departmentCode,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size
-    ) {
+            @RequestParam(defaultValue = "12") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<GalleryGroupResponse> galleryGroups = queryService.getGalleryGroups(departmentCode, pageable);
-        return ResponseEntity.ok(galleryGroups);
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.from(queryService.getGalleryGroups(departmentCode, pageable))));
     }
 
-    /**
-     * 특정 제목의 모든 이미지 조회 (라이트박스용)
-     * GET /api/departments/{departmentCode}/gallery/titles/{title}/images
-     */
     @GetMapping("/titles/{title}/images")
-    public ResponseEntity<List<GalleryImageResponse>> getImagesByTitle(
+    public ResponseEntity<ApiResponse<List<GalleryImageResponse>>> getImagesByTitle(
             @PathVariable String departmentCode,
-            @PathVariable String title
-    ) {
-        List<GalleryImageResponse> images = queryService.getImagesByTitle(departmentCode, title);
-        return ResponseEntity.ok(images);
+            @PathVariable String title) {
+        return ResponseEntity.ok(ApiResponse.ok(queryService.getImagesByTitle(departmentCode, title)));
     }
 
-    /**
-     * 갤러리 이미지 목록 조회 (게시판 형태)
-     * GET /api/departments/{departmentCode}/gallery?page=0
-     */
     @GetMapping
-    public ResponseEntity<Page<GalleryImageResponse>> getImageListForBoard(
+    public ResponseEntity<ApiResponse<PageResponse<GalleryImageResponse>>> getImageListForBoard(
             @PathVariable String departmentCode,
-            @RequestParam(defaultValue = "0") int page
-    ) {
-        Page<GalleryImageResponse> images = queryService.getImageListForBoard(departmentCode, page);
-        return ResponseEntity.ok(images);
+            @RequestParam(defaultValue = "0") int page) {
+        return ResponseEntity.ok(ApiResponse.ok(PageResponse.from(queryService.getImageListForBoard(departmentCode, page))));
     }
 
-    /**
-     * 갤러리 이미지 상세 조회
-     * GET /api/departments/{departmentCode}/gallery/{imageId}
-     */
     @GetMapping("/{imageId}")
-    public ResponseEntity<GalleryImageDetailResponse> getImageDetail(
+    public ResponseEntity<ApiResponse<GalleryImageDetailResponse>> getImageDetail(
             @PathVariable String departmentCode,
-            @PathVariable Long imageId
-    ) {
-        // 조회수 증가
-        commandService.incrementViewCount(imageId);
-
-        GalleryImageDetailResponse response = queryService.getImageDetail(imageId);
-        return ResponseEntity.ok(response);
+            @PathVariable Long imageId) {
+        return ResponseEntity.ok(ApiResponse.ok(commandService.incrementViewCountAndGet(imageId)));
     }
 
-    /**
-     * 제목 목록 조회
-     * GET /api/departments/{departmentCode}/gallery/titles
-     */
     @GetMapping("/titles")
-    public ResponseEntity<List<String>> getTitles(@PathVariable String departmentCode) {
-        List<String> titles = queryService.getTitles(departmentCode);
-        return ResponseEntity.ok(titles);
+    public ResponseEntity<ApiResponse<List<String>>> getTitles(@PathVariable String departmentCode) {
+        return ResponseEntity.ok(ApiResponse.ok(queryService.getTitles(departmentCode)));
     }
 
-    /**
-     * 갤러리 이미지 업로드 (다중)
-     * POST /api/departments/{departmentCode}/gallery
-     */
     @PostMapping
-    public ResponseEntity<List<GalleryImageDetailResponse>> uploadImages(
+    public ResponseEntity<ApiResponse<List<GalleryImageDetailResponse>>> uploadImages(
             @PathVariable String departmentCode,
             @Valid @ModelAttribute GalleryImageRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        log.debug("갤러리 업로드 요청 - 부서: {}, 제목: {}, 파일 개수: {}", 
-                departmentCode, request.title(), 
-                request.imageFiles() != null ? request.imageFiles().size() : 0);
-        
-        List<GalleryImageDetailResponse> responses = commandService.uploadImages(
-                request.toCreateCommands(departmentCode),
-                userDetails.getUsername()
-        );
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(responses);
+        log.debug("갤러리 업로드 요청 - 부서: {}, 제목: {}, 파일 개수: {}",
+                departmentCode, request.title(),
+                request.imageFiles() != null ? request.imageFiles().size() : 0);
+
+        List<GalleryImageDetailResponse> responses = commandService.uploadImages(
+                request.toCreateCommands(departmentCode), userDetails.getUsername());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(responses));
     }
 
-    /**
-     * 갤러리 이미지 삭제
-     * DELETE /api/departments/{departmentCode}/gallery/{imageId}
-     */
     @DeleteMapping("/{imageId}")
-    public ResponseEntity<Void> deleteImage(
+    public ResponseEntity<ApiResponse<Void>> deleteImage(
             @PathVariable String departmentCode,
             @PathVariable Long imageId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         commandService.deleteImage(imageId, userDetails.getUsername());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.ok());
     }
 }

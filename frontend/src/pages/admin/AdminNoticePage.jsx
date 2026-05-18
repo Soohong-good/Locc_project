@@ -1,34 +1,34 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getNotices, deleteNotice, toggleNoticePin } from '@/api/notices'
-import { getErrorMessage } from '@/lib/apiError'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
+import { SkeletonRow } from '@/components/ui/SkeletonCard'
 import ErrorMessage from '@/components/common/ErrorMessage'
+import toast from '@/utils/toast'
 
-/**
- * 관리자 공지사항 목록 페이지
- * - 목록 조회, 삭제, 고정 토글
- * - 생성/수정은 기존 Thymeleaf 관리자 페이지로 이동 (추후 React 전환)
- */
 const AdminNoticePage = () => {
   const [page, setPage] = useState(0)
   const [keyword, setKeyword] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const queryClient = useQueryClient()
 
+  const queryKey = ['admin', 'notices', page, keyword]
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['admin', 'notices', { page, keyword }],
+    queryKey,
     queryFn: () => getNotices({ page, size: 15, keyword }),
   })
 
   const deleteMutation = useMutation({
     mutationFn: deleteNotice,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onError: (e) => toast.error(e?.response?.data?.message ?? '삭제에 실패했습니다.'),
   })
 
   const pinMutation = useMutation({
     mutationFn: toggleNoticePin,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'notices'] }),
+    onSuccess: () => window.location.reload(),
+    onError: (e) => toast.error(e?.response?.data?.message ?? '고정 변경에 실패했습니다.'),
   })
 
   const handleSearch = (e) => {
@@ -43,18 +43,18 @@ const AdminNoticePage = () => {
   }
 
   const notices = data?.content ?? []
-  const totalPages = data?.totalPages ?? 0
+  const totalPages = data?.pageInfo?.totalPages ?? 0
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">공지사항 관리</h1>
-        <a
-          href="/admin/notices/new"
+        <Link
+          to="/admin/notices/new"
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + 새 공지사항
-        </a>
+        </Link>
       </div>
 
       {/* 검색 */}
@@ -83,16 +83,11 @@ const AdminNoticePage = () => {
         )}
       </form>
 
-      {/* 에러 */}
-      {(deleteMutation.error || pinMutation.error) && (
-        <div className="mb-4">
-          <ErrorMessage error={deleteMutation.error || pinMutation.error} />
-        </div>
-      )}
-
       {/* 테이블 */}
       {isLoading ? (
-        <LoadingSpinner fullScreen={false} />
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden p-4 space-y-2">
+          {[...Array(8)].map((_, i) => <SkeletonRow key={i} />)}
+        </div>
       ) : error ? (
         <ErrorMessage error={error} fallback="공지사항 목록을 불러올 수 없습니다." />
       ) : notices.length === 0 ? (
@@ -100,65 +95,78 @@ const AdminNoticePage = () => {
       ) : (
         <>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col />
+                <col style={{ width: '80px' }} />
+                <col style={{ width: '100px' }} />
+                <col style={{ width: '80px' }} />
+                <col style={{ width: '80px' }} />
+              </colgroup>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-10">고정</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">제목</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-24 hidden sm:table-cell">작성자</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-28 hidden md:table-cell">등록일</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-28">관리</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">작성자</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">등록일</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">핀고정</th>
+                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {notices.map((notice) => (
                   <tr key={notice.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => pinMutation.mutate(notice.id)}
-                        disabled={pinMutation.isPending}
-                        title={notice.isPinned ? '고정 해제' : '고정'}
-                        className={`text-base transition-colors ${
-                          notice.isPinned ? 'text-yellow-500' : 'text-gray-300 hover:text-yellow-400'
-                        }`}
-                      >
-                        📌
-                      </button>
-                    </td>
+                    {/* 제목 */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <a
-                          href={`/admin/notices/${notice.id}`}
-                          className="text-gray-800 hover:text-blue-600 hover:underline font-medium truncate max-w-xs"
+                        <Link
+                          to={`/notices/${notice.id}`}
+                          className="text-gray-800 hover:text-blue-600 hover:underline font-medium truncate"
                         >
                           {notice.title}
-                        </a>
+                        </Link>
                         {notice.isNew && (
-                          <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium shrink-0">
-                            NEW
-                          </span>
+                          <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium shrink-0">NEW</span>
                         )}
                         {notice.hasAttachments && (
                           <span className="text-gray-400 text-xs shrink-0">📎</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{notice.authorName}</td>
-                    <td className="px-4 py-3 text-gray-400 hidden md:table-cell">
-                      {notice.createdAt ? new Date(notice.createdAt).toLocaleDateString('ko-KR') : '-'}
+                    {/* 작성자 */}
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {notice.authorName}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`/admin/notices/${notice.id}/edit`}
-                          className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                    {/* 등록일 */}
+                    <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
+                      {notice.createdAt ? notice.createdAt.slice(0, 10) : '-'}
+                    </td>
+                    {/* 핀고정 */}
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => pinMutation.mutate(notice.id)}
+                        disabled={pinMutation.isPending}
+                        className={`text-xs font-medium px-2 py-1 rounded transition-colors disabled:opacity-40 ${
+                          notice.isPinned
+                            ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                        }`}
+                      >
+                        {notice.isPinned ? '고정중' : '고정'}
+                      </button>
+                    </td>
+                    {/* 관리 */}
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
+                        <Link
+                          to={`/admin/notices/${notice.id}/edit`}
+                          className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors"
                         >
                           수정
-                        </a>
+                        </Link>
                         <button
                           onClick={() => handleDelete(notice.id, notice.title)}
                           disabled={deleteMutation.isPending}
-                          className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                          className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
                         >
                           삭제
                         </button>

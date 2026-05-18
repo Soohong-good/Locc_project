@@ -48,6 +48,13 @@ public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long
     List<GalleryImage> findAllByGroupId(@Param("groupId") String groupId);
 
     /**
+     * groupId로 모든 이미지 삭제 (게시물 전체 삭제)
+     */
+    @Query("DELETE FROM GalleryImage gi WHERE gi.groupId = :groupId")
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    void deleteAllByGroupId(@Param("groupId") String groupId);
+
+    /**
      * 갤러리 이미지 상세 조회
      */
     @EntityGraph(attributePaths = {"department", "uploader"})
@@ -80,6 +87,28 @@ public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long
      */
     @Query("SELECT DISTINCT gi.title FROM GalleryImage gi WHERE gi.department.code = :departmentCode AND gi.title IS NOT NULL ORDER BY gi.title")
     List<String> findTitlesByDepartmentCode(@Param("departmentCode") String departmentCode);
+
+    /**
+     * 전체 부서 최신 갤러리 그룹 조회 (대시보드용)
+     * groupId 기준으로 그룹별 대표 이미지 1개 + 부서명 반환
+     */
+    @EntityGraph(attributePaths = {"department", "uploader"})
+    @Query("""
+        SELECT gi FROM GalleryImage gi
+        WHERE gi.id IN (
+            SELECT MIN(gi2.id)
+            FROM GalleryImage gi2
+            GROUP BY gi2.groupId
+        )
+        ORDER BY gi.createdAt DESC
+        """)
+    Page<GalleryImage> findLatestGalleryGroupsAll(Pageable pageable);
+
+    /**
+     * groupId 목록의 이미지 개수를 한 번에 조회 (N+1 방지)
+     */
+    @Query("SELECT gi.groupId, COUNT(gi) FROM GalleryImage gi WHERE gi.groupId IN :groupIds GROUP BY gi.groupId")
+    List<Object[]> countByGroupIds(@Param("groupIds") List<String> groupIds);
 
     /**
      * 부서별 특정 제목의 모든 이미지 조회 (인스타그램 스타일)

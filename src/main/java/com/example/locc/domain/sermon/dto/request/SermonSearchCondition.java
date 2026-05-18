@@ -33,6 +33,10 @@ public class SermonSearchCondition {
     @Builder.Default
     private Sort.Direction direction = Sort.Direction.DESC;
     
+    public void setSize(Integer size) {
+        this.size = (size != null && size > 0) ? Math.min(size, 100) : 10;
+    }
+
     /**
      * Pageable 객체로 변환
      */

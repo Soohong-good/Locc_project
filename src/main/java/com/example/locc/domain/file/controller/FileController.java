@@ -1,12 +1,10 @@
 package com.example.locc.domain.file.controller;
 
 import com.example.locc.common.ApiResponse;
-import com.example.locc.domain.file.dto.FileResponse;
+import com.example.locc.domain.file.dto.response.FileResponse;
 import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.file.service.FileQueryService;
-import com.example.locc.domain.file.service.FileUrlResolver;
-import com.example.locc.exception.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -37,28 +35,42 @@ public class FileController {
 
     private final FileCommandService fileCommandService;
     private final FileQueryService fileQueryService;
-    private final FileUrlResolver fileUrlResolver;
 
     // ───── 공개 이미지 접근 (인증 불필요) ─────
 
     /**
      * 공개 이미지 스트리밍
-     * - CONTENT_IMAGE, THUMBNAIL, GALLERY_IMAGE 카테고리만 허용
-     * - 이 외의 카테고리(ATTACHMENT, MANUSCRIPT 등)는 403 반환
-     * - SecurityConfig에서 /api/files/image/** 는 permitAll 처리
      */
     @GetMapping("/image/{fileId}")
     public ResponseEntity<Resource> getPublicImage(@PathVariable Long fileId) {
+        File file = fileQueryService.getPublicFile(fileId);
+        Resource resource = fileQueryService.loadFileAsResource(fileId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(file.getContentType()))
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .body(resource);
+    }
+
+    /**
+     * 공개 PDF 스트리밍 (인증 불필요)
+     * - NEWYEAR 엔티티의 ATTACHMENT PDF만 허용
+     * - SecurityConfig에서 /api/files/pdf/** 는 permitAll 처리
+     */
+    @GetMapping("/pdf/{fileId}")
+    public ResponseEntity<Resource> getPublicPdf(@PathVariable Long fileId) {
         File file = fileQueryService.getFile(fileId);
 
-        if (!isPublicImageCategory(file.getCategory())) {
-            throw new AccessDeniedException("접근이 허용되지 않는 파일입니다.");
+        // NEWYEAR 엔티티의 PDF만 공개 허용
+        if (file.getEntityType() != File.EntityType.NEWYEAR
+                || !"application/pdf".equals(file.getContentType())) {
+            return ResponseEntity.status(403).build();
         }
 
         Resource resource = fileQueryService.loadFileAsResource(fileId);
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(file.getContentType()))
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400") // 공개 이미지 1일 캐시
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
                 .body(resource);
     }
 
@@ -90,19 +102,15 @@ public class FileController {
      */
     @GetMapping("/{fileId}")
     public ResponseEntity<ApiResponse<FileResponse>> getFile(@PathVariable Long fileId) {
-        File file = fileQueryService.getFileWithUploader(fileId);
-        return ResponseEntity.ok(ApiResponse.ok(fileUrlResolver.toResponse(file)));
+        return ResponseEntity.ok(ApiResponse.ok(fileQueryService.getFileResponse(fileId)));
     }
 
     @GetMapping("/entity/{entityType}/{entityId}")
     public ResponseEntity<ApiResponse<List<FileResponse>>> getFilesByEntity(
             @PathVariable File.EntityType entityType,
             @PathVariable Long entityId) {
-
-        List<FileResponse> files = fileUrlResolver.toResponses(
-                fileQueryService.getFilesByEntityWithUploader(entityType, entityId)
-        );
-        return ResponseEntity.ok(ApiResponse.ok(files));
+        return ResponseEntity.ok(ApiResponse.ok(
+                fileQueryService.getFileResponsesByEntity(entityType, entityId)));
     }
 
     // ───── 파일 삭제 (ADMIN) ─────
@@ -114,13 +122,5 @@ public class FileController {
     public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long fileId) {
         fileCommandService.deleteFile(fileId);
         return ResponseEntity.ok(ApiResponse.ok());
-    }
-
-    // ───── private ─────
-
-    private boolean isPublicImageCategory(File.FileCategory category) {
-        return category == File.FileCategory.CONTENT_IMAGE
-                || category == File.FileCategory.THUMBNAIL
-                || category == File.FileCategory.GALLERY_IMAGE;
     }
 }

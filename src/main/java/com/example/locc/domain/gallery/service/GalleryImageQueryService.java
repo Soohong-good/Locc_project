@@ -1,5 +1,6 @@
 package com.example.locc.domain.gallery.service;
 
+import com.example.locc.config.CacheConfig;
 import com.example.locc.domain.gallery.dto.request.GalleryImageSearchCondition;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupDto;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupResponse;
@@ -10,6 +11,7 @@ import com.example.locc.domain.gallery.repository.GalleryImageRepository;
 import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +19,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,15 +59,20 @@ public class GalleryImageQueryService {
                 pageRequest
         );
 
-        // 각 그룹별 이미지 개수 계산
-        Map<String, Integer> imageCountMap = new HashMap<>();
-        for (GalleryImage image : imagePage.getContent()) {
-            int count = galleryImageRepository.findAllByGroupId(image.getGroupId()).size();
-            imageCountMap.put(image.getGroupId(), count);
-        }
+        // groupId 목록을 모아 한 번의 쿼리로 개수 조회 (N+1 방지)
+        List<String> groupIds = imagePage.getContent().stream()
+                .map(GalleryImage::getGroupId)
+                .toList();
+
+        Map<String, Integer> imageCountMap = galleryImageRepository.countByGroupIds(groupIds)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
 
         return imagePage.map(image ->
-                GalleryImageResponse.from(image, imageCountMap.get(image.getGroupId()))
+                GalleryImageResponse.from(image, imageCountMap.getOrDefault(image.getGroupId(), 1))
         );
     }
 
@@ -105,6 +111,7 @@ public class GalleryImageQueryService {
     /**
      * 부서별 제목 목록 조회 (중복 제거)
      */
+    @Cacheable(value = CacheConfig.CACHE_GALLERY_TITLES, key = "#departmentCode")
     public List<String> getTitles(String departmentCode) {
         return galleryImageRepository.findTitlesByDepartmentCode(departmentCode);
     }
@@ -117,5 +124,45 @@ public class GalleryImageQueryService {
                 .stream()
                 .map(image -> GalleryImageResponse.from(image, 1))
                 .toList();
+    }
+
+    public Long countAll() {
+        return galleryImageRepository.count();
+    }
+
+    /**
+     * 전체 부서 최신 갤러리 그룹 목록 (대시보드용)
+     */
+    public Page<GalleryDashboardResponse> getLatestGalleryForDashboard(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return galleryImageRepository.findLatestGalleryGroupsAll(pageable)
+                .map(GalleryDashboardResponse::from);
+    }
+
+    /**
+     * 대시보드 갤러리 응답 DTO (내부 전용)
+     */
+    public record GalleryDashboardResponse(
+            Long id,
+            String title,
+            String departmentCode,
+            String departmentName,
+            String thumbnailFilename,
+            String storedFilename,
+            String uploaderName,
+            java.time.LocalDateTime createdAt
+    ) {
+        public static GalleryDashboardResponse from(com.example.locc.domain.gallery.entity.GalleryImage image) {
+            return new GalleryDashboardResponse(
+                    image.getId(),
+                    image.getTitle(),
+                    image.getDepartment().getCode(),
+                    image.getDepartment().getName(),
+                    image.getThumbnailFilename(),
+                    image.getStoredFilename(),
+                    image.getUploader().getName(),
+                    image.getCreatedAt()
+            );
+        }
     }
 }

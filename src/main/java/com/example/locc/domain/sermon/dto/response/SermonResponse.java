@@ -27,6 +27,7 @@ public class SermonResponse {
     private final String videoUrl;
     private final String thumbnailUrl;
     private final String authorName;
+    private final String authorId;   // 작성자 UUID — 프론트 본인 여부 판단용
     private final LocalDateTime createdAt;
     private final boolean isNew;
     
@@ -46,6 +47,7 @@ public class SermonResponse {
                 .videoUrl(sermon.getVideoUrl())
                 .thumbnailUrl(sermon.getThumbnailUrl())
                 .authorName(sermon.getAuthor() != null ? sermon.getAuthor().getName() : "알 수 없음")
+                .authorId(sermon.getAuthor() != null ? sermon.getAuthor().getId().toString() : null)
                 .createdAt(sermon.getCreatedAt())
                 .isNew(isNew(sermon.getCreatedAt()))
                 .build();

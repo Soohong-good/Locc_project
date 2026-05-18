@@ -57,3 +57,15 @@ export const deleteUser = async (userId) => {
   const { data } = await client.delete(`/api/admin/users/${userId}`)
   return data
 }
+
+// 운영자 권한 부여
+export const grantOperator = async (userId) => {
+  const { data } = await client.post(`/api/admin/users/${userId}/grant-operator`)
+  return data
+}
+
+// 운영자 권한 회수
+export const revokeOperator = async (userId) => {
+  const { data } = await client.post(`/api/admin/users/${userId}/revoke-operator`)
+  return data
+}

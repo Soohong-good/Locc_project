@@ -78,6 +78,6 @@ public class DepartmentBoard {
 
     // 권한 체크
     public boolean canModify(User user) {
-        return this.author.getId().equals(user.getId()) || user.isAdmin();
+        return this.author.getId().equals(user.getId()) || user.isAdminOrOperator();
     }
 }

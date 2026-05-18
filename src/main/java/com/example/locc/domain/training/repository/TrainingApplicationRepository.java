@@ -44,7 +44,7 @@ public interface TrainingApplicationRepository extends JpaRepository<TrainingApp
     /**
      * 사용자의 신청 내역
      */
-    @EntityGraph(attributePaths = {"training"})
+    @EntityGraph(attributePaths = {"training", "user"})
     @Query("SELECT a FROM TrainingApplication a " +
            "WHERE a.user.id = :userId " +
            "ORDER BY a.appliedAt DESC")

@@ -6,6 +6,7 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -32,10 +33,18 @@ public class UserDetailResponse {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
+    // 소셜 로그인 관련 — 마이페이지 UI 분기에 필요
+    private final Boolean isOAuthUser;           // 소셜 전용 계정 여부 (password=null)
+    private final List<String> connectedProviders; // 연결된 소셜 제공자 목록 (예: ["KAKAO", "NAVER"])
+
     /**
      * Entity → DTO 변환
      */
     public static UserDetailResponse from(User user) {
+        List<String> providers = user.getSocialAccounts().stream()
+                .map(sa -> sa.getProvider().name())
+                .toList();
+
         return UserDetailResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -53,6 +62,8 @@ public class UserDetailResponse {
                 .deleted(user.getDeleted())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .isOAuthUser(user.isOAuthUser())
+                .connectedProviders(providers)
                 .build();
     }
 }

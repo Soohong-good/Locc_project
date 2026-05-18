@@ -1,10 +1,11 @@
 package com.example.locc.domain.user.service;
 
 import com.example.locc.domain.user.dto.command.UserUpdateCommand;
+import com.example.locc.domain.user.dto.response.UserDetailResponse;
 import com.example.locc.domain.user.dto.response.UserMyPageResponse;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,11 +25,21 @@ public class UserMyPageService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * 사용자 정보 조회
+     * 사용자 정보 조회 (마이페이지용)
      */
     public UserMyPageResponse getMyInfo(String email) {
-        User user = findUserByEmail(email);
+        User user = userRepository.findByEmailWithSocialAccounts(email)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
         return UserMyPageResponse.from(user);
+    }
+
+    /**
+     * 사용자 정보 조회 (API 상세 응답용)
+     */
+    public UserDetailResponse getUserInfo(String email) {
+        User user = userRepository.findByEmailWithSocialAccounts(email)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+        return UserDetailResponse.from(user);
     }
 
     /**
@@ -38,7 +49,7 @@ public class UserMyPageService {
     public void updateProfile(String email, UserUpdateCommand command) {
         User user = findUserByEmail(email);
         user.update(command);
-        log.info("프로필 수정 완료: {}", email);
+        log.debug("프로필 수정 완료");
     }
 
     /**
@@ -48,9 +59,10 @@ public class UserMyPageService {
     public void changePassword(String email, String currentPassword, String newPassword) {
         User user = findUserByEmail(email);
 
-        // 소셜 로그인 사용자는 비밀번호 변경 불가
+        // 소셜 전용 계정(password=null)은 비밀번호 변경 불가
+        // 일반 계정에 소셜 연결이 추가된 경우는 변경 가능
         if (user.isOAuthUser()) {
-            throw new IllegalStateException("소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.");
+            throw new IllegalStateException("소셜 로그인 전용 계정은 비밀번호를 변경할 수 없습니다. 마이페이지에서 비밀번호를 새로 설정할 수 있습니다.");
         }
 
         // 현재 비밀번호 확인
@@ -61,7 +73,7 @@ public class UserMyPageService {
         // 새 비밀번호로 변경
         String encodedNewPassword = passwordEncoder.encode(newPassword);
         user.changePassword(encodedNewPassword);
-        log.info("비밀번호 변경 완료: {}", email);
+        log.debug("비밀번호 변경 완료");
     }
 
     /**
@@ -69,6 +81,6 @@ public class UserMyPageService {
      */
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
     }
 }

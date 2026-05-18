@@ -61,9 +61,11 @@ public class File extends BaseEntity {
         NOTICE("공지사항"),
         SERMON("설교"),
         BULLETIN("주보"),
+        NEWYEAR("송구영신예배"),
         GALLERY("갤러리"),
         DEPARTMENT("부서"),
-        STAFF("교역자");
+        STAFF("교역자"),
+        POPUP("팝업");
 
         private final String description;
 
@@ -95,6 +97,16 @@ public class File extends BaseEntity {
 
         public String getDescription() {
             return description;
+        }
+
+        /**
+         * 인증 없이 공개 접근이 허용된 카테고리 여부
+         * - CONTENT_IMAGE, THUMBNAIL, GALLERY_IMAGE 만 공개 허용
+         */
+        public boolean isPublic() {
+            return this == CONTENT_IMAGE
+                    || this == THUMBNAIL
+                    || this == GALLERY_IMAGE;
         }
     }
 

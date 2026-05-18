@@ -124,6 +124,6 @@ public class GalleryImage {
      * 수정 권한 확인
      */
     public boolean canModify(User user) {
-        return this.uploader.equals(user) || user.isAdmin();
+        return this.uploader.equals(user) || user.isAdminOrOperator();
     }
 }

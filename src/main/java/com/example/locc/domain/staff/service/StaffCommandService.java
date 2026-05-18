@@ -1,5 +1,6 @@
 package com.example.locc.domain.staff.service;
 
+import com.example.locc.config.CacheConfig;
 import com.example.locc.domain.staff.dto.command.StaffCreateCommand;
 import com.example.locc.domain.staff.dto.command.StaffUpdateCommand;
 import com.example.locc.domain.staff.dto.response.StaffResponse;
@@ -9,6 +10,7 @@ import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +34,9 @@ public class StaffCommandService {
     /**
      * Staff 생성
      */
+    @CacheEvict(value = CacheConfig.CACHE_STAFF, allEntries = true)
     public StaffResponse create(StaffCreateCommand command) {
-        log.info("Creating staff: {} by {}", command.getName(), command.getCreatedByEmail());
+        log.debug("Creating staff: {}", command.getName());
 
         // 권한 검증
         User user = findUserByEmail(command.getCreatedByEmail());
@@ -54,8 +57,9 @@ public class StaffCommandService {
     /**
      * Staff 수정
      */
+    @CacheEvict(value = CacheConfig.CACHE_STAFF, allEntries = true)
     public StaffResponse update(StaffUpdateCommand command) {
-        log.info("Updating staff: {} by {}", command.getStaffId(), command.getUpdatedByEmail());
+        log.debug("Updating staff: {}", command.getStaffId());
 
         // Staff 조회
         Staff staff = staffQueryService.findEntityById(command.getStaffId());
@@ -78,8 +82,9 @@ public class StaffCommandService {
     /**
      * Staff 삭제
      */
+    @CacheEvict(value = CacheConfig.CACHE_STAFF, allEntries = true)
     public void delete(Long staffId, String email) {
-        log.info("Deleting staff: {} by {}", staffId, email);
+        log.debug("Deleting staff: {}", staffId);
 
         Staff staff = staffQueryService.findEntityById(staffId);
         User user = findUserByEmail(email);
@@ -94,8 +99,9 @@ public class StaffCommandService {
     /**
      * 이미지 업데이트
      */
+    @CacheEvict(value = CacheConfig.CACHE_STAFF, allEntries = true)
     public StaffResponse updateImage(Long staffId, String imagePath, String email) {
-        log.info("Updating staff image: {} by {}", staffId, email);
+        log.debug("Updating staff image: {}", staffId);
 
         Staff staff = staffQueryService.findEntityById(staffId);
         User user = findUserByEmail(email);
@@ -124,14 +130,14 @@ public class StaffCommandService {
      */
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     /**
-     * 관리자 권한 검증
+     * 관리자 또는 운영자 권한 검증
      */
     private void validateAdminPermission(User user) {
-        if (!user.isAdmin()) {
+        if (!user.isAdminOrOperator()) {
             throw new IllegalStateException("권한이 없습니다.");
         }
     }

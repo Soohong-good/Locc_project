@@ -1,20 +1,19 @@
-import { useEffect } from 'react'
+﻿import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import useAuthStore from '@/stores/authStore'
-import { TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/lib/constants'
 import { getMe } from '@/api/auth'
 
 /**
  * OAuth2 로그인 콜백 처리
  *
- * 백엔드 OAuth2SuccessHandler가 아래 URL로 리다이렉트:
- *   http://localhost:3000/oauth2/callback?accessToken=...&refreshToken=...
+ * 토큰 방식: HttpOnly 쿠키
+ * - 백엔드 OAuth2SuccessHandler가 Set-Cookie로 토큰을 이미 발급한 상태로 리다이렉트
+ * - URL 파라미터에 토큰 없음 → 추출/저장 불필요
  *
- * 이 컴포넌트에서:
- * 1. URL 파라미터에서 토큰 추출
- * 2. localStorage 저장
- * 3. /api/auth/me 호출로 사용자 정보 세팅
- * 4. 메인 페이지로 이동
+ * 처리 흐름:
+ * 1. error 파라미터 있으면 /login?error=... 이동
+ * 2. error 없으면 /api/auth/me 호출로 사용자 정보 확인 (쿠키 자동 전송)
+ * 3. 성공 시 메인 페이지로 이동
  */
 const OAuth2Callback = () => {
   const [searchParams] = useSearchParams()
@@ -22,24 +21,24 @@ const OAuth2Callback = () => {
   const { setUser } = useAuthStore()
 
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken')
-    const refreshToken = searchParams.get('refreshToken')
     const error = searchParams.get('error')
 
     if (error) {
-      navigate(`/login?error=${error}`, { replace: true })
+      // error 파라미터 화이트리스트 — 허용된 값만 전달 (Reflected XSS 방지)
+      const allowedErrors = ['rejected', 'oauth2_error', 'oauth2_failed', 'access_denied', 'email_conflict']
+      const safeError = allowedErrors.includes(error) ? error : 'oauth2_error'
+
+      // 이메일 충돌은 전용 안내 페이지로
+      if (safeError === 'email_conflict') {
+        navigate('/social/email-conflict', { replace: true })
+        return
+      }
+
+      navigate(`/login?error=${safeError}`, { replace: true })
       return
     }
 
-    if (!accessToken) {
-      navigate('/login?error=oauth2_failed', { replace: true })
-      return
-    }
-
-    localStorage.setItem(TOKEN_KEY, accessToken)
-    if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
-
-    // 토큰 저장 후 유저 정보 로드
+    // 쿠키는 이미 백엔드가 발급 — 바로 유저 정보 조회
     getMe()
       .then((user) => {
         setUser(user)
@@ -48,7 +47,7 @@ const OAuth2Callback = () => {
       .catch(() => {
         navigate('/login?error=oauth2_failed', { replace: true })
       })
-  }, [])
+  }, [searchParams, navigate, setUser])
 
   return (
     <div className="flex items-center justify-center min-h-screen">

@@ -3,7 +3,7 @@ package com.example.locc.domain.file.service;
 import com.example.locc.config.FileProperties;
 import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.repository.FileRepository;
-import com.example.locc.domain.file.util.PdfThumbnailGenerator;
+import com.example.locc.domain.file.service.PdfThumbnailGenerator;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,6 +37,7 @@ public class FileCommandService {
     private final FileQueryService fileQueryService;
     private final UserRepository userRepository;
     private final PdfThumbnailGenerator pdfThumbnailGenerator;
+    private final AsyncPdfThumbnailService asyncPdfThumbnailService;
     private final FileProperties fileProperties;
 
     // 파일 검증 상수
@@ -163,7 +163,7 @@ public class FileCommandService {
 
         // User 조회
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // 이미지 저장 (entityId=0: 본문 이미지는 특정 엔티티에 속하지 않음)
         File uploadedFile = uploadFile(
@@ -228,13 +228,63 @@ public class FileCommandService {
         );
     }
 
+    // ===== 도메인별 퍼사드 메서드 (외부 도메인용) =====
+    // 외부 도메인은 File.EntityType / File.FileCategory 를 직접 알 필요 없이
+    // 아래 메서드만 호출하면 됩니다.
+
+    /** Notice 첨부파일 업로드 */
+    public List<File> uploadNoticeAttachments(List<MultipartFile> files, Long entityId, String email) {
+        return uploadFiles(files, File.EntityType.NOTICE, entityId, File.FileCategory.ATTACHMENT, email);
+    }
+
+    /** Notice 본문 이미지 업로드 → 공개 이미지 URL 반환 */
+    public String uploadNoticeContentImage(MultipartFile image, String email) {
+        return uploadContentImage(image, File.EntityType.NOTICE, email);
+    }
+
+    /** Notice 엔티티의 모든 파일 삭제 */
+    public void deleteNoticeFiles(Long entityId) {
+        deleteAllByEntity(File.EntityType.NOTICE, entityId);
+    }
+
+    /** Sermon 첨부파일 업로드 */
+    public List<File> uploadSermonAttachments(List<MultipartFile> files, Long entityId, String email) {
+        return uploadFiles(files, File.EntityType.SERMON, entityId, File.FileCategory.ATTACHMENT, email);
+    }
+
+    /** Sermon 본문 이미지 업로드 → 공개 이미지 URL 반환 */
+    public String uploadSermonContentImage(MultipartFile image, String email) {
+        return uploadContentImage(image, File.EntityType.SERMON, email);
+    }
+
+    /** Sermon 엔티티의 모든 파일 삭제 */
+    public void deleteSermonFiles(Long entityId) {
+        deleteAllByEntity(File.EntityType.SERMON, entityId);
+    }
+
+    /** Popup 본문 이미지 업로드 → 공개 이미지 URL 반환 */
+    public String uploadPopupContentImage(MultipartFile image, String email) {
+        return uploadContentImage(image, File.EntityType.POPUP, email);
+    }
+
+    /** Bulletin PDF 업로드 + 썸네일 생성 */
+    public PdfUploadResult uploadBulletinPdf(MultipartFile pdfFile, Long entityId, User user) {
+        return uploadPdfWithThumbnail(pdfFile, File.EntityType.BULLETIN, entityId, user);
+    }
+
     // ===== Private Helper Methods =====
 
     /**
      * 파일 검증
+     *
+     * 3단계 검증:
+     *   1. 파일 크기
+     *   2. 확장자 + 클라이언트 제공 MIME 타입 (1차 필터)
+     *   3. 이미지 파일은 실제 바이트 파싱으로 Magic Bytes 검증 (MIME 위조 방지)
+     *      PDF는 Apache PDFBox 파싱이 있으므로 여기서는 MIME 검증까지만 수행
      */
     private void validateFile(MultipartFile file) {
-        // 파일 크기 검증
+        // 1. 파일 크기 검증
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new IllegalArgumentException(
                     String.format("파일 크기가 제한을 초과했습니다. (최대: 10MB, 업로드 시도: %.2fMB)",
@@ -242,13 +292,13 @@ public class FileCommandService {
             );
         }
 
-        // 파일명 검증
+        // 2. 파일명 검증
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isEmpty()) {
+        if (originalFilename == null || originalFilename.isBlank()) {
             throw new IllegalArgumentException("파일 이름이 유효하지 않습니다.");
         }
 
-        // 확장자 검증
+        // 3. 확장자 검증
         String extension = extractExtension(originalFilename);
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new IllegalArgumentException(
@@ -258,12 +308,27 @@ public class FileCommandService {
             );
         }
 
-        // MIME 타입 검증
+        // 4. 클라이언트 제공 MIME 타입 검증 (1차 필터)
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType.toLowerCase())) {
             throw new IllegalArgumentException(
                     String.format("허용되지 않는 파일 타입입니다. (MIME Type: %s)", contentType)
             );
+        }
+
+        // 5. 이미지 파일 — 실제 바이트 파싱으로 Magic Bytes 검증 (MIME 위조 방지)
+        //    PDF는 uploadPdfWithThumbnail()에서 PDFBox 파싱으로 별도 검증됨
+        if (contentType.startsWith("image/")) {
+            try {
+                java.awt.image.BufferedImage image =
+                        javax.imageio.ImageIO.read(file.getInputStream());
+                if (image == null) {
+                    throw new IllegalArgumentException("유효한 이미지 파일이 아닙니다. (MIME 타입 위조 의심)");
+                }
+            } catch (IOException e) {
+                log.warn("이미지 파일 Magic Bytes 검증 실패: {}", originalFilename);
+                throw new IllegalArgumentException("이미지 파일을 읽을 수 없습니다.");
+            }
         }
     }
 
@@ -318,67 +383,69 @@ public class FileCommandService {
 
     /**
      * PDF 업로드 및 썸네일 자동 생성
-     * 
-     * @param pdfFile PDF 파일
+     * - PDF 저장(ATTACHMENT) + 썸네일 저장(THUMBNAIL) 을 한 번에 처리
+     * - BulletinCommandService 등에서 이 메서드 하나만 호출하면 됨
+     *   (uploadFile 을 별도로 먼저 호출하면 PDF 가 이중 저장되므로 금지)
+     *
+     * @param pdfFile    PDF 파일
      * @param entityType 엔티티 타입
-     * @param entityId 엔티티 ID
-     * @param user 업로드 사용자
-     * @return 썸네일 파일 다운로드 URL
+     * @param entityId   엔티티 ID
+     * @param user       업로드 사용자
+     * @return PdfUploadResult (pdfFileId, thumbnailUrl)
      */
-    public String uploadPdfWithThumbnail(
+    public PdfUploadResult uploadPdfWithThumbnail(
             MultipartFile pdfFile,
             File.EntityType entityType,
             Long entityId,
             User user
     ) {
-        // PDF 파일 검증
         if (pdfFile == null || pdfFile.isEmpty()) {
             throw new IllegalArgumentException("PDF 파일이 비어있습니다.");
         }
-
-        String contentType = pdfFile.getContentType();
-        if (!"application/pdf".equals(contentType)) {
+        if (!"application/pdf".equals(pdfFile.getContentType())) {
             throw new IllegalArgumentException("PDF 파일만 업로드 가능합니다.");
         }
 
         try {
-            // 1. PDF 파일 저장
+            // 1. PDF 바이트를 미리 읽어 둠 (InputStream은 한 번만 소비 가능하므로)
+            byte[] pdfBytes = pdfFile.getInputStream().readAllBytes();
+
+            // 2. PDF 원본 저장 (ATTACHMENT)
             File savedPdf = uploadFile(pdfFile, entityType, entityId, File.FileCategory.ATTACHMENT, user);
 
-            // 2. PDF 첫 페이지를 썸네일 이미지로 변환
-            InputStream thumbnailStream = pdfThumbnailGenerator.generateThumbnail(pdfFile.getInputStream());
-
-            // 3. 썸네일 이미지 저장
-            String thumbnailFilename = generateStoredFilename(pdfFile.getOriginalFilename()) + ".jpg";
+            // 3. 썸네일 경로 미리 결정 → DB 레코드 선저장
+            String thumbnailFilename = UUID.randomUUID() + ".jpg";
             Path uploadPath = createUploadPath(entityType);
             Path thumbnailPath = uploadPath.resolve(thumbnailFilename);
 
-            Files.copy(thumbnailStream, thumbnailPath, StandardCopyOption.REPLACE_EXISTING);
-
-            // 4. 썸네일 메타데이터 저장
             File thumbnailFile = File.create(
                     pdfFile.getOriginalFilename() + "_thumbnail.jpg",
                     thumbnailFilename,
                     thumbnailPath.toString(),
-                    Files.size(thumbnailPath),
+                    0L,         // 비동기 렌더링 완료 전이므로 크기는 0
                     "image/jpeg",
                     entityType,
                     entityId,
                     File.FileCategory.THUMBNAIL,
                     user
             );
-
             File savedThumbnail = fileRepository.save(thumbnailFile);
 
-            log.info("PDF 업로드 및 썸네일 생성 완료: PDF={}, 썸네일={}", 
-                    savedPdf.getId(), savedThumbnail.getId());
+            // 4. PDFBox 렌더링(무거운 CPU 작업)을 비동기로 위임
+            asyncPdfThumbnailService.renderAndSave(pdfBytes, thumbnailPath);
 
-            // 썸네일 공개 이미지 URL 반환
-            return "/api/files/image/" + savedThumbnail.getId();
+            log.info("PDF 업로드 완료 (썸네일 비동기 처리 중): PDF={}, 썸네일={}", savedPdf.getId(), savedThumbnail.getId());
+
+            return new PdfUploadResult(savedPdf.getId(), "/api/files/image/" + savedThumbnail.getId());
 
         } catch (IOException e) {
-            log.error("PDF 업로드 및 썸네일 생성 실패", e);
+            log.error("PDF 업로드 실패", e);
             throw new RuntimeException("PDF 업로드에 실패했습니다: " + e.getMessage(), e);
         }
     }
+
+    /**
+     * PDF 업로드 결과 (원본 파일 ID + 썸네일 URL)
+     */
+    public record PdfUploadResult(Long pdfFileId, String thumbnailUrl) {}
 }

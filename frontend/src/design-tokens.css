@@ -1,0 +1,180 @@
+/*
+  그리스도사랑교회 — 디자인 토큰
+  index.css에 @import 추가 후 사용.
+
+  기존 --church-gold / --church-ivory-warm / --church-border 는 그대로 두고,
+  이 파일에서 더 풍부한 토큰 세트를 정의한다.
+*/
+
+:root {
+  /* ── Brand Gold ─────────────────────────────── */
+  --gold:          #b5893f;
+  --gold-dark:     #8a6830;
+  --gold-light:    #f5edd8;
+  --gold-subtle:   #faf6ee;   /* 섹션 배경용 */
+
+  /* ── Neutral (warm) ─────────────────────────── */
+  --bg:            #ffffff;
+  --bg-warm:       #faf8f5;   /* 짝수 섹션 배경 */
+  --bg-dark:       #111111;   /* 푸터, 다크 섹션 */
+  --bg-card:       #ffffff;
+
+  --text-primary:  #1a1710;   /* 제목 */
+  --text-body:     #3d3a35;   /* 본문 */
+  --text-muted:    #7a766e;   /* 보조 */
+  --text-inverse:  #f5f3ef;   /* 다크 배경 위 */
+
+  --border:        #e6e0d6;
+  --border-dark:   #2a2a2a;
+
+  /* ── Spacing ────────────────────────────────── */
+  --section-y:     120px;
+  --section-y-sm:  80px;
+
+  /* ── Typography ─────────────────────────────── */
+  --font-body:     'Pretendard', 'Noto Sans KR', sans-serif;
+  --tracking-label: 0.22em;  /* 섹션 레이블 자간 */
+
+  /* ── Transitions ────────────────────────────── */
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --duration:      280ms;
+}
+
+/* ── 공통 유틸 클래스 ─────────────────────────────── */
+
+/* 섹션 레이블: GALLERY · 갤러리 */
+.ds-label {
+  display: inline-block;
+  font-size: 0.6875rem;        /* 11px */
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* 섹션 제목 */
+.ds-heading {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.ds-heading-xl {
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 300;
+  color: var(--text-primary);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+/* 골드 언더라인 강조 */
+.ds-underline {
+  position: relative;
+  display: inline-block;
+}
+.ds-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+}
+
+/* 버튼 */
+.ds-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  background: var(--gold);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: background var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.ds-btn-gold:hover {
+  background: var(--gold-dark);
+  transform: translateY(-1px);
+}
+
+.ds-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  transition: background var(--duration) var(--ease-out),
+              color var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.ds-btn-outline:hover {
+  background: var(--gold);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.ds-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border: 1.5px solid var(--border);
+  color: var(--text-body);
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  transition: border-color var(--duration), color var(--duration);
+}
+.ds-btn-ghost:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* 카드 */
+.ds-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: border-color var(--duration) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.ds-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 8px 32px rgba(181, 137, 63, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 골드 좌측 선 (인용, 강조 블록) */
+.ds-gold-bar {
+  border-left: 3px solid var(--gold);
+  padding-left: 1.25rem;
+  color: var(--text-body);
+}
+
+/* 섹션 구분선 */
+.ds-divider {
+  width: 2.5rem;
+  height: 1.5px;
+  background: var(--gold);
+}
+
+/* 섹션 넘버링 */
+.ds-number {
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--gold-light);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  pointer-events: none;
+  user-select: none;
+}

@@ -1,38 +1,49 @@
 import { Link } from 'react-router-dom'
 
 const AboutPage = () => (
-  <>
-    {/* Hero */}
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 pt-24 pb-32 px-6">
-      <div className="max-w-4xl w-full">
-        <div className="mb-16">
-          <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">About Church</p>
-          <h1 className="text-5xl md:text-6xl font-light text-slate-900 leading-[1.3] tracking-tight mb-8">
+  <div className="relative" style={{ backgroundColor: '#ffffff' }}>
+    {/* ── 고정 배경 이미지 ─────────────────────────────────── */}
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        backgroundImage: 'url(/aboutPage.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+      }}
+    />
+
+    {/* ── Hero — 반투명 (이미지 비침) ─────────────────────── */}
+    <section className="pt-page pb-20 px-6 text-white relative" style={{ zIndex: 1, backgroundColor: 'rgba(15,23,42,0.60)' }}>
+      <div className="max-w-6xl mx-auto">
+        <div className="animate-fade-in-up">
+          <p className="text-xs font-medium tracking-[0.3em] uppercase mb-3 text-eyebrow">
+            About Church
+          </p>
+          <h1 className="text-4xl md:text-5xl font-light leading-tight tracking-tight">
             그리스도 사랑교회
           </h1>
-          <div className="h-px w-16 bg-slate-300 mb-12" />
-          <p className="text-xl md:text-2xl text-slate-600 leading-[1.8] font-light">
-            종교개혁의 원리를 따라<br />
-            오직 성경, 오직 은혜, 오직 믿음,<br />
-            오직 그리스도, 오직 하나님께만 영광을 고백하며,<br />
+          <p className="mt-4 text-lg font-light text-slate-300 max-w-2xl">
+            오직 성경, 오직 은혜, 오직 믿음, 오직 그리스도, 오직 하나님께만 영광을 고백하며,
             예배의 감격과 사랑의 교제가 넘치는 제자 공동체입니다.
           </p>
         </div>
       </div>
     </section>
 
-    {/* 비전 */}
-    <section className="py-32 bg-white px-6">
+    {/* ── 비전 — 불투명 흰색 (이미지 가려짐) ─────────────── */}
+    <section className="py-32 px-6 relative" style={{ zIndex: 1, backgroundColor: '#ffffff' }}>
       <div className="max-w-4xl mx-auto">
         <div className="mb-20">
-          <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Vision</p>
+          <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Vision</p>
           <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">우리의 비전</h2>
           <div className="h-px w-16 bg-slate-300" />
         </div>
         <div className="space-y-16">
           {[
-            { title: '그리스도 중심의 교회', desc: '예수 그리스도가 교회의 머리, 주인, 왕, 목자가 되심을 인정하며\n그리스도의 인도하심을 따라가는 교회입니다.' },
-            { title: '말씀 중심의 교회',     desc: '성경 말씀을 있는 그대로 가르치고 배우며,\n그 진리를 우리의 삶 가운데 적용하여 하나님의 뜻을 실천하는 교회입니다.' },
+            { title: '그리스도 중심의 교회', desc: '예수 그리스도가 교회의 머리, 주인, 왕, 목자가 되심을 인정하며\n그리스도의 인도하심을 따라가는 교회입니다.' }, { title: '말씀 중심의 교회',     desc: '성경 말씀을 있는 그대로 가르치고 배우며,\n그 진리를 우리의 삶 가운데 적용하여 하나님의 뜻을 실천하는 교회입니다.' },
             { title: '예배하는 교회',         desc: '살아계신 하나님을 영과 진리로 예배하며,\n예배를 통해 하나님과의 친밀한 교제를 경험하는 교회입니다.' },
             { title: '사랑의 교회',           desc: '하나님의 사랑을 받은 자로서 서로를 진실하게 사랑하고 섬기며,\n세상에 그리스도의 사랑을 전하는 교회입니다.' },
             { title: '제자 세우는 교회',      desc: '자기를 부인하며 자기 십자가를 지고\n예수 그리스도를 따라가는 제자를 세우는 교회입니다.' },
@@ -48,13 +59,13 @@ const AboutPage = () => (
       </div>
     </section>
 
-    {/* 핵심 가치 */}
-    <section className="py-32 bg-slate-50 px-6">
+    {/* ── 핵심 가치 — 반투명 (이미지 비침) ───────────────── */}
+    <section className="py-32 px-6 text-white relative" style={{ zIndex: 1, backgroundColor: 'rgba(15,23,42,0.65)' }}>
       <div className="max-w-4xl mx-auto">
         <div className="mb-20">
-          <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Core Values</p>
-          <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">핵심 가치</h2>
-          <div className="h-px w-16 bg-slate-300" />
+          <p className="text-xs tracking-[0.3em] uppercase mb-4 text-slate-400">Core Values</p>
+          <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-6">핵심 가치</h2>
+          <div className="h-px w-16 bg-white/30" />
         </div>
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16">
           {[
@@ -66,20 +77,20 @@ const AboutPage = () => (
             { num: '06', title: '섬김', desc: '그리스도의 마음으로 서로를 섬기고 지역사회를 섬깁니다.' },
           ].map(({ num, title, desc }) => (
             <div key={num} className="space-y-4">
-              <div className="text-4xl font-light text-slate-300">{num}</div>
-              <h3 className="text-2xl font-light text-slate-900">{title}</h3>
-              <p className="text-lg text-slate-600 leading-[1.8] font-light">{desc}</p>
+              <div className="text-4xl font-light text-white/25">{num}</div>
+              <h3 className="text-2xl font-light text-white">{title}</h3>
+              <p className="text-lg text-slate-300 leading-[1.8] font-light">{desc}</p>
             </div>
           ))}
         </div>
       </div>
     </section>
 
-    {/* 신앙고백 요약 */}
-    <section className="py-32 bg-white px-6">
+    {/* ── 신앙고백 — 불투명 흰색 (이미지 가려짐) ─────────── */}
+    <section className="py-32 px-6 relative" style={{ zIndex: 1, backgroundColor: '#ffffff' }}>
       <div className="max-w-4xl mx-auto">
         <div className="mb-20">
-          <p className="text-xs tracking-[0.3em] text-slate-400 uppercase mb-4">Statement of Faith</p>
+          <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Statement of Faith</p>
           <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-6">신앙고백</h2>
           <div className="h-px w-16 bg-slate-300 mb-8" />
           <p className="text-lg text-slate-600 leading-[1.9] font-light">
@@ -104,7 +115,7 @@ const AboutPage = () => (
             <h3 className="text-xl font-medium text-slate-900 mb-4">교회 소속</h3>
             <p className="text-lg text-slate-600 leading-[1.9] font-light">
               그리스도사랑교회는{' '}
-              <a href="http://www.rpck.tv/" target="_blank" rel="noreferrer"
+              <a href="https://www.rpck.tv/" target="_blank" rel="noreferrer"
                 className="font-medium text-slate-900 inline-flex items-center gap-1 hover:text-blue-600 transition-colors border-b border-slate-300 hover:border-blue-600">
                 대한예수교장로회총회(개혁)
               </a>
@@ -112,11 +123,11 @@ const AboutPage = () => (
             </p>
           </div>
           {[
-            { title: '성경',       desc: '우리는 신구약 성경 66권이 하나님의 영감으로 기록된 오류 없는 하나님의 말씀임을 믿습니다.' },
-            { title: '하나님',     desc: '우리는 성부, 성자, 성령 삼위일체 하나님을 믿으며, 그분이 천지를 창조하시고 섭리하시는 분임을 믿습니다.' },
+            { title: '성경',          desc: '우리는 신구약 성경 66권이 하나님의 영감으로 기록된 오류 없는 하나님의 말씀임을 믿습니다.' },
+            { title: '하나님',        desc: '우리는 성부, 성자, 성령 삼위일체 하나님을 믿으며, 그분이 천지를 창조하시고 섭리하시는 분임을 믿습니다.' },
             { title: '예수 그리스도', desc: '우리는 예수 그리스도께서 참 하나님이시며 참 사람이시고, 십자가에서 우리의 죄를 위해 죽으시고 부활하심으로 구원의 길을 열어주셨음을 믿습니다.' },
-            { title: '구원',       desc: '우리는 오직 예수 그리스도를 믿는 믿음으로만 구원받으며, 이는 전적인 하나님의 은혜임을 믿습니다.' },
-            { title: '교회',       desc: '우리는 교회가 그리스도의 몸이며, 성도들의 모임을 통해 하나님의 나라를 이루어가는 하나님의 백성임을 믿습니다.' },
+            { title: '구원',          desc: '우리는 오직 예수 그리스도를 믿는 믿음으로만 구원받으며, 이는 전적인 하나님의 은혜임을 믿습니다.' },
+            { title: '교회',          desc: '우리는 교회가 그리스도의 몸이며, 성도들의 모임을 통해 하나님의 나라를 이루어가는 하나님의 백성임을 믿습니다.' },
           ].map(({ title, desc }) => (
             <div key={title} className="border-l-2 border-slate-900 pl-8">
               <h3 className="text-xl font-medium text-slate-900 mb-4">{title}</h3>
@@ -127,8 +138,8 @@ const AboutPage = () => (
       </div>
     </section>
 
-    {/* CTA */}
-    <section className="py-24 bg-slate-900 px-6">
+    {/* ── CTA — 반투명 (이미지 비침) ──────────────────────── */}
+    <section className="py-24 px-6 text-white relative" style={{ zIndex: 1, backgroundColor: 'rgba(15,23,42,0.70)' }}>
       <div className="max-w-4xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-light text-white mb-6">여러분을 초대합니다</h2>
         <p className="text-lg md:text-xl text-slate-300 mb-12 font-light leading-[1.8]">
@@ -148,7 +159,7 @@ const AboutPage = () => (
         </div>
       </div>
     </section>
-  </>
+  </div>
 )
 
 export default AboutPage

@@ -1,7 +1,7 @@
 package com.example.locc.domain.file.service;
 
 import com.example.locc.config.AppProperties;
-import com.example.locc.domain.file.dto.FileResponse;
+import com.example.locc.domain.file.dto.response.FileResponse;
 import com.example.locc.domain.file.entity.File;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

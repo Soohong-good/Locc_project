@@ -127,6 +127,6 @@ public class Training extends BaseEntity {
         if (user == null) {
             return false;
         }
-        return user.isAdmin() || this.createdBy.getId().equals(user.getId());
+        return user.isAdminOrOperator() || this.createdBy.getId().equals(user.getId());
     }
 }

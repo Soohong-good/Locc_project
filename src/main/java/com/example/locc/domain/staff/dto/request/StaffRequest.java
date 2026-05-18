@@ -1,5 +1,7 @@
 package com.example.locc.domain.staff.dto.request;
 
+import com.example.locc.domain.staff.dto.command.StaffCreateCommand;
+import com.example.locc.domain.staff.dto.command.StaffUpdateCommand;
 import com.example.locc.domain.staff.entity.Staff;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -48,4 +50,35 @@ public class StaffRequest {
 
     @Builder.Default
     private Integer displayOrder = 0;
+
+    public StaffCreateCommand toCreateCommand(String createdByEmail) {
+        return StaffCreateCommand.builder()
+                .name(this.name)
+                .englishName(this.englishName)
+                .position(this.position)
+                .category(this.category)
+                .isSeniorPastor(this.isSeniorPastor)
+                .customPosition(this.customPosition)
+                .responsibility(this.responsibility)
+                .imagePath(this.imagePath)
+                .displayOrder(this.displayOrder)
+                .createdByEmail(createdByEmail)
+                .build();
+    }
+
+    public StaffUpdateCommand toUpdateCommand(Long staffId, String updatedByEmail) {
+        return StaffUpdateCommand.builder()
+                .staffId(staffId)
+                .name(this.name)
+                .englishName(this.englishName)
+                .position(this.position)
+                .category(this.category)
+                .isSeniorPastor(this.isSeniorPastor)
+                .customPosition(this.customPosition)
+                .responsibility(this.responsibility)
+                .imagePath(this.imagePath)
+                .displayOrder(this.displayOrder)
+                .updatedByEmail(updatedByEmail)
+                .build();
+    }
 }

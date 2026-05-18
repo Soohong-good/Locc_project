@@ -1,12 +1,15 @@
 package com.example.locc.domain.sermon.service;
 
+import com.example.locc.config.YouTubeProperties;
+import com.example.locc.domain.department.service.YouTubeService;
 import com.example.locc.domain.sermon.dto.request.SermonSearchCondition;
 import com.example.locc.domain.sermon.dto.response.SermonDetailResponse;
+import com.example.locc.domain.sermon.dto.response.SermonPageResponse;
 import com.example.locc.domain.sermon.dto.response.SermonResponse;
 import com.example.locc.domain.sermon.entity.Sermon;
 import com.example.locc.domain.sermon.repository.SermonRepository;
-import com.example.locc.domain.file.dto.FileDto;
-import com.example.locc.domain.file.entity.File;
+import com.example.locc.domain.file.dto.response.AttachmentInfo;
+import com.example.locc.exception.InvalidInputException;
 import com.example.locc.exception.NotFoundException;
 import com.example.locc.domain.file.service.FileQueryService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -32,134 +37,189 @@ public class SermonQueryService {
 
     private final SermonRepository sermonRepository;
     private final FileQueryService fileQueryService;
+    private final YouTubeService youTubeService;
+    private final YouTubeProperties youTubeProperties;
 
-    /**
-     * 목록 조회
-     */
+    // ─────────────────────────────────────────────
+    // 기본 조회
+    // ─────────────────────────────────────────────
+
     public Page<SermonResponse> findList(SermonSearchCondition condition) {
         log.debug("Finding sermon list with condition: {}", condition);
-        
+
         Page<Sermon> sermons;
-        
+
         if (condition.hasCategory() && condition.hasKeyword()) {
-            // 카테고리 + 검색
             sermons = sermonRepository.searchByCategory(
-                    condition.getCategory(),
-                    condition.getKeyword(),
-                    condition.toPageable()
-            );
+                    condition.getCategory(), condition.getKeyword(), condition.toPageable());
         } else if (condition.hasCategory()) {
-            // 카테고리만
             sermons = sermonRepository.findByCategory(
-                    condition.getCategory(),
-                    condition.toPageable()
-            );
+                    condition.getCategory(), condition.toPageable());
         } else if (condition.hasKeyword()) {
-            // 검색만
-            sermons = sermonRepository.search(
-                    condition.getKeyword(),
-                    condition.toPageable()
-            );
+            sermons = sermonRepository.search(condition.getKeyword(), condition.toPageable());
         } else {
-            // 전체 목록
             sermons = sermonRepository.findList(condition.toPageable());
         }
-        
+
         return sermons.map(SermonResponse::from);
     }
 
-    /**
-     * 상세 조회
-     */
     public SermonDetailResponse findDetail(Long id) {
         log.debug("Finding sermon detail: {}", id);
-        
         Sermon sermon = sermonRepository.findDetailById(id)
                 .orElseThrow(() -> new NotFoundException("설교를 찾을 수 없습니다. ID: " + id));
-        
-        // 파일 정보 조회
-        List<FileDto> files = fileQueryService.getFilesByEntityWithUploader(
-                File.EntityType.SERMON, id)
-                .stream()
-                .map(FileDto::fromEntity)
-                .collect(Collectors.toList());
-        
+        List<AttachmentInfo> files = fileQueryService.getSermonAttachments(id);
         return SermonDetailResponse.from(sermon, files);
     }
 
-    /**
-     * 최근 설교 조회 (N개)
-     */
     public List<SermonResponse> findLatest(int limit) {
-        log.debug("Finding latest {} sermons", limit);
-        
         return sermonRepository.findLatest(PageRequest.of(0, limit))
-                .stream()
-                .map(SermonResponse::from)
-                .collect(Collectors.toList());
+                .stream().map(SermonResponse::from).collect(Collectors.toList());
     }
 
-    /**
-     * 카테고리별 최신 설교 조회 (N개)
-     */
     public List<SermonResponse> findLatestByCategory(String category, int limit) {
-        log.debug("Finding latest {} sermons by category: {}", limit, category);
-        
         return sermonRepository.findByCategory(category, PageRequest.of(0, limit))
-                .stream()
-                .map(SermonResponse::from)
-                .collect(Collectors.toList());
+                .stream().map(SermonResponse::from).collect(Collectors.toList());
     }
 
     /**
-     * 카테고리 + 부 구분 최신 설교 조회 (주일오전 1부/2부 등)
+     * 카테고리별 최신 설교 단건 조회 (없으면 null)
      */
+    public SermonResponse findLatestOneByCategory(String category) {
+        List<SermonResponse> result = findLatestByCategory(category, 1);
+        return result.isEmpty() ? null : result.get(0);
+    }
+
     public List<SermonResponse> findLatestByCategoryAndServiceNumber(String category, Integer serviceNumber, int limit) {
-        log.debug("Finding latest {} sermons by category: {} and serviceNumber: {}", limit, category, serviceNumber);
-        
         return sermonRepository.findLatestByCategoryAndServiceNumber(
-                        category, 
-                        serviceNumber, 
-                        PageRequest.of(0, limit))
-                .stream()
-                .map(SermonResponse::from)
-                .collect(Collectors.toList());
+                        category, serviceNumber, PageRequest.of(0, limit))
+                .stream().map(SermonResponse::from).collect(Collectors.toList());
     }
 
-    /**
-     * 카테고리 + 부 구분 페이징 조회
-     */
     public Page<SermonResponse> findByCategoryAndServiceNumber(String category, Integer serviceNumber, int page, int size) {
-        log.debug("Finding sermons by category: {} and serviceNumber: {}, page: {}, size: {}", 
-                  category, serviceNumber, page, size);
-        
         return sermonRepository.findByCategoryAndServiceNumber(
-                        category, 
-                        serviceNumber, 
-                        PageRequest.of(page, size))
+                        category, serviceNumber, PageRequest.of(page, size))
                 .map(SermonResponse::from);
     }
 
-    /**
-     * ID로 조회 (내부용)
-     */
+    public Page<SermonResponse> findPagedForAdmin(int page, int size) {
+        log.debug("관리자 설교 목록 조회: page={}, size={}", page, size);
+        return sermonRepository.findList(PageRequest.of(page, size))
+                .map(SermonResponse::from);
+    }
+
     Sermon findById(Long id) {
         return sermonRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("설교를 찾을 수 없습니다. ID: " + id));
     }
 
-    /**
-     * 전체 설교 개수 조회 (Admin용)
-     */
     public Long countAll() {
         return sermonRepository.count();
     }
 
-    /**
-     * 최근 N일 이내 등록된 설교 개수 조회 (Admin용)
-     */
     public Long countRecent(int days) {
-        java.time.LocalDateTime since = java.time.LocalDateTime.now().minusDays(days);
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
         return sermonRepository.countByCreatedAtAfter(since);
+    }
+
+    // ─────────────────────────────────────────────
+    // 페이지 전용 통합 조회 (YouTube + 설교 데이터)
+    // ─────────────────────────────────────────────
+
+    /**
+     * 주일오전 통합 조회 (1부 / 2부)
+     */
+    public SermonPageResponse getSundayMorningPage(int serviceNumber, int page, int size) {
+        if (serviceNumber != 1 && serviceNumber != 2) {
+            throw new InvalidInputException("지원하지 않는 예배 서비스 번호입니다. (허용: 1, 2)");
+        }
+        String playlistKey = "sunday-morning-" + serviceNumber;
+        List<Map<String, String>> youtubeVideos = fetchYoutubeVideos(playlistKey);
+        Page<SermonResponse> sermons = findByCategoryAndServiceNumber("주일오전", serviceNumber, page, size);
+        List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("주일오전", serviceNumber, 1);
+
+        return SermonPageResponse.builder()
+                .sermons(sermons.getContent())
+                .latestSermon(latestList.isEmpty() ? null : latestList.get(0))
+                .youtubeVideos(youtubeVideos)
+                .currentPage(page)
+                .totalPages(sermons.getTotalPages())
+                .totalItems(sermons.getTotalElements())
+                .selectedServiceNumber(serviceNumber)
+                .build();
+    }
+
+    /**
+     * 주일오후 통합 조회
+     */
+    public SermonPageResponse getSundayAfternoonPage(int page, int size) {
+        List<Map<String, String>> youtubeVideos = fetchYoutubeVideos("sunday-afternoon");
+        SermonSearchCondition condition = SermonSearchCondition.builder()
+                .category("주일오후").page(page).size(size).build();
+        Page<SermonResponse> sermons = findList(condition);
+        List<SermonResponse> latestList = findLatestByCategory("주일오후", 1);
+
+        return SermonPageResponse.builder()
+                .sermons(sermons.getContent())
+                .latestSermon(latestList.isEmpty() ? null : latestList.get(0))
+                .youtubeVideos(youtubeVideos)
+                .currentPage(page)
+                .totalPages(sermons.getTotalPages())
+                .totalItems(sermons.getTotalElements())
+                .build();
+    }
+
+    /**
+     * 기타예배 통합 조회 (수요 / 금요)
+     */
+    public SermonPageResponse getWeekdayPage(String type, int page, int size) {
+        if (!"wednesday".equals(type) && !"friday".equals(type)) {
+            throw new InvalidInputException("지원하지 않는 예배 타입입니다. (허용: wednesday, friday)");
+        }
+        int serviceNumber = "wednesday".equals(type) ? 1 : 2;
+        List<Map<String, String>> youtubeVideos = fetchYoutubeVideos(type);
+        Page<SermonResponse> sermons = findByCategoryAndServiceNumber("기타예배", serviceNumber, page, size);
+        List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("기타예배", serviceNumber, 1);
+
+        return SermonPageResponse.builder()
+                .sermons(sermons.getContent())
+                .latestSermon(latestList.isEmpty() ? null : latestList.get(0))
+                .youtubeVideos(youtubeVideos)
+                .currentPage(page)
+                .totalPages(sermons.getTotalPages())
+                .totalItems(sermons.getTotalElements())
+                .selectedType(type)
+                .build();
+    }
+
+    /**
+     * 훈련용메시지 통합 조회
+     */
+    public SermonPageResponse getTrainingMessagePage(int page, int size) {
+        SermonSearchCondition condition = SermonSearchCondition.builder()
+                .category("훈련용메시지").page(page).size(size).build();
+        Page<SermonResponse> sermons = findList(condition);
+        List<SermonResponse> latestList = findLatestByCategory("훈련용메시지", 1);
+
+        return SermonPageResponse.builder()
+                .sermons(sermons.getContent())
+                .latestSermon(latestList.isEmpty() ? null : latestList.get(0))
+                .youtubeVideos(List.of())
+                .currentPage(page)
+                .totalPages(sermons.getTotalPages())
+                .totalItems(sermons.getTotalElements())
+                .build();
+    }
+
+    // ─────────────────────────────────────────────
+    // private
+    // ─────────────────────────────────────────────
+
+    private List<Map<String, String>> fetchYoutubeVideos(String playlistKey) {
+        String playlistId = youTubeProperties.getPlaylistId(playlistKey);
+        if (playlistId == null || playlistId.isEmpty()) {
+            return List.of();
+        }
+        return youTubeService.getLatestVideos(playlistId, 1);
     }
 }

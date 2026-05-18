@@ -1,5 +1,6 @@
 package com.example.locc.domain.helprequest.controller;
 
+import com.example.locc.common.ApiResponse;
 import com.example.locc.domain.helprequest.dto.request.HelpRequestCreateRequest;
 import com.example.locc.domain.helprequest.dto.response.HelpRequestResponse;
 import com.example.locc.domain.helprequest.service.HelpRequestCommandService;
@@ -23,16 +24,9 @@ public class HelpRequestApiController {
 
     private final HelpRequestCommandService helpRequestCommandService;
 
-    /**
-     * 도움 요청 생성
-     * POST /api/help-request
-     */
     @PostMapping
-    public ResponseEntity<HelpRequestResponse> create(@Valid @RequestBody HelpRequestCreateRequest request) {
-        log.info("[도움 요청 API] 이름: {}, 이메일: {}", request.getName(), request.getEmail());
-        
-        HelpRequestResponse response = helpRequestCommandService.create(request);
-        
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<HelpRequestResponse>> create(@Valid @RequestBody HelpRequestCreateRequest request) {
+        log.debug("[도움 요청 API] 요청 수신");
+        return ResponseEntity.ok(ApiResponse.ok(helpRequestCommandService.create(request.toCommand())));
     }
 }

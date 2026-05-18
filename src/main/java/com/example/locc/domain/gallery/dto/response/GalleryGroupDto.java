@@ -16,15 +16,16 @@ public record GalleryGroupDto(
     public GalleryGroupResponse toResponse() {
         // 간단한 커버 이미지 정보만 담은 Response 생성
         GalleryImageResponse coverImage = new GalleryImageResponse(
-                null,  // id
+                null,
                 this.title,
-                null,  // description
+                null,
                 this.coverThumbnailFilename,
                 this.coverStoredFilename,
-                "시스템",  // uploaderName
-                this.imageCount.intValue(),  // imageCount
-                0,     // viewCount
-                null   // createdAt
+                "시스템",
+                null,  // uploaderId
+                this.imageCount.intValue(),
+                0,
+                null
         );
         
         return new GalleryGroupResponse(

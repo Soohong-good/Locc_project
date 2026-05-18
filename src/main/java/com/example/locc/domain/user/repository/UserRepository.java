@@ -21,6 +21,18 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
 
     /**
+     * 이메일로 사용자 조회 (socialAccounts fetch join — getMe, 상세 조회용)
+     */
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.socialAccounts WHERE u.email = :email")
+    Optional<User> findByEmailWithSocialAccounts(@Param("email") String email);
+
+    /**
+     * ID로 사용자 조회 (socialAccounts fetch join — 관리자 상세 조회용)
+     */
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.socialAccounts WHERE u.id = :id")
+    Optional<User> findByIdWithSocialAccounts(@Param("id") UUID id);
+
+    /**
      * 이메일 중복 체크
      */
     Boolean existsByEmail(String email);

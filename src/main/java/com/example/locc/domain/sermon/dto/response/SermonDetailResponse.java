@@ -1,7 +1,7 @@
 package com.example.locc.domain.sermon.dto.response;
 
 import com.example.locc.domain.sermon.entity.Sermon;
-import com.example.locc.domain.file.dto.FileDto;
+import com.example.locc.domain.file.dto.response.AttachmentInfo;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -33,13 +33,14 @@ public class SermonDetailResponse {
     // 작성자 정보
     private final String authorName;
     private final String authorEmail;
+    private final String authorId;   // 프론트 본인 여부 판단용
     
     // 메타 정보
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     
     // 첨부파일
-    private final List<FileDto> attachments;
+    private final List<AttachmentInfo> attachments;
     
     // 추가 정보
     private final boolean isNew;
@@ -47,7 +48,7 @@ public class SermonDetailResponse {
     /**
      * Entity to Response (파일 정보 포함)
      */
-    public static SermonDetailResponse from(Sermon sermon, List<FileDto> files) {
+    public static SermonDetailResponse from(Sermon sermon, List<AttachmentInfo> files) {
         return SermonDetailResponse.builder()
                 .id(sermon.getId())
                 .title(sermon.getTitle())
@@ -62,6 +63,7 @@ public class SermonDetailResponse {
                 .serviceNumber(sermon.getServiceNumber())
                 .authorName(sermon.getAuthor() != null ? sermon.getAuthor().getName() : "알 수 없음")
                 .authorEmail(sermon.getAuthor() != null ? sermon.getAuthor().getEmail() : null)
+                .authorId(sermon.getAuthor() != null ? sermon.getAuthor().getId().toString() : null)
                 .createdAt(sermon.getCreatedAt())
                 .updatedAt(sermon.getUpdatedAt())
                 .attachments(files)

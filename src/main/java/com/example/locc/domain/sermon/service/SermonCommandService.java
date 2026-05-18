@@ -5,8 +5,7 @@ import com.example.locc.domain.sermon.dto.command.SermonUpdateCommand;
 import com.example.locc.domain.sermon.dto.response.SermonDetailResponse;
 import com.example.locc.domain.sermon.entity.Sermon;
 import com.example.locc.domain.sermon.repository.SermonRepository;
-import com.example.locc.domain.file.dto.FileDto;
-import com.example.locc.domain.file.entity.File;
+import com.example.locc.domain.file.dto.response.AttachmentInfo;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import com.example.locc.domain.file.service.FileCommandService;
@@ -16,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,7 +42,7 @@ public class SermonCommandService {
      * Sermon 생성
      */
     public SermonDetailResponse create(SermonCreateCommand command) {
-        log.info("Creating sermon: {} by {}", command.getTitle(), command.getCreatedByEmail());
+        log.debug("Creating sermon: {}", command.getTitle());
 
         // 사용자 조회
         User author = findUserByEmail(command.getCreatedByEmail());
@@ -52,7 +52,7 @@ public class SermonCommandService {
         Sermon savedSermon = sermonRepository.save(sermon);
 
         // 파일 업로드
-        List<FileDto> files = uploadFiles(savedSermon.getId(), command);
+        List<AttachmentInfo> files = uploadFiles(savedSermon.getId(), command);
 
         return SermonDetailResponse.from(savedSermon, files);
     }
@@ -61,7 +61,7 @@ public class SermonCommandService {
      * Sermon 수정
      */
     public SermonDetailResponse update(SermonUpdateCommand command) {
-        log.info("Updating sermon: {} by {}", command.getSermonId(), command.getUpdatedByEmail());
+        log.debug("Updating sermon: {}", command.getSermonId());
 
         // Sermon 조회
         Sermon sermon = sermonQueryService.findById(command.getSermonId());
@@ -74,7 +74,7 @@ public class SermonCommandService {
         sermon.update(command);
 
         // 파일 업로드
-        List<FileDto> files = uploadFiles(sermon.getId(), command);
+        List<AttachmentInfo> files = uploadFiles(sermon.getId(), command);
 
         return SermonDetailResponse.from(sermon, files);
     }
@@ -83,7 +83,7 @@ public class SermonCommandService {
      * Sermon 삭제
      */
     public void delete(Long sermonId, String email) {
-        log.info("Deleting sermon: {} by {}", sermonId, email);
+        log.debug("Deleting sermon: {}", sermonId);
 
         Sermon sermon = sermonQueryService.findById(sermonId);
         User user = findUserByEmail(email);
@@ -92,10 +92,17 @@ public class SermonCommandService {
         validateModifyPermission(sermon, user);
 
         // 파일 먼저 삭제
-        fileCommandService.deleteAllByEntity(File.EntityType.SERMON, sermonId);
+        fileCommandService.deleteSermonFiles(sermonId);
 
         // Sermon 삭제
         sermonRepository.delete(sermon);
+    }
+
+    /**
+     * 본문 이미지 업로드 (에디터용)
+     */
+    public String uploadContentImage(MultipartFile image, String email) {
+        return fileCommandService.uploadSermonContentImage(image, email);
     }
 
     // ===== Private Helper Methods =====
@@ -103,43 +110,34 @@ public class SermonCommandService {
     /**
      * 파일 업로드 (생성용)
      */
-    private List<FileDto> uploadFiles(Long sermonId, SermonCreateCommand command) {
+    private List<AttachmentInfo> uploadFiles(Long sermonId, SermonCreateCommand command) {
         if (command.getFiles() == null || command.getFiles().isEmpty()) {
             return List.of();
         }
 
-        return fileCommandService.uploadFiles(
+        return fileCommandService.uploadSermonAttachments(
                         command.getFiles(),
-                        File.EntityType.SERMON,
                         sermonId,
-                        File.FileCategory.ATTACHMENT,
                         command.getCreatedByEmail()
                 )
                 .stream()
-                .map(FileDto::fromEntity)
+                .map(AttachmentInfo::from)
                 .collect(Collectors.toList());
     }
 
     /**
      * 파일 업로드 (수정용)
      */
-    private List<FileDto> uploadFiles(Long sermonId, SermonUpdateCommand command) {
-        // 새 파일 업로드
+    private List<AttachmentInfo> uploadFiles(Long sermonId, SermonUpdateCommand command) {
         if (command.getFiles() != null && !command.getFiles().isEmpty()) {
-            fileCommandService.uploadFiles(
+            fileCommandService.uploadSermonAttachments(
                     command.getFiles(),
-                    File.EntityType.SERMON,
                     sermonId,
-                    File.FileCategory.ATTACHMENT,
                     command.getUpdatedByEmail()
             );
         }
-        
-        // 최종 파일 목록 조회 및 반환
-        return fileQueryService.getFilesByEntityWithUploader(File.EntityType.SERMON, sermonId)
-                .stream()
-                .map(FileDto::fromEntity)
-                .collect(Collectors.toList());
+
+        return fileQueryService.getSermonAttachments(sermonId);
     }
 
     /**
@@ -147,7 +145,7 @@ public class SermonCommandService {
      */
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
     }
 
     /**

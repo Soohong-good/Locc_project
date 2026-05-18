@@ -5,8 +5,7 @@ import com.example.locc.domain.notice.dto.request.NoticeSearchCondition;
 import com.example.locc.domain.notice.dto.response.NoticeDetailResponse;
 import com.example.locc.domain.notice.dto.response.NoticeResponse;
 import com.example.locc.domain.notice.repository.NoticeRepository;
-import com.example.locc.domain.file.dto.FileDto;
-import com.example.locc.domain.file.entity.File;
+import com.example.locc.domain.file.dto.response.AttachmentInfo;
 import com.example.locc.exception.NotFoundException;
 import com.example.locc.domain.file.service.FileQueryService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -48,8 +49,7 @@ public class NoticeQueryService {
                 .collect(Collectors.toList());
         
         // 첨부파일 개수를 한 번에 조회 (N+1 방지)
-        java.util.Map<Long, Long> fileCountMap = fileQueryService.countByEntities(
-                File.EntityType.NOTICE, noticeIds);
+        Map<Long, Long> fileCountMap = fileQueryService.countNoticeAttachments(noticeIds);
         
         return notices.map(notice -> {
             long fileCount = fileCountMap.getOrDefault(notice.getId(), 0L);
@@ -67,11 +67,7 @@ public class NoticeQueryService {
                 .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다. ID: " + id));
         
         // 파일 정보 조회
-        List<FileDto> files = fileQueryService.getFilesByEntityWithUploader(
-                File.EntityType.NOTICE, id)
-                .stream()
-                .map(FileDto::fromEntity)
-                .collect(Collectors.toList());
+        List<AttachmentInfo> files = fileQueryService.getNoticeAttachments(id);
         
         return NoticeDetailResponse.from(notice, files);
     }
@@ -90,8 +86,7 @@ public class NoticeQueryService {
                 .collect(Collectors.toList());
         
         // 첨부파일 개수를 한 번에 조회 (N+1 방지)
-        java.util.Map<Long, Long> fileCountMap = fileQueryService.countByEntities(
-                File.EntityType.NOTICE, noticeIds);
+        Map<Long, Long> fileCountMap = fileQueryService.countNoticeAttachments(noticeIds);
         
         return notices.stream()
                 .map(notice -> {
@@ -121,8 +116,7 @@ public class NoticeQueryService {
                 .collect(Collectors.toList());
         
         // 첨부파일 개수를 한 번에 조회 (N+1 방지)
-        java.util.Map<Long, Long> fileCountMap = fileQueryService.countByEntities(
-                File.EntityType.NOTICE, noticeIds);
+        Map<Long, Long> fileCountMap = fileQueryService.countNoticeAttachments(noticeIds);
         
         return notices.stream()
                 .map(notice -> {
@@ -151,7 +145,7 @@ public class NoticeQueryService {
      * 최근 N일 이내 등록된 공지사항 개수 조회 (Admin용)
      */
     public Long countRecent(int days) {
-        java.time.LocalDateTime since = java.time.LocalDateTime.now().minusDays(days);
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
         return noticeRepository.countByCreatedAtAfter(since);
     }
 
@@ -170,8 +164,7 @@ public class NoticeQueryService {
                 .collect(Collectors.toList());
         
         // 첨부파일 개수를 한 번에 조회 (N+1 방지)
-        java.util.Map<Long, Long> fileCountMap = fileQueryService.countByEntities(
-                File.EntityType.NOTICE, noticeIds);
+        Map<Long, Long> fileCountMap = fileQueryService.countNoticeAttachments(noticeIds);
         
         return notices.map(notice -> {
             long fileCount = fileCountMap.getOrDefault(notice.getId(), 0L);

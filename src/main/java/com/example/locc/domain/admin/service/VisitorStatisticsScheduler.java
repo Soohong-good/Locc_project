@@ -25,9 +25,9 @@ public class VisitorStatisticsScheduler {
     
     /**
      * Redis의 현재 누적 카운트를 DB에 스냅샷으로 저장
-     * 매분 실행
+     * 5분마다 실행
      */
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 */5 * * * *")
     @Transactional
     public void flushToDatabase() {
         LocalDate today = LocalDate.now();

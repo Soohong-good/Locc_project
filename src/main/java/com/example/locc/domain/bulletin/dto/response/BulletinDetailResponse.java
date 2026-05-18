@@ -20,6 +20,7 @@ public class BulletinDetailResponse {
     private String thumbnailUrl;
     private Long fileId;              // 원본 파일 ID
     private String authorName;
+    private String authorId;          // 프론트 본인 여부 판단용
     private Integer viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -32,6 +33,7 @@ public class BulletinDetailResponse {
                 .thumbnailUrl(bulletin.getThumbnailUrl())
                 .fileId(bulletin.getFileId())
                 .authorName(bulletin.getAuthor() != null ? bulletin.getAuthor().getName() : "알 수 없음")
+                .authorId(bulletin.getAuthor() != null ? bulletin.getAuthor().getId().toString() : null)
                 .viewCount(bulletin.getViewCount())
                 .createdAt(bulletin.getCreatedAt())
                 .updatedAt(bulletin.getUpdatedAt())

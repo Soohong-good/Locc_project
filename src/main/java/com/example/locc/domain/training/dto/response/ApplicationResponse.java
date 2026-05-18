@@ -19,6 +19,7 @@ public class ApplicationResponse {
     private final String userName;
     private final String phone;
     private final String paymentMethod;
+    private final int trainingFee;
     private final LocalDateTime appliedAt;
 
     /**
@@ -32,6 +33,7 @@ public class ApplicationResponse {
                 .userName(application.getUser().getName())
                 .phone(application.getPhone())
                 .paymentMethod(application.getPaymentMethod())
+                .trainingFee(application.getTraining().getTrainingFee())
                 .appliedAt(application.getAppliedAt())
                 .build();
     }

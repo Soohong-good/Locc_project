@@ -8,16 +8,26 @@ import java.util.List;
 
 /**
  * 대시보드 전체 응답
- * - Phase 3에서 실제 데이터 연동
  */
 @Getter
 @Builder
 public class DashboardResponse {
-    
+
     private VisitorStatisticsResponse visitorStatistics;
     private List<ContentSummaryResponse> contentSummaries;
+
+    // 회원 통계
+    private Long totalUsers;
+    private Long approvedUsers;
+    private Long pendingUsers;
+
+    // 도움문의 통계
+    private Long totalHelpRequests;
+    private Long pendingHelpRequests;
+    private Long inProgressHelpRequests;
+
     private LocalDateTime generatedAt;
-    
+
     public static DashboardResponse of(
             VisitorStatisticsResponse visitorStats,
             List<ContentSummaryResponse> contentSummaries) {

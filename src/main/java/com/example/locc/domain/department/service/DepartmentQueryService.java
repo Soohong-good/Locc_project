@@ -1,5 +1,6 @@
 package com.example.locc.domain.department.service;
 
+import com.example.locc.config.CacheConfig;
 import com.example.locc.domain.department.dto.response.DepartmentBoardDetailResponse;
 import com.example.locc.domain.department.dto.response.DepartmentBoardResponse;
 import com.example.locc.domain.department.dto.response.DepartmentResponse;
@@ -9,11 +10,14 @@ import com.example.locc.domain.department.repository.DepartmentBoardRepository;
 import com.example.locc.domain.department.repository.DepartmentRepository;
 import com.example.locc.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,19 @@ public class DepartmentQueryService {
 
     private final DepartmentRepository departmentRepository;
     private final DepartmentBoardRepository boardRepository;
+
+    public Long countAll() {
+        return departmentRepository.count();
+    }
+
+    // 부서 전체 목록 조회
+    @Cacheable(value = CacheConfig.CACHE_DEPARTMENTS, key = "'all'")
+    public List<DepartmentResponse> findAll() {
+        return departmentRepository.findAll()
+                .stream()
+                .map(DepartmentResponse::from)
+                .collect(java.util.stream.Collectors.toList());
+    }
 
     // 부서 정보 조회 (코드로)
     public DepartmentResponse getDepartmentByCode(String code) {
