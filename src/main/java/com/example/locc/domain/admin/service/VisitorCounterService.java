@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +26,7 @@ public class VisitorCounterService {
     private static final String PAGE_VIEW_KEY_PREFIX = "visitor:pageview:";
     private static final String VISITOR_CHECK_PREFIX = "visitor:check:";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     
     /**
      * 방문 증가 (중복 체크)
@@ -32,20 +34,27 @@ public class VisitorCounterService {
      * @return true: 카운트 증가됨, false: 이미 방문함
      */
     public boolean incrementVisitIfNew(String visitorKey) {
-        String today = LocalDate.now().format(DATE_FORMATTER);
+        String today = LocalDate.now(KST).format(DATE_FORMATTER);
         String checkKey = VISITOR_CHECK_PREFIX + today + ":" + visitorKey;
-        
-        // 이미 방문한 적이 있는지 체크
-        Boolean isNew = redisTemplate.opsForValue().setIfAbsent(checkKey, "1", 24, TimeUnit.HOURS);
-        
+
+        // check key TTL: 자정까지 남은 시간 계산 (당일 자정 리셋)
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(KST);
+        java.time.ZonedDateTime nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(KST);
+        long secondsUntilMidnight = java.time.Duration.between(now, nextMidnight).getSeconds();
+
+        Boolean isNew = redisTemplate.opsForValue().setIfAbsent(checkKey, "1", secondsUntilMidnight, TimeUnit.SECONDS);
+
         if (Boolean.TRUE.equals(isNew)) {
-            // 신규 방문자 → 카운트 증가
             String visitKey = VISIT_KEY_PREFIX + today;
-            redisTemplate.opsForValue().increment(visitKey);
+            Long count = redisTemplate.opsForValue().increment(visitKey);
+            // visit key에 48h TTL 설정 (최초 increment 시 한 번만)
+            if (Long.valueOf(1L).equals(count)) {
+                redisTemplate.expire(visitKey, 48, TimeUnit.HOURS);
+            }
             log.debug("신규 방문자 카운트 증가: {}", visitorKey);
             return true;
         }
-        
+
         log.trace("이미 방문한 사용자: {}", visitorKey);
         return false;
     }
@@ -54,7 +63,7 @@ public class VisitorCounterService {
      * 페이지뷰 증가
      */
     public void incrementPageView() {
-        String key = PAGE_VIEW_KEY_PREFIX + LocalDate.now().format(DATE_FORMATTER);
+        String key = PAGE_VIEW_KEY_PREFIX + LocalDate.now(KST).format(DATE_FORMATTER);
         redisTemplate.opsForValue().increment(key);
         log.trace("페이지뷰 증가: {}", key);
     }
@@ -64,7 +73,7 @@ public class VisitorCounterService {
      */
     @Deprecated
     public void incrementVisit() {
-        String key = VISIT_KEY_PREFIX + LocalDate.now().format(DATE_FORMATTER);
+        String key = VISIT_KEY_PREFIX + LocalDate.now(KST).format(DATE_FORMATTER);
         redisTemplate.opsForValue().increment(key);
         log.trace("방문 증가: {}", key);
     }
@@ -91,13 +100,13 @@ public class VisitorCounterService {
      * 오늘 페이지뷰 조회
      */
     public Long getTodayPageViewCount() {
-        return getPageViewCount(LocalDate.now());
+        return getPageViewCount(LocalDate.now(KST));
     }
-    
+
     /**
      * 오늘 방문 조회
      */
     public Long getTodayVisitCount() {
-        return getVisitCount(LocalDate.now());
+        return getVisitCount(LocalDate.now(KST));
     }
 }
