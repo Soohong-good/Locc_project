@@ -72,3 +72,8 @@ export const deleteGalleryImage = (code, imageId) =>
 export const getRecentGallery = ({ page = 0, size = 10 } = {}) =>
   client.get('/api/admin/dashboard/recent-gallery', { params: { page, size } })
     .then((r) => r.data.data)
+
+/** 전체 부서 최신 갤러리 이미지 (비로그인 허용, 홈페이지용) */
+export const getPublicRecentGallery = ({ page = 0, size = 12 } = {}) =>
+  client.get('/api/galleries/recent', { params: { page, size } })
+    .then((r) => r.data.data)
