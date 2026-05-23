@@ -208,6 +208,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/department/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/departments/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/popups/**").permitAll()
+                        // 홈페이지 갤러리 — 전체 부서 최신 이미지 공개 조회
+                        .requestMatchers(HttpMethod.GET, "/api/galleries/**").permitAll()
                         // 훈련 콘텐츠 조회 — 로그인 필수 (훈련신청 전체 로그인 전용)
                         .requestMatchers(HttpMethod.GET, "/api/trainings/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/visitor/**").permitAll()

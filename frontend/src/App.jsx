@@ -24,6 +24,7 @@ const SocialRegisterPage     = lazy(() => import('@/pages/auth/SocialRegisterPag
 const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage'))
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
+const DesignTemplate         = lazy(() => import('@/pages/DesignTemplate'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
 const NotFoundPage           = lazy(() => import('@/pages/NotFoundPage'))
 const MyPage                 = lazy(() => import('@/pages/MyPage'))
@@ -89,6 +90,9 @@ const AppRoutes = () => {
       <Routes>
         {/* OAuth2 콜백 — 레이아웃 없음 (토큰 처리 후 즉시 리다이렉트) */}
         <Route path="/oauth2/callback" element={<OAuth2Callback />} />
+
+        {/* 디자인 템플릿 — 레이아웃 없음 */}
+        <Route path="/design-template" element={<DesignTemplate />} />
 
         {/* 공통 레이아웃 (Header + Footer) */}
         <Route element={<Layout />}>
