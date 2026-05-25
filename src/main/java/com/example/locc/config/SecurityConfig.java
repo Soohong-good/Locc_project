@@ -180,8 +180,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/applications/*/confirm").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/applications/*/reset").hasRole("ADMIN")
 
-                        // ========== 내 정보 조회 — 로그인 필수 ==========
-                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+                        // ========== 내 정보 조회 — 비로그인 시 null 반환 (401 콘솔 오류 방지) ==========
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
 
                         // ========== 공개 인증 엔드포인트 — 비로그인 허용 ==========
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()

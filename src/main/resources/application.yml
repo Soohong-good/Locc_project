@@ -84,8 +84,8 @@
   servlet:
     multipart:
       enabled: true
-      max-file-size: ${MAX_FILE_SIZE:10MB}
-      max-request-size: ${MAX_REQUEST_SIZE:50MB}
+      max-file-size: ${MAX_FILE_SIZE:20MB}       # 단일 파일 최대 크기
+      max-request-size: ${MAX_REQUEST_SIZE:100MB} # 요청 전체(파일+파라미터) 최대 크기
 
 jwt:
   secret: ${JWT_SECRET}
@@ -135,6 +135,10 @@ server:
   # 신뢰된 리버스 프록시(Nginx 등)의 X-Forwarded-* 헤더를 Spring이 처리하도록 설정
   # ForwardedHeaderFilter Bean과 함께 동작 — 클라이언트가 직접 조작한 헤더는 무시됨
   forward-headers-strategy: FRAMEWORK
+  tomcat:
+    # Tomcat 커넥터의 POST 데이터 최대 크기 (-1 = 무제한, Spring multipart 설정이 제어)
+    # 기본값 2MB → 에디터 본문에 base64 이미지가 포함되면 초과될 수 있어 max-request-size에 맞춤
+    max-http-form-post-size: ${MAX_REQUEST_SIZE:100MB}
   servlet:
     encoding:
       charset: UTF-8

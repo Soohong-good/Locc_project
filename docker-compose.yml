@@ -1,19 +1,17 @@
 version: '3.8'
 
 services:
-  # MariaDB 데이터베이스
+
+  # ── MariaDB ──────────────────────────────────────────────────────
   db:
     image: mariadb:11.2
     container_name: locc-mariadb
     restart: unless-stopped
     environment:
-      # 기본값(fallback) 없음 — 환경변수 미설정 시 컨테이너 시작 실패로 명시적 오류 유도
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USERNAME}
       MARIADB_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -24,45 +22,14 @@ services:
       timeout: 5s
       retries: 5
 
-  # Spring Boot 애플리케이션
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: locc-app
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      # 기본값(fallback) 없음 — 환경변수 미설정 시 컨테이너 시작 실패로 명시적 오류 유도
-      JWT_SECRET: ${JWT_SECRET}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      FILE_UPLOAD_DIR: /app/uploads
-    volumes:
-      - uploads_data:/app/uploads
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - locc-network
-
-  # Redis (Rate Limiting + 비밀번호 재설정 토큰)
+  # ── Redis (Rate Limit + 토큰 저장) ───────────────────────────────
   redis:
     image: redis:7.2-alpine
     container_name: locc-redis
     restart: unless-stopped
-    # 비밀번호 인증 필수 — 없으면 외부에서 토큰 직접 조작 가능
-    command: redis-server --requirepass ${REDIS_PASSWORD} --bind 127.0.0.1 --protected-mode yes
+    command: redis-server --requirepass ${REDIS_PASSWORD} --protected-mode yes
     ports:
-      - "127.0.0.1:6379:6379"  # 로컬호스트에서만 접근 허용
+      - "127.0.0.1:6379:6379"   # 외부 노출 차단 — 호스트 루프백에서만 접근
     volumes:
       - redis_data:/data
     networks:
@@ -73,16 +40,100 @@ services:
       timeout: 5s
       retries: 5
 
-# 데이터 영속성을 위한 볼륨
+  # ── Spring Boot 백엔드 ────────────────────────────────────────────
+  # 포트를 외부에 노출하지 않음 — Nginx(locc-nginx)를 통해서만 접근
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: locc-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+
+      # 데이터베이스 (Spring relaxed binding: SPRING_DATASOURCE_* → spring.datasource.*)
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-18000000}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      # 이메일 (회원가입 인증 등)
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      # OAuth2 소셜 로그인
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_REDIRECT_URI: ${APP_DOMAIN}/login/oauth2/code/kakao
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      NAVER_REDIRECT_URI: ${APP_DOMAIN}/login/oauth2/code/naver
+      APP_OAUTH2_REDIRECT_URL: ${APP_DOMAIN}/oauth2/callback
+
+      # 외부 API 키
+      KAKAO_MAP_API_KEY: ${KAKAO_MAP_API_KEY}
+      YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
+
+      # CORS — Nginx 단일 도메인 구조이므로 실제 도메인 1개
+      APP_CORS_ORIGIN_1: ${APP_DOMAIN}
+
+      # 파일 업로드
+      FILE_UPLOAD_DIR: /app/uploads
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-20MB}
+      MAX_REQUEST_SIZE: ${MAX_REQUEST_SIZE:-100MB}
+
+      # 로그 파일
+      LOG_FILE_NAME: /app/logs/application.log
+
+    volumes:
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - locc-network
+
+  # ── Nginx + React 프론트엔드 ──────────────────────────────────────
+  # React를 빌드하고 Nginx로 서빙 + /api/** 를 Spring Boot로 프록시
+  nginx:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: locc-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # HTTPS 사용 시: - "443:443"
+      # 그리고 SSL 인증서 볼륨 마운트 필요:
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - app
+    networks:
+      - locc-network
+
+# ── 데이터 영속성 볼륨 ─────────────────────────────────────────────
 volumes:
   mariadb_data:
     driver: local
   redis_data:
     driver: local
-  uploads_data:
+  uploads_data:        # 업로드 파일 (재배포 시에도 유지)
+    driver: local
+  logs_data:           # Spring Boot 로그 (재배포 시에도 유지)
     driver: local
 
-# 컨테이너 간 통신을 위한 네트워크
+# ── 컨테이너 간 통신 네트워크 ─────────────────────────────────────
 networks:
   locc-network:
     driver: bridge

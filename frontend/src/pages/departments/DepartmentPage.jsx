@@ -63,7 +63,7 @@ const NotFoundView = ({ code }) => (
 // ────────────────────────────────────────────────────────────────────────────
 // 소개 탭
 // ────────────────────────────────────────────────────────────────────────────
-const AboutTab = ({ dept }) => {
+const AboutTab = ({ dept, bgSrc }) => {
   const features = [
     {
       label: '특징 1', value: dept.feature1,
@@ -80,78 +80,92 @@ const AboutTab = ({ dept }) => {
   ].filter((f) => f.value)
 
   return (
-    <section className="py-16 bg-white px-6">
+    <section className="py-16 px-6 bg-white">
       <div className="max-w-6xl mx-auto">
-        {/* 소개 텍스트 */}
-        <div className="mb-16">
-          <SectionHeader eyebrow="About" title="부서 소개" />
-          {dept.description && (
-            <p className="text-lg text-slate-600 leading-relaxed text-center max-w-3xl mx-auto -mt-4">
-              {dept.description}
-            </p>
+
+        {/* ── 상단: 좌우 2단 (소개 텍스트 + 이미지) ── */}
+        <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+          {/* 왼쪽: 소개 */}
+          <div>
+            <p className="text-xs tracking-[0.2em] uppercase text-slate-400 mb-3">About</p>
+            <h2 className="text-3xl font-light text-slate-900 mb-1">부서 소개</h2>
+            <div className="w-10 h-0.5 bg-slate-900 mb-6" />
+            {dept.description && (
+              <p className="text-lg text-slate-600 leading-relaxed">{dept.description}</p>
+            )}
+
+            {/* 예배 안내 인라인 */}
+            <div className="mt-8 space-y-4 border-t border-slate-100 pt-8">
+              <div className="flex items-center gap-3 text-slate-700">
+                <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="font-medium">매주 주일</span>
+              </div>
+              {dept.worshipTime && (
+                <div className="flex items-center gap-3 text-slate-700">
+                  <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">{dept.worshipTime}</span>
+                  {dept.worshipTimeEn && <span className="text-sm text-slate-400">{dept.worshipTimeEn}</span>}
+                </div>
+              )}
+              {dept.worshipLocation && (
+                <div className="flex items-center gap-3 text-slate-700">
+                  <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="font-medium">{dept.worshipLocation}</span>
+                  {dept.worshipLocationEn && <span className="text-sm text-slate-400">{dept.worshipLocationEn}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 오른쪽: 부서 이미지 */}
+          {bgSrc ? (
+            <div className="relative">
+              <img
+                src={bgSrc}
+                alt={dept.name}
+                className="w-full object-cover rounded-sm shadow-lg"
+                style={{ maxHeight: 420 }}
+              />
+            </div>
+          ) : (
+            <div className="aspect-[4/3] bg-slate-100 rounded-sm flex items-center justify-center">
+              <svg className="w-16 h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0" />
+              </svg>
+            </div>
           )}
         </div>
 
-        {/* 특징 카드 */}
+        {/* ── 하단: 특징 카드 ── */}
         {features.length > 0 && (
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="grid md:grid-cols-3 gap-6">
             {features.map((f) => (
-              <div key={f.label} className="text-center p-8">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+              <div key={f.label} className="bg-slate-50 border border-slate-100 p-8 text-center">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
                      style={{ background: '#0f172a' }}>
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={f.icon} />
                   </svg>
                 </div>
-                <h4 className="text-xl font-light text-slate-900 mb-3">{f.label}</h4>
-                <p className="text-slate-600">{f.value}</p>
+                <h4 className="text-lg font-medium text-slate-900 mb-2">{f.label}</h4>
+                <p className="text-slate-600 text-sm leading-relaxed">{f.value}</p>
               </div>
             ))}
           </div>
         )}
 
-        {/* 예배 안내 */}
-        <div className="bg-slate-50 p-12 border border-slate-200 max-w-2xl mx-auto">
-          <h3 className="text-2xl font-light text-slate-900 mb-8 text-center">예배 안내</h3>
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <svg className="w-6 h-6 text-slate-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <div>
-                <p className="font-medium text-slate-900">매주 주일</p>
-                <p className="text-sm text-slate-600">Every Sunday</p>
-              </div>
-            </div>
-            {dept.worshipTime && (
-              <div className="flex items-center gap-4">
-                <svg className="w-6 h-6 text-slate-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <p className="font-medium text-slate-900">{dept.worshipTime}</p>
-                  {dept.worshipTimeEn && <p className="text-sm text-slate-600">{dept.worshipTimeEn}</p>}
-                </div>
-              </div>
-            )}
-            {dept.worshipLocation && (
-              <div className="flex items-center gap-4">
-                <svg className="w-6 h-6 text-slate-900 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <div>
-                  <p className="font-medium text-slate-900">{dept.worshipLocation}</p>
-                  {dept.worshipLocationEn && <p className="text-sm text-slate-600">{dept.worshipLocationEn}</p>}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </section>
   )
@@ -776,6 +790,17 @@ const TABS = [
   { key: 'gallery', label: '갤러리' },
 ]
 
+// ── 부서별 배너 이미지 매핑 ───────────────────────────────────────────────
+const DEPT_BANNERS = {
+  nursery:       '/nersury.png',
+  nersury:       '/nersury.png',
+  preschool:     '/preschool.png',
+  children:      '/children.png',
+  youth:         '/youth.png',
+  'young-adult': '/young-adult.png',
+  multiethnic:   '/multiethnic.png',
+}
+
 const DepartmentPage = () => {
   const { code }      = useParams()
   const [tab, setTab] = useState('about')
@@ -794,18 +819,12 @@ const DepartmentPage = () => {
 
   if (isError || !dept) return <NotFoundView code={code} />
 
+  const deptBgSrc = DEPT_BANNERS[code] ?? null
+
   return (
     <main>
-      {/* Hero */}
-      <section
-        className="pt-page pb-16 text-white px-6 relative"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-900/65 pointer-events-none" />
+      {/* Hero — 단색 배경 */}
+      <section className="pt-page pb-16 text-white px-6 relative bg-slate-900">
         <div className="max-w-6xl mx-auto relative z-10">
           <p className="text-xs tracking-[0.3em] uppercase mb-3 text-slate-400">
             {dept.nameEn || 'Ministry'}
@@ -831,7 +850,7 @@ const DepartmentPage = () => {
       </section>
 
       {/* 탭 컨텐츠 */}
-      {tab === 'about'   && <AboutTab   dept={dept} />}
+      {tab === 'about'   && <AboutTab   dept={dept} bgSrc={deptBgSrc} />}
       {tab === 'board'   && <BoardTab   dept={dept} isAdmin={isAdmin} canWrite={canWrite} userId={userId} />}
       {tab === 'gallery' && <GalleryTab dept={dept} isAdmin={isAdmin} canWrite={canWrite} userId={userId} />}
     </main>

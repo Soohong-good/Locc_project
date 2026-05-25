@@ -195,8 +195,8 @@ const Header = () => {
       className={`fixed w-full top-0 z-50 bg-white/95 backdrop-blur-sm border-b transition-all duration-200
         ${scrolled ? 'border-slate-200 shadow-sm' : 'border-transparent'}`}
     >
-      <div className="w-full px-6 lg:px-12">
-        <div className="flex items-center justify-between h-[95px]">
+      <div className="w-full px-6 nav:px-12">
+        <div className="flex items-center justify-between h-[95px] flex-nowrap">
 
           {/* 로고 */}
           <Link to="/" className="flex-shrink-0">
@@ -209,7 +209,7 @@ const Header = () => {
           </Link>
 
           {/* 데스크탑 네비게이션 */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden nav:flex items-center gap-8">
             <nav className="flex items-center gap-6">
               {NAV_MENUS.map((item) => {
                 if (!item.children && !item.href) {
@@ -301,7 +301,7 @@ const Header = () => {
 
           {/* 모바일 햄버거 */}
           <button
-            className="lg:hidden p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className="nav:hidden p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="메뉴 열기"
           >
@@ -318,7 +318,7 @@ const Header = () => {
 
         {/* 모바일 메뉴 */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
+          className={`nav:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
             ${mobileOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'}`}
         >
           <nav className="overflow-y-auto py-2" style={{ maxHeight: 'calc(80vh - 0px)' }}>

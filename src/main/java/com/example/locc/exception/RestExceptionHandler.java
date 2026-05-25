@@ -13,6 +13,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
  * REST API 전용 예외 핸들러
@@ -148,6 +149,33 @@ public class RestExceptionHandler {
         log.warn("NotFoundException: {}", e.getMessage());
         ErrorResponse response = ErrorResponse.of(ErrorCode.NOT_FOUND, e.getMessage());
         return ResponseEntity.status(ErrorCode.NOT_FOUND.getHttpStatus()).body(response);
+    }
+
+    // ───── 413 파일 크기 초과 ─────
+
+    /**
+     * 파일 업로드 크기 초과
+     * - Spring multipart max-file-size / max-request-size 초과
+     * - Tomcat maxPostSize 초과 (파라미터 데이터 포함)
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        log.warn("MaxUploadSizeExceededException: {}", e.getMessage());
+
+        // 파일 단건 초과 vs 요청 전체 초과 구분
+        String detail;
+        String cause = e.getCause() != null ? e.getCause().getMessage() : "";
+        if (cause.contains("maxPostSize") || cause.contains("parameter data")) {
+            detail = "요청 데이터가 너무 큽니다. 이미지 파일은 한 번에 여러 장보다 한 장씩 업로드해주세요.";
+        } else {
+            long maxMb = e.getMaxUploadSize() / (1024 * 1024);
+            detail = maxMb > 0
+                    ? "파일 크기가 허용 한도(" + maxMb + "MB)를 초과했습니다. 파일 크기를 줄여서 다시 시도해주세요."
+                    : "파일 크기가 허용 한도를 초과했습니다. 파일 크기를 줄여서 다시 시도해주세요.";
+        }
+
+        ErrorResponse response = ErrorResponse.of(ErrorCode.FILE_TOO_LARGE, detail);
+        return ResponseEntity.status(ErrorCode.FILE_TOO_LARGE.getHttpStatus()).body(response);
     }
 
     // ───── 500 서버 오류 ─────

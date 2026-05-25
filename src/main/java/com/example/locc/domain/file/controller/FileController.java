@@ -45,8 +45,19 @@ public class FileController {
     public ResponseEntity<Resource> getPublicImage(@PathVariable Long fileId) {
         File file = fileQueryService.getPublicFile(fileId);
         Resource resource = fileQueryService.loadFileAsResource(fileId);
+
+        // contentType이 null인 레거시 파일 대응: 파일명 확장자로 추론
+        String rawContentType = file.getContentType();
+        if (rawContentType == null || rawContentType.isBlank()) {
+            String name = file.getOriginalFileName() != null ? file.getOriginalFileName().toLowerCase() : "";
+            if (name.endsWith(".png"))       rawContentType = "image/png";
+            else if (name.endsWith(".gif"))  rawContentType = "image/gif";
+            else if (name.endsWith(".webp")) rawContentType = "image/webp";
+            else                             rawContentType = "image/jpeg";
+        }
+
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(file.getContentType()))
+                .contentType(MediaType.parseMediaType(rawContentType))
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
                 .body(resource);
     }
