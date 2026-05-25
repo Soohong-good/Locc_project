@@ -33,7 +33,9 @@ const AuthInitializer = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      setUser(data)
+      // data가 null이면 비로그인 상태 (서버가 200 + null 반환)
+      if (data) setUser(data)
+      else clearAuth()
       setInitialized()
     }
     if (isError) {

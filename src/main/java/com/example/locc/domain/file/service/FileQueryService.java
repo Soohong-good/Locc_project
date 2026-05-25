@@ -45,13 +45,44 @@ public class FileQueryService {
                 .orElseThrow(() -> new NotFoundException("파일을 찾을 수 없습니다. ID: " + fileId));
     }
 
+    // 이미지로 간주할 파일 확장자 목록
+    private static final java.util.Set<String> IMAGE_EXTENSIONS =
+            java.util.Set.of("jpg", "jpeg", "png", "gif", "webp", "bmp", "svg");
+
     /**
      * 공개 이미지 파일 조회
-     * - 공개 카테고리(CONTENT_IMAGE, THUMBNAIL, GALLERY_IMAGE)가 아니면 AccessDeniedException
+     * - 공개 카테고리(CONTENT_IMAGE, THUMBNAIL, GALLERY_IMAGE)이거나
+     *   contentType 또는 파일 확장자 기준으로 이미지인 경우 허용
+     * - PDF, HWP 등 비이미지 첨부파일은 AccessDeniedException (403)
+     *
+     * contentType이 null로 저장된 레거시 파일을 위해 확장자 폴백 추가
      */
     public File getPublicFile(Long fileId) {
         File file = getFile(fileId);
-        if (!file.getCategory().isPublic()) {
+
+        // 1. 카테고리 기반 공개 여부
+        boolean isPublicCategory = file.getCategory() != null && file.getCategory().isPublic();
+
+        // 2. contentType 기반 이미지 여부 (null-safe)
+        String contentType = file.getContentType();
+        boolean isImageByMime = contentType != null && contentType.startsWith("image/");
+
+        // 3. 파일명 확장자 기반 폴백 (contentType이 null인 레거시 파일 대응)
+        boolean isImageByExt = false;
+        if (!isImageByMime) {
+            String name = file.getOriginalFileName();
+            if (name != null) {
+                int dot = name.lastIndexOf('.');
+                if (dot >= 0) {
+                    String ext = name.substring(dot + 1).toLowerCase();
+                    isImageByExt = IMAGE_EXTENSIONS.contains(ext);
+                }
+            }
+        }
+
+        if (!isPublicCategory && !isImageByMime && !isImageByExt) {
+            log.warn("공개 이미지 접근 거부: fileId={}, category={}, contentType={}",
+                    fileId, file.getCategory(), contentType);
             throw new AccessDeniedException("접근이 허용되지 않는 파일입니다.");
         }
         return file;
@@ -187,7 +218,8 @@ public class FileQueryService {
             if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
-                throw new RuntimeException("파일을 읽을 수 없습니다: " + file.getOriginalFileName());
+                log.warn("파일이 디스크에 존재하지 않음: fileId={}, path={}", fileId, filePath);
+                throw new NotFoundException("파일을 찾을 수 없습니다: " + file.getOriginalFileName());
             }
         } catch (MalformedURLException e) {
             throw new RuntimeException("파일 경로가 잘못되었습니다: " + file.getOriginalFileName(), e);

@@ -108,7 +108,7 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
       const file = input.files[0]
       if (!file) return
       if (!file.type.startsWith('image/')) { toast.error('이미지 파일만 업로드 가능합니다.'); return }
-      if (file.size > 10 * 1024 * 1024) { toast.error('이미지 크기는 10MB를 초과할 수 없습니다.'); return }
+      if (file.size > 20 * 1024 * 1024) { toast.error('이미지 크기는 20MB를 초과할 수 없습니다.'); return }
 
       try {
         const range = quill.getSelection(true)
@@ -117,9 +117,10 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
         quill.deleteText(range.index, '이미지 업로드 중...'.length)
         quill.insertEmbed(range.index, 'image', imageUrl, 'user')
         quill.setSelection(range.index + 1)
-      } catch {
+      } catch (err) {
         quill.deleteText(quill.getSelection()?.index ?? 0, '이미지 업로드 중...'.length)
-        toast.error('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+        const msg = err?.response?.data?.message ?? '이미지 업로드에 실패했습니다. 다시 시도해주세요.'
+        toast.error(msg)
       }
     }
   }, [])
@@ -142,7 +143,7 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         if (!file.type.startsWith('image/')) continue
-        if (file.size > 10 * 1024 * 1024) { toast.error('이미지 크기는 10MB를 초과할 수 없습니다.'); continue }
+        if (file.size > 20 * 1024 * 1024) { toast.error('이미지 크기는 20MB를 초과할 수 없습니다.'); continue }
         try {
           const range = quill.getSelection(true)
           const index = range ? range.index : quill.getLength()
@@ -151,8 +152,9 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
           quill.deleteText(index, '이미지 업로드 중...'.length)
           quill.insertEmbed(index, 'image', imageUrl, 'user')
           quill.setSelection(index + 1)
-        } catch {
-          toast.error('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+        } catch (err) {
+          const msg = err?.response?.data?.message ?? '이미지 업로드에 실패했습니다. 다시 시도해주세요.'
+          toast.error(msg)
         }
       }
     })
@@ -185,8 +187,9 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
             quill.deleteText(index, '이미지 업로드 중...'.length)
             quill.insertEmbed(index, 'image', imageUrl, 'user')
             quill.setSelection(index + 1)
-          } catch {
-            toast.error('이미지 업로드에 실패했습니다. 다시 시도해주세요.')
+          } catch (err) {
+            const msg = err?.response?.data?.message ?? '이미지 업로드에 실패했습니다. 다시 시도해주세요.'
+            toast.error(msg)
           }
           break
         }

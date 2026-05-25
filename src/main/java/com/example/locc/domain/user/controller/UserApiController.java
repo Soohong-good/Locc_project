@@ -131,6 +131,10 @@ public class UserApiController {
 
     @GetMapping("/auth/me")
     public ResponseEntity<ApiResponse<UserDetailResponse>> getMe(Authentication authentication) {
+        // 비로그인 상태: authentication이 null이거나 인증되지 않은 경우 → null 반환 (401 방지)
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.ok(ApiResponse.ok(null));
+        }
         return ResponseEntity.ok(ApiResponse.ok(
                 UserDetailResponse.from(userQueryService.findByEmailWithSocialAccounts(authentication.getName()))));
     }

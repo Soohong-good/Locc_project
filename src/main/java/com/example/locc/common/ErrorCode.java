@@ -32,6 +32,9 @@ public enum ErrorCode {
     // 404 Not Found
     NOT_FOUND("NOT_FOUND", "요청한 리소스를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
+    // 413 Payload Too Large
+    FILE_TOO_LARGE("FILE_TOO_LARGE", "파일 크기가 허용 범위를 초과했습니다.", HttpStatus.PAYLOAD_TOO_LARGE),
+
     // 429 Too Many Requests
     RATE_LIMIT_EXCEEDED("RATE_LIMIT_EXCEEDED", "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.", HttpStatus.TOO_MANY_REQUESTS),
 

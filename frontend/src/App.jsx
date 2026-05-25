@@ -24,7 +24,7 @@ const SocialRegisterPage     = lazy(() => import('@/pages/auth/SocialRegisterPag
 const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage'))
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
-const DesignTemplate         = lazy(() => import('@/pages/DesignTemplate'))
+const Template               = lazy(() => import('@/pages/Template'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
 const NotFoundPage           = lazy(() => import('@/pages/NotFoundPage'))
 const MyPage                 = lazy(() => import('@/pages/MyPage'))
@@ -91,12 +91,17 @@ const AppRoutes = () => {
         {/* OAuth2 콜백 — 레이아웃 없음 (토큰 처리 후 즉시 리다이렉트) */}
         <Route path="/oauth2/callback" element={<OAuth2Callback />} />
 
-        {/* 디자인 템플릿 — 레이아웃 없음 */}
-        <Route path="/design-template" element={<DesignTemplate />} />
+        {/* 메인 홈 — 레이아웃 없음 (자체 헤더/푸터 내장) */}
+        <Route index element={<MainPage />} />
+
+        {/* 구 메인 (비활성 — 삭제 전 보관) */}
+        {/* <Route path="/main-legacy" element={<Layout><MainPage /></Layout>} /> */}
+
+        {/* 구 메인 직접 접근용 (보관) */}
+        <Route path="/template" element={<Template />} />
 
         {/* 공통 레이아웃 (Header + Footer) */}
         <Route element={<Layout />}>
-          <Route index element={<MainPage />} />
           <Route path="/salvation" element={<SalvationPage />} />
 
           {/* 교회 페이지 */}

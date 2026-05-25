@@ -73,7 +73,14 @@ const AdminNoticeFormPage = () => {
   }
 
   const handleFileChange = (e) => {
-    setFiles((prev) => [...prev, ...Array.from(e.target.files)])
+    const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png', '.hwp']
+    const newFiles = Array.from(e.target.files)
+    for (const file of newFiles) {
+      const ext = '.' + file.name.split('.').pop().toLowerCase()
+      if (!ALLOWED_EXTS.includes(ext)) { toast.error(`허용되지 않는 파일 형식입니다: ${file.name}`); e.target.value = ''; return }
+      if (file.size > 20 * 1024 * 1024) { toast.error(`파일 크기는 20MB 이하여야 합니다: ${file.name}`); e.target.value = ''; return }
+    }
+    setFiles((prev) => [...prev, ...newFiles])
     e.target.value = ''
   }
   const removeFile = (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx))
@@ -140,7 +147,7 @@ const AdminNoticeFormPage = () => {
                 d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
             <span className="text-sm text-gray-500">파일 선택하기</span>
-            <span className="ml-auto text-xs text-gray-400 shrink-0">PDF, HWP, JPG, PNG · 최대 10MB</span>
+            <span className="ml-auto text-xs text-gray-400 shrink-0">PDF, HWP, JPG, PNG · 최대 20MB</span>
             <input type="file" multiple onChange={handleFileChange} className="hidden" />
           </label>
           {files.length > 0 && (

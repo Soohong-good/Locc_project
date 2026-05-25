@@ -81,7 +81,7 @@ const NoticeWritePage = () => {
       const ext = '.' + file.name.split('.').pop().toLowerCase()
       const typeOk = ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTS.includes(ext)
       if (!typeOk) { toast.error(`허용되지 않는 파일 형식입니다: ${file.name}`); e.target.value = ''; return }
-      if (file.size > 10 * 1024 * 1024) { toast.error(`파일 크기는 10MB 이하여야 합니다: ${file.name}`); e.target.value = ''; return }
+      if (file.size > 20 * 1024 * 1024) { toast.error(`파일 크기는 20MB 이하여야 합니다: ${file.name}`); e.target.value = ''; return }
     }
     setFiles((prev) => [...prev, ...newFiles])
     e.target.value = ''
@@ -136,7 +136,7 @@ const NoticeWritePage = () => {
                 <label className="text-sm font-medium text-slate-700 tracking-wide">
                   첨부파일{' '}
                   <span className="text-xs text-slate-400 font-normal">
-                    (PDF, HWP, JPG, PNG · 최대 10MB)
+                    (PDF, HWP, JPG, PNG · 최대 20MB)
                   </span>
                 </label>
                 <label className="flex items-center gap-3 px-4 py-3

@@ -14,7 +14,7 @@ export const logout = async () => {
 /** 내 정보 조회 */
 export const getMe = async () => {
   const { data } = await client.get('/api/auth/me')
-  return data.data
+  return data.data ?? null  // undefined 방지 — 비로그인 시 서버가 data 필드 생략 가능
 }
 
 /** 회원가입 */

@@ -28,6 +28,12 @@ COPY --from=build /app/build/libs/*.jar app.jar
 # 파일 소유권 변경
 RUN chown locc:locc app.jar
 
+# 업로드/로그 디렉토리 사전 생성 + 소유권 설정
+# - USER 전환 전에 생성해야 locc 유저에게 쓰기 권한이 부여됨
+# - Docker 볼륨이 새로 생성될 때 이 디렉토리 권한을 그대로 상속함
+RUN mkdir -p /app/uploads /app/logs && \
+    chown -R locc:locc /app/uploads /app/logs
+
 # non-root 사용자로 전환
 USER locc
 
