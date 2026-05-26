@@ -1,19 +1,13 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import useAuthStore from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuth'
 
 /**
- * 메뉴 정책:
- *   href 있음  → 구현 완료, <Link to={href}> 사용
- *   href 없음  → 미구현, 클릭 막음
- *
- * URL 통일 규칙 (App.jsx 라우트 기준):
- *   공지사항  → /notices
- *   주보      → /bulletin
- *   부서      → /department/{code}
- *   훈련신청  → /training
+ * 투명 헤더 라우트: 이 경로에서는 최상단에서 투명+흰 글씨,
+ * 스크롤 시 흰 배경으로 전환됩니다.
  */
+const TRANSPARENT_ROUTES = ['/', '/template']
 
 const NAV_MENUS = [
   { label: '복음 말씀', href: '/salvation' },
@@ -87,28 +81,18 @@ const NavItem = ({ href, label, onClick, isActive }) => {
 }
 
 const ChevronDown = () => (
-  <svg
-    className="w-3.5 h-3.5"
-    fill="none" stroke="currentColor" viewBox="0 0 24 24"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-      d="M19 9l-7 7-7-7" />
+  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
   </svg>
 )
 
 // ── 데스크탑 드롭다운 ─────────────────────────────────
-const DesktopDropdown = ({ label, children, minWidth, alignRight, extraBottom }) => {
+const DesktopDropdown = ({ label, children, minWidth, alignRight, extraBottom, glass }) => {
   const [open, setOpen] = useState(false)
   const timerRef = useRef(null)
 
-  const handleEnter = () => {
-    clearTimeout(timerRef.current)
-    setOpen(true)
-  }
-
-  const handleLeave = () => {
-    timerRef.current = setTimeout(() => setOpen(false), 150)
-  }
+  const handleEnter = () => { clearTimeout(timerRef.current); setOpen(true) }
+  const handleLeave = () => { timerRef.current = setTimeout(() => setOpen(false), 150) }
 
   return (
     <div
@@ -118,7 +102,8 @@ const DesktopDropdown = ({ label, children, minWidth, alignRight, extraBottom })
     >
       <button
         type="button"
-        className="text-slate-700 hover:text-slate-900 transition-colors duration-150 font-medium text-base flex items-center gap-1.5 bg-transparent border-0 cursor-pointer py-1"
+        className={`transition-colors duration-150 font-medium text-base flex items-center gap-1.5 bg-transparent border-0 cursor-pointer py-1
+          ${glass ? 'text-white/90 hover:text-white' : 'text-slate-700 hover:text-slate-900'}`}
       >
         {label}
         <ChevronDown />
@@ -156,9 +141,7 @@ const MobileDropdown = ({ label, children, onClose }) => {
         <span className="font-medium text-base">{label}</span>
         <ChevronDown />
       </button>
-      <div
-        className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
-      >
+      <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="pb-2 bg-slate-50">
           {children.map(({ href, label: l }) => (
             <NavItem key={l} href={href} label={l} onClick={onClose} />
@@ -178,12 +161,17 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
 
-  // 스크롤에 따라 헤더 그림자 추가
+  const isTransparent = TRANSPARENT_ROUTES.includes(location.pathname)
+  // glass = 투명 라우트 + 스크롤 안 됨 + 모바일 메뉴 닫힌 상태
+  const glass = isTransparent && !scrolled && !mobileOpen
+
+  // 스크롤 감지 (항상 유지, glass 계산에 사용)
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4)
+    const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll() // 라우트 이동 시 현재 스크롤 위치 즉시 반영
     return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  }, [location.pathname])
 
   // 라우트 변경 시 모바일 메뉴 닫기
   useEffect(() => {
@@ -192,24 +180,31 @@ const Header = () => {
 
   return (
     <header
-      className={`fixed w-full top-0 z-50 bg-white/95 backdrop-blur-sm border-b transition-all duration-200
-        ${scrolled ? 'border-slate-200 shadow-sm' : 'border-transparent'}`}
+      className={`fixed w-full top-0 z-50 transition-all duration-300
+        ${glass
+          ? 'bg-transparent border-b border-transparent'
+          : 'bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm'}`}
     >
-      <div className="w-full px-6 nav:px-12">
-        <div className="flex items-center justify-between h-[95px] flex-nowrap">
+      <div className="w-full px-6 lg:px-12">
+        <div className="flex items-center justify-between h-[95px]">
 
           {/* 로고 */}
           <Link to="/" className="flex-shrink-0">
             <img
               src="/logo.png"
-              style={{ width: '220px', height: 'auto' }}
+              style={{
+                width: '220px',
+                height: 'auto',
+                filter: glass ? 'brightness(0) invert(1)' : 'none',
+                transition: 'filter 0.3s',
+              }}
               alt="그리스도 사랑교회"
               className="block"
             />
           </Link>
 
           {/* 데스크탑 네비게이션 */}
-          <div className="hidden nav:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8">
             <nav className="flex items-center gap-6">
               {NAV_MENUS.map((item) => {
                 if (!item.children && !item.href) {
@@ -228,6 +223,7 @@ const Header = () => {
                       label={item.label}
                       children={item.children}
                       minWidth={item.minWidth}
+                      glass={glass}
                     />
                   )
                 }
@@ -236,9 +232,9 @@ const Header = () => {
                     key={item.href}
                     to={item.href}
                     className={`font-medium text-base transition-colors duration-150
-                      ${location.pathname === item.href
-                        ? 'text-slate-900'
-                        : 'text-slate-600 hover:text-slate-900'}`}
+                      ${glass
+                        ? (location.pathname === item.href ? 'text-white font-semibold' : 'text-white/90 hover:text-white')
+                        : (location.pathname === item.href ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900')}`}
                   >
                     {item.label}
                   </Link>
@@ -247,20 +243,23 @@ const Header = () => {
             </nav>
 
             {/* 인증 영역 */}
-            <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+            <div className={`flex items-center gap-3 pl-4 border-l transition-colors duration-300
+              ${glass ? 'border-white/30' : 'border-slate-200'}`}>
               {user ? (
                 <DesktopDropdown
                   alignRight
+                  glass={glass}
                   label={
                     <span className="flex items-center gap-2">
-                      {/* 아바타 원 */}
-                      <span className="w-7 h-7 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center font-medium">
+                      <span className={`w-7 h-7 rounded-full text-white text-xs flex items-center justify-center font-medium transition-colors
+                        ${glass ? 'bg-white/20' : 'bg-slate-900'}`}>
                         {user.name?.charAt(0) ?? '?'}
                       </span>
-                      <span className="text-base text-slate-700 font-medium">
+                      <span className={`text-base font-medium transition-colors
+                        ${glass ? 'text-white/90' : 'text-slate-700'}`}>
                         {user.name}
                         {isAdmin && (
-                          <span className="ml-1.5 text-xs text-blue-500 font-medium">[관리자]</span>
+                          <span className="ml-1.5 text-xs text-blue-400 font-medium">[관리자]</span>
                         )}
                       </span>
                     </span>
@@ -284,13 +283,15 @@ const Header = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-base font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                    className={`px-4 py-2 text-base font-medium transition-colors
+                      ${glass ? 'text-white/85 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
                   >
                     로그인
                   </Link>
                   <Link
                     to="/register"
-                    className="px-4 py-2 text-base font-medium bg-slate-900 text-white hover:bg-slate-700 transition-colors"
+                    className={`px-4 py-2 text-base font-medium transition-colors
+                      ${glass ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-slate-900 text-white hover:bg-slate-700'}`}
                   >
                     회원가입
                   </Link>
@@ -301,7 +302,8 @@ const Header = () => {
 
           {/* 모바일 햄버거 */}
           <button
-            className="nav:hidden p-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            className={`lg:hidden p-2 transition-colors hover:bg-black/5
+              ${glass ? 'text-white' : 'text-slate-700 hover:text-slate-900'}`}
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="메뉴 열기"
           >
@@ -318,10 +320,10 @@ const Header = () => {
 
         {/* 모바일 메뉴 */}
         <div
-          className={`nav:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
             ${mobileOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'}`}
         >
-          <nav className="overflow-y-auto py-2" style={{ maxHeight: 'calc(80vh - 0px)' }}>
+          <nav className="overflow-y-auto py-2 bg-white" style={{ maxHeight: 'calc(80vh - 0px)' }}>
             {NAV_MENUS.map((item) => {
               if (!item.children && !item.href) {
                 return (

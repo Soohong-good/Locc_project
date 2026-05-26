@@ -1,11 +1,10 @@
-import { useRef, useEffect, useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getLatestSermons } from '@/api/sermons'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
-import useAuthStore from '@/stores/authStore'
-import { useLogout } from '@/hooks/useAuth'
+import Header from '@/components/layout/Header'
 import KakaoMap from '@/components/ui/KakaoMap'
 
 function extractVideoId(url) {
@@ -47,137 +46,12 @@ const VideoModal = ({ videoId, onClose }) => {
   )
 }
 
-const NAV_MENUS = [
-  { label: '복음 말씀', href: '/salvation' },
-  {
-    label: '그리스도사랑교회',
-    minWidth: '210px',
-    children: [
-      { href: '/church/about',       label: '교회소개' },
-      { href: '/church/confession',  label: '신앙고백' },
-      { href: '/church/first-visit', label: '처음 교회에 방문하신 분' },
-      { href: '/church/staff',       label: '섬기는 분들' },
-      { href: '/church/mission',     label: '선교' },
-      { href: '/church/contact',     label: '오시는 길' },
-    ],
-  },
-  {
-    label: '예배',
-    children: [
-      { href: '/worship/newyear',                 label: '송구영신예배' },
-      { href: '/worship/sermon/sunday-morning',   label: '주일오전예배' },
-      { href: '/worship/sermon/sunday-afternoon', label: '주일오후예배' },
-      { href: '/worship/sermon/weekday',          label: '수요·금요예배' },
-      { href: '/worship/training-intro',          label: '훈련소개' },
-      { href: '/worship/sermon/training-message', label: '훈련 메시지' },
-    ],
-  },
-  {
-    label: '공지 및 자료실',
-    minWidth: '210px',
-    children: [
-      { href: '/notices',      label: '공지' },
-      { href: '/bulletin',     label: '주보' },
-      { href: '/applications', label: '시설·차량 신청' },
-    ],
-  },
-  {
-    label: '부서',
-    children: [
-      { href: '/department/nursery',      label: '태영아부' },
-      { href: '/department/preschool',    label: '유아유치부' },
-      { href: '/department/children',     label: '초등부' },
-      { href: '/department/youth',        label: '중고등부' },
-      { href: '/department/young-adults', label: '대학청년부' },
-      { href: '/department/newcomers',    label: '새가족부' },
-      { href: '/department/multiethnic',  label: '다민족부' },
-      { href: '/department/healing',      label: '치유부' },
-    ],
-  },
-  { label: '훈련 신청', href: '/training' },
-]
 
 const css = `
   :root { --navy:#1e3a5f; --navy-light:#274d7a; --gold:#ffffff; --gold-light:#f3f6fb; --bg:#f3f6fb; --text:#1a2e4a; }
 
   .dt-root { font-family:'Noto Sans KR',sans-serif; color:var(--text); background:#fff; }
   .dt-wrap  { max-width:1140px; margin:0 auto; padding:0 24px; }
-
-  /* ── HEADER ── */
-  .dt-header { position:fixed; top:0; left:0; right:0; z-index:100; padding:0; transition:background .3s,box-shadow .3s; }
-  .dt-header.scrolled { background:#fff; box-shadow:0 2px 16px rgba(0,0,0,.08); }
-  .dt-header .dt-wrap { max-width:none; padding:0 80px; }
-  .dt-header-inner { display:flex; align-items:center; justify-content:space-between; height:95px; flex-wrap:nowrap; }
-  @media(max-width:1144px){ .dt-header .dt-wrap { padding:0 24px; } }
-  /* 모바일 메뉴 오픈 시 — 스크롤 위치 무관하게 항상 흰 배경 */
-  .dt-header.mobile-open { background:#fff !important; box-shadow:0 2px 16px rgba(0,0,0,.08); }
-  .dt-header.mobile-open .dt-logo img { filter:none !important; }
-  .dt-header.mobile-open .dt-hamburger span { background:var(--navy) !important; }
-  .dt-logo { flex-shrink:0; text-decoration:none; }
-  .dt-logo img { display:block; width:220px; height:auto; }
-  .dt-header:not(.scrolled) .dt-logo img { filter:brightness(0) invert(1); }
-
-  /* ── DESKTOP NAV ── */
-  .dt-desk-nav { display:flex; align-items:center; gap:24px; }
-  .dt-desk-nav-links { display:flex; align-items:center; gap:16px; }
-  .dt-desk-nav-link { font-size:15px; font-weight:500; color:#444; text-decoration:none; transition:color .15s; white-space:nowrap; }
-  .dt-desk-nav-link:hover { color:var(--navy); }
-  .dt-header:not(.scrolled) .dt-desk-nav-link { color:rgba(255,255,255,.9); }
-  .dt-header:not(.scrolled) .dt-desk-nav-link:hover { color:#fff; }
-
-  /* ── DESKTOP DROPDOWN ── */
-  .dt-dd { position:relative; }
-  .dt-dd-btn { background:none; border:none; cursor:pointer; font-size:15px; font-weight:500; padding:4px 0; display:flex; align-items:center; gap:4px; color:#444; transition:color .15s; white-space:nowrap; }
-  .dt-dd-btn:hover { color:var(--navy); }
-  .dt-header:not(.scrolled) .dt-dd-btn { color:rgba(255,255,255,.9); }
-  .dt-header:not(.scrolled) .dt-dd-btn:hover { color:#fff; }
-  .dt-dd-menu { position:absolute; top:calc(100% + 10px); left:0; background:#fff; border:1px solid rgba(0,0,0,.08); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.12); z-index:200; overflow:hidden; min-width:160px; }
-  .dt-dd-menu.right { left:auto; right:0; }
-  .dt-dd-menu a,.dt-dd-menu button { display:block; width:100%; padding:10px 20px; font-size:15px; color:#555; text-decoration:none; background:none; border:none; text-align:left; cursor:pointer; transition:background .15s,color .15s; box-sizing:border-box; white-space:nowrap; }
-  .dt-dd-menu a:hover,.dt-dd-menu button:hover { background:#f5f5f5; color:var(--navy); }
-  .dt-dd-menu .logout-btn { color:#ef4444; border-top:1px solid #f0f0f0; margin-top:4px; }
-  .dt-dd-menu .logout-btn:hover { background:#fef2f2; color:#dc2626; }
-
-  /* ── AUTH AREA ── */
-  .dt-auth { display:flex; align-items:center; gap:8px; padding-left:16px; border-left:1px solid rgba(0,0,0,.1); }
-  .dt-header:not(.scrolled) .dt-auth { border-left-color:rgba(255,255,255,.25); }
-  .dt-auth-login { padding:8px 16px; font-size:15px; font-weight:500; color:#555; text-decoration:none; transition:color .15s; }
-  .dt-auth-login:hover { color:var(--navy); }
-  .dt-auth-register { padding:8px 16px; font-size:15px; font-weight:500; background:var(--navy); color:#fff; text-decoration:none; transition:background .15s; }
-  .dt-auth-register:hover { background:var(--navy-light); }
-  .dt-header:not(.scrolled) .dt-auth-login { color:rgba(255,255,255,.85); }
-  .dt-header:not(.scrolled) .dt-auth-login:hover { color:#fff; }
-  .dt-header:not(.scrolled) .dt-auth-register { background:rgba(255,255,255,.2); }
-  .dt-header:not(.scrolled) .dt-auth-register:hover { background:rgba(255,255,255,.3); }
-  .dt-user-avatar { width:28px; height:28px; border-radius:50%; background:var(--navy); color:#fff; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; }
-  .dt-header:not(.scrolled) .dt-user-avatar { background:rgba(255,255,255,.2); }
-
-  /* ── MOBILE HAMBURGER ── */
-  .dt-hamburger { display:none; flex-direction:column; gap:6px; background:none; border:none; cursor:pointer; padding:8px; }
-  .dt-hamburger span { display:block; width:20px; height:2px; background:var(--navy); transition:all .3s; transform-origin:center; }
-  .dt-header:not(.scrolled) .dt-hamburger span { background:#fff; }
-  .dt-hamburger.open span:nth-child(1) { transform:rotate(45deg) translate(5.5px,5.5px); }
-  .dt-hamburger.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
-  .dt-hamburger.open span:nth-child(3) { transform:rotate(-45deg) translate(5.5px,-5.5px); }
-
-  /* ── MOBILE MENU PANEL — 항상 흰 배경 ── */
-  .dt-mobile-panel { border-top:1px solid #e8e8e8; overflow-y:auto; background:#fff; }
-  .dt-mobile-acc-btn { width:100%; display:flex; align-items:center; justify-content:space-between; padding:16px 0; font-size:16px; font-weight:500; background:none; border:none; border-bottom:1px solid #f0f0f0; cursor:pointer; color:#333; }
-  .dt-mobile-acc-btn:hover { color:var(--navy); }
-  .dt-mobile-acc-sub { overflow:hidden; transition:max-height .2s ease,opacity .2s; background:#fafafa; }
-  .dt-mobile-acc-sub a { display:block; padding:10px 16px; font-size:15px; color:#555; text-decoration:none; }
-  .dt-mobile-acc-sub a:hover { color:var(--navy); }
-  .dt-mobile-link { display:block; padding:16px 0; font-size:16px; font-weight:500; text-decoration:none; border-bottom:1px solid #f0f0f0; color:#333; }
-  .dt-mobile-link:hover { color:var(--navy); }
-  .dt-mobile-auth { padding:16px 0; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .dt-mobile-auth a { display:block; padding:12px; text-align:center; font-size:15px; font-weight:500; text-decoration:none; }
-  .dt-mobile-auth-login { border:1px solid #ccc; color:#333; }
-  .dt-mobile-auth-login:hover { border-color:var(--navy); color:var(--navy); }
-  .dt-mobile-auth-reg { background:var(--navy); color:#fff; }
-  .dt-mobile-auth-reg:hover { background:var(--navy-light); }
-
-  @media (min-width:1145px) { .dt-hamburger { display:none !important; } .dt-mobile-panel { display:none !important; } }
-  @media (max-width:1144px) { .dt-desk-nav { display:none !important; } .dt-hamburger { display:flex !important; } }
 
   /* ── HERO ── */
   .dt-hero { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; text-align:center; }
@@ -368,77 +242,9 @@ const css = `
   }
 `
 
-const DtChevron = () => (
-  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-)
-
-const DtDesktopDropdown = ({ label, children, minWidth, alignRight, extraBottom }) => {
-  const [open, setOpen] = useState(false)
-  const timerRef = useRef(null)
-  const handleEnter = () => { clearTimeout(timerRef.current); setOpen(true) }
-  const handleLeave = () => { timerRef.current = setTimeout(() => setOpen(false), 150) }
-  return (
-    <div className="dt-dd" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <button type="button" className="dt-dd-btn">
-        {label}
-        <DtChevron />
-      </button>
-      <div
-        className={`dt-dd-menu${alignRight ? ' right' : ''}`}
-        style={{
-          ...(minWidth ? { minWidth } : {}),
-          opacity: open ? 1 : 0,
-          visibility: open ? 'visible' : 'hidden',
-          transform: open ? 'translateY(0)' : 'translateY(-6px)',
-          transition: 'opacity .25s ease, transform .25s ease, visibility .25s',
-          pointerEvents: open ? 'auto' : 'none',
-        }}
-      >
-        {children.map(({ href, label: l }) =>
-          href
-            ? <Link key={l} to={href} onClick={() => setOpen(false)} className=""
-                style={{display:'block',padding:'10px 20px',fontSize:'15px',color:'#555',textDecoration:'none',transition:'background .15s,color .15s',whiteSpace:'nowrap'}}
-                onMouseEnter={e=>{e.currentTarget.style.background='#f5f5f5';e.currentTarget.style.color='#1e3a5f'}}
-                onMouseLeave={e=>{e.currentTarget.style.background='';e.currentTarget.style.color='#555'}}
-              >{l}</Link>
-            : <span key={l} style={{display:'block',padding:'10px 20px',fontSize:'15px',color:'#bbb',cursor:'not-allowed'}}>{l}</span>
-        )}
-        {extraBottom}
-      </div>
-    </div>
-  )
-}
-
-const DtMobileDropdown = ({ label, children, onClose }) => {
-  const [open, setOpen] = useState(false)
-  return (
-    <div>
-      <button type="button" className="dt-mobile-acc-btn" onClick={() => setOpen(v => !v)}>
-        <span>{label}</span>
-        <DtChevron />
-      </button>
-      <div className="dt-mobile-acc-sub" style={{ maxHeight: open ? '500px' : '0', opacity: open ? 1 : 0 }}>
-        {children.map(({ href, label: l }) =>
-          href
-            ? <Link key={l} to={href} onClick={onClose}>{l}</Link>
-            : <span key={l} style={{display:'block',padding:'10px 16px',fontSize:'15px',color:'#aaa'}}>{l}</span>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export default function MainPage() {
-  const headerRef = useRef(null)
   const navigate = useNavigate()
-  const location = useLocation()
   const [modalVideoId, setModalVideoId] = useState(null)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const { user, isAdmin: isAdminFn } = useAuthStore()
-  const { mutate: logout, isPending } = useLogout()
-  const isAdmin = isAdminFn()
 
   const { data: sermons = [] } = useQuery({
     queryKey: ['sermons', 'latest', 3],
@@ -460,22 +266,11 @@ export default function MainPage() {
   })
   const galleryImages = galleryData?.content ?? []
 
-  useEffect(() => { setMobileOpen(false) }, [location.pathname])
-
   // dt-js 클래스: JS 실행 시에만 fade 숨김 활성화
   useEffect(() => {
     const root = document.querySelector('.dt-root')
     root?.classList.add('dt-js')
     return () => root?.classList.remove('dt-js')
-  }, [])
-
-  // 스크롤 헤더
-  useEffect(() => {
-    const onScroll = () => {
-      headerRef.current?.classList.toggle('scrolled', window.scrollY > 20)
-    }
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   // IntersectionObserver: API 데이터 로드 후 새로 생긴 카드도 감지하도록 sermons/notices 의존
@@ -502,129 +297,8 @@ export default function MainPage() {
     <div className="dt-root">
       <style>{css}</style>
 
-      {/* ─── HEADER ─── */}
-      <header className={`dt-header${mobileOpen ? ' mobile-open' : ''}`} ref={headerRef}>
-        <div className="dt-wrap">
-          <div className="dt-header-inner">
-
-            {/* 로고 */}
-            <Link to="/" className="dt-logo">
-              <img src="/logo.png" alt="그리스도사랑교회" />
-            </Link>
-
-            {/* 데스크탑 네비게이션 */}
-            <div className="dt-desk-nav">
-              <nav className="dt-desk-nav-links">
-                {NAV_MENUS.map((item) => {
-                  if (item.children) {
-                    return (
-                      <DtDesktopDropdown key={item.label} label={item.label} children={item.children} minWidth={item.minWidth} />
-                    )
-                  }
-                  return (
-                    <Link key={item.href} to={item.href} className="dt-desk-nav-link"
-                      style={location.pathname === item.href ? {color:'inherit',fontWeight:700} : {}}>
-                      {item.label}
-                    </Link>
-                  )
-                })}
-              </nav>
-
-              {/* 인증 영역 */}
-              <div className="dt-auth">
-                {user ? (
-                  <DtDesktopDropdown
-                    alignRight
-                    label={
-                      <span style={{display:'flex',alignItems:'center',gap:8}}>
-                        <span className="dt-user-avatar">{user.name?.charAt(0) ?? '?'}</span>
-                        <span style={{fontSize:15,fontWeight:500}}>
-                          {user.name}
-                          {isAdmin && <span style={{marginLeft:6,fontSize:12,color:'#3b82f6'}}>[관리자]</span>}
-                        </span>
-                      </span>
-                    }
-                    children={[
-                      { href: '/mypage',      label: '마이페이지' },
-                      { href: '/training/my', label: '내 신청내역' },
-                      ...(isAdmin ? [{ href: '/admin', label: '관리자 대시보드' }] : []),
-                    ]}
-                    extraBottom={
-                      <button onClick={() => logout()} disabled={isPending} className="logout-btn"
-                        style={{display:'block',width:'100%',padding:'10px 20px',fontSize:'15px',color:'#ef4444',background:'none',border:'none',borderTop:'1px solid #f0f0f0',marginTop:4,textAlign:'left',cursor:'pointer',transition:'background .15s'}}
-                        onMouseEnter={e=>{e.currentTarget.style.background='#fef2f2'}}
-                        onMouseLeave={e=>{e.currentTarget.style.background='none'}}>
-                        로그아웃
-                      </button>
-                    }
-                  />
-                ) : (
-                  <>
-                    <Link to="/login" className="dt-auth-login">로그인</Link>
-                    <Link to="/register" className="dt-auth-register">회원가입</Link>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* 모바일 햄버거 */}
-            <button
-              className={`dt-hamburger${mobileOpen ? ' open' : ''}`}
-              onClick={() => setMobileOpen(v => !v)}
-              aria-label="메뉴 열기"
-            >
-              <span /><span /><span />
-            </button>
-          </div>
-
-          {/* 모바일 메뉴 패널 */}
-          <div className="dt-mobile-panel" style={{ maxHeight: mobileOpen ? '80vh' : '0', opacity: mobileOpen ? 1 : 0, transition: 'max-height .3s ease-out, opacity .3s' }}>
-            <nav style={{paddingBottom:8}}>
-              {NAV_MENUS.map((item) => {
-                if (item.children) {
-                  return <DtMobileDropdown key={item.label} label={item.label} children={item.children} onClose={() => setMobileOpen(false)} />
-                }
-                return (
-                  <Link key={item.href} to={item.href} className="dt-mobile-link" onClick={() => setMobileOpen(false)}>
-                    {item.label}
-                  </Link>
-                )
-              })}
-
-              {/* 모바일 인증 */}
-              {user ? (
-                <div style={{padding:'16px 0',borderTop:'1px solid rgba(255,255,255,.15)'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:12,paddingBottom:12,marginBottom:8,borderBottom:'1px solid rgba(255,255,255,.1)'}}>
-                    <span className="dt-user-avatar" style={{width:32,height:32,fontSize:14}}>{user.name?.charAt(0) ?? '?'}</span>
-                    <div>
-                      <div style={{fontSize:15,fontWeight:600,color:'rgba(255,255,255,.9)'}}>{user.name}</div>
-                      {isAdmin && <div style={{fontSize:12,color:'#93c5fd'}}>관리자</div>}
-                    </div>
-                  </div>
-                  {[
-                    { to:'/mypage', label:'마이페이지' },
-                    { to:'/training/my', label:'내 신청내역' },
-                    ...(isAdmin ? [{to:'/admin',label:'관리자 대시보드'}] : []),
-                  ].map(({to, label}) => (
-                    <Link key={to} to={to} onClick={() => setMobileOpen(false)} className="dt-mobile-link">{label}</Link>
-                  ))}
-                  <button onClick={() => { logout(); setMobileOpen(false) }} disabled={isPending}
-                    style={{display:'block',width:'100%',textAlign:'left',padding:'14px 0',fontSize:15,color:'#fca5a5',background:'none',border:'none',borderTop:'1px solid rgba(255,255,255,.1)',cursor:'pointer',marginTop:4}}>
-                    로그아웃
-                  </button>
-                </div>
-              ) : (
-                <div style={{padding:'16px 0',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                  <Link to="/login" onClick={() => setMobileOpen(false)} className="dt-mobile-auth-login"
-                    style={{display:'block',padding:'12px',textAlign:'center',fontSize:15,fontWeight:500,textDecoration:'none'}}>로그인</Link>
-                  <Link to="/register" onClick={() => setMobileOpen(false)} className="dt-mobile-auth-reg"
-                    style={{display:'block',padding:'12px',textAlign:'center',fontSize:15,fontWeight:500,textDecoration:'none'}}>회원가입</Link>
-                </div>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
+      {/* ─── HEADER (공통 컴포넌트 사용 — 투명 모드 자동 적용) ─── */}
+      <Header />
 
       {/* ─── HERO ─── */}
       <section className="dt-hero">
