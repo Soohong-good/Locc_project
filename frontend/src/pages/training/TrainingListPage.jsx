@@ -131,7 +131,6 @@ const TrainingListPage = () => {
           eyebrow="Training"
           title="훈련신청"
           subtitle="교회 훈련 프로그램에 신청하세요"
-          bgImage="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=1600&q=80&auto=format&fit=crop"
         >
           <div className="flex items-center gap-3">
             {user && (
