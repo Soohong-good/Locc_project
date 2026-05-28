@@ -127,9 +127,9 @@ youtube:
 
 # 파일 업로드 설정
 file:
-  # 기본값을 상대경로 uploads -> user.home 기반 절대경로로 변경
-  # 필요하면 환경변수 FILE_UPLOAD_DIR 로 덮어써서 운영/개발 각각 분리 가능
-  upload-dir: ${FILE_UPLOAD_DIR:${user.home}/locc-data/uploads}
+  # 기본값: 프로젝트 루트 하위 uploads/ (git에서 제외됨 — .gitignore 참고)
+  # Docker: docker-compose에서 FILE_UPLOAD_DIR=/app/uploads 로 덮어씀
+  upload-dir: ${FILE_UPLOAD_DIR:uploads}
 
 
 server:
