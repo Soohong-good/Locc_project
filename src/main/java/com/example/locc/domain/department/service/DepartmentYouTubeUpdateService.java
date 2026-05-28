@@ -1,9 +1,11 @@
 package com.example.locc.domain.department.service;
 
+import com.example.locc.config.CacheConfig;
 import com.example.locc.domain.department.entity.Department;
 import com.example.locc.domain.department.repository.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class DepartmentYouTubeUpdateService {
      */
     @Scheduled(cron = "0 0 6 * * *")
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_DEPARTMENTS, allEntries = true)
     public void updateAllDepartmentVideos() {
         log.info("Starting YouTube video update for all departments");
 
@@ -49,6 +52,7 @@ public class DepartmentYouTubeUpdateService {
      * @param departmentCode 부서 코드
      */
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_DEPARTMENTS, allEntries = true)
     public void updateDepartmentVideoByCode(String departmentCode) {
         log.info("Updating YouTube video for department: {}", departmentCode);
 

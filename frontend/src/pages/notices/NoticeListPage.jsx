@@ -98,7 +98,6 @@ const NoticeListPage = () => {
         eyebrow="Notice"
         title="공지사항"
         subtitle="교회 소식과 주요 공지사항을 확인하세요"
-        bgImage="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=1600&q=80&auto=format&fit=crop"
       >
         {canWrite && (
           <Button

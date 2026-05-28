@@ -5,6 +5,7 @@ import { getLatestSermons } from '@/api/sermons'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
 import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
 import KakaoMap from '@/components/ui/KakaoMap'
 
 function extractVideoId(url) {
@@ -211,34 +212,16 @@ const css = `
   .dt-bus    { background:#4caf50; color:#fff; }
   .dt-car    { background:#888; color:#fff; }
 
-  /* ── FOOTER ── */
-  .dt-footer { background:var(--navy); color:rgba(255,255,255,.65); padding:64px 0 0; }
-  .dt-footer-top { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; gap:48px; padding-bottom:48px; border-bottom:1px solid rgba(255,255,255,.1); }
-  .dt-footer-logo-ko { font-size:20px; font-weight:700; color:#fff; margin-bottom:4px; }
-  .dt-footer-logo-en { font-size:13px; letter-spacing:.1em; color:var(--gold); margin-bottom:16px; }
-  .dt-footer-desc { font-size:15px; line-height:1.8; color:rgba(255,255,255,.5); }
-  .dt-footer-col-title { font-size:14px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#fff; margin-bottom:16px; }
-  .dt-footer-links { display:flex; flex-direction:column; gap:8px; }
-  .dt-footer-links a { font-size:15px; color:rgba(255,255,255,.5); text-decoration:none; transition:color .2s; }
-  .dt-footer-links a:hover { color:var(--gold); }
-  .dt-footer-bottom { display:flex; align-items:center; justify-content:space-between; padding:24px 0; }
-  .dt-footer-copy { font-size:14px; color:rgba(255,255,255,.3); }
-  .dt-socials { display:flex; gap:8px; }
-  .dt-social-btn { width:36px; height:36px; background:rgba(255,255,255,.08); border-radius:8px; display:flex; align-items:center; justify-content:center; transition:background .2s; }
-  .dt-social-btn:hover { background:rgba(255,255,255,.16); }
-  .dt-social-btn svg { width:16px; height:16px; fill:rgba(255,255,255,.7); }
 
   @media (max-width:900px) {
     .dt-intro-grid,.dt-contact-grid,.dt-news-layout { grid-template-columns:1fr; }
     .dt-worship-grid { grid-template-columns:1fr 1fr; }
     .dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr 1fr; }
-    .dt-footer-top { grid-template-columns:1fr 1fr; }
   }
   @media (max-width:600px) {
     .dt-worship-grid,.dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr; }
     .dt-gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto; }
     .dt-gallery-cell.tall { grid-row:span 1; }
-    .dt-footer-top { grid-template-columns:1fr; gap:32px; }
   }
 `
 
@@ -294,6 +277,7 @@ export default function MainPage() {
   }, [sermons, notices, galleryImages])
 
   return (
+    <>
     <div className="dt-root">
       <style>{css}</style>
 
@@ -649,8 +633,10 @@ export default function MainPage() {
                 {[
                   { label:'주소', value:'대구광역시 동구\n안심로55길 59',
                     icon: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></> },
-                  { label:'전화', value:'053-962-8948',
+                  { label:'전화', value:'053-962-8948 / 053-961-0931',
                     icon: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 14a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3.12h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.9A16 16 0 0 0 13.1 16.1l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17.14"/> },
+                  { label:'팩스', value:'053-961-0862',
+                    icon: <><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 2H8v5h8V2z"/></> },
                   { label:'이메일', value:'magamedia8948@gmail.com',
                     icon: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></> },
                 ].map((info) => (
@@ -677,61 +663,8 @@ export default function MainPage() {
       </section>
 
       {modalVideoId && <VideoModal videoId={modalVideoId} onClose={() => setModalVideoId(null)} />}
-
-      {/* ─── FOOTER ─── */}
-      <footer className="dt-footer">
-        <div className="dt-wrap">
-          <div className="dt-footer-top">
-            <div>
-              <div className="dt-footer-logo-ko">그리스도사랑교회</div>
-              <div className="dt-footer-logo-en">Christ Love Church</div>
-              <p className="dt-footer-desc">말씀과 기도, 전도와 봉사로 세워지는<br />하나님의 공동체입니다.<br />1994년 창립 · 서울 성북구</p>
-            </div>
-            <div>
-              <div className="dt-footer-col-title">예배 안내</div>
-              <div className="dt-footer-links">
-                <a href="#">주일 1부 예배 — 09:00</a>
-                <a href="#">주일 2부 예배 — 11:00</a>
-                <a href="#">수요 예배 — 19:30</a>
-                <a href="#">금요 기도회 — 21:00</a>
-              </div>
-            </div>
-            <div>
-              <div className="dt-footer-col-title">빠른 이동</div>
-              <div className="dt-footer-links">
-                <a href="/church/about">교회 소개</a>
-                <a href="/worship/sermon/sunday-morning">설교 아카이브</a>
-                <a href="#">사역 부서</a>
-                <a href="/notices">교회 소식</a>
-                <a href="/church/contact">오시는 길</a>
-              </div>
-            </div>
-            <div>
-              <div className="dt-footer-col-title">멤버 서비스</div>
-              <div className="dt-footer-links">
-                <a href="/login">로그인 / 회원가입</a>
-                <a href="/mypage">마이페이지</a>
-                <a href="/church/first-visit">새가족 등록</a>
-                <a href="/bulletin">주보</a>
-              </div>
-            </div>
-          </div>
-          <div className="dt-footer-bottom">
-            <span className="dt-footer-copy">© 2025 그리스도사랑교회. All rights reserved.</span>
-            <div className="dt-socials">
-              <a href="#" className="dt-social-btn" title="YouTube">
-                <svg viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
-              </a>
-              <a href="#" className="dt-social-btn" title="Instagram">
-                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" strokeWidth="2" strokeLinecap="round"/></svg>
-              </a>
-              <a href="#" className="dt-social-btn" title="카카오">
-                <svg viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.58 2 11c0 2.72 1.72 5.13 4.35 6.63L5.14 21l4.38-2.46c.79.13 1.63.2 2.48.2 5.5 0 10-3.58 10-8s-4.5-8-10-8z"/></svg>
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
+    <Footer />
+    </>
   )
 }

@@ -1,11 +1,13 @@
 package com.example.locc.domain.department.dto.response;
 
 import com.example.locc.domain.department.entity.Department;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
 public class DepartmentResponse {
-    
+
     private final Long id;
     private final String code;
     private final String name;
@@ -22,10 +24,24 @@ public class DepartmentResponse {
     private final String latestVideoId;
     private final String latestVideoTitle;
 
-    private DepartmentResponse(Long id, String code, String name, String nameEn, String description,
-                              String worshipTime, String worshipTimeEn, String worshipLocation, String worshipLocationEn,
-                              String feature1, String feature2, String feature3,
-                              String youtubeChannelId, String latestVideoId, String latestVideoTitle) {
+    // Redis 캐시 역직렬화를 위해 @JsonCreator 추가
+    @JsonCreator
+    public DepartmentResponse(
+            @JsonProperty("id")                 Long id,
+            @JsonProperty("code")               String code,
+            @JsonProperty("name")               String name,
+            @JsonProperty("nameEn")             String nameEn,
+            @JsonProperty("description")        String description,
+            @JsonProperty("worshipTime")        String worshipTime,
+            @JsonProperty("worshipTimeEn")      String worshipTimeEn,
+            @JsonProperty("worshipLocation")    String worshipLocation,
+            @JsonProperty("worshipLocationEn")  String worshipLocationEn,
+            @JsonProperty("feature1")           String feature1,
+            @JsonProperty("feature2")           String feature2,
+            @JsonProperty("feature3")           String feature3,
+            @JsonProperty("youtubeChannelId")   String youtubeChannelId,
+            @JsonProperty("latestVideoId")      String latestVideoId,
+            @JsonProperty("latestVideoTitle")   String latestVideoTitle) {
         this.id = id;
         this.code = code;
         this.name = name;

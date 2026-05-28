@@ -60,4 +60,11 @@ public class AppProperties {
      * application-prod.yml:  true
      */
     private boolean cookieSecure = false;
+
+    /**
+     * 에러 알림 수신 이메일
+     * - 비워두면 에러 알림 이메일 비활성화
+     * - application.yml: app.admin-email: ${ADMIN_ALERT_EMAIL:}
+     */
+    private String adminEmail = "";
 }

@@ -52,7 +52,6 @@ export default function MissionPage() {
         eyebrow="Mission"
         title="선교"
         subtitle="모든 민족에게 복음을 전하라는 주님의 지상 명령을 실천합니다"
-        bgImage="https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1600&q=80&auto=format&fit=crop"
       />
 
       {/* 선교 비전 */}

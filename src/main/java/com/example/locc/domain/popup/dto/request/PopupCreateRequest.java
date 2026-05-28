@@ -4,6 +4,7 @@ import com.example.locc.domain.popup.dto.command.PopupCreateCommand;
 import com.example.locc.domain.popup.entity.TargetType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -46,6 +47,11 @@ public class PopupCreateRequest {
 
     private String imageUrl;
 
+    /** javascript: 등 위험한 프로토콜 주입 방지 — http/https 또는 빈값만 허용 */
+    @Pattern(
+        regexp = "^(https?://.+)?$",
+        message = "링크 URL은 http 또는 https로 시작해야 합니다"
+    )
     private String linkUrl;
 
     /**
