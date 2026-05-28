@@ -467,7 +467,7 @@ export default function MainPage() {
             <div className="dt-div" />
             <p className="dt-sub">각 부서는 하나님의 나라를 세우는 한 몸의 지체입니다. 여러분의 은사로 함께 섬겨주세요.</p>
           </div>
-          <div className="dt-ministry-grid">
+          <div className="dt-ministry-grid dt-fade">
             {[
               { code:'nursery',     name:'태영아부',   en:'Nursery',      banner:'/nersury.png' },
               { code:'preschool',   name:'유아유치부', en:'Preschool',    banner:'/preschool.png' },
@@ -481,8 +481,7 @@ export default function MainPage() {
               <Link
                 key={dept.code}
                 to={`/department/${dept.code}`}
-                className="dt-ministry-card dt-fade"
-                style={{ transitionDelay:`${i * 0.07}s` }}
+                className="dt-ministry-card"
               >
                 <div
                   className="dt-ministry-card-bg"
