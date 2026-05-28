@@ -1,6 +1,9 @@
 package com.example.locc.exception;
 
 import com.example.locc.common.ErrorCode;
+import com.example.locc.domain.auth.service.AsyncEmailSender;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -15,6 +18,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * REST API 전용 예외 핸들러
  *
@@ -27,7 +33,10 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@RequiredArgsConstructor
 public class RestExceptionHandler {
+
+    private final AsyncEmailSender asyncEmailSender;
 
     // ───── 400 검증 오류 ─────
 
@@ -181,8 +190,18 @@ public class RestExceptionHandler {
     // ───── 500 서버 오류 ─────
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
         log.error("Unexpected error - {}: {}", e.getClass().getName(), e.getMessage(), e);
+
+        // 스택트레이스 문자열 변환
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        String stackTrace = sw.toString();
+        if (stackTrace.length() > 3000) stackTrace = stackTrace.substring(0, 3000) + "\n... (truncated)";
+
+        String detail = "URL: " + request.getMethod() + " " + request.getRequestURI() + "\n\n" + stackTrace;
+        asyncEmailSender.sendErrorAlert("서버 에러 발생", e.getClass().getSimpleName(), e.getMessage(), detail);
+
         ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
         return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(response);
     }

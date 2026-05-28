@@ -98,5 +98,12 @@ public class VisitorStatisticsScheduler {
         repository.save(stats);
 
         log.info("어제 통계 최종 확정: {} - visit: {}, pageView: {}", yesterday, finalVisit, finalPageView);
+
+        // DB 확정 후 어제 Redis 카운터 키 삭제 (stale 키 정리)
+        try {
+            counterService.deleteCounterKeys(yesterday);
+        } catch (Exception e) {
+            log.warn("어제 Redis 키 삭제 실패 (무시): {}", e.getMessage());
+        }
     }
 }

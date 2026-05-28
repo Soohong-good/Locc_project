@@ -25,6 +25,7 @@ const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
 const Template               = lazy(() => import('@/pages/Template'))
+const TestDashboard          = lazy(() => import('@/pages/TestDashboard'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
 const NotFoundPage           = lazy(() => import('@/pages/NotFoundPage'))
 const MyPage                 = lazy(() => import('@/pages/MyPage'))
@@ -39,6 +40,7 @@ const FirstVisitPage         = lazy(() => import('@/pages/church/FirstVisit'))
 const StaffPage              = lazy(() => import('@/pages/church/StaffPage'))
 const MissionPage            = lazy(() => import('@/pages/church/MissionPage'))
 const ContactPage            = lazy(() => import('@/pages/church/ContactPage'))
+const WorshipGuidePage       = lazy(() => import('@/pages/church/WorshipGuidePage'))
 
 const NewYearServicePage     = lazy(() => import('@/pages/worship/NewYearServicePage'))
 const SundayMorningPage      = lazy(() => import('@/pages/worship/SundayMorningPage'))
@@ -100,17 +102,21 @@ const AppRoutes = () => {
         {/* 구 메인 직접 접근용 (보관) */}
         <Route path="/template" element={<Template />} />
 
+        {/* 기능 테스트 대시보드 — 개발 전용 */}
+        <Route path="/test" element={<TestDashboard />} />
+
         {/* 공통 레이아웃 (Header + Footer) */}
         <Route element={<Layout />}>
           <Route path="/salvation" element={<SalvationPage />} />
 
           {/* 교회 페이지 */}
-          <Route path="/church/about"       element={<AboutPage />} />
-          <Route path="/church/confession"  element={<ConfessionPage />} />
-          <Route path="/church/staff"       element={<StaffPage />} />
-          <Route path="/church/first-visit" element={<FirstVisitPage />} />
-          <Route path="/church/mission"     element={<MissionPage />} />
-          <Route path="/church/contact"     element={<ContactPage />} />
+          <Route path="/church/about"         element={<AboutPage />} />
+          <Route path="/church/confession"    element={<ConfessionPage />} />
+          <Route path="/church/staff"         element={<StaffPage />} />
+          <Route path="/church/first-visit"   element={<FirstVisitPage />} />
+          <Route path="/church/mission"       element={<MissionPage />} />
+          <Route path="/church/contact"       element={<ContactPage />} />
+          <Route path="/church/worship-guide" element={<WorshipGuidePage />} />
 
           {/* 예배 페이지 */}
           <Route path="/worship/newyear"                 element={<NewYearServicePage />} />
@@ -189,9 +195,55 @@ const AppRoutes = () => {
   )
 }
 
+// ── 에러 리포트 전송 헬퍼 ────────────────────────────────────────────────
+const reportedErrors = new Set() // 세션 내 중복 방지
+
+const sendErrorReport = (type, message, stack) => {
+  const key = `${type}:${message}`
+  if (reportedErrors.has(key)) return // 같은 에러 중복 전송 방지
+  reportedErrors.add(key)
+
+  fetch('/api/error-report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ type, message, stack, url: window.location.href }),
+  }).catch(() => {})
+}
+
 const App = () => {
   useEffect(() => {
     recordVisit().catch(() => {}) // 실패해도 UI에 영향 없도록 무시
+
+    // 전역 JS 에러 (런타임 오류)
+    const handleError = (event) => {
+      // React 자체 에러는 ErrorBoundary가 처리하므로 중복 제외
+      if (event.error?.stack?.includes('ErrorBoundary')) return
+      sendErrorReport(
+        'Uncaught JS Error',
+        event.message ?? String(event.error),
+        event.error?.stack ?? `${event.filename}:${event.lineno}`
+      )
+    }
+
+    // 미처리 Promise 거부 (API 에러 제외 — 네트워크 오류는 제외)
+    const handleUnhandledRejection = (event) => {
+      const reason = event.reason
+      // fetch 실패(네트워크), 401/403 같은 API 에러는 알림 제외
+      if (!reason || reason?.status) return
+      sendErrorReport(
+        'Unhandled Promise Rejection',
+        reason?.message ?? String(reason),
+        reason?.stack ?? ''
+      )
+    }
+
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
+    return () => {
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+    }
   }, [])
 
   return (

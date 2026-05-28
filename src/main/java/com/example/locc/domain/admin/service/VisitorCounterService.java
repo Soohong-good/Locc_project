@@ -64,7 +64,11 @@ public class VisitorCounterService {
      */
     public void incrementPageView() {
         String key = PAGE_VIEW_KEY_PREFIX + LocalDate.now(KST).format(DATE_FORMATTER);
-        redisTemplate.opsForValue().increment(key);
+        Long count = redisTemplate.opsForValue().increment(key);
+        // 최초 생성 시 48h TTL 설정 (visit 키와 동일한 방식)
+        if (Long.valueOf(1L).equals(count)) {
+            redisTemplate.expire(key, 48, TimeUnit.HOURS);
+        }
         log.trace("페이지뷰 증가: {}", key);
     }
     
@@ -108,5 +112,18 @@ public class VisitorCounterService {
      */
     public Long getTodayVisitCount() {
         return getVisitCount(LocalDate.now(KST));
+    }
+
+    /**
+     * 특정 날짜의 Redis 카운터 키 삭제
+     * - DB 확정 후 호출하여 stale 키가 남지 않도록 정리
+     */
+    public void deleteCounterKeys(LocalDate date) {
+        String dateStr   = date.format(DATE_FORMATTER);
+        String visitKey  = VISIT_KEY_PREFIX    + dateStr;
+        String pageKey   = PAGE_VIEW_KEY_PREFIX + dateStr;
+        redisTemplate.delete(visitKey);
+        redisTemplate.delete(pageKey);
+        log.debug("방문자 Redis 키 삭제 완료: {}", dateStr);
     }
 }

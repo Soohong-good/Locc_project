@@ -1,6 +1,11 @@
 package com.example.locc.domain.staff.dto.response;
 
 import com.example.locc.domain.staff.entity.Staff;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,6 +16,7 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Builder
+@JsonDeserialize(builder = StaffResponse.StaffResponseBuilder.class)
 public class StaffResponse {
 
     private final Long id;
@@ -23,12 +29,20 @@ public class StaffResponse {
     private final String responsibility;
     private final String imagePath;
     private final Integer displayOrder;
+
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private final LocalDateTime createdAt;
-    
+
     // 프론트엔드용 추가 필드
     private final String positionEnglish;
     private final String categoryEnglish;
     
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class StaffResponseBuilder {
+        // Lombok @Builder generates the implementation
+    }
+
     /**
      * Entity to Response
      */

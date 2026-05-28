@@ -81,7 +81,82 @@ public class AsyncEmailSender {
         }
     }
 
+    /**
+     * 비동기 이메일 발송 - 서버/프론트 에러 알림
+     * adminEmail이 비어 있으면 발송하지 않음
+     */
+    @Async
+    public void sendErrorAlert(String subject, String errorType, String message, String detail) {
+        String adminEmail = appProperties.getAdminEmail();
+        if (adminEmail == null || adminEmail.isBlank()) return;
+
+        try {
+            MimeMessage mail = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
+            helper.setTo(adminEmail);
+            helper.setSubject("[그리스도 사랑교회] " + subject);
+            helper.setText(buildErrorAlertHtml(errorType, message, detail), true);
+            mailSender.send(mail);
+            log.info("[에러 알림] 이메일 발송 완료 → {}", adminEmail);
+        } catch (MessagingException e) {
+            log.error("[에러 알림] 이메일 발송 실패", e);
+        }
+    }
+
     // ── HTML 빌더 ────────────────────────────────────────────────────────
+
+    private String buildErrorAlertHtml(String errorType, String message, String detail) {
+        return """
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head><meta charset="UTF-8"></head>
+                <body style="margin:0;padding:0;font-family:'Malgun Gothic',Arial,sans-serif;background-color:#f5f5f5;">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
+                    <tr><td align="center">
+                      <table width="600" cellpadding="0" cellspacing="0"
+                             style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                        <tr>
+                          <td style="padding:30px 40px;background-color:#dc2626;border-radius:8px 8px 0 0;">
+                            <h1 style="margin:0;font-size:20px;color:#ffffff;">🚨 서버 에러 알림</h1>
+                            <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.8);">그리스도 사랑교회 웹사이트</p>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:30px 40px;">
+                            <table width="100%%" cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                                  <span style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;">에러 유형</span>
+                                  <span style="font-size:14px;color:#0f172a;font-weight:600;">%s</span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:10px 0;border-bottom:1px solid #f1f5f9;">
+                                  <span style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px;">메시지</span>
+                                  <span style="font-size:14px;color:#dc2626;">%s</span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:10px 0;">
+                                  <span style="font-size:12px;color:#94a3b8;display:block;margin-bottom:8px;">상세 정보</span>
+                                  <pre style="margin:0;padding:16px;background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;color:#475569;white-space:pre-wrap;word-break:break-all;font-family:'Courier New',monospace;">%s</pre>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:20px 40px;background-color:#f8fafc;border-top:1px solid #e5e5e5;border-radius:0 0 8px 8px;text-align:center;">
+                            <p style="margin:0;font-size:12px;color:#94a3b8;">이 메일은 자동 발송된 에러 알림입니다.</p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </body>
+                </html>
+                """.formatted(errorType, message, detail);
+    }
 
     private String buildVerificationCodeHtml(String code) {
         return """

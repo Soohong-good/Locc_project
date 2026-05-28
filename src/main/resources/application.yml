@@ -101,6 +101,8 @@ app:
   oauth2-redirect-url: ${APP_OAUTH2_REDIRECT_URL:/oauth2/callback}
   # JWT 쿠키 Secure 플래그: 운영(HTTPS)=true, 개발(HTTP)=false
   cookie-secure: ${APP_COOKIE_SECURE:false}
+  # 에러 알림 수신 이메일 (비워두면 비활성화)
+  admin-email: ${ADMIN_ALERT_EMAIL:}
 
 kakao:
   map:

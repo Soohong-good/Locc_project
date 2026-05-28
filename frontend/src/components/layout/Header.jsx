@@ -15,12 +15,13 @@ const NAV_MENUS = [
     label: '그리스도사랑교회',
     minWidth: '210px',
     children: [
-      { href: '/church/about',       label: '교회소개' },
-      { href: '/church/confession',  label: '신앙고백' },
-      { href: '/church/first-visit', label: '처음 교회에 방문하신 분' },
-      { href: '/church/staff',       label: '섬기는 분들' },
-      { href: '/church/mission',     label: '선교' },
-      { href: '/church/contact',     label: '오시는 길' },
+      { href: '/church/about',         label: '교회소개' },
+      { href: '/church/confession',    label: '신앙고백' },
+      { href: '/church/first-visit',   label: '처음 교회에 방문하신 분' },
+      { href: '/church/worship-guide', label: '예배 안내' },
+      { href: '/church/staff',         label: '섬기는 분들' },
+      { href: '/church/mission',       label: '선교' },
+      { href: '/church/contact',       label: '오시는 길' },
     ],
   },
   {
@@ -40,7 +41,7 @@ const NAV_MENUS = [
     children: [
       { href: '/notices',      label: '공지' },
       { href: '/bulletin',     label: '주보' },
-      { href: '/applications', label: '시설·차량 신청' },
+      { href: '/applications', label: '신청양식' },
     ],
   },
   {
@@ -63,7 +64,7 @@ const NAV_MENUS = [
 const NavItem = ({ href, label, onClick, isActive }) => {
   if (!href) {
     return (
-      <span className="block px-5 py-2.5 text-base text-slate-400 cursor-not-allowed select-none" title="준비 중">
+      <span className="block px-5 py-2.5 text-lg text-slate-400 cursor-not-allowed select-none" title="준비 중">
         {label}
       </span>
     )
@@ -72,7 +73,7 @@ const NavItem = ({ href, label, onClick, isActive }) => {
     <Link
       to={href}
       onClick={onClick}
-      className={`block px-5 py-2.5 text-base transition-colors duration-150
+      className={`block px-5 py-2.5 text-lg transition-colors duration-150
         ${isActive ? 'text-slate-900 font-medium bg-slate-50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
     >
       {label}
@@ -102,7 +103,7 @@ const DesktopDropdown = ({ label, children, minWidth, alignRight, extraBottom, g
     >
       <button
         type="button"
-        className={`transition-colors duration-150 font-medium text-base flex items-center gap-1.5 bg-transparent border-0 cursor-pointer py-1
+        className={`transition-colors duration-150 font-medium text-lg flex items-center gap-1.5 bg-transparent border-0 cursor-pointer py-1
           ${glass ? 'text-white/90 hover:text-white' : 'text-slate-700 hover:text-slate-900'}`}
       >
         {label}
@@ -138,7 +139,7 @@ const MobileDropdown = ({ label, children, onClose }) => {
         className="w-full flex items-center justify-between px-5 py-4 text-slate-700 hover:text-slate-900 transition-colors"
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="font-medium text-base">{label}</span>
+        <span className="font-medium text-lg">{label}</span>
         <ChevronDown />
       </button>
       <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -185,7 +186,7 @@ const Header = () => {
           ? 'bg-transparent border-b border-transparent'
           : 'bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm'}`}
     >
-      <div className="w-full px-6 lg:px-12">
+      <div className="w-full px-6 xl:px-12">
         <div className="flex items-center justify-between h-[95px]">
 
           {/* 로고 */}
@@ -204,13 +205,13 @@ const Header = () => {
           </Link>
 
           {/* 데스크탑 네비게이션 */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden xl:flex items-center gap-8">
             <nav className="flex items-center gap-6">
               {NAV_MENUS.map((item) => {
                 if (!item.children && !item.href) {
                   return (
                     <span key={item.label}
-                      className="text-slate-400 font-medium text-base cursor-not-allowed select-none"
+                      className="text-slate-400 font-medium text-lg cursor-not-allowed select-none"
                       title="준비 중">
                       {item.label}
                     </span>
@@ -231,7 +232,7 @@ const Header = () => {
                   <Link
                     key={item.href}
                     to={item.href}
-                    className={`font-medium text-base transition-colors duration-150
+                    className={`font-medium text-lg transition-colors duration-150
                       ${glass
                         ? (location.pathname === item.href ? 'text-white font-semibold' : 'text-white/90 hover:text-white')
                         : (location.pathname === item.href ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900')}`}
@@ -255,7 +256,7 @@ const Header = () => {
                         ${glass ? 'bg-white/20' : 'bg-slate-900'}`}>
                         {user.name?.charAt(0) ?? '?'}
                       </span>
-                      <span className={`text-base font-medium transition-colors
+                      <span className={`text-lg font-medium transition-colors
                         ${glass ? 'text-white/90' : 'text-slate-700'}`}>
                         {user.name}
                         {isAdmin && (
@@ -273,7 +274,7 @@ const Header = () => {
                     <button
                       onClick={() => logout()}
                       disabled={isPending}
-                      className="w-full text-left px-5 py-2.5 text-base text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border-t border-slate-100 mt-1"
+                      className="w-full text-left px-5 py-2.5 text-lg text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border-t border-slate-100 mt-1"
                     >
                       로그아웃
                     </button>
@@ -283,14 +284,14 @@ const Header = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className={`px-4 py-2 text-base font-medium transition-colors
+                    className={`px-4 py-2 text-lg font-medium transition-colors
                       ${glass ? 'text-white/85 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
                   >
                     로그인
                   </Link>
                   <Link
                     to="/register"
-                    className={`px-4 py-2 text-base font-medium transition-colors
+                    className={`px-4 py-2 text-lg font-medium transition-colors
                       ${glass ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-slate-900 text-white hover:bg-slate-700'}`}
                   >
                     회원가입
@@ -302,7 +303,7 @@ const Header = () => {
 
           {/* 모바일 햄버거 */}
           <button
-            className={`lg:hidden p-2 transition-colors hover:bg-black/5
+            className={`xl:hidden p-2 transition-colors hover:bg-black/5
               ${glass ? 'text-white' : 'text-slate-700 hover:text-slate-900'}`}
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="메뉴 열기"
@@ -320,7 +321,7 @@ const Header = () => {
 
         {/* 모바일 메뉴 */}
         <div
-          className={`lg:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
+          className={`xl:hidden overflow-hidden transition-all duration-300 ease-out border-t border-slate-100
             ${mobileOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'}`}
         >
           <nav className="overflow-y-auto py-2 bg-white" style={{ maxHeight: 'calc(80vh - 0px)' }}>
@@ -328,7 +329,7 @@ const Header = () => {
               if (!item.children && !item.href) {
                 return (
                   <span key={item.label}
-                    className="block px-5 py-4 text-base text-slate-400 cursor-not-allowed select-none border-b border-slate-100">
+                    className="block px-5 py-4 text-lg text-slate-400 cursor-not-allowed select-none border-b border-slate-100">
                     {item.label}
                   </span>
                 )
@@ -348,7 +349,7 @@ const Header = () => {
                   key={item.href}
                   to={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`block px-5 py-4 text-base font-medium border-b border-slate-100 transition-colors
+                  className={`block px-5 py-4 text-lg font-medium border-b border-slate-100 transition-colors
                     ${location.pathname === item.href
                       ? 'text-slate-900 bg-slate-50'
                       : 'text-slate-700 hover:bg-slate-50'}`}
@@ -367,7 +368,7 @@ const Header = () => {
                       {user.name?.charAt(0) ?? '?'}
                     </span>
                     <div>
-                      <p className="text-base font-medium text-slate-900">{user.name}</p>
+                      <p className="text-lg font-medium text-slate-900">{user.name}</p>
                       {isAdmin && <p className="text-xs text-blue-500">관리자</p>}
                     </div>
                   </div>
@@ -377,14 +378,14 @@ const Header = () => {
                     ...(isAdmin ? [{ to: '/admin', label: '관리자 대시보드' }] : []),
                   ].map(({ to, label }) => (
                     <Link key={to} to={to} onClick={() => setMobileOpen(false)}
-                      className="block py-2.5 text-base text-slate-700 hover:text-slate-900 transition-colors">
+                      className="block py-2.5 text-lg text-slate-700 hover:text-slate-900 transition-colors">
                       {label}
                     </Link>
                   ))}
                   <button
                     onClick={() => { logout(); setMobileOpen(false) }}
                     disabled={isPending}
-                    className="block w-full text-left py-2.5 text-base text-red-500 hover:text-red-600 transition-colors mt-1 pt-3 border-t border-slate-200"
+                    className="block w-full text-left py-2.5 text-lg text-red-500 hover:text-red-600 transition-colors mt-1 pt-3 border-t border-slate-200"
                   >
                     로그아웃
                   </button>
@@ -392,11 +393,11 @@ const Header = () => {
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   <Link to="/login" onClick={() => setMobileOpen(false)}
-                    className="py-3 text-center text-base font-medium border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors">
+                    className="py-3 text-center text-lg font-medium border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors">
                     로그인
                   </Link>
                   <Link to="/register" onClick={() => setMobileOpen(false)}
-                    className="py-3 text-center text-base font-medium bg-slate-900 text-white hover:bg-slate-700 transition-colors">
+                    className="py-3 text-center text-lg font-medium bg-slate-900 text-white hover:bg-slate-700 transition-colors">
                     회원가입
                   </Link>
                 </div>

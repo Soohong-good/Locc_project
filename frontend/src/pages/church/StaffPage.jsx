@@ -726,7 +726,6 @@ export default function StaffPage() {
         eyebrow="Our Staff"
         title="섬기는 분들"
         subtitle="그리스도 사랑교회를 섬기는 주의 종들을 소개합니다"
-        bgImage="https://images.unsplash.com/photo-1606041008023-472dfb5e530f?w=1600&q=80&auto=format&fit=crop"
       />
 
       {/* 카테고리 탭 */}
@@ -761,28 +760,6 @@ export default function StaffPage() {
         <EmployeeTab onEdit={openEdit} onDelete={handleDelete} onAdd={openCreate} />
       )}
 
-      {/* CTA */}
-      <section className="py-24 bg-slate-900 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-light text-white mb-6">
-            함께 예배하기 원하십니까?
-          </h2>
-          <p className="text-lg md:text-xl text-slate-300 mb-12 font-light leading-[1.8]">
-            그리스도 사랑교회는 여러분을 환영합니다.<br />
-            언제든지 편하게 방문하시거나 연락주시기 바랍니다.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/church/contact"
-              className="inline-flex items-center px-8 py-4 bg-white text-slate-900 hover:bg-slate-100 transition-all duration-300 font-light tracking-wide">
-              오시는 길
-            </Link>
-            <Link to="/"
-              className="inline-flex items-center px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-300 font-light tracking-wide">
-              홈으로
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* 모달 */}
       <CreateModal

@@ -52,6 +52,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // ── 보안 응답 헤더 ─────────────────────────────────────────
+                .headers(headers -> headers
+                        // XSS 필터 활성화 (구형 브라우저 호환)
+                        .xssProtection(xss -> xss.disable())   // CSP로 대체되므로 비활성화(1;mode=block은 deprecated)
+                        // MIME 스니핑 방지 — Content-Type 강제 준수
+                        .contentTypeOptions(opt -> {})
+                        // Clickjacking 방지 — iframe 임베드 차단
+                        .frameOptions(frame -> frame.deny())
+                        // CSP — 허용 출처 명시로 인라인 스크립트 실행 제한
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives(
+                                        "default-src 'self'; " +
+                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com; " +
+                                        "style-src 'self' 'unsafe-inline'; " +
+                                        "img-src 'self' data: https:; " +
+                                        "frame-src 'self' https://www.youtube.com; " +
+                                        "connect-src 'self'; " +
+                                        "font-src 'self' data:"
+                                )
+                        )
+                )
                 .csrf(csrf -> csrf
                         // JWT + Stateless 구조에서 CSRF 방어는 /api/** 불필요
                         // (세션 쿠키 기반이 아닌 HttpOnly JWT 쿠키 + Bearer 방식이므로 CSRF 공격 벡터 없음)
@@ -214,6 +235,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/trainings/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/visitor/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/help-request").permitAll()
+                        // 프론트 에러 리포트 — 비로그인 포함 허용
+                        .requestMatchers(HttpMethod.POST, "/api/error-report").permitAll()
 
                         // ========== 나머지 — 인증 필수 (기본 보안 정책) ==========
                         // [SECURITY] anyRequest().authenticated() 로 변경

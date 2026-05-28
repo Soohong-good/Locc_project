@@ -27,6 +27,18 @@ class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     console.error('[ErrorBoundary]', error, info)
+    // 백엔드로 에러 리포트 전송 (실패해도 UI에 영향 없음)
+    fetch('/api/error-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        type: 'React ErrorBoundary',
+        message: error.message ?? '알 수 없는 에러',
+        stack: (error.stack ?? '') + '\n\nComponent Stack:\n' + (info.componentStack ?? ''),
+        url: window.location.href,
+      }),
+    }).catch(() => {})
   }
 
   render() {

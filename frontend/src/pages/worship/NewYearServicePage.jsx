@@ -1,4 +1,4 @@
-import DOMPurify from 'dompurify'
+﻿import DOMPurify from 'dompurify'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchNewYear, updateNewYearLatestVideo, updateNewYearTranscript, uploadNewYearPdf } from '@/api/newYearApi'
@@ -91,6 +91,16 @@ const TranscriptEditModal = ({ transcript, onSave, onClose, isSaving }) => {
  *   -설명문         → <p class="sermon-desc"> 들여쓰기 설명
  *   그 외           → <p class="sermon-p"> 일반 단락
  */
+/** XSS 방지: 텍스트 노드를 HTML에 삽입하기 전 이스케이프 */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 function formatTranscript(html) {
   if (!html) return html
 
@@ -115,7 +125,7 @@ function formatTranscript(html) {
     const result2 = []
     for (const line of lines2) {
       if (!line) continue
-      result2.push(`<p class="sermon-p">${line}</p>`)
+      result2.push(`<p class="sermon-p">${escapeHtml(line)}</p>`)
     }
     return result2.join('\n')
   }
@@ -149,12 +159,12 @@ function formatTranscript(html) {
     if (!titleDone) {
       // 날짜 패턴으로 시작하면 타이틀
       if (/^\d+\.\d+/.test(line)) {
-        result.push(`<p class="sermon-title-date">${line}</p>`)
+        result.push(`<p class="sermon-title-date">${escapeHtml(line)}</p>`)
         continue
       }
       // 서론/본론/결론/숫자항목이 아니고 타이틀 아직 안 끝났으면 주제 성구
       if (!/^(서론|본론|결론)/.test(line) && !/^[1-9]/.test(line) && !/^[-"]/.test(line)) {
-        result.push(`<p class="sermon-title-verse">${line}</p>`)
+        result.push(`<p class="sermon-title-verse">${escapeHtml(line)}</p>`)
         continue
       }
       titleDone = true
@@ -162,50 +172,50 @@ function formatTranscript(html) {
 
     // 서론 / 본론
     if (/^(서론|본론)\s*$/.test(line)) {
-      result.push(`<h2 class="sermon-section">${line}</h2>`)
+      result.push(`<h2 class="sermon-section">${escapeHtml(line)}</h2>`)
       continue
     }
 
     // 결론-... (결론 뒤에 설명이 붙는 형태)
     if (/^결론/.test(line)) {
-      result.push(`<h2 class="sermon-section">${line}</h2>`)
+      result.push(`<h2 class="sermon-section">${escapeHtml(line)}</h2>`)
       continue
     }
 
     // 1. 2. 3. 대항목
     if (/^[1-9]\d*\.[가-힣]/.test(line)) {
-      result.push(`<h3 class="sermon-h3">${line}</h3>`)
+      result.push(`<h3 class="sermon-h3">${escapeHtml(line)}</h3>`)
       continue
     }
 
     // 1) 2) 3) 소항목
     if (/^[1-9]\d*\)[가-힣]/.test(line)) {
-      result.push(`<p class="sermon-sub">${line}</p>`)
+      result.push(`<p class="sermon-sub">${escapeHtml(line)}</p>`)
       continue
     }
 
     // 책명+장절 "인용" — 예: 딤후3:1-2 "...", 시145:1 "..."
     const refQuoteMatch = line.match(/^([가-힣]{1,4}\d+:\d+[\d\-,b]*)\s+([""\u201c].+)$/)
     if (refQuoteMatch) {
-      result.push(`<p class="sermon-ref">${refQuoteMatch[1]}</p>`)
-      result.push(`<blockquote class="sermon-quote">${refQuoteMatch[2]}</blockquote>`)
+      result.push(`<p class="sermon-ref">${escapeHtml(refQuoteMatch[1])}</p>`)
+      result.push(`<blockquote class="sermon-quote">${escapeHtml(refQuoteMatch[2])}</blockquote>`)
       continue
     }
 
     // 큰따옴표로 시작하는 인용 (책명 없이)
     if (/^[""\u201c]/.test(line)) {
-      result.push(`<blockquote class="sermon-quote">${line}</blockquote>`)
+      result.push(`<blockquote class="sermon-quote">${escapeHtml(line)}</blockquote>`)
       continue
     }
 
     // - 설명문
     if (/^-[가-힣]/.test(line)) {
-      result.push(`<p class="sermon-desc">${line}</p>`)
+      result.push(`<p class="sermon-desc">${escapeHtml(line)}</p>`)
       continue
     }
 
     // 일반 단락
-    result.push(`<p class="sermon-p">${line}</p>`)
+    result.push(`<p class="sermon-p">${escapeHtml(line)}</p>`)
   }
 
   return result.join('\n')

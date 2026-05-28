@@ -5,6 +5,17 @@ import { getActivePopups } from '@/api/popups'
 
 const STORAGE_KEY_TODAY = 'popup_closed_today'  // localStorage — 오늘 하루 닫기
 
+/** javascript: 등 위험한 프로토콜 주입 방지 */
+const safeUrl = (url) => {
+  if (!url) return null
+  try {
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:' ? url : null
+  } catch {
+    return null
+  }
+}
+
 const getClosedToday = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_TODAY)
@@ -118,8 +129,8 @@ const SliderPopup = ({ popups, onClose, onCloseToday }) => {
           className={`transition-all duration-[240ms] ease-in-out ${slideClass}`}
         >
           {popup.imageUrl && (
-            popup.linkUrl ? (
-              <a href={popup.linkUrl} target="_blank" rel="noopener noreferrer">
+            safeUrl(popup.linkUrl) ? (
+              <a href={safeUrl(popup.linkUrl)} target="_blank" rel="noopener noreferrer">
                 <img src={popup.imageUrl} alt={popup.title} loading="lazy" className="w-full object-cover" />
               </a>
             ) : (

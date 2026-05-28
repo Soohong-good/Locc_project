@@ -8,7 +8,6 @@ export default function ContactPage() {
         eyebrow="Location & Contact"
         title="오시는 길"
         subtitle="그리스도사랑교회로 오시는 길을 안내합니다"
-        bgImage="https://images.unsplash.com/photo-1519003300449-424ad0405076?w=1600&q=80&auto=format&fit=crop"
       />
 
       {/* 지도 */}
@@ -58,8 +57,21 @@ export default function ContactPage() {
               <div className="space-y-4 text-slate-700 font-light text-lg">
                 <div>
                   <p className="text-sm text-slate-500 mb-1">전화</p>
-                  <a href="tel:053-962-8948" className="hover:text-slate-900 transition-colors">
+                  <a href="tel:053-962-8948" className="hover:text-slate-900 transition-colors block">
                     053-962-8948
+                  </a>
+                  <a href="tel:053-961-0931" className="hover:text-slate-900 transition-colors block">
+                    053-961-0931
+                  </a>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">팩스</p>
+                  <p>053-961-0862</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500 mb-1">사랑선교원</p>
+                  <a href="tel:053-965-8948" className="hover:text-slate-900 transition-colors">
+                    053-965-8948
                   </a>
                 </div>
                 <div>
@@ -90,24 +102,29 @@ export default function ContactPage() {
                   <p className="text-base text-slate-500">도보 약 10분</p>
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900 mb-2">버스</p>
+                  <p className="font-medium text-slate-900 mb-2">시내버스</p>
                   <div className="space-y-3 text-base">
                     <div>
-                      <p className="text-slate-900">경북교통앞 정류장</p>
-                      <p className="text-sm text-slate-500 mt-1">도보 약 5분</p>
-                      <p className="text-sm text-slate-600 mt-1">805, 836, 동구4, 동구10, 북구3</p>
+                      <p className="text-slate-900">경북교통</p>
+                      <p className="text-sm text-slate-600 mt-1">805, 836, 동구10, 동구4, 동구4-1, 북구3</p>
                     </div>
                     <div>
-                      <p className="text-slate-900">동부고교앞·건너 정류장</p>
-                      <p className="text-sm text-slate-500 mt-1">도보 약 8분</p>
-                      <p className="text-sm text-slate-600 mt-1">55, 555, 802, 814, 818, 북구3</p>
+                      <p className="text-slate-900">안심지구대</p>
+                      <p className="text-sm text-slate-600 mt-1">708, 836, 급행5, 동구10</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-900">동부고교</p>
+                      <p className="text-sm text-slate-600 mt-1">55, 555, 808, 814, 818, 북구3</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-900">반야월역</p>
+                      <p className="text-sm text-slate-600 mt-1">518, 618, 651, 805, 836, 848, 동구4-1, 동구10, 급행10, 수성3, 수성3-1, 수성6</p>
                     </div>
                   </div>
                 </div>
                 <div>
                   <p className="font-medium text-slate-900 mb-2">주차</p>
                   <p className="text-base">교회 주차장 이용 가능</p>
-                  <p className="text-base text-slate-500">넓은 주차 공간 완비</p>
                 </div>
               </div>
             </div>
