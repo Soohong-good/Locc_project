@@ -314,15 +314,8 @@ const MyPage = () => {
   return (
     <>
       {/* Hero */}
-      <section
-        className="pt-page pb-16 text-white px-6 relative"
-        style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=1600&q=80&auto=format&fit=crop)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-900/70 pointer-events-none" />
+      <section className="pt-page pb-16 text-white px-6 relative bg-slate-900">
+        <div className="absolute inset-0 pointer-events-none" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">

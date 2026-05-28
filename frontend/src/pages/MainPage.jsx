@@ -154,13 +154,16 @@ const css = `
   .dt-sermon-verse { font-size:14px; color:var(--navy); opacity:.5; font-weight:600; }
 
   /* ── MINISTRY ── */
-  .dt-ministry-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:48px; }
-  .dt-ministry-item { background:#fff; border:1px solid #eee; border-radius:12px; padding:28px 24px; transition:border-color .2s,box-shadow .2s; }
-  .dt-ministry-item:hover { border-color:var(--navy); box-shadow:0 4px 20px rgba(30,58,95,.1); }
-  .dt-ministry-icon { width:44px; height:44px; background:rgba(30,58,95,.06); border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-  .dt-ministry-icon svg { width:22px; height:22px; stroke:var(--navy); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-  .dt-ministry-name { font-size:18px; font-weight:700; color:var(--navy); margin-bottom:8px; }
-  .dt-ministry-desc { font-size:15px; color:#666; line-height:1.7; }
+  .dt-ministry-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:48px; }
+  .dt-ministry-card { position:relative; overflow:hidden; border-radius:12px; aspect-ratio:3/4; cursor:pointer; display:block; text-decoration:none; }
+  .dt-ministry-card-bg { position:absolute; inset:0; background-size:cover; background-position:center; transition:transform .4s ease; }
+  .dt-ministry-card:hover .dt-ministry-card-bg { transform:scale(1.06); }
+  .dt-ministry-card-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(10,18,35,.85) 40%, rgba(10,18,35,.3) 100%); }
+  .dt-ministry-card-body { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end; padding:24px 20px; }
+  .dt-ministry-card-en { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:rgba(255,255,255,.55); margin-bottom:6px; }
+  .dt-ministry-card-name { font-size:20px; font-weight:700; color:#fff; line-height:1.2; }
+  .dt-ministry-card-arrow { margin-top:10px; width:28px; height:28px; border:1.5px solid rgba(255,255,255,.4); border-radius:50%; display:flex; align-items:center; justify-content:center; transition:border-color .2s,background .2s; }
+  .dt-ministry-card:hover .dt-ministry-card-arrow { border-color:#fff; background:rgba(255,255,255,.15); }
 
   /* ── NEWS ── */
   .dt-news-layout { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
@@ -219,7 +222,8 @@ const css = `
     .dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr 1fr; }
   }
   @media (max-width:600px) {
-    .dt-worship-grid,.dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr; }
+    .dt-worship-grid,.dt-sermon-grid { grid-template-columns:1fr; }
+    .dt-ministry-grid { grid-template-columns:1fr 1fr; }
     .dt-gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto; }
     .dt-gallery-cell.tall { grid-row:span 1; }
   }
@@ -465,26 +469,39 @@ export default function MainPage() {
           </div>
           <div className="dt-ministry-grid">
             {[
-              { name:'예배부', desc:'찬양과 경배로 하나님 앞에 나아가는 예배 공동체를 섬깁니다.',
-                icon: <><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></> },
-              { name:'청년부', desc:'다음 세대 청년들이 하나님 안에서 꿈을 발견하도록 돕습니다.',
-                icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></> },
-              { name:'아동부', desc:'어린이들이 말씀으로 자라나고 믿음의 뿌리를 내리도록 양육합니다.',
-                icon: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/> },
-              { name:'구역부', desc:'소그룹 구역 모임을 통해 성도 간 사랑의 교제를 나눕니다.',
-                icon: <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></> },
-              { name:'선교부', desc:'국내외 선교사 파송 및 지원을 통해 복음을 땅끝까지 전합니다.',
-                icon: <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></> },
-              { name:'성경학교', desc:'체계적인 성경 교육으로 말씀에 깊이 뿌리내린 성도를 양성합니다.',
-                icon: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></> },
-            ].map((m, i) => (
-              <div key={m.name} className="dt-ministry-item dt-fade" style={{transitionDelay:`${i*0.08}s`}}>
-                <div className="dt-ministry-icon">
-                  <svg viewBox="0 0 24 24">{m.icon}</svg>
+              { code:'nursery',     name:'태영아부',   en:'Nursery',      banner:'/nersury.png' },
+              { code:'preschool',   name:'유아유치부', en:'Preschool',    banner:'/preschool.png' },
+              { code:'children',    name:'초등부',     en:'Children',     banner:'/children.png' },
+              { code:'youth',       name:'중·고등부', en:'Youth',        banner:'/youth.png' },
+              { code:'young-adult', name:'대학청년부', en:'Young Adults', banner:'/young-adult.png' },
+              { code:'multiethnic', name:'다민족부',   en:'Multiethnic',  banner:'/multiethnic.png' },
+              { code:'new-family',  name:'새가족부',   en:'New Family',   banner:null },
+              { code:'healing',     name:'치유부',     en:'Healing',      banner:null },
+            ].map((dept, i) => (
+              <Link
+                key={dept.code}
+                to={`/department/${dept.code}`}
+                className="dt-ministry-card dt-fade"
+                style={{ transitionDelay:`${i * 0.07}s` }}
+              >
+                <div
+                  className="dt-ministry-card-bg"
+                  style={dept.banner
+                    ? { backgroundImage:`url(${dept.banner})` }
+                    : { background:'#0f172a' }}
+                />
+                <div className="dt-ministry-card-overlay" />
+                <div className="dt-ministry-card-body">
+                  <div className="dt-ministry-card-en">{dept.en}</div>
+                  <div className="dt-ministry-card-name">{dept.name}</div>
+                  <div className="dt-ministry-card-arrow">
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+                         stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </div>
                 </div>
-                <div className="dt-ministry-name">{m.name}</div>
-                <div className="dt-ministry-desc">{m.desc}</div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
