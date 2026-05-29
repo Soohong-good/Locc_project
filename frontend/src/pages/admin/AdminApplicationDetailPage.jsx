@@ -8,12 +8,22 @@ const STATUS_BADGE = {
   COMPLETED: 'bg-green-100  text-green-700',
 }
 
-const Row = ({ label, value }) => (
+const Row = ({ label, value }) => value != null ? (
   <div className="flex py-3 border-b border-gray-100 last:border-0">
     <dt className="w-32 flex-shrink-0 text-sm text-gray-500">{label}</dt>
-    <dd className="text-sm text-gray-800 whitespace-pre-wrap">{value ?? '-'}</dd>
+    <dd className="text-sm text-gray-800 whitespace-pre-wrap">{value}</dd>
   </div>
-)
+) : null
+
+// 차량신청 memo JSON 파싱
+const parseVehicleMemo = (memo) => {
+  if (!memo) return null
+  try {
+    const obj = JSON.parse(memo)
+    if (obj.__type === '차량신청') return obj
+  } catch {}
+  return null
+}
 
 const AdminApplicationDetailPage = () => {
   const { id }      = useParams()
@@ -50,7 +60,10 @@ const AdminApplicationDetailPage = () => {
   if (isLoading) return <div className="p-8 text-sm text-gray-400">불러오는 중...</div>
   if (!application) return <div className="p-8 text-sm text-gray-400">신청 내역을 찾을 수 없습니다.</div>
 
-  const isPending = application.status === 'PENDING'
+  const isPending   = application.status === 'PENDING'
+  const isVehicle   = application.categoryName === '차량신청'
+  const vehicleData = isVehicle ? parseVehicleMemo(application.memo) : null
+  const plainMemo   = !isVehicle ? application.memo : null
 
   return (
     <div className="p-8 max-w-2xl">
@@ -65,18 +78,32 @@ const AdminApplicationDetailPage = () => {
         </span>
       </div>
 
-      {/* 신청 정보 */}
+      {/* 기본 신청 정보 */}
       <div className="bg-white border border-gray-200 rounded-xl px-5 py-2 mb-4">
         <dl>
           <Row label="신청자"    value={application.applicantName} />
           <Row label="연락처"    value={application.applicantEmail} />
           <Row label="사용 날짜" value={application.useDate} />
-          <Row label="사용 시간" value={`${application.useStartTime?.slice(0,5)} ~ ${application.useEndTime?.slice(0,5)}`} />
+          <Row label={isVehicle ? '출발 / 도착' : '사용 시간'} value={`${application.useStartTime?.slice(0,5)} ~ ${application.useEndTime?.slice(0,5)}`} />
           <Row label="사용 목적" value={application.purpose} />
           <Row label="인원"      value={`${application.headCount}명`} />
-          {application.memo && <Row label="요청사항" value={application.memo} />}
+          <Row label="요청사항"  value={plainMemo} />
         </dl>
       </div>
+
+      {/* 차량신청 전용 정보 */}
+      {isVehicle && vehicleData && (
+        <div className="bg-white border border-gray-200 rounded-xl px-5 py-2 mb-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest pt-3 pb-1">차량 정보</p>
+          <dl>
+            <Row label="차량 번호" value={vehicleData.vehicleNumber} />
+            <Row label="목적지"    value={vehicleData.destination} />
+            <Row label="운전자"    value={vehicleData.driver} />
+            <Row label="인솔자"    value={vehicleData.escort} />
+            <Row label="기타"      value={vehicleData.notes} />
+          </dl>
+        </div>
+      )}
 
       {/* 관리자 메모 */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
