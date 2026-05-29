@@ -181,12 +181,12 @@ const css = `
   .dt-news-item-date { font-size:13px; color:#bbb; }
 
   /* ── GALLERY ── */
-  .dt-gallery { background:var(--navy); padding:100px 0 0; }
-  .dt-gallery-top { margin-bottom:48px; }
+  .dt-gallery { background:var(--navy); padding:60px 0 0; }
+  .dt-gallery-top { margin-bottom:40px; }
   .dt-gallery-top .dt-h2 { color:#fff; }
   .dt-gallery-top .dt-label { color:rgba(255,255,255,.4); }
   .dt-gallery-top .dt-div { background:rgba(255,255,255,.25); }
-  .dt-gallery-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:220px 220px; gap:4px; }
+  .dt-gallery-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:220px 220px 220px; gap:4px; }
   .dt-gallery-cell { position:relative; overflow:hidden; }
   .dt-gallery-cell.tall { grid-row:span 2; }
   .dt-gallery-cell img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
@@ -220,7 +220,7 @@ const css = `
   }
   @media (max-width:600px) {
     .dt-worship-grid,.dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr; }
-    .dt-gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto; }
+    .dt-gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto auto auto; }
     .dt-gallery-cell.tall { grid-row:span 1; }
   }
 `
@@ -244,7 +244,7 @@ export default function MainPage() {
 
   const { data: galleryData } = useQuery({
     queryKey: ['gallery', 'public', 'recent'],
-    queryFn: () => getPublicRecentGallery({ size: 7 }),
+    queryFn: () => getPublicRecentGallery({ size: 11 }),
     staleTime: 5 * 60 * 1000,
   })
   const galleryImages = galleryData?.content ?? []
@@ -584,7 +584,12 @@ export default function MainPage() {
         </div>
         {galleryImages.length > 0 ? (
           <div className="dt-gallery-grid">
-            <div className="dt-gallery-cell tall">
+            {/* 첫 번째 이미지 — tall 셀 */}
+            <Link
+              to={`/department/${galleryImages[0].departmentCode}/gallery/${galleryImages[0].id}`}
+              className="dt-gallery-cell tall"
+              style={{display:'block'}}
+            >
               <img
                 src={`/uploads/gallery/${galleryImages[0].thumbnailFilename || galleryImages[0].storedFilename}`}
                 alt={galleryImages[0].title}
@@ -596,9 +601,15 @@ export default function MainPage() {
                   <div style={{fontSize:14,fontWeight:600,color:'#fff',lineHeight:1.3}}>{galleryImages[0].title}</div>
                 </div>
               </div>
-            </div>
+            </Link>
+            {/* 나머지 이미지 */}
             {galleryImages.slice(1).map((img) => (
-              <div key={img.id} className="dt-gallery-cell">
+              <Link
+                key={img.id}
+                to={`/department/${img.departmentCode}/gallery/${img.id}`}
+                className="dt-gallery-cell"
+                style={{display:'block'}}
+              >
                 <img
                   src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
                   alt={img.title}
@@ -610,7 +621,7 @@ export default function MainPage() {
                     <div style={{fontSize:13,fontWeight:600,color:'#fff',lineHeight:1.3}}>{img.title}</div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

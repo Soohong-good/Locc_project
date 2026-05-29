@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Builder
@@ -26,6 +28,7 @@ public class FacilityApplicationDetailResponse {
     private String                  adminMemo;
     private FacilityApplicationStatus status;
     private String                  statusLabel;
+    private String                  createdAt;
 
     public static FacilityApplicationDetailResponse from(FacilityApplication a) {
         return FacilityApplicationDetailResponse.builder()
@@ -43,6 +46,9 @@ public class FacilityApplicationDetailResponse {
                 .adminMemo(a.getAdminMemo())
                 .status(a.getStatus())
                 .statusLabel(a.getStatus().getLabel())
+                .createdAt(a.getCreatedAt() != null
+                        ? a.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        : null)
                 .build();
     }
 }

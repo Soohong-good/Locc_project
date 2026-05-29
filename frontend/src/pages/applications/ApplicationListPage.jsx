@@ -96,7 +96,7 @@ const ApplicationListPage = () => {
                 style={{
                   background: NAV_BG,
                   color: 'rgba(255,255,255,0.7)',
-                  gridTemplateColumns: '64px 120px 1fr 108px 126px 60px 84px',
+                  gridTemplateColumns: '64px 120px 1fr 108px 130px 80px 100px',
                 }}
               >
                 <div className="px-4 py-3 text-center whitespace-nowrap">번호</div>
@@ -142,13 +142,13 @@ const ApplicationListPage = () => {
                           <div className="px-4 py-4 text-center text-xs text-slate-400">{rowNo}</div>
                           <div className="px-4 py-4 font-medium text-slate-800 truncate">{item.categoryName}</div>
                           <div className="px-4 py-4 text-slate-600 truncate">{item.purpose}</div>
-                          <div className="px-4 py-4 text-xs text-slate-500">{item.useDate}</div>
-                          <div className="px-4 py-4 text-xs text-slate-500">
+                          <div className="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">{item.useDate}</div>
+                          <div className="px-4 py-4 text-xs text-slate-500 whitespace-nowrap">
                             {item.useStartTime?.slice(0, 5)} ~ {item.useEndTime?.slice(0, 5)}
                           </div>
-                          <div className="px-4 py-4 text-center text-sm text-slate-600">{item.headCount}명</div>
+                          <div className="px-4 py-4 text-center text-sm text-slate-600 whitespace-nowrap">{item.headCount}명</div>
                           <div className="px-4 py-4 text-center">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLE[item.status] ?? 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_STYLE[item.status] ?? 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                               {STATUS_LABEL[item.status] ?? item.statusLabel}
                             </span>
                           </div>

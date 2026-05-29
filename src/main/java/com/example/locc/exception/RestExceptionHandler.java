@@ -17,6 +17,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -153,6 +154,13 @@ public class RestExceptionHandler {
 
     // ───── 404 리소스 없음 ─────
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException e) {
+        log.debug("NoResourceFoundException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.NOT_FOUND, e.getMessage());
+        return ResponseEntity.status(ErrorCode.NOT_FOUND.getHttpStatus()).body(response);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e) {
         log.warn("NotFoundException: {}", e.getMessage());
@@ -187,10 +195,27 @@ public class RestExceptionHandler {
         return ResponseEntity.status(ErrorCode.FILE_TOO_LARGE.getHttpStatus()).body(response);
     }
 
+    // ───── 클라이언트 연결 끊김 (정상 상황, 로깅 불필요) ─────
+
+    /**
+     * 브라우저가 응답 수신 전에 연결을 끊을 때 발생 (페이지 이동, 새로고침, 탭 닫기 등)
+     * 서버 이상이 아니므로 ERROR 로그 및 이메일 알림 제외
+     */
+    @ExceptionHandler({
+        org.springframework.web.context.request.async.AsyncRequestNotUsableException.class,
+        org.apache.catalina.connector.ClientAbortException.class
+    })
+    public ResponseEntity<ErrorResponse> handleClientAbort(Exception e) {
+        log.debug("클라이언트 연결 끊김 (무시): {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(response);
+    }
+
     // ───── 500 서버 오류 ─────
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e, HttpServletRequest request) {
+        // 클라이언트 연결 끊김으로 인한 예외는 위 핸들러에서 처리되므로 여기선 진짜 서버 오류만 처리
         log.error("Unexpected error - {}: {}", e.getClass().getName(), e.getMessage(), e);
 
         // 스택트레이스 문자열 변환

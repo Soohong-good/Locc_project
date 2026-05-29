@@ -17,8 +17,8 @@ import java.time.LocalTime;
 @Builder
 public class FacilityApplicationRequest {
 
-    @NotNull(message = "신청 카테고리를 선택해주세요")
-    private Long categoryId;
+    @NotBlank(message = "신청 종류를 선택해주세요")
+    private String formType;
 
     @NotNull(message = "사용 날짜를 선택해주세요")
     private LocalDate useDate;
@@ -42,7 +42,7 @@ public class FacilityApplicationRequest {
 
     public FacilityCreateCommand toCreateCommand(String userEmail) {
         return FacilityCreateCommand.builder()
-                .categoryId(this.categoryId)
+                .formType(this.formType)
                 .userEmail(userEmail)
                 .useDate(this.useDate)
                 .useStartTime(this.useStartTime)

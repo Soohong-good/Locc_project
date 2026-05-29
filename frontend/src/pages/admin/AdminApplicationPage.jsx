@@ -122,20 +122,20 @@ const AdminApplicationPage = () => {
                   onClick={() => navigate(`/admin/applications/${item.id}`)}
                   className="hover:bg-gray-50 cursor-pointer transition"
                 >
-                  <td className="px-4 py-3 font-medium text-gray-800">{item.categoryName}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.applicantName}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.useDate}</td>
+                  <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">{item.categoryName}</td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{item.applicantName}</td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{item.useDate}</td>
                   <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                     {item.useStartTime?.slice(0,5)} ~ {item.useEndTime?.slice(0,5)}
                   </td>
                   <td className="px-4 py-3 text-gray-600 max-w-[160px] truncate">{item.purpose}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.headCount}명</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{item.headCount}명</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_BADGE[item.status] ?? 'bg-gray-100 text-gray-600'}`}>
                       {item.statusLabel}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{item.createdAt?.slice(0,10)}</td>
+                  <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">{item.createdAt?.slice(0,10)}</td>
                 </tr>
               ))}
             </tbody>

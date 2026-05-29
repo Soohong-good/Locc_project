@@ -10,12 +10,13 @@ import java.time.LocalDateTime;
  */
 public record GalleryImageResponse(
         Long id,
+        String groupId,
         String title,
         String description,
         String thumbnailFilename,
         String storedFilename,
         String uploaderName,
-        String uploaderId,     // 업로더 UUID — 프론트 본인 여부 판단용
+        String uploaderId,
         Integer imageCount,
         Integer viewCount,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -24,6 +25,7 @@ public record GalleryImageResponse(
     public static GalleryImageResponse from(GalleryImage image) {
         return new GalleryImageResponse(
                 image.getId(),
+                image.getGroupId(),
                 image.getTitle(),
                 image.getDescription(),
                 image.getThumbnailFilename(),
@@ -39,6 +41,7 @@ public record GalleryImageResponse(
     public static GalleryImageResponse from(GalleryImage image, int imageCount) {
         return new GalleryImageResponse(
                 image.getId(),
+                image.getGroupId(),
                 image.getTitle(),
                 image.getDescription(),
                 image.getThumbnailFilename(),

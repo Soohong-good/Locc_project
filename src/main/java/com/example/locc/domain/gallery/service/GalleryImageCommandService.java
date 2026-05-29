@@ -64,6 +64,8 @@ public class GalleryImageCommandService {
 
         // 3. 파일 I/O (검증·저장·리사이즈·썸네일) — 성공한 엔티티만 수집
         List<GalleryImage> entities = new ArrayList<>();
+        // 썸네일은 그룹 첫 번째 이미지(대표 이미지)에만 생성
+        boolean thumbnailGenerated = false;
 
         for (GalleryImageCreateCommand command : commands) {
             try {
@@ -72,7 +74,13 @@ public class GalleryImageCommandService {
 
                 String storedFilename = saveImageFile(imageFile);
                 thumbnailGenerator.resizeOriginal(getGalleryDir(), storedFilename);
-                String thumbnailFilename = thumbnailGenerator.generateThumbnail(getGalleryDir(), storedFilename);
+
+                // 첫 번째 이미지만 썸네일 생성, 나머지는 null (목록에서 storedFilename으로 fallback)
+                String thumbnailFilename = null;
+                if (!thumbnailGenerated) {
+                    thumbnailFilename = thumbnailGenerator.generateThumbnail(getGalleryDir(), storedFilename);
+                    thumbnailGenerated = true;
+                }
 
                 entities.add(GalleryImage.create(
                         department,
@@ -112,6 +120,50 @@ public class GalleryImageCommandService {
                 .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
         image.incrementViewCount();
         return GalleryImageDetailResponse.from(image);
+    }
+
+    /**
+     * 개별 이미지 단건 삭제 (그룹 유지, 해당 이미지만 제거)
+     */
+    @CacheEvict(value = CacheConfig.CACHE_GALLERY_TITLES, allEntries = true)
+    public void deleteSingleImage(Long imageId, String userEmail) {
+        GalleryImage image = galleryImageRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+
+        if (!image.canModify(user)) {
+            throw new AccessDeniedException("이미지를 삭제할 권한이 없습니다.");
+        }
+
+        deleteImageFiles(image);
+        galleryImageRepository.delete(image);
+        log.info("개별 이미지 삭제 완료: id={}", imageId);
+    }
+
+    /**
+     * 갤러리 그룹 정보 수정 (제목 + 설명, 같은 groupId 전체 반영)
+     */
+    @CacheEvict(value = CacheConfig.CACHE_GALLERY_TITLES, allEntries = true)
+    public void updateGroup(Long imageId, String newTitle, String newDescription, String userEmail) {
+        GalleryImage representative = galleryImageRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+
+        if (!representative.canModify(user)) {
+            throw new AccessDeniedException("이미지를 수정할 권한이 없습니다.");
+        }
+
+        String groupId = representative.getGroupId();
+        List<GalleryImage> groupImages = (groupId != null && !groupId.isBlank())
+                ? galleryImageRepository.findAllByGroupId(groupId)
+                : List.of(representative);
+
+        groupImages.forEach(img -> img.updateTitleAndDescription(newTitle, newDescription));
+        log.info("갤러리 그룹 수정 완료: groupId={}, title={}", groupId, newTitle);
     }
 
     @CacheEvict(value = CacheConfig.CACHE_GALLERY_TITLES, allEntries = true)

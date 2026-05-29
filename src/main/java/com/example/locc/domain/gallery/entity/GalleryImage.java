@@ -114,6 +114,14 @@ public class GalleryImage {
     }
 
     /**
+     * 제목 + 설명 수정 (그룹 전체 일괄 수정용)
+     */
+    public void updateTitleAndDescription(String newTitle, String newDescription) {
+        this.title = newTitle;
+        this.description = newDescription;
+    }
+
+    /**
      * 조회수 증가
      */
     public void incrementViewCount() {

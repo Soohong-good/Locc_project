@@ -89,7 +89,7 @@ public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long
     List<String> findTitlesByDepartmentCode(@Param("departmentCode") String departmentCode);
 
     /**
-     * 전체 부서 최신 갤러리 그룹 조회 (대시보드용)
+     * 전체 부서 최신 갤러리 그룹 조회 (대시보드용 - 구버전)
      * groupId 기준으로 그룹별 대표 이미지 1개 + 부서명 반환
      */
     @EntityGraph(attributePaths = {"department", "uploader"})
@@ -103,6 +103,14 @@ public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long
         ORDER BY gi.createdAt DESC
         """)
     Page<GalleryImage> findLatestGalleryGroupsAll(Pageable pageable);
+
+    /**
+     * 전체 부서 최신 이미지 조회 (메인 갤러리용)
+     * 그룹 구분 없이 최근 업로드 순으로 모든 이미지 반환
+     */
+    @EntityGraph(attributePaths = {"department", "uploader"})
+    @Query("SELECT gi FROM GalleryImage gi ORDER BY gi.createdAt DESC")
+    Page<GalleryImage> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     /**
      * groupId 목록의 이미지 개수를 한 번에 조회 (N+1 방지)
