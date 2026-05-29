@@ -131,11 +131,20 @@ public class GalleryImageQueryService {
     }
 
     /**
-     * 전체 부서 최신 갤러리 그룹 목록 (대시보드용)
+     * 전체 부서 최신 갤러리 그룹 목록 (관리자 대시보드용 - 그룹별 대표 이미지)
      */
     public Page<GalleryDashboardResponse> getLatestGalleryForDashboard(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return galleryImageRepository.findLatestGalleryGroupsAll(pageable)
+                .map(GalleryDashboardResponse::from);
+    }
+
+    /**
+     * 메인 페이지 갤러리 — 최근 업로드 순으로 개별 이미지 반환 (그룹 구분 없음)
+     */
+    public Page<GalleryDashboardResponse> getLatestImagesForMain(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return galleryImageRepository.findAllByOrderByCreatedAtDesc(pageable)
                 .map(GalleryDashboardResponse::from);
     }
 

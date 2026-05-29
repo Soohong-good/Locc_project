@@ -79,11 +79,11 @@ const AdminPopupPage = () => {
         ) : (
         <table className="w-full text-sm table-fixed">
           <colgroup>
-            <col className="w-32" />
-            <col className="w-24" />
+            <col className="w-36" />
+            <col className="w-20" />
             <col />
             <col className="w-20" />
-            <col className="w-20" />
+            <col className="w-24" />
             <col className="w-24" />
           </colgroup>
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -100,18 +100,18 @@ const AdminPopupPage = () => {
               {popups.map((popup) => (
                 <tr key={popup.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-gray-900">{popup.title}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                     {TARGET_LABEL[popup.targetType] ?? popup.targetType}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                     {formatDate(popup.displayStartDate)} ~ {formatDate(popup.displayEndDate)}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{popup.priority}</td>
+                  <td className="px-4 py-3 text-gray-600 text-center">{popup.priority}</td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => toggleMutation.mutate(popup.id)}
                       disabled={toggleMutation.isPending}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                         popup.isActive
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200'

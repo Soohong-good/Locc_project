@@ -63,8 +63,23 @@ export const uploadGalleryImages = (code, formData) =>
     .then((r) => r.data.data)
 
 /** 갤러리 이미지 삭제 (ADMIN) */
+/** 그룹 전체 삭제 */
 export const deleteGalleryImage = (code, imageId) =>
   client.delete(`/api/departments/${code}/gallery/${imageId}`).then((r) => r.data)
+
+/** 개별 이미지 단건 삭제 (그룹 유지) */
+export const deleteSingleGalleryImage = (code, imageId) =>
+  client.delete(`/api/departments/${code}/gallery/${imageId}/single`).then((r) => r.data)
+
+/** 그룹 정보 수정 (제목 + 설명) */
+export const updateGalleryGroup = (code, imageId, { title, description }) =>
+  client.patch(`/api/departments/${code}/gallery/${imageId}`, { title, description }).then((r) => r.data)
+
+/** 기존 그룹에 이미지 추가 */
+export const addImagesToGalleryGroup = (code, formData) =>
+  client.post(`/api/departments/${code}/gallery`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }).then((r) => r.data)
 
 // ── 대시보드용 ────────────────────────────────────────────────────────────
 

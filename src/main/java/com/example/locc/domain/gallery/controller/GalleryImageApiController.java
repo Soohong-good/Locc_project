@@ -82,12 +82,33 @@ public class GalleryImageApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(responses));
     }
 
+    /** 개별 이미지 단건 삭제 (그룹 유지) */
+    @DeleteMapping("/{imageId}/single")
+    public ResponseEntity<ApiResponse<Void>> deleteSingleImage(
+            @PathVariable String departmentCode,
+            @PathVariable Long imageId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        commandService.deleteSingleImage(imageId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    /** 그룹 전체 삭제 */
     @DeleteMapping("/{imageId}")
     public ResponseEntity<ApiResponse<Void>> deleteImage(
             @PathVariable String departmentCode,
             @PathVariable Long imageId,
             @AuthenticationPrincipal UserDetails userDetails) {
         commandService.deleteImage(imageId, userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    @PatchMapping("/{imageId}")
+    public ResponseEntity<ApiResponse<Void>> updateGroup(
+            @PathVariable String departmentCode,
+            @PathVariable Long imageId,
+            @RequestBody java.util.Map<String, String> body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        commandService.updateGroup(imageId, body.get("title"), body.get("description"), userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok());
     }
 }

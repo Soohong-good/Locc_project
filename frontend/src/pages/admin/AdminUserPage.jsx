@@ -105,11 +105,11 @@ const AdminUserPage = () => {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table className="w-full text-sm table-fixed">
               <colgroup>
-                <col className="w-32" />
+                <col className="w-36" />
                 <col />
                 <col className="w-20" />
                 <col className="w-28" />
-                <col className="w-24" />
+                <col className="w-40" />
               </colgroup>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -154,7 +154,7 @@ const AdminUserPage = () => {
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 flex-nowrap">
                           {u.approvalStatus === 'PENDING' && !u.deleted && (
                             <>
                               <button

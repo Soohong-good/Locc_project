@@ -9,7 +9,7 @@ import java.time.LocalTime;
 @Getter
 @Builder
 public class FacilityCreateCommand {
-    private Long      categoryId;
+    private String    formType;   // 신청 종류 이름 (예: 차량신청) — 카테고리 자동 생성
     private String    userEmail;
     private LocalDate useDate;
     private LocalTime useStartTime;

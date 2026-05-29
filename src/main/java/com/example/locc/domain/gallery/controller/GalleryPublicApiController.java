@@ -18,13 +18,16 @@ public class GalleryPublicApiController {
 
     private final GalleryImageQueryService queryService;
 
-    /** 전체 부서 최신 갤러리 이미지 (홈페이지용, 비로그인 허용) */
+    /**
+     * 전체 부서 최신 이미지 (홈페이지 갤러리용, 비로그인 허용)
+     * 그룹 구분 없이 최근 업로드 순으로 개별 이미지 반환
+     */
     @GetMapping("/recent")
     public ResponseEntity<ApiResponse<PageResponse<GalleryImageQueryService.GalleryDashboardResponse>>> getRecentGallery(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
         Page<GalleryImageQueryService.GalleryDashboardResponse> result =
-                queryService.getLatestGalleryForDashboard(page, size);
+                queryService.getLatestImagesForMain(page, size);
         return ResponseEntity.ok(ApiResponse.ok(PageResponse.from(result)));
     }
 }

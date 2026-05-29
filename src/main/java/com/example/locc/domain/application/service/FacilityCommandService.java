@@ -37,8 +37,10 @@ public class FacilityCommandService {
 
     public FacilityApplicationDetailResponse create(FacilityCreateCommand command) {
         User user = findUserByEmail(command.getUserEmail());
-        FacilityCategory category = categoryRepository.findById(command.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("카테고리를 찾을 수 없습니다."));
+        // 이름으로 카테고리 조회 — 없으면 자동 생성 (관리자 등록 불필요)
+        FacilityCategory category = categoryRepository.findByName(command.getFormType())
+                .orElseGet(() -> categoryRepository.save(
+                        FacilityCategory.create(command.getFormType(), null, 0)));
         if (!category.getIsActive()) throw new IllegalStateException("비활성화된 카테고리입니다.");
         return FacilityApplicationDetailResponse.from(
                 applicationRepository.save(FacilityApplication.create(command, category, user)));

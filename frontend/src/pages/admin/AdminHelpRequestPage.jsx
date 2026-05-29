@@ -267,8 +267,8 @@ const AdminHelpRequestPage = () => {
                   className="hover:bg-gray-50 transition-colors cursor-pointer"
                   onClick={() => setSelectedItem(item)}
                 >
-                  <td className="px-4 py-3 font-medium text-gray-900">{item.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.phone}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{item.name}</td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{item.phone}</td>
                   <td className="px-4 py-3 text-gray-600 max-w-xs">
                     <span className="line-clamp-1">{item.content}</span>
                   </td>
