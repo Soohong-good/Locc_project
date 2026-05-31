@@ -56,7 +56,7 @@ const css = `
 
   /* ── HERO ── */
   .dt-hero { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; text-align:center; }
-  .dt-hero-bg { position:absolute; inset:0; background:linear-gradient(rgba(60,60,60,.72),rgba(40,40,40,.80)), url('https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1600&q=70') center/cover; }
+  .dt-hero-bg { position:absolute; inset:0; background:linear-gradient(rgba(60,60,60,.72),rgba(40,40,40,.80)), url('/images/bg-hero.jpg') center/cover; }
   .dt-hero-content { max-width:820px; padding:140px 0 100px; position:relative; z-index:2; }
   .dt-hero-eyebrow { display:inline-block; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.75); border:1px solid rgba(255,255,255,.35); padding:7px 18px; margin-bottom:36px; }
   .dt-hero-title { font-size:clamp(44px,6vw,80px); font-weight:800; color:#fff; line-height:1.2; margin-bottom:20px; letter-spacing:-.01em; }

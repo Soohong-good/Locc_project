@@ -11,7 +11,7 @@ const TrainingIntroPage = () => {
           position: 'fixed',
           inset: 0,
           zIndex: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1600&q=80&auto=format&fit=crop)',
+          backgroundImage: 'url(/images/bg-training.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

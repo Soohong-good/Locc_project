@@ -164,7 +164,7 @@ const SalvationPage = () => {
           position: 'fixed',
           inset: 0,
           zIndex: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=1600&q=80&auto=format&fit=crop)',
+          backgroundImage: 'url(/images/bg-hero.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

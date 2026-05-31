@@ -29,7 +29,7 @@ export default defineConfig({
   server: {
     port: 3000,
     // ngrok 등 외부 터널링 도구 사용 시 호스트 허용
-    allowedHosts: 'all',
+    allowedHosts: true,
     // 개발 환경: /api/** 요청을 Spring Boot(8080)으로 프록시
     // 이렇게 하면 CORS 없이 같은 오리진처럼 동작
     proxy: {

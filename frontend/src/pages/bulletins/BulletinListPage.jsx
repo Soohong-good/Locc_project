@@ -340,7 +340,7 @@ const BulletinListPage = () => {
         eyebrow="Weekly Bulletin"
         title="주보"
         subtitle="주간 예배 및 교회 소식을 확인하세요"
-        bgImage="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1600&q=80&auto=format&fit=crop"
+        bgImage="/images/bg-library.jpg"
       >
         {canWrite && (
           <Button variant="primary" size="sm" onClick={() => setWriteOpen(true)}>
