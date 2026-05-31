@@ -81,18 +81,20 @@ const css = `
 
   /* ── WORSHIP ── */
   .dt-worship { background:var(--navy); padding:0; }
-  .dt-worship-grid { display:grid; grid-template-columns:repeat(3,1fr); }
-  .dt-worship-col { padding:48px 36px 52px; border-right:1px solid rgba(255,255,255,.12); }
-  .dt-worship-col:last-child { border-right:none; }
+  .dt-worship-grid { display:grid; grid-template-columns:1fr 1fr; }
+  .dt-worship-left { display:flex; flex-direction:column; border-right:1px solid rgba(255,255,255,.12); }
+  .dt-worship-left .dt-worship-col:first-child { border-bottom:1px solid rgba(255,255,255,.12); }
+  .dt-worship-col { padding:48px 36px 52px; }
   .dt-worship-col-label { font-size:17px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:24px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.12); }
   .dt-worship-row { display:flex; align-items:center; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.06); gap:8px; }
   .dt-worship-row:last-child { border-bottom:none; }
-  .dt-worship-row-name { font-size:24px; font-weight:600; color:rgba(255,255,255,.8); flex:1; }
-  .dt-worship-row-time { font-size:30px; font-weight:800; color:var(--gold); min-width:80px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
-  .dt-worship-row-loc { font-size:16px; color:rgba(255,255,255,.4); min-width:68px; text-align:right; }
+  .dt-worship-row-name { font-size:22px; font-weight:600; color:rgba(255,255,255,.8); flex:1; }
+  .dt-worship-row-time { font-size:28px; font-weight:800; color:var(--gold); min-width:80px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+  .dt-worship-row-loc { font-size:14px; color:rgba(255,255,255,.4); min-width:72px; text-align:right; }
   @media(max-width:768px){
     .dt-worship-grid { grid-template-columns:1fr; }
-    .dt-worship-col { border-right:none; border-bottom:1px solid rgba(255,255,255,.12); }
+    .dt-worship-left { border-right:none; }
+    .dt-worship-col { border-bottom:1px solid rgba(255,255,255,.12); }
     .dt-worship-col:last-child { border-bottom:none; }
   }
 
@@ -353,39 +355,44 @@ export default function MainPage() {
       <section className="dt-worship">
         <div className="dt-worship-grid">
 
-          {/* 주일 예배 */}
-          <div className="dt-worship-col">
-            <div className="dt-worship-col-label">Sunday Service · 주일예배</div>
-            {[
-              { name:'1부 예배', time:'09:00', loc:'본당' },
-              { name:'2부 예배', time:'11:00', loc:'본당' },
-              { name:'오후 예배', time:'15:00', loc:'본당' },
-            ].map(w => (
-              <div key={w.name} className="dt-worship-row">
-                <span className="dt-worship-row-name">{w.name}</span>
-                <span className="dt-worship-row-time">{w.time}</span>
-                <span className="dt-worship-row-loc">{w.loc}</span>
-              </div>
-            ))}
+          {/* 왼쪽: 주일 + 주중 적층 */}
+          <div className="dt-worship-left">
+
+            {/* 주일 예배 */}
+            <div className="dt-worship-col">
+              <div className="dt-worship-col-label">Sunday Service · 주일예배</div>
+              {[
+                { name:'1부 예배',  time:'09:00', loc:'본당' },
+                { name:'2부 예배',  time:'11:00', loc:'본당' },
+                { name:'오후 예배', time:'15:00', loc:'본당' },
+              ].map(w => (
+                <div key={w.name} className="dt-worship-row">
+                  <span className="dt-worship-row-name">{w.name}</span>
+                  <span className="dt-worship-row-time">{w.time}</span>
+                  <span className="dt-worship-row-loc">{w.loc}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 주중 예배 */}
+            <div className="dt-worship-col">
+              <div className="dt-worship-col-label">Weekday Service · 주중예배</div>
+              {[
+                { name:'수요 예배',   time:'20:00', loc:'본당' },
+                { name:'금요 기도회', time:'21:00', loc:'본당' },
+                { name:'새벽 기도',   time:'05:30', loc:'101호' },
+              ].map(w => (
+                <div key={w.name} className="dt-worship-row">
+                  <span className="dt-worship-row-name">{w.name}</span>
+                  <span className="dt-worship-row-time">{w.time}</span>
+                  <span className="dt-worship-row-loc">{w.loc}</span>
+                </div>
+              ))}
+            </div>
+
           </div>
 
-          {/* 주중 예배 */}
-          <div className="dt-worship-col">
-            <div className="dt-worship-col-label">Weekday Service · 주중예배</div>
-            {[
-              { name:'수요 예배',   time:'20:00', loc:'본당' },
-              { name:'금요 기도회', time:'21:00', loc:'본당' },
-              { name:'새벽 기도',   time:'05:30', loc:'101호' },
-            ].map(w => (
-              <div key={w.name} className="dt-worship-row">
-                <span className="dt-worship-row-name">{w.name}</span>
-                <span className="dt-worship-row-time">{w.time}</span>
-                <span className="dt-worship-row-loc">{w.loc}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* 부서 예배 */}
+          {/* 오른쪽: 부서 예배 */}
           <div className="dt-worship-col">
             <div className="dt-worship-col-label">Department Service · 부서예배</div>
             {[
