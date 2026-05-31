@@ -63,7 +63,7 @@ const WeekdayPage = () => {
   return (
     <>
       <PageHero eyebrow="Weekday Service" title="수요·금요예배"
-        bgImage="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=1600&q=80&auto=format&fit=crop">
+        bgImage="/images/bg-worship.jpg">
         {canWrite && (
           <Button variant="secondary" size="sm" onClick={crud.openCreate}
             className="border-white text-white hover:bg-white hover:text-slate-900">

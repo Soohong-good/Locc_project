@@ -41,7 +41,7 @@ const TrainingMessagePage = () => {
   return (
     <>
       <PageHero eyebrow="Training Message" title="훈련 메시지"
-        bgImage="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1600&q=80&auto=format&fit=crop">
+        bgImage="/images/bg-training.jpg">
         {canWrite && (
           <Button variant="secondary" size="sm" onClick={crud.openCreate}
             className="border-white text-white hover:bg-white hover:text-slate-900">

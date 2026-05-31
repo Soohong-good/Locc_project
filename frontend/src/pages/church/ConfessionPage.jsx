@@ -519,7 +519,7 @@ export default function ConfessionPage() {
             <div
                 className="text-white py-12 pt-page relative"
                 style={{
-                    backgroundImage: 'url(https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1600&q=80&auto=format&fit=crop)',
+                    backgroundImage: 'url(/images/bg-library.jpg)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}
