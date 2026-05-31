@@ -374,8 +374,8 @@ export default function MainPage() {
             <div className="dt-worship-col-label">Weekday Service · 주중예배</div>
             {[
               { name:'수요 예배',   time:'20:00', loc:'본당' },
-              { name:'금요 기도회', time:'20:30', loc:'본당' },
-              { name:'새벽 기도',   time:'05:30', loc:'101호실' },
+              { name:'금요 기도회', time:'21:00', loc:'본당' },
+              { name:'새벽 기도',   time:'05:30', loc:'101호' },
             ].map(w => (
               <div key={w.name} className="dt-worship-row">
                 <span className="dt-worship-row-name">{w.name}</span>
@@ -389,11 +389,14 @@ export default function MainPage() {
           <div className="dt-worship-col">
             <div className="dt-worship-col-label">Department Service · 부서예배</div>
             {[
-              { name:'태영아부',   time:'11:00', loc:'별도 안내' },
-              { name:'유아유치부', time:'11:00', loc:'별도 안내' },
-              { name:'초등부',     time:'11:00', loc:'별도 안내' },
-              { name:'중·고등부', time:'11:00', loc:'별도 안내' },
-              { name:'대학청년부', time:'11:00', loc:'별도 안내' },
+              { name:'태영아부',   time:'13:30', loc:'204호' },
+              { name:'유아유치부', time:'11:00', loc:'204호' },
+              { name:'초등부',     time:'09:00', loc:'206호' },
+              { name:'중고등부',   time:'10:30', loc:'205호' },
+              { name:'대학청년부', time:'13:00', loc:'교육관 3층' },
+              { name:'다민족부',   time:'13:00', loc:'206호' },
+              { name:'새가족부',   time:'10:00', loc:'101호' },
+              { name:'치유부',     time:'13:10', loc:'101호' },
             ].map(w => (
               <div key={w.name} className="dt-worship-row">
                 <span className="dt-worship-row-name">{w.name}</span>
