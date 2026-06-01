@@ -103,6 +103,7 @@ public class SecurityConfig {
                         // 갤러리 이미지는 공개 콘텐츠이므로 직접 접근 허용
                         // 그 외 파일 접근은 /api/files/image/** 와 /api/files/download/** 로만 허용
                         .requestMatchers("/uploads/gallery/**").permitAll()
+                        .requestMatchers("/uploads/staff/**").permitAll()
                         .requestMatchers("/uploads/**").denyAll()
 
                         // ========== 정적 리소스 ==========

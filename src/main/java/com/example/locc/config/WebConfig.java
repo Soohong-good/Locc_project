@@ -24,12 +24,18 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/");
 
         // 갤러리 이미지 직접 서빙 (공개 콘텐츠)
-        // SecurityConfig에서 /uploads/gallery/** 는 permitAll 처리됨
         Path galleryDir = fileProperties.resolve("gallery");
-        ensureDir(galleryDir); // 디렉토리 없으면 자동 생성 (500 방지)
+        ensureDir(galleryDir);
         registry.addResourceHandler("/uploads/gallery/**")
                 .addResourceLocations(galleryDir.toUri().toString() + "/")
-                .setCachePeriod(86400); // 1일 캐시
+                .setCachePeriod(86400);
+
+        // 스태프 이미지 직접 서빙 (공개 콘텐츠)
+        Path staffDir = fileProperties.resolve("staff");
+        ensureDir(staffDir);
+        registry.addResourceHandler("/uploads/staff/**")
+                .addResourceLocations(staffDir.toUri().toString() + "/")
+                .setCachePeriod(86400);
     }
 
     private void ensureDir(Path dir) {
