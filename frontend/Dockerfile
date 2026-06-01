@@ -8,6 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+# 루트 .env의 Vite 변수를 빌드 ARG → ENV로 주입
+ARG VITE_APP_NAME
+ARG VITE_KAKAO_MAP_KEY
+ENV VITE_APP_NAME=$VITE_APP_NAME
+ENV VITE_KAKAO_MAP_KEY=$VITE_KAKAO_MAP_KEY
+
 # 소스 코드 복사 후 빌드
 COPY . .
 RUN npm run build
