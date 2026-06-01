@@ -99,14 +99,22 @@ public class UserCommandService {
         // 계정 상태 체크
         validateAccountStatus(user);
 
-        // ADMIN이고 TOTP 활성화된 경우 → 사전 인증 토큰 반환 (JWT 발급 보류)
-        if (user.isAdmin() && Boolean.TRUE.equals(user.getTotpEnabled())) {
+        // ADMIN — TOTP 활성화 여부에 따라 분기 (JWT 발급 보류)
+        if (user.isAdmin()) {
             String preAuthToken = jwtTokenProvider.generatePreAuthToken(user.getEmail());
-            return UserAuthResponse.builder()
-                    .totpRequired(true)
-                    .preAuthToken(preAuthToken)
-                    .message("2차 인증이 필요합니다.")
-                    .build();
+            if (Boolean.TRUE.equals(user.getTotpEnabled())) {
+                return UserAuthResponse.builder()
+                        .totpRequired(true)
+                        .preAuthToken(preAuthToken)
+                        .message("2차 인증이 필요합니다.")
+                        .build();
+            } else {
+                return UserAuthResponse.builder()
+                        .totpSetupRequired(true)
+                        .preAuthToken(preAuthToken)
+                        .message("2차 인증 설정이 필요합니다.")
+                        .build();
+            }
         }
 
         // JWT 토큰 생성
@@ -333,9 +341,10 @@ public class UserCommandService {
     }
 
     /**
-     * TOTP 시크릿 설정 (QR 등록 단계)
+     * TOTP QR 코드 발급 (preAuthToken 기반 — 로그인 흐름 중)
      */
-    public String setupTotp(String email) {
+    public String setupTotp(String preAuthToken) {
+        String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
         User user = userQueryService.findByEmail(email);
         String secret = totpService.generateSecret();
         user.setupTotp(secret);
@@ -343,9 +352,10 @@ public class UserCommandService {
     }
 
     /**
-     * TOTP 활성화 (첫 코드 검증 후)
+     * TOTP 활성화 + JWT 발급 (첫 코드 검증 후)
      */
-    public void enableTotp(String email, String code) {
+    public User enableTotpAndGetUser(String preAuthToken, String code) {
+        String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
         User user = userQueryService.findByEmail(email);
         if (user.getTotpSecret() == null) {
             throw new InvalidInputException("QR 코드를 먼저 발급받으세요.");
@@ -354,10 +364,11 @@ public class UserCommandService {
             throw new InvalidInputException("인증 코드가 올바르지 않습니다.");
         }
         user.enableTotp();
+        return user;
     }
 
     /**
-     * TOTP 코드 검증 후 JWT 발급
+     * TOTP 코드 검증 후 사용자 반환
      */
     public User verifyTotpAndGetUser(String preAuthToken, String code) {
         String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);

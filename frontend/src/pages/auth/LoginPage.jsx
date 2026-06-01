@@ -32,10 +32,11 @@ const LoginPage = () => {
   const navigate = useNavigate()
   const setUser = useAuthStore((s) => s.setUser)
 
-  // TOTP 2단계
-  const [totpStep, setTotpStep]           = useState(false)
+  // TOTP 단계: 'login' | 'verify' | 'setup' | 'setup-verify'
+  const [totpStep, setTotpStep]           = useState('login')
   const [preAuthToken, setPreAuthToken]   = useState('')
   const [totpCode, setTotpCode]           = useState('')
+  const [qrCode, setQrCode]              = useState('')
   const [totpPending, setTotpPending]     = useState(false)
   const [totpError, setTotpError]         = useState('')
 
@@ -53,11 +54,23 @@ const LoginPage = () => {
     login(
       { email, password },
       {
-        onSuccess: (data) => {
-          const payload = data?.data
-          if (payload?.totpRequired) {
-            setPreAuthToken(payload.preAuthToken)
-            setTotpStep(true)
+        onSuccess: async (data) => {
+          if (data?.totpRequired) {
+            setPreAuthToken(data.preAuthToken)
+            setTotpStep('verify')
+          } else if (data?.totpSetupRequired) {
+            setPreAuthToken(data.preAuthToken)
+            // QR 코드 자동 발급
+            setTotpPending(true)
+            try {
+              const res = await client.post('/api/auth/totp/setup', { preAuthToken: data.preAuthToken })
+              setQrCode(res.data?.data?.qrCode)
+              setTotpStep('setup')
+            } catch {
+              setTotpError('QR 코드 발급에 실패했습니다.')
+            } finally {
+              setTotpPending(false)
+            }
           }
         },
       }
@@ -69,7 +82,8 @@ const LoginPage = () => {
     setTotpError('')
     setTotpPending(true)
     try {
-      await client.post('/api/auth/totp/verify', { preAuthToken, code: totpCode })
+      const endpoint = totpStep === 'setup' ? '/api/auth/totp/enable' : '/api/auth/totp/verify'
+      await client.post(endpoint, { preAuthToken, code: totpCode })
       try {
         const user = await getMe()
         setUser(user)
@@ -96,20 +110,52 @@ const LoginPage = () => {
         </div>
 
         <div className="bg-white p-8 md:p-10 border border-slate-200 shadow-sm">
-          {/* TOTP 2단계 화면 */}
-          {totpStep ? (
+          {/* TOTP 설정 화면 (최초 1회) */}
+          {totpStep === 'setup' ? (
+            <div className="space-y-5">
+              <div className="text-center mb-4">
+                <p className="text-sm font-medium text-slate-700">2차 인증 설정</p>
+                <p className="text-xs text-slate-500 mt-1">Google Authenticator 앱으로 QR 코드를 스캔하세요</p>
+              </div>
+              {totpPending && <p className="text-sm text-center text-slate-500">QR 코드 발급 중...</p>}
+              {qrCode && (
+                <div className="flex justify-center">
+                  <img src={qrCode} alt="TOTP QR Code" className="w-44 h-44 border border-slate-200" />
+                </div>
+              )}
+              <form onSubmit={handleTotpVerify} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1.5 tracking-wide uppercase">앱에 표시된 6자리 코드</label>
+                  <input
+                    type="text"
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    maxLength={6}
+                    required
+                    className="w-full px-4 py-3 text-sm border bg-slate-50 focus:bg-white focus:outline-none border-slate-200 focus:border-slate-900 text-center text-2xl tracking-widest"
+                  />
+                </div>
+                {totpError && <p className="text-sm text-red-600">{totpError}</p>}
+                <Button type="submit" isLoading={totpPending} className="w-full justify-center py-3">
+                  인증 활성화
+                </Button>
+              </form>
+              <button type="button" onClick={() => { setTotpStep('login'); setTotpCode(''); setTotpError('') }}
+                className="w-full text-xs text-slate-400 hover:text-slate-600">
+                ← 로그인으로 돌아가기
+              </button>
+            </div>
+
+          ) : totpStep === 'verify' ? (
             <form onSubmit={handleTotpVerify} className="space-y-5">
               <div className="text-center mb-4">
                 <p className="text-sm font-medium text-slate-700">2차 인증</p>
                 <p className="text-xs text-slate-500 mt-1">Google Authenticator 앱의 6자리 코드를 입력하세요</p>
               </div>
-
               {totpError && (
-                <div className="px-4 py-3 text-sm bg-red-50 border border-red-200 text-red-700">
-                  {totpError}
-                </div>
+                <div className="px-4 py-3 text-sm bg-red-50 border border-red-200 text-red-700">{totpError}</div>
               )}
-
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1.5 tracking-wide uppercase">인증 코드</label>
                 <input
@@ -119,22 +165,18 @@ const LoginPage = () => {
                   placeholder="000000"
                   maxLength={6}
                   required
-                  className="w-full px-4 py-3 text-sm border bg-slate-50 focus:bg-white focus:outline-none transition-colors border-slate-200 focus:border-slate-900 text-center text-2xl tracking-widest"
+                  className="w-full px-4 py-3 text-sm border bg-slate-50 focus:bg-white focus:outline-none border-slate-200 focus:border-slate-900 text-center text-2xl tracking-widest"
                 />
               </div>
-
               <Button type="submit" isLoading={totpPending} className="w-full justify-center py-3">
                 {totpPending ? '확인 중...' : '인증 확인'}
               </Button>
-
-              <button
-                type="button"
-                onClick={() => { setTotpStep(false); setTotpCode(''); setTotpError('') }}
-                className="w-full text-xs text-slate-400 hover:text-slate-600 mt-2"
-              >
+              <button type="button" onClick={() => { setTotpStep('login'); setTotpCode(''); setTotpError('') }}
+                className="w-full text-xs text-slate-400 hover:text-slate-600 mt-2">
                 ← 로그인으로 돌아가기
               </button>
             </form>
+
           ) : (
             <>
               {oauthErrorMsg && (

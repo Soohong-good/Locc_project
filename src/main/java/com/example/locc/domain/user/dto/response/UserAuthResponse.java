@@ -15,6 +15,7 @@ public class UserAuthResponse {
     private final String role;
     private final String message;
     private final Boolean totpRequired;
+    private final Boolean totpSetupRequired;
     private final String preAuthToken;
 
     public UserAuthResponse withoutTokens() {
@@ -25,6 +26,7 @@ public class UserAuthResponse {
                 .role(this.role)
                 .message(this.message)
                 .totpRequired(this.totpRequired)
+                .totpSetupRequired(this.totpSetupRequired)
                 .preAuthToken(this.preAuthToken)
                 .build();
     }
