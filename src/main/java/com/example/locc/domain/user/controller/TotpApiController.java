@@ -5,11 +5,9 @@ import com.example.locc.config.JwtProperties;
 import com.example.locc.domain.user.dto.response.UserAuthResponse;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.service.UserCommandService;
-import com.example.locc.domain.user.service.UserQueryService;
 import com.example.locc.exception.InvalidInputException;
 import com.example.locc.security.CookieUtil;
 import com.example.locc.security.JwtTokenProvider;
-import com.example.locc.security.TotpService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TotpApiController {
 
-    private final TotpService totpService;
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
     private final CookieUtil cookieUtil;
     private final JwtProperties jwtProperties;
@@ -39,11 +35,8 @@ public class TotpApiController {
     @PostMapping("/setup")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, String>>> setup(Authentication authentication) {
-        User user = userQueryService.findByEmail(authentication.getName());
-        String secret = totpService.generateSecret();
-        user.setupTotp(secret);
-        String qrUri = totpService.generateQrCodeImageUri(secret, user.getEmail());
-        log.info("TOTP setup initiated for admin: {}", user.getEmail());
+        String qrUri = userCommandService.setupTotp(authentication.getName());
+        log.info("TOTP setup initiated for admin: {}", authentication.getName());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("qrCode", qrUri)));
     }
 
@@ -55,18 +48,8 @@ public class TotpApiController {
     public ResponseEntity<ApiResponse<Void>> enable(
             @RequestBody Map<String, String> body,
             Authentication authentication) {
-        String code = body.get("code");
-        User user = userQueryService.findByEmail(authentication.getName());
-
-        if (user.getTotpSecret() == null) {
-            throw new InvalidInputException("QR 코드를 먼저 발급받으세요.");
-        }
-        if (!totpService.verifyCode(user.getTotpSecret(), code)) {
-            throw new InvalidInputException("인증 코드가 올바르지 않습니다.");
-        }
-
-        user.enableTotp();
-        log.info("TOTP enabled for admin: {}", user.getEmail());
+        userCommandService.enableTotp(authentication.getName(), body.get("code"));
+        log.info("TOTP enabled for admin: {}", authentication.getName());
         return ResponseEntity.ok(ApiResponse.ok(null, "2차 인증이 활성화되었습니다."));
     }
 
@@ -81,19 +64,11 @@ public class TotpApiController {
         String preAuthToken = body.get("preAuthToken");
         String code = body.get("code");
 
-        String email;
-        try {
-            email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
-        } catch (Exception e) {
-            throw new InvalidInputException("유효하지 않거나 만료된 인증 세션입니다.");
+        if (preAuthToken == null || code == null) {
+            throw new InvalidInputException("preAuthToken과 code는 필수입니다.");
         }
 
-        User user = userQueryService.findByEmail(email);
-
-        if (!totpService.verifyCode(user.getTotpSecret(), code)) {
-            log.warn("TOTP 인증 실패: {}", email);
-            throw new InvalidInputException("인증 코드가 올바르지 않습니다.");
-        }
+        User user = userCommandService.verifyTotpAndGetUser(preAuthToken, code);
 
         String accessToken = jwtTokenProvider.generateAccessToken(user);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user);
@@ -102,7 +77,7 @@ public class TotpApiController {
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
 
-        log.info("TOTP 인증 성공: {}", email);
+        log.info("TOTP 인증 성공: {}", user.getEmail());
 
         UserAuthResponse auth = UserAuthResponse.builder()
                 .tokenType("Bearer")

@@ -14,6 +14,7 @@ import com.example.locc.exception.AccountDeletedException;
 import com.example.locc.exception.AccountNotApprovedException;
 import com.example.locc.exception.InvalidInputException;
 import com.example.locc.exception.TokenRefreshException;
+import com.example.locc.security.TotpService;
 import com.example.locc.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class UserCommandService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final JwtProperties jwtProperties;
-    private final com.example.locc.security.TotpService totpService;
+    private final TotpService totpService;
 
     /**
      * 회원가입 (승인 대기 상태로)
@@ -329,6 +330,42 @@ public class UserCommandService {
                     "REJECTED"
             );
         }
+    }
+
+    /**
+     * TOTP 시크릿 설정 (QR 등록 단계)
+     */
+    public String setupTotp(String email) {
+        User user = userQueryService.findByEmail(email);
+        String secret = totpService.generateSecret();
+        user.setupTotp(secret);
+        return totpService.generateQrCodeImageUri(secret, email);
+    }
+
+    /**
+     * TOTP 활성화 (첫 코드 검증 후)
+     */
+    public void enableTotp(String email, String code) {
+        User user = userQueryService.findByEmail(email);
+        if (user.getTotpSecret() == null) {
+            throw new InvalidInputException("QR 코드를 먼저 발급받으세요.");
+        }
+        if (!totpService.verifyCode(user.getTotpSecret(), code)) {
+            throw new InvalidInputException("인증 코드가 올바르지 않습니다.");
+        }
+        user.enableTotp();
+    }
+
+    /**
+     * TOTP 코드 검증 후 JWT 발급
+     */
+    public User verifyTotpAndGetUser(String preAuthToken, String code) {
+        String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
+        User user = userQueryService.findByEmail(email);
+        if (!totpService.verifyCode(user.getTotpSecret(), code)) {
+            throw new InvalidInputException("인증 코드가 올바르지 않습니다.");
+        }
+        return user;
     }
 
     /**
