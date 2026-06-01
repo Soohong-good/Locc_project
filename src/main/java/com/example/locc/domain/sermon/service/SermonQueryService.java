@@ -193,13 +193,15 @@ public class SermonQueryService {
     }
 
     /**
-     * 훈련용메시지 통합 조회
+     * 훈련용메시지 통합 조회 (카테고리 탭 지원)
+     * serviceNumber: 1=성경학교, 2=기초복음메시지, 3=하이델베르크 요리문답, 4=웨스트민스터 소요리문답
      */
-    public SermonPageResponse getTrainingMessagePage(int page, int size) {
-        SermonSearchCondition condition = SermonSearchCondition.builder()
-                .category("훈련용메시지").page(page).size(size).build();
-        Page<SermonResponse> sermons = findList(condition);
-        List<SermonResponse> latestList = findLatestByCategory("훈련용메시지", 1);
+    public SermonPageResponse getTrainingMessagePage(int serviceNumber, int page, int size) {
+        if (serviceNumber < 1 || serviceNumber > 4) {
+            throw new InvalidInputException("지원하지 않는 훈련 메시지 타입입니다. (허용: 1~4)");
+        }
+        Page<SermonResponse> sermons = findByCategoryAndServiceNumber("훈련용메시지", serviceNumber, page, size);
+        List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("훈련용메시지", serviceNumber, 1);
 
         return SermonPageResponse.builder()
                 .sermons(sermons.getContent())
@@ -208,6 +210,7 @@ public class SermonQueryService {
                 .currentPage(page)
                 .totalPages(sermons.getTotalPages())
                 .totalItems(sermons.getTotalElements())
+                .selectedServiceNumber(serviceNumber)
                 .build();
     }
 

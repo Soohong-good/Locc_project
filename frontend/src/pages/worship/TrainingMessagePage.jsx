@@ -13,7 +13,17 @@ import Button from '@/components/ui/Button'
 import PageHero from '@/components/ui/PageHero'
 import SkeletonGrid from '@/components/ui/SkeletonCard'
 
+const TRAINING_TABS = [
+  { value: 1, label: '성경학교' },
+  { value: 2, label: '기초복음메시지' },
+  { value: 3, label: '하이델베르크 요리문답' },
+  { value: 4, label: '웨스트민스터 소요리문답' },
+]
+
+const SERVICE_NUMBER_OPTIONS = TRAINING_TABS.map((t) => ({ value: t.value, label: t.label }))
+
 const TrainingMessagePage = () => {
+  const [serviceNumber, setServiceNumber] = useState(1)
   const [page, setPage] = useState(0)
   const [keyword, setKeyword] = useState('')
   const [preacher, setPreacher] = useState('')
@@ -22,15 +32,22 @@ const TrainingMessagePage = () => {
   const isAdmin = isAdminFn()
   const userId = getUserId()
 
-  const queryKey = ['sermons', 'training-message', page, keyword, preacher]
+  const queryKey = ['sermons', 'training-message', serviceNumber, page, keyword, preacher]
 
   const { data, isLoading, error } = useQuery({
     queryKey,
-    queryFn: () => getTrainingMessageData({ page, keyword, preacher }),
+    queryFn: () => getTrainingMessageData({ serviceNumber, page, keyword, preacher }),
     placeholderData: (prev) => prev,
   })
 
-  const crud = useSermonCrud([['sermons', 'training-message', page, keyword, preacher]])
+  const crud = useSermonCrud([queryKey])
+
+  const handleTabChange = (val) => {
+    setServiceNumber(val)
+    setPage(0)
+    setKeyword('')
+    setPreacher('')
+  }
 
   const handleSearch = (kw, pr) => {
     setKeyword(kw)
@@ -49,6 +66,27 @@ const TrainingMessagePage = () => {
           </Button>
         )}
       </PageHero>
+
+      {/* 탭 */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex gap-0 overflow-x-auto">
+            {TRAINING_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => handleTabChange(tab.value)}
+                className={`px-5 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors duration-200 ${
+                  serviceNumber === tab.value
+                    ? 'border-slate-900 text-slate-900'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* 검색 */}
       <SermonSearchBar
@@ -101,8 +139,8 @@ const TrainingMessagePage = () => {
         isLoadingDetail={crud.isLoadingDetail}
         editTarget={crud.editTarget}
         fixedCategory="훈련용메시지"
-        serviceNumberOptions={null}
-        defaultServiceNumber={null}
+        serviceNumberOptions={SERVICE_NUMBER_OPTIONS}
+        defaultServiceNumber={serviceNumber}
       />
 
       {/* 삭제 모달 */}

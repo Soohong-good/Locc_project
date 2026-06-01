@@ -60,10 +60,10 @@ export const getWeekdayData = async ({ type = 'wednesday', page = 0, size = 9, k
   return data.data
 }
 
-// 훈련용 메시지
-export const getTrainingMessageData = async ({ page = 0, size = 9, keyword, preacher } = {}) => {
+// 훈련용 메시지 (serviceNumber: 1=성경학교, 2=기초복음메시지, 3=하이델베르크, 4=웨스트민스터)
+export const getTrainingMessageData = async ({ serviceNumber = 1, page = 0, size = 9, keyword, preacher } = {}) => {
   const { data } = await client.get('/api/sermons/training-message', {
-    params: { page, size, keyword, preacher },
+    params: { serviceNumber, page, size, keyword, preacher },
   })
   return data.data
 }
