@@ -2,11 +2,18 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getLatestSermons } from '@/api/sermons'
+import { fetchNewYear } from '@/api/newYearApi'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import KakaoMap from '@/components/ui/KakaoMap'
+import useAuthStore from '@/stores/authStore'
+
+// ── 비로그인 갤러리 대표 이미지 ──────────────────────────────────────────
+// 추후 이미지 파일을 public/images/ 에 추가하고 경로를 입력하세요
+// 예: '/images/gallery-placeholder.jpg'
+const GALLERY_PLACEHOLDER_IMG = ''
 
 function extractVideoId(url) {
   if (!url) return null
@@ -81,20 +88,23 @@ const css = `
 
   /* ── WORSHIP ── */
   .dt-worship { background:var(--navy); padding:0; }
-  .dt-worship-grid { display:grid; grid-template-columns:1fr 1fr; }
-  .dt-worship-left { display:flex; flex-direction:column; border-right:1px solid rgba(255,255,255,.12); }
-  .dt-worship-left .dt-worship-col:first-child { border-bottom:1px solid rgba(255,255,255,.12); }
-  .dt-worship-col { padding:48px 36px 52px; }
+  .dt-worship-grid { display:grid; grid-template-columns:repeat(3,1fr); }
+  .dt-worship-col { padding:48px 36px 52px; border-right:1px solid rgba(255,255,255,.12); }
+  .dt-worship-col:last-child { border-right:none; }
   .dt-worship-col-label { font-size:17px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:24px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.12); }
   .dt-worship-row { display:flex; align-items:center; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.06); gap:8px; }
   .dt-worship-row:last-child { border-bottom:none; }
-  .dt-worship-row-name { font-size:22px; font-weight:600; color:rgba(255,255,255,.8); flex:1; }
-  .dt-worship-row-time { font-size:28px; font-weight:800; color:var(--gold); min-width:80px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
-  .dt-worship-row-loc { font-size:14px; color:rgba(255,255,255,.4); min-width:72px; text-align:right; }
+  .dt-worship-row-name { font-size:24px; font-weight:600; color:rgba(255,255,255,.8); flex:1; }
+  .dt-worship-row-time { font-size:30px; font-weight:800; color:var(--gold); min-width:80px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+  .dt-worship-row-loc { font-size:16px; color:rgba(255,255,255,.4); min-width:68px; text-align:right; }
+  /* 부서예배 컬럼 — 항목이 많아 행 크기 축소 */
+  .dt-worship-col--dept .dt-worship-row { padding:7px 0; }
+  .dt-worship-col--dept .dt-worship-row-name { font-size:17px; }
+  .dt-worship-col--dept .dt-worship-row-time { font-size:21px; min-width:64px; }
+  .dt-worship-col--dept .dt-worship-row-loc  { font-size:13px; min-width:60px; }
   @media(max-width:768px){
     .dt-worship-grid { grid-template-columns:1fr; }
-    .dt-worship-left { border-right:none; }
-    .dt-worship-col { border-bottom:1px solid rgba(255,255,255,.12); }
+    .dt-worship-col { border-right:none; border-bottom:1px solid rgba(255,255,255,.12); }
     .dt-worship-col:last-child { border-bottom:none; }
   }
 
@@ -136,6 +146,24 @@ const css = `
   .dt-worship-verse-ref { font-size:14px; color:#999; font-weight:600; letter-spacing:.06em; margin-bottom:10px; }
   .dt-worship-verse-text { font-size:16px; color:var(--navy); line-height:1.9; }
   @media (max-width:900px) { .dt-worship-about { grid-template-columns:1fr; gap:36px; } }
+
+  /* ── SERMON TABS ── */
+  .dt-sermon-tabs { display:flex; gap:0; margin-bottom:40px; border-bottom:1px solid #e8ecf2; }
+  .dt-sermon-tab { padding:10px 20px; font-size:14px; font-weight:600; color:#aab; border-bottom:2px solid transparent; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; transition:color .2s,border-color .2s; letter-spacing:.04em; }
+  .dt-sermon-tab:hover { color:var(--navy); }
+  .dt-sermon-tab.active { color:var(--navy); border-bottom-color:var(--navy); }
+  /* 송구영신예배 대형 카드 */
+  .dt-newyear-feature { max-width:1060px; margin:0 auto; cursor:pointer; }
+  .dt-newyear-thumb { position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.15); }
+  .dt-newyear-thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+  .dt-newyear-feature:hover .dt-newyear-thumb img { transform:scale(1.03); }
+  .dt-newyear-play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(10,18,40,.25); transition:background .2s; }
+  .dt-newyear-feature:hover .dt-newyear-play { background:rgba(10,18,40,.4); }
+  .dt-newyear-play-circle { width:72px; height:72px; background:rgba(255,255,255,.92); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(0,0,0,.2); transition:transform .2s; }
+  .dt-newyear-feature:hover .dt-newyear-play-circle { transform:scale(1.08); }
+  .dt-newyear-info { text-align:center; margin-top:20px; }
+  .dt-newyear-tag { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--navy); opacity:.5; margin-bottom:8px; }
+  .dt-newyear-title { font-size:22px; font-weight:700; color:var(--navy); line-height:1.4; }
 
   /* ── SERMON ── */
   .dt-sermon-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:40px; }
@@ -184,6 +212,9 @@ const css = `
 
   /* ── GALLERY ── */
   .dt-gallery { background:var(--navy); padding:60px 0 0; }
+  .dt-gallery-placeholder { width:100%; overflow:hidden; }
+  .dt-gallery-placeholder img { width:100%; max-height:500px; object-fit:cover; display:block; }
+  .dt-gallery-placeholder-empty { height:440px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:rgba(255,255,255,.2); }
   .dt-gallery-top { margin-bottom:40px; }
   .dt-gallery-top .dt-h2 { color:#fff; }
   .dt-gallery-top .dt-label { color:rgba(255,255,255,.4); }
@@ -230,11 +261,20 @@ const css = `
 export default function MainPage() {
   const navigate = useNavigate()
   const [modalVideoId, setModalVideoId] = useState(null)
+  const [sermonTab, setSermonTab] = useState('newyear')
+  const { user } = useAuthStore()
 
   const { data: sermons = [] } = useQuery({
     queryKey: ['sermons', 'latest', 3],
     queryFn: () => getLatestSermons(3),
     staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: newYearData } = useQuery({
+    queryKey: ['newyear'],
+    queryFn: fetchNewYear,
+    enabled: sermonTab === 'newyear',
+    staleTime: 10 * 60 * 1000,
   })
 
   const { data: noticesData } = useQuery({
@@ -248,6 +288,7 @@ export default function MainPage() {
     queryKey: ['gallery', 'public', 'recent'],
     queryFn: () => getPublicRecentGallery({ size: 11 }),
     staleTime: 5 * 60 * 1000,
+    enabled: !!user,   // 로그인 시에만 API 호출
   })
   const galleryImages = galleryData?.content ?? []
 
@@ -355,45 +396,40 @@ export default function MainPage() {
       <section className="dt-worship">
         <div className="dt-worship-grid">
 
-          {/* 왼쪽: 주일 + 주중 적층 */}
-          <div className="dt-worship-left">
-
-            {/* 주일 예배 */}
-            <div className="dt-worship-col">
-              <div className="dt-worship-col-label">Sunday Service · 주일예배</div>
-              {[
-                { name:'1부 예배',  time:'09:00', loc:'본당' },
-                { name:'2부 예배',  time:'11:00', loc:'본당' },
-                { name:'오후 예배', time:'15:00', loc:'본당' },
-              ].map(w => (
-                <div key={w.name} className="dt-worship-row">
-                  <span className="dt-worship-row-name">{w.name}</span>
-                  <span className="dt-worship-row-time">{w.time}</span>
-                  <span className="dt-worship-row-loc">{w.loc}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* 주중 예배 */}
-            <div className="dt-worship-col">
-              <div className="dt-worship-col-label">Weekday Service · 주중예배</div>
-              {[
-                { name:'수요 예배',   time:'20:00', loc:'본당' },
-                { name:'금요 기도회', time:'21:00', loc:'본당' },
-                { name:'새벽 기도',   time:'05:30', loc:'101호' },
-              ].map(w => (
-                <div key={w.name} className="dt-worship-row">
-                  <span className="dt-worship-row-name">{w.name}</span>
-                  <span className="dt-worship-row-time">{w.time}</span>
-                  <span className="dt-worship-row-loc">{w.loc}</span>
-                </div>
-              ))}
-            </div>
-
+          {/* 주일 예배 */}
+          <div className="dt-worship-col">
+            <div className="dt-worship-col-label">Sunday Service · 주일예배</div>
+            {[
+              { name:'1부 예배',  time:'09:00', loc:'본당' },
+              { name:'2부 예배',  time:'11:00', loc:'본당' },
+              { name:'오후 예배', time:'15:00', loc:'본당' },
+            ].map(w => (
+              <div key={w.name} className="dt-worship-row">
+                <span className="dt-worship-row-name">{w.name}</span>
+                <span className="dt-worship-row-time">{w.time}</span>
+                <span className="dt-worship-row-loc">{w.loc}</span>
+              </div>
+            ))}
           </div>
 
-          {/* 오른쪽: 부서 예배 */}
+          {/* 주중 예배 */}
           <div className="dt-worship-col">
+            <div className="dt-worship-col-label">Weekday Service · 주중예배</div>
+            {[
+              { name:'수요 예배',   time:'20:00', loc:'본당' },
+              { name:'금요 기도회', time:'21:00', loc:'본당' },
+              { name:'새벽 기도',   time:'05:30', loc:'101호' },
+            ].map(w => (
+              <div key={w.name} className="dt-worship-row">
+                <span className="dt-worship-row-name">{w.name}</span>
+                <span className="dt-worship-row-time">{w.time}</span>
+                <span className="dt-worship-row-loc">{w.loc}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* 부서 예배 — 행 크기 축소 클래스 적용 */}
+          <div className="dt-worship-col dt-worship-col--dept">
             <div className="dt-worship-col-label">Department Service · 부서예배</div>
             {[
               { name:'태영아부',   time:'13:30', loc:'204호' },
@@ -427,40 +463,91 @@ export default function MainPage() {
             </div>
             <a href="/worship/sermon/sunday-morning" className="dt-see-all">전체 보기 →</a>
           </div>
-          <div className="dt-sermon-grid">
-            {sermons.map((s, i) => {
-              const vid = extractVideoId(s.videoUrl)
-              return (
-                <div key={s.id} className="dt-sermon-card dt-fade" style={{transitionDelay:`${i*0.12}s`,cursor:'pointer'}}
-                  onClick={() => vid ? setModalVideoId(vid) : navigate(`/worship/sermon/${s.id}`)}>
-                  <div className="dt-sermon-thumb">
-                    {vid
-                      ? <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={s.title} />
-                      : <div style={{width:'100%',height:'100%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5">
-                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                          </svg>
+
+          {/* 카테고리 탭 */}
+          <div className="dt-sermon-tabs">
+            <button
+              className={`dt-sermon-tab ${sermonTab === 'newyear' ? 'active' : ''}`}
+              onClick={() => setSermonTab('newyear')}
+            >
+              송구영신예배
+            </button>
+            <button
+              className={`dt-sermon-tab ${sermonTab === 'latest' ? 'active' : ''}`}
+              onClick={() => setSermonTab('latest')}
+            >
+              최근 설교
+            </button>
+          </div>
+
+          {/* 최근 설교 탭 */}
+          {sermonTab === 'latest' && (
+            <div className="dt-sermon-grid">
+              {sermons.map((s, i) => {
+                const vid = extractVideoId(s.videoUrl)
+                return (
+                  <div key={s.id} className="dt-sermon-card dt-fade" style={{transitionDelay:`${i*0.12}s`,cursor:'pointer'}}
+                    onClick={() => vid ? setModalVideoId(vid) : navigate(`/worship/sermon/${s.id}`)}>
+                    <div className="dt-sermon-thumb">
+                      {vid
+                        ? <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={s.title} />
+                        : <div style={{width:'100%',height:'100%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5">
+                              <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                            </svg>
+                          </div>
+                      }
+                      <div className="dt-play-btn">
+                        <div className="dt-play-circle">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
                         </div>
-                    }
-                    <div className="dt-play-btn">
-                      <div className="dt-play-circle">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
                       </div>
                     </div>
-                  </div>
-                  <div className="dt-sermon-body">
-                    <div className="dt-sermon-meta">
-                      <span className="dt-sermon-tag">{s.category || '설교'}</span>
-                      <span>{fmtDate(s.sermonDate || s.createdAt)}</span>
+                    <div className="dt-sermon-body">
+                      <div className="dt-sermon-meta">
+                        <span className="dt-sermon-tag">{s.category || '설교'}</span>
+                        <span>{fmtDate(s.sermonDate || s.createdAt)}</span>
+                      </div>
+                      <div className="dt-sermon-title">{s.title}</div>
+                      {s.preacher && <div className="dt-sermon-speaker">{s.preacher}</div>}
+                      {s.bibleVerses && <div className="dt-sermon-verse">{s.bibleVerses}</div>}
                     </div>
-                    <div className="dt-sermon-title">{s.title}</div>
-                    {s.preacher && <div className="dt-sermon-speaker">{s.preacher}</div>}
-                    {s.bibleVerses && <div className="dt-sermon-verse">{s.bibleVerses}</div>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* 송구영신예배 탭 — 중앙 대형 표시 */}
+          {sermonTab === 'newyear' && (
+            newYearData?.latestVideoId ? (
+              <div className="dt-newyear-feature dt-fade"
+                onClick={() => setModalVideoId(newYearData.latestVideoId)}>
+                <div className="dt-newyear-thumb">
+                  <img
+                    src={`https://img.youtube.com/vi/${newYearData.latestVideoId}/maxresdefault.jpg`}
+                    alt={newYearData.title || '송구영신예배'}
+                    onError={(e) => { e.currentTarget.src = `https://img.youtube.com/vi/${newYearData.latestVideoId}/mqdefault.jpg` }}
+                  />
+                  <div className="dt-newyear-play">
+                    <div className="dt-newyear-play-circle">
+                      <svg viewBox="0 0 24 24" width="28" height="28" fill="#1a2744">
+                        <polygon points="6,3 20,12 6,21"/>
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              )
-            })}
-          </div>
+                <div className="dt-newyear-info">
+                  <div className="dt-newyear-tag">송구영신예배</div>
+                  <div className="dt-newyear-title">{newYearData.title || '송구영신예배'}</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{padding:'48px 0',textAlign:'center',color:'#aab',fontSize:15}}>
+                등록된 송구영신예배 영상이 없습니다
+              </div>
+            )
+          )}
         </div>
       </section>
 
@@ -592,51 +679,64 @@ export default function MainPage() {
             <div className="dt-div" style={{background:'rgba(255,255,255,.25)'}} />
           </div>
         </div>
-        {galleryImages.length > 0 ? (
-          <div className="dt-gallery-grid">
-            {/* 첫 번째 이미지 — tall 셀 */}
-            <Link
-              to={`/department/${galleryImages[0].departmentCode}/gallery/${galleryImages[0].id}`}
-              className="dt-gallery-cell tall"
-              style={{display:'block'}}
-            >
-              <img
-                src={`/uploads/gallery/${galleryImages[0].thumbnailFilename || galleryImages[0].storedFilename}`}
-                alt={galleryImages[0].title}
-                onError={(e) => { e.target.src = '/images/no-image.png' }}
-              />
-              <div className="dt-gallery-overlay">
-                <div style={{position:'absolute',bottom:12,left:12,right:12}}>
-                  <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginBottom:4}}>{galleryImages[0].departmentName}</div>
-                  <div style={{fontSize:14,fontWeight:600,color:'#fff',lineHeight:1.3}}>{galleryImages[0].title}</div>
-                </div>
-              </div>
-            </Link>
-            {/* 나머지 이미지 */}
-            {galleryImages.slice(1).map((img) => (
+        {user ? (
+          /* ── 로그인: 실제 갤러리 ── */
+          galleryImages.length > 0 ? (
+            <div className="dt-gallery-grid">
+              {/* 첫 번째 이미지 — tall 셀 */}
               <Link
-                key={img.id}
-                to={`/department/${img.departmentCode}/gallery/${img.id}`}
-                className="dt-gallery-cell"
+                to={`/department/${galleryImages[0].departmentCode}/gallery/${galleryImages[0].id}`}
+                className="dt-gallery-cell tall"
                 style={{display:'block'}}
               >
                 <img
-                  src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
-                  alt={img.title}
+                  src={`/uploads/gallery/${galleryImages[0].thumbnailFilename || galleryImages[0].storedFilename}`}
+                  alt={galleryImages[0].title}
                   onError={(e) => { e.target.src = '/images/no-image.png' }}
                 />
                 <div className="dt-gallery-overlay">
-                  <div style={{position:'absolute',bottom:8,left:8,right:8}}>
-                    <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginBottom:2}}>{img.departmentName}</div>
-                    <div style={{fontSize:13,fontWeight:600,color:'#fff',lineHeight:1.3}}>{img.title}</div>
+                  <div style={{position:'absolute',bottom:12,left:12,right:12}}>
+                    <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginBottom:4}}>{galleryImages[0].departmentName}</div>
+                    <div style={{fontSize:14,fontWeight:600,color:'#fff',lineHeight:1.3}}>{galleryImages[0].title}</div>
                   </div>
                 </div>
               </Link>
-            ))}
-          </div>
+              {/* 나머지 이미지 */}
+              {galleryImages.slice(1).map((img) => (
+                <Link
+                  key={img.id}
+                  to={`/department/${img.departmentCode}/gallery/${img.id}`}
+                  className="dt-gallery-cell"
+                  style={{display:'block'}}
+                >
+                  <img
+                    src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
+                    alt={img.title}
+                    onError={(e) => { e.target.src = '/images/no-image.png' }}
+                  />
+                  <div className="dt-gallery-overlay">
+                    <div style={{position:'absolute',bottom:8,left:8,right:8}}>
+                      <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginBottom:2}}>{img.departmentName}</div>
+                      <div style={{fontSize:13,fontWeight:600,color:'#fff',lineHeight:1.3}}>{img.title}</div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div style={{padding:'60px 0',textAlign:'center',color:'rgba(255,255,255,.3)',fontSize:15}}>
+              등록된 갤러리 이미지가 없습니다
+            </div>
+          )
         ) : (
-          <div style={{padding:'60px 0',textAlign:'center',color:'rgba(255,255,255,.3)',fontSize:15}}>
-            등록된 갤러리 이미지가 없습니다
+          /* ── 비로그인: 지정 이미지 ── */
+          <div className="dt-gallery-placeholder">
+            {GALLERY_PLACEHOLDER_IMG ? (
+              <img src={GALLERY_PLACEHOLDER_IMG} alt="갤러리" loading="lazy" />
+            ) : (
+              /* GALLERY_PLACEHOLDER_IMG 상수에 이미지 경로 입력 시 표시됩니다 */
+              <div className="dt-gallery-placeholder-empty" />
+            )}
           </div>
         )}
       </section>
