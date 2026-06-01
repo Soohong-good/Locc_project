@@ -135,16 +135,18 @@ const LoginPage = () => {
               </svg>
               카카오로 계속하기
             </a>
-            <a
-              href="/oauth2/authorization/naver"
-              className="flex items-center justify-center w-full py-3 px-4 text-sm font-medium transition-opacity hover:opacity-90"
+            {/* 네이버 로그인 검수 승인 후 활성화 */}
+            <button
+              disabled
+              className="flex items-center justify-center w-full py-3 px-4 text-sm font-medium cursor-not-allowed opacity-40"
               style={{ backgroundColor: '#03C75A', color: '#FFFFFF' }}
+              title="네이버 로그인 준비 중입니다"
             >
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
               </svg>
-              네이버로 계속하기
-            </a>
+              네이버로 계속하기 (준비 중)
+            </button>
           </div>
         </div>
 
