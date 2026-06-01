@@ -114,9 +114,9 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-      # HTTPS 사용 시: - "443:443"
-      # 그리고 SSL 인증서 볼륨 마운트 필요:
-      # - /etc/letsencrypt:/etc/letsencrypt:ro
+      - "443:443"
+    volumes:
+      - /etc/ssl/cloudflare:/etc/ssl/cloudflare:ro
     depends_on:
       - app
     networks:
