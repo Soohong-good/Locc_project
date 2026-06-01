@@ -78,6 +78,11 @@ public class UserApiController {
 
         UserAuthResponse auth = userCommandService.login(request.toCommand());
 
+        // TOTP 2차 인증 필요 — JWT 쿠키 설정 없이 preAuthToken만 반환
+        if (Boolean.TRUE.equals(auth.getTotpRequired())) {
+            return ResponseEntity.ok(ApiResponse.ok(auth));
+        }
+
         // HttpOnly 쿠키로 토큰 설정
         cookieUtil.addAccessTokenCookie(response, auth.getAccessToken());
         cookieUtil.addRefreshTokenCookie(response, auth.getRefreshToken());

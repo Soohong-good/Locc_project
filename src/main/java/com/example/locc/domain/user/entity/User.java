@@ -114,6 +114,14 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private Boolean agreedToPrivacy = false;
 
+    // TOTP 2차 인증
+    @Column(length = 64)
+    private String totpSecret;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean totpEnabled = false;
+
 
     // ===== Enum 정의 =====
 
@@ -343,6 +351,29 @@ public class User extends BaseEntity implements UserDetails {
      */
     public void revokeOperator() {
         this.role = Role.USER;
+    }
+
+    /**
+     * TOTP 시크릿 설정 (QR 등록 단계)
+     */
+    public void setupTotp(String secret) {
+        this.totpSecret = secret;
+        this.totpEnabled = false;
+    }
+
+    /**
+     * TOTP 활성화 (첫 코드 검증 후)
+     */
+    public void enableTotp() {
+        this.totpEnabled = true;
+    }
+
+    /**
+     * TOTP 비활성화
+     */
+    public void disableTotp() {
+        this.totpSecret = null;
+        this.totpEnabled = false;
     }
 
     /**

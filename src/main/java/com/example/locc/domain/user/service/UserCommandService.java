@@ -46,6 +46,7 @@ public class UserCommandService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
     private final JwtProperties jwtProperties;
+    private final com.example.locc.security.TotpService totpService;
 
     /**
      * 회원가입 (승인 대기 상태로)
@@ -96,6 +97,16 @@ public class UserCommandService {
 
         // 계정 상태 체크
         validateAccountStatus(user);
+
+        // ADMIN이고 TOTP 활성화된 경우 → 사전 인증 토큰 반환 (JWT 발급 보류)
+        if (user.isAdmin() && Boolean.TRUE.equals(user.getTotpEnabled())) {
+            String preAuthToken = jwtTokenProvider.generatePreAuthToken(user.getEmail());
+            return UserAuthResponse.builder()
+                    .totpRequired(true)
+                    .preAuthToken(preAuthToken)
+                    .message("2차 인증이 필요합니다.")
+                    .build();
+        }
 
         // JWT 토큰 생성
         String accessToken = jwtTokenProvider.generateAccessToken(user);
@@ -318,6 +329,13 @@ public class UserCommandService {
                     "REJECTED"
             );
         }
+    }
+
+    /**
+     * RefreshToken 저장 또는 갱신 (TOTP 컨트롤러에서 호출)
+     */
+    public void saveOrUpdateRefreshTokenPublic(User user, String token) {
+        saveOrUpdateRefreshToken(user, token);
     }
 
     /**

@@ -29,6 +29,29 @@ public class JwtTokenProvider {
     }
 
     /**
+     * TOTP 사전 인증 토큰 생성 (비밀번호 검증 완료, TOTP 검증 대기)
+     * 5분 유효, type=totp_pending
+     */
+    public String generatePreAuthToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "totp_pending");
+        long tempExpiration = 1000L * 60 * 5; // 5분
+        return createToken(claims, email, tempExpiration);
+    }
+
+    /**
+     * TOTP 사전 인증 토큰에서 이메일 추출 (type 검증 포함)
+     */
+    public String getEmailFromPreAuthToken(String token) {
+        Claims claims = extractAllClaims(token);
+        String type = (String) claims.get("type");
+        if (!"totp_pending".equals(type)) {
+            throw new IllegalStateException("TOTP 사전 인증 토큰이 아닙니다.");
+        }
+        return claims.getSubject();
+    }
+
+    /**
      * OAuth2 임시 토큰 생성 (추가 정보 입력용)
      * 10분 유효, type=oauth_temp
      */
