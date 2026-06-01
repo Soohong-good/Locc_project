@@ -22,8 +22,8 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: loginApi,
     onSuccess: async (data) => {
-      // TOTP 2차 인증 필요 — JWT 쿠키 미발급, 페이지 이동 없음
-      if (data?.totpRequired) return
+      // TOTP 관련 — JWT 쿠키 미발급, 페이지 이동 없음
+      if (data?.totpRequired || data?.totpSetupRequired) return
 
       // 토큰은 이미 HttpOnly 쿠키로 설정됨 — localStorage 저장 없음
       try {

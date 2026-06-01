@@ -12,8 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -30,32 +28,35 @@ public class TotpApiController {
     private final JwtProperties jwtProperties;
 
     /**
-     * TOTP QR 코드 발급 (ADMIN 전용, 로그인 상태)
+     * QR 코드 발급 (로그인 흐름 중, preAuthToken 기반)
      */
     @PostMapping("/setup")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Map<String, String>>> setup(Authentication authentication) {
-        String qrUri = userCommandService.setupTotp(authentication.getName());
-        log.info("TOTP setup initiated for admin: {}", authentication.getName());
+    public ResponseEntity<ApiResponse<Map<String, String>>> setup(
+            @RequestBody Map<String, String> body) {
+        String preAuthToken = body.get("preAuthToken");
+        if (preAuthToken == null) throw new InvalidInputException("preAuthToken은 필수입니다.");
+
+        String qrUri = userCommandService.setupTotp(preAuthToken);
         return ResponseEntity.ok(ApiResponse.ok(Map.of("qrCode", qrUri)));
     }
 
     /**
-     * TOTP 활성화 (ADMIN 전용, 로그인 상태)
+     * TOTP 활성화 (첫 코드 검증 → JWT 발급)
      */
     @PostMapping("/enable")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> enable(
+    public ResponseEntity<ApiResponse<UserAuthResponse>> enable(
             @RequestBody Map<String, String> body,
-            Authentication authentication) {
-        userCommandService.enableTotp(authentication.getName(), body.get("code"));
-        log.info("TOTP enabled for admin: {}", authentication.getName());
-        return ResponseEntity.ok(ApiResponse.ok(null, "2차 인증이 활성화되었습니다."));
+            HttpServletResponse response) {
+        String preAuthToken = body.get("preAuthToken");
+        String code = body.get("code");
+        if (preAuthToken == null || code == null) throw new InvalidInputException("preAuthToken과 code는 필수입니다.");
+
+        User user = userCommandService.enableTotpAndGetUser(preAuthToken, code);
+        return issueJwt(user, response, "2차 인증이 활성화되었습니다.");
     }
 
     /**
-     * TOTP 코드 검증 (공개, 비로그인)
-     * preAuthToken + 6자리 코드 → JWT 쿠키 발급
+     * TOTP 코드 검증 (이미 설정된 경우 → JWT 발급)
      */
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<UserAuthResponse>> verify(
@@ -63,13 +64,14 @@ public class TotpApiController {
             HttpServletResponse response) {
         String preAuthToken = body.get("preAuthToken");
         String code = body.get("code");
-
-        if (preAuthToken == null || code == null) {
-            throw new InvalidInputException("preAuthToken과 code는 필수입니다.");
-        }
+        if (preAuthToken == null || code == null) throw new InvalidInputException("preAuthToken과 code는 필수입니다.");
 
         User user = userCommandService.verifyTotpAndGetUser(preAuthToken, code);
+        return issueJwt(user, response, "로그인에 성공했습니다.");
+    }
 
+    private ResponseEntity<ApiResponse<UserAuthResponse>> issueJwt(
+            User user, HttpServletResponse response, String message) {
         String accessToken = jwtTokenProvider.generateAccessToken(user);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user);
         userCommandService.saveOrUpdateRefreshTokenPublic(user, refreshToken);
@@ -77,16 +79,16 @@ public class TotpApiController {
         cookieUtil.addAccessTokenCookie(response, accessToken);
         cookieUtil.addRefreshTokenCookie(response, refreshToken);
 
-        log.info("TOTP 인증 성공: {}", user.getEmail());
+        log.info("TOTP 로그인 완료: {}", user.getEmail());
 
-        UserAuthResponse auth = UserAuthResponse.builder()
-                .tokenType("Bearer")
-                .expiresIn(jwtProperties.getExpiration())
-                .username(user.getName())
-                .role(user.getRole().name())
-                .message("로그인에 성공했습니다.")
-                .build();
-
-        return ResponseEntity.ok(ApiResponse.ok(auth));
+        return ResponseEntity.ok(ApiResponse.ok(
+                UserAuthResponse.builder()
+                        .tokenType("Bearer")
+                        .expiresIn(jwtProperties.getExpiration())
+                        .username(user.getName())
+                        .role(user.getRole().name())
+                        .message(message)
+                        .build()
+        ));
     }
 }

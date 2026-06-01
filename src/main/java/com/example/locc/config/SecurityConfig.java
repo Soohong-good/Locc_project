@@ -215,6 +215,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/password/reset").permitAll()
                         .requestMatchers(HttpMethod.GET,  "/api/auth/password/reset").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/totp/verify").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/totp/setup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/totp/enable").permitAll()
 
                         // ========== 공개 소셜 로그인 엔드포인트 ==========
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
