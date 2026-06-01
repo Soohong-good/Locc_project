@@ -106,10 +106,11 @@ public class SermonApiController {
 
     @GetMapping("/training-message")
     public ResponseEntity<ApiResponse<SermonPageResponse>> getTrainingMessageData(
+            @RequestParam(defaultValue = "1") int serviceNumber,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "9") int size) {
         return ResponseEntity.ok(ApiResponse.ok(
-                sermonQueryService.getTrainingMessagePage(page, size)));
+                sermonQueryService.getTrainingMessagePage(serviceNumber, page, size)));
     }
 
     // ─────────────────────────────────────────────

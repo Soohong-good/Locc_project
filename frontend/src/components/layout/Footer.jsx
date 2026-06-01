@@ -23,7 +23,7 @@ const SITEMAP = [
     links: [
       { to: '/worship/sermon/sunday-morning',   label: '주일오전예배' },
       { to: '/worship/sermon/sunday-afternoon', label: '주일오후예배' },
-      { to: '/worship/sermon/weekday',          label: '수요·금요예배' },
+      { to: '/worship/sermon/weekday',          label: '수요예배·금요기도회' },
       { to: '/worship/training-intro',          label: '훈련소개' },
     ],
   },

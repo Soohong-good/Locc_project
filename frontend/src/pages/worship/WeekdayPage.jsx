@@ -15,14 +15,14 @@ import PageHero from '@/components/ui/PageHero'
 import SkeletonGrid from '@/components/ui/SkeletonCard'
 
 const WEEKDAY_TABS = [
-  { value: 'wednesday', label: '수요 예배' },
-  { value: 'friday', label: '금요 예배' },
+  { value: 'wednesday', label: '수요예배' },
+  { value: 'friday', label: '금요기도회' },
 ]
 
 // 백엔드 serviceNumber 매핑: wednesday=1, friday=2
 const SERVICE_NUMBER_OPTIONS = [
-  { value: 1, label: '수요 예배' },
-  { value: 2, label: '금요 예배' },
+  { value: 1, label: '수요예배' },
+  { value: 2, label: '금요기도회' },
 ]
 
 const WeekdayPage = () => {
@@ -62,7 +62,7 @@ const WeekdayPage = () => {
 
   return (
     <>
-      <PageHero eyebrow="Weekday Service" title="수요·금요예배"
+      <PageHero eyebrow="Weekday Service" title="수요예배·금요기도회"
         bgImage="/images/bg-worship.jpg">
         {canWrite && (
           <Button variant="secondary" size="sm" onClick={crud.openCreate}

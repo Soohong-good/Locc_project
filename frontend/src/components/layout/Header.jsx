@@ -30,7 +30,7 @@ const NAV_MENUS = [
       { href: '/worship/newyear',                 label: '송구영신예배' },
       { href: '/worship/sermon/sunday-morning',   label: '주일오전예배' },
       { href: '/worship/sermon/sunday-afternoon', label: '주일오후예배' },
-      { href: '/worship/sermon/weekday',          label: '수요·금요예배' },
+      { href: '/worship/sermon/weekday',          label: '수요예배·금요기도회' },
       { href: '/worship/training-intro',          label: '훈련소개' },
       { href: '/worship/sermon/training-message', label: '훈련 메시지' },
     ],
