@@ -110,6 +110,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_APP_NAME=${VITE_APP_NAME:-그리스도사랑교회}
+        - VITE_KAKAO_MAP_KEY=${KAKAO_MAP_API_KEY}
     container_name: locc-nginx
     restart: unless-stopped
     ports:
