@@ -53,8 +53,8 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
     Page<Sermon> findByCategory(@Param("category") String category, Pageable pageable);
 
     /**
-     * 카테고리 + 부 구분 조회 (주일오전 1부/2부 등)
-     * TEMPORARY: serviceNumber가 null인 경우도 포함하여 조회
+     * 카테고리 + 부 구분 조회 (주일오전 1부/2부, 기타예배 수요/금요)
+     * serviceNumber가 null인 경우도 포함 — 기존 데이터 호환용
      */
     @EntityGraph(attributePaths = {"author"})
     @Query("SELECT s FROM Sermon s " +
@@ -67,7 +67,7 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
 
     /**
      * 카테고리 + 부 구분 최신 조회
-     * TEMPORARY: serviceNumber가 null인 경우도 포함하여 조회
+     * serviceNumber가 null인 경우도 포함 — 기존 데이터 호환용
      */
     @EntityGraph(attributePaths = {"author"})
     @Query("SELECT s FROM Sermon s " +
@@ -77,6 +77,30 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
     List<Sermon> findLatestByCategoryAndServiceNumber(@Param("category") String category,
                                                         @Param("serviceNumber") Integer serviceNumber,
                                                         Pageable pageable);
+
+    /**
+     * 카테고리 + serviceNumber 정확히 일치 조회 (훈련메시지 탭 구분용)
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT s FROM Sermon s " +
+           "WHERE s.category = :category " +
+           "  AND s.serviceNumber = :serviceNumber " +
+           "ORDER BY s.sermonDate DESC, s.createdAt DESC")
+    Page<Sermon> findByCategoryAndServiceNumberExact(@Param("category") String category,
+                                                       @Param("serviceNumber") Integer serviceNumber,
+                                                       Pageable pageable);
+
+    /**
+     * 카테고리 + serviceNumber 정확히 일치 최신 조회 (훈련메시지 탭 구분용)
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT s FROM Sermon s " +
+           "WHERE s.category = :category " +
+           "  AND s.serviceNumber = :serviceNumber " +
+           "ORDER BY s.sermonDate DESC, s.createdAt DESC")
+    List<Sermon> findLatestByCategoryAndServiceNumberExact(@Param("category") String category,
+                                                             @Param("serviceNumber") Integer serviceNumber,
+                                                             Pageable pageable);
 
     /**
      * 카테고리 + 검색
