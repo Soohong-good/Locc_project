@@ -57,6 +57,9 @@ dependencies {
     // PDF 처리 및 첫 페이지 이미지 추출
     implementation 'org.apache.pdfbox:pdfbox:2.0.31'
 
+    // TOTP 2차 인증 (Google Authenticator 호환)
+    implementation 'dev.samstevens.totp:totp:1.7.1'
+
     implementation 'org.apache.poi:poi:5.2.5'
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
     // ✅ 여기까지 추가

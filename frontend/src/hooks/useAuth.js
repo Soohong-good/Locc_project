@@ -22,18 +22,17 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: loginApi,
     onSuccess: async (data) => {
-      // 토큰은 이미 HttpOnly 쿠키로 설정됨 — localStorage 저장 없음
+      // TOTP 2차 인증 필요 — JWT 쿠키 미발급, 페이지 이동 없음
+      if (data?.totpRequired) return
 
-      // 쿠키 기반으로 유저 정보 조회
+      // 토큰은 이미 HttpOnly 쿠키로 설정됨 — localStorage 저장 없음
       try {
         const user = await getMe()
         setUser(user)
       } catch {
-        // getMe 실패해도 username/role 기반 최소 정보로 유지
         setUser({ name: data.username, role: data.role })
       }
 
-      // 이전 페이지가 있으면 복귀, 없으면 홈으로
       const from = location.state?.from?.pathname ?? '/'
       navigate(from, { replace: true })
     },

@@ -81,6 +81,7 @@ const AdminGalleryPage           = lazy(() => import('@/pages/admin/AdminGallery
 const AdminApplicationPage       = lazy(() => import('@/pages/admin/AdminApplicationPage'))
 const AdminApplicationDetailPage = lazy(() => import('@/pages/admin/AdminApplicationDetailPage'))
 const AdminApplicationCategoryPage = lazy(() => import('@/pages/admin/AdminApplicationCategoryPage'))
+const TotpSetupPage                 = lazy(() => import('@/pages/admin/TotpSetupPage'))
 
 const AppRoutes = () => {
   const { isInitialized } = useAuthStore()
@@ -187,6 +188,7 @@ const AppRoutes = () => {
           <Route path="applications"             element={<AdminApplicationPage />} />
           <Route path="applications/:id"         element={<AdminApplicationDetailPage />} />
           <Route path="applications/categories"  element={<AdminApplicationCategoryPage />} />
+          <Route path="totp-setup"               element={<TotpSetupPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
