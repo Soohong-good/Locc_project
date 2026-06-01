@@ -80,6 +80,7 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
 
       setupDragAndDrop(quill)
       setupPaste(quill)
+      setupImageResize(quill)
       quillRef.current = quill
 
       // initialValue가 있으면 초기 내용 주입
@@ -194,6 +195,74 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
           break
         }
       }
+    })
+  }, [])
+
+  // ── setupImageResize ─────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const setupImageResize = useCallback((quill) => {
+    const editor = quill.root
+    let activeImg = null
+    let handle    = null
+    let startX, startW
+
+    const removeHandle = () => {
+      if (handle)     { handle.remove(); handle = null }
+      if (activeImg)  { activeImg.style.outline = ''; activeImg = null }
+    }
+
+    const updateHandlePos = (img) => {
+      if (!handle) return
+      const imgRect    = img.getBoundingClientRect()
+      const editorRect = editor.getBoundingClientRect()
+      handle.style.left = (imgRect.right  - editorRect.left + editor.scrollLeft - 6) + 'px'
+      handle.style.top  = (imgRect.bottom - editorRect.top  + editor.scrollTop  - 6) + 'px'
+    }
+
+    const createHandle = (img) => {
+      removeHandle()
+      activeImg = img
+      img.style.outline = '2px solid #2563eb'
+
+      handle = document.createElement('div')
+      handle.style.cssText = [
+        'position:absolute', 'width:12px', 'height:12px',
+        'background:#2563eb', 'border:2px solid #fff',
+        'border-radius:2px', 'cursor:se-resize', 'z-index:9999',
+      ].join(';')
+
+      editor.style.position = 'relative'
+      editor.appendChild(handle)
+      updateHandlePos(img)
+
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        startX = e.clientX
+        startW = img.offsetWidth
+
+        const onMove = (e) => {
+          const newW = Math.max(50, startW + (e.clientX - startX))
+          img.style.width  = newW + 'px'
+          img.style.height = 'auto'
+          updateHandlePos(img)
+        }
+        const onUp = () => {
+          document.removeEventListener('mousemove', onMove)
+          document.removeEventListener('mouseup',   onUp)
+        }
+        document.addEventListener('mousemove', onMove)
+        document.addEventListener('mouseup',   onUp)
+      })
+    }
+
+    editor.addEventListener('click', (e) => {
+      if (e.target.tagName === 'IMG') createHandle(e.target)
+      else if (e.target !== handle)   removeHandle()
+    })
+
+    document.addEventListener('click', (e) => {
+      if (!editor.contains(e.target)) removeHandle()
     })
   }, [])
 
