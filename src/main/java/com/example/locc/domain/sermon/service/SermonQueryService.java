@@ -102,6 +102,18 @@ public class SermonQueryService {
                 .map(SermonResponse::from);
     }
 
+    public Page<SermonResponse> findByCategoryAndServiceNumberExact(String category, Integer serviceNumber, int page, int size) {
+        return sermonRepository.findByCategoryAndServiceNumberExact(
+                        category, serviceNumber, PageRequest.of(page, size))
+                .map(SermonResponse::from);
+    }
+
+    public List<SermonResponse> findLatestByCategoryAndServiceNumberExact(String category, Integer serviceNumber, int limit) {
+        return sermonRepository.findLatestByCategoryAndServiceNumberExact(
+                        category, serviceNumber, PageRequest.of(0, limit))
+                .stream().map(SermonResponse::from).collect(Collectors.toList());
+    }
+
     public Page<SermonResponse> findPagedForAdmin(int page, int size) {
         log.debug("관리자 설교 목록 조회: page={}, size={}", page, size);
         return sermonRepository.findList(PageRequest.of(page, size))
@@ -200,8 +212,8 @@ public class SermonQueryService {
         if (serviceNumber < 1 || serviceNumber > 4) {
             throw new InvalidInputException("지원하지 않는 훈련 메시지 타입입니다. (허용: 1~4)");
         }
-        Page<SermonResponse> sermons = findByCategoryAndServiceNumber("훈련용메시지", serviceNumber, page, size);
-        List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("훈련용메시지", serviceNumber, 1);
+        Page<SermonResponse> sermons = findByCategoryAndServiceNumberExact("훈련용메시지", serviceNumber, page, size);
+        List<SermonResponse> latestList = findLatestByCategoryAndServiceNumberExact("훈련용메시지", serviceNumber, 1);
 
         return SermonPageResponse.builder()
                 .sermons(sermons.getContent())
