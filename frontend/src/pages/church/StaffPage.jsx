@@ -728,19 +728,22 @@ const ElderSection = ({ staffList, isLoading, onEdit, onDelete, onUpload, onDele
               }
             </div>
 
-            {/* 시무 장로 — 이름만 */}
+            {/* 시무 장로 — 교회 직원 카드 스타일 */}
             <div>
               <ElderSubHeader title="시무 장로"
                 onAdd={() => onAdd('OTHER', false, 'ELDER', '시무')} />
               {activeElders.length === 0
                 ? <EmptyState message="등록된 시무 장로가 없습니다"
                     onAdd={() => onAdd('OTHER', false, 'ELDER', '시무')} />
-                : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activeElders.map((s) => (
-                      <div key={s.id} className="relative bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-center hover:bg-slate-100 transition">
+                      <div key={s.id}
+                        className="relative bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
                         <AdminCardButtons staffId={s.id} onEdit={onEdit} onDelete={onDelete} />
-                        <p className="text-base font-medium text-slate-800">{s.name}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">장로</p>
+                        <div className="space-y-1.5">
+                          <h4 className="text-lg font-semibold text-slate-900">{s.name}</h4>
+                          <p className="text-sm text-slate-400">장로</p>
+                        </div>
                       </div>
                     ))}
                   </div>
