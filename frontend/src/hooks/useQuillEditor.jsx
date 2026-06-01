@@ -201,22 +201,23 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
   // ── setupImageResize ─────────────────────────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const setupImageResize = useCallback((quill) => {
-    const editor = quill.root
+    const editor    = quill.root              // .ql-editor (편집 영역)
+    const container = quill.root.parentNode   // .ql-container (핸들 부착 대상)
     let activeImg = null
     let handle    = null
     let startX, startW
 
     const removeHandle = () => {
-      if (handle)     { handle.remove(); handle = null }
-      if (activeImg)  { activeImg.style.outline = ''; activeImg = null }
+      if (handle)    { handle.remove(); handle = null }
+      if (activeImg) { activeImg.style.outline = ''; activeImg = null }
     }
 
     const updateHandlePos = (img) => {
       if (!handle) return
-      const imgRect    = img.getBoundingClientRect()
-      const editorRect = editor.getBoundingClientRect()
-      handle.style.left = (imgRect.right  - editorRect.left + editor.scrollLeft - 6) + 'px'
-      handle.style.top  = (imgRect.bottom - editorRect.top  + editor.scrollTop  - 6) + 'px'
+      const imgRect       = img.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      handle.style.left = (imgRect.right  - containerRect.left - 6) + 'px'
+      handle.style.top  = (imgRect.bottom - containerRect.top  - 6) + 'px'
     }
 
     const createHandle = (img) => {
@@ -231,8 +232,9 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
         'border-radius:2px', 'cursor:se-resize', 'z-index:9999',
       ].join(';')
 
-      editor.style.position = 'relative'
-      editor.appendChild(handle)
+      // .ql-container에 붙임 — 에디터 내부 DOM 간섭 방지
+      container.style.position = 'relative'
+      container.appendChild(handle)
       updateHandlePos(img)
 
       handle.addEventListener('mousedown', (e) => {
@@ -262,7 +264,7 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
     })
 
     document.addEventListener('click', (e) => {
-      if (!editor.contains(e.target)) removeHandle()
+      if (!container.contains(e.target)) removeHandle()
     })
   }, [])
 
