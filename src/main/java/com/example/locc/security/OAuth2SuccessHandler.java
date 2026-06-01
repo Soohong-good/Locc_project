@@ -66,6 +66,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         if (user.getApprovalStatus() == User.ApprovalStatus.PENDING &&
                 user.getPhoneNumber() == null) {
             log.debug("신규 소셜 로그인 사용자 - 추가 정보 입력 필요");
+            cookieUtil.clearAuthCookies(response);
             String tempToken = jwtTokenProvider.generateOAuthTempToken(user.getEmail());
             getRedirectStrategy().sendRedirect(request, response,
                     resolveUrl("/social/register?tempToken=" + tempToken));
@@ -75,6 +76,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 승인 대기 중
         if (user.getApprovalStatus() == User.ApprovalStatus.PENDING) {
             log.debug("승인 대기 중인 소셜 로그인 사용자");
+            cookieUtil.clearAuthCookies(response);
             getRedirectStrategy().sendRedirect(request, response,
                     resolveUrl("/social/pending"));
             return;
@@ -83,6 +85,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 반려된 계정
         if (user.getApprovalStatus() == User.ApprovalStatus.REJECTED) {
             log.warn("반려된 OAuth2 사용자 로그인 시도");
+            cookieUtil.clearAuthCookies(response);
             getRedirectStrategy().sendRedirect(request, response,
                     resolveUrl("/auth/login?error=rejected"));
             return;

@@ -431,7 +431,8 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // enabled=true AND deleted=false 여야 활성 계정
-        return Boolean.TRUE.equals(enabled) && !Boolean.TRUE.equals(deleted);
+        // deleted 계정만 Spring Security 단에서 차단
+        // PENDING/REJECTED는 validateAccountStatus()에서 별도 처리 (정확한 메시지 반환)
+        return !Boolean.TRUE.equals(deleted);
     }
 }

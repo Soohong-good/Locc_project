@@ -179,6 +179,9 @@ public class UserCommandService {
 
         User user = refreshToken.getUser();
 
+        // 계정 상태 검증 — PENDING/비활성/삭제 계정은 토큰 갱신 차단
+        validateAccountStatus(user);
+
         // 새 AccessToken + 새 RefreshToken 발급 (Rotation)
         String newAccessToken  = jwtTokenProvider.generateAccessToken(user);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
@@ -336,6 +339,13 @@ public class UserCommandService {
             throw new AccountNotApprovedException(
                     ErrorCode.ACCOUNT_NOT_APPROVED.getDefaultMessage(),
                     "REJECTED"
+            );
+        }
+
+        // 관리자에 의해 비활성화된 계정
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
+            throw new org.springframework.security.authentication.DisabledException(
+                    ErrorCode.ACCOUNT_DISABLED.getDefaultMessage()
             );
         }
     }

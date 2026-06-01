@@ -115,7 +115,7 @@ const AboutPage = () => (
             <h3 className="text-xl font-medium text-slate-900 mb-4">교회 소속</h3>
             <p className="text-lg text-slate-600 leading-[1.9] font-light">
               그리스도사랑교회는{' '}
-              <a href="https://www.rpck.tv/" target="_blank" rel="noreferrer"
+              <a href="http://www.rpck.tv/" target="_blank" rel="noreferrer"
                 className="font-medium text-slate-900 inline-flex items-center gap-1 hover:text-blue-600 transition-colors border-b border-slate-300 hover:border-blue-600">
                 대한예수교장로회총회(개혁)
               </a>
