@@ -225,6 +225,13 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
       activeImg = img
       img.style.outline = '2px solid #2563eb'
 
+      // Quill 선택 영역을 이미지 위치로 설정 → 툴바 정렬 버튼 즉시 동작
+      const blot = Quill.find(img)
+      if (blot) {
+        const index = quill.getIndex(blot)
+        quill.setSelection(index, 1, 'silent')
+      }
+
       handle = document.createElement('div')
       handle.style.cssText = [
         'position:absolute', 'width:12px', 'height:12px',

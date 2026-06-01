@@ -1,4 +1,10 @@
 @import "tailwindcss";
+
+/* ── Quill 에디터 이미지 정렬 지원 ───────────────────── */
+.ql-editor img {
+  display: inline-block;
+  max-width: 100%;
+}
 @import "./design-tokens.css";
 
 /* ── 커스텀 브레이크포인트 ─────────────────────────── */
