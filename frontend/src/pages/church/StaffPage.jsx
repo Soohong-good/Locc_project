@@ -12,6 +12,7 @@ const STAFF_QUERY_KEYS = [
   ['staff', 'senior-pastor'],
   ['staff', 'MINISTER'],
   ['staff', 'EMPLOYEE'],
+  ['staff', 'ELDER'],
 ]
 
 // ─── 공통 UI ──────────────────────────────────────────────────────────────────
@@ -650,6 +651,123 @@ const EmployeeSection = ({ staffList, isLoading, onEdit, onDelete, onAdd }) => (
   </section>
 )
 
+// ─── 장로 섹션 ────────────────────────────────────────────────────────────────
+
+const ElderSubHeader = ({ title, onAdd }) => {
+  const isAdmin = useAuthStore((s) => s.isAdminOrOperator())
+  return (
+    <div className="flex items-center justify-between mb-8">
+      <h3 className="text-2xl font-light text-slate-900">{title}</h3>
+      {isAdmin && onAdd && (
+        <button onClick={onAdd}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition shadow-sm">
+          + 추가
+        </button>
+      )}
+    </div>
+  )
+}
+
+const ElderSection = ({ staffList, isLoading, onEdit, onDelete, onUpload, onDeleteImage, onAdd }) => {
+  const honoraryElders = staffList.filter((s) => s.customPosition === '원로')
+  const retiredElders  = staffList.filter((s) => s.customPosition === '은퇴')
+  const activeElders   = staffList.filter((s) => s.customPosition === '시무')
+
+  const PhotoCard = ({ staff }) => (
+    <div className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 relative">
+      <AdminCardButtons staffId={staff.id} onEdit={onEdit} onDelete={onDelete} />
+      <div className="relative w-28 md:w-36 mx-auto mb-4" style={{ aspectRatio: '3/4' }}>
+        <div className="w-full h-full rounded-lg overflow-hidden bg-slate-100">
+          {staff.imagePath
+            ? <img src={staff.imagePath} alt={staff.name} loading="lazy"
+                className="w-full h-full object-cover transition-transform duration-300 hover:scale-[1.02]" />
+            : <ImagePlaceholder />}
+        </div>
+        <AdminImageButtons staffId={staff.id} hasImage={!!staff.imagePath}
+          onUpload={onUpload} onDeleteImage={onDeleteImage} />
+      </div>
+      <div className="text-center">
+        <h4 className="text-lg font-medium text-slate-900">{staff.name}</h4>
+        <p className="text-sm text-slate-400 mt-0.5">{staff.englishName}</p>
+      </div>
+    </div>
+  )
+
+  return (
+    <section className="py-24 bg-white px-6">
+      <div className="max-w-5xl mx-auto">
+        <SectionHeader title="장로" subtitle="Elder" />
+
+        {isLoading && <LoadingSkeleton count={4} />}
+
+        {!isLoading && (
+          <>
+            {/* 원로 장로 */}
+            <div className="mb-16">
+              <ElderSubHeader title="원로 장로"
+                onAdd={() => onAdd('OTHER', false, 'ELDER', '원로')} />
+              {honoraryElders.length === 0
+                ? <EmptyState message="등록된 원로 장로가 없습니다"
+                    onAdd={() => onAdd('OTHER', false, 'ELDER', '원로')} />
+                : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    {honoraryElders.map((s) => <PhotoCard key={s.id} staff={s} />)}
+                  </div>
+              }
+            </div>
+
+            {/* 은퇴 장로 */}
+            <div className="mb-16">
+              <ElderSubHeader title="은퇴 장로"
+                onAdd={() => onAdd('OTHER', false, 'ELDER', '은퇴')} />
+              {retiredElders.length === 0
+                ? <EmptyState message="등록된 은퇴 장로가 없습니다"
+                    onAdd={() => onAdd('OTHER', false, 'ELDER', '은퇴')} />
+                : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                    {retiredElders.map((s) => <PhotoCard key={s.id} staff={s} />)}
+                  </div>
+              }
+            </div>
+
+            {/* 시무 장로 — 이름만 */}
+            <div>
+              <ElderSubHeader title="시무 장로"
+                onAdd={() => onAdd('OTHER', false, 'ELDER', '시무')} />
+              {activeElders.length === 0
+                ? <EmptyState message="등록된 시무 장로가 없습니다"
+                    onAdd={() => onAdd('OTHER', false, 'ELDER', '시무')} />
+                : <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {activeElders.map((s) => (
+                      <div key={s.id} className="relative bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-center hover:bg-slate-100 transition">
+                        <AdminCardButtons staffId={s.id} onEdit={onEdit} onDelete={onDelete} />
+                        <p className="text-base font-medium text-slate-800">{s.name}</p>
+                        <p className="text-xs text-slate-400 mt-0.5">장로</p>
+                      </div>
+                    ))}
+                  </div>
+              }
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  )
+}
+
+const ElderTab = ({ onEdit, onDelete, onUpload, onDeleteImage, onAdd }) => {
+  const { data: elderList = [], isLoading } = useQuery({
+    queryKey: ['staff', 'ELDER'],
+    queryFn: () => staffApi.getByCategory('ELDER'),
+    staleTime: 5 * 60 * 1000,
+  })
+  return (
+    <ElderSection
+      staffList={elderList} isLoading={isLoading}
+      onEdit={onEdit} onDelete={onDelete}
+      onUpload={onUpload} onDeleteImage={onDeleteImage} onAdd={onAdd}
+    />
+  )
+}
+
 // ─── 교역자 탭 ────────────────────────────────────────────────────────────────
 
 const MinisterTab = ({ onEdit, onDelete, onUpload, onDeleteImage, onAdd }) => {
@@ -734,6 +852,7 @@ export default function StaffPage() {
           <div className="flex gap-4 justify-center">
             {[
               { key: 'MINISTER', label: '교역자' },
+              { key: 'ELDER',    label: '장로' },
               { key: 'EMPLOYEE', label: '교회 직원' },
             ].map(({ key, label }) => (
               <button key={key} onClick={() => setActiveTab(key)}
@@ -751,12 +870,19 @@ export default function StaffPage() {
       </section>
 
       {/* 탭 콘텐츠 */}
-      {activeTab === 'MINISTER' ? (
+      {activeTab === 'MINISTER' && (
         <MinisterTab
           onEdit={openEdit} onDelete={handleDelete}
           onUpload={handleUploadImage} onDeleteImage={handleDeleteImage} onAdd={openCreate}
         />
-      ) : (
+      )}
+      {activeTab === 'ELDER' && (
+        <ElderTab
+          onEdit={openEdit} onDelete={handleDelete}
+          onUpload={handleUploadImage} onDeleteImage={handleDeleteImage} onAdd={openCreate}
+        />
+      )}
+      {activeTab === 'EMPLOYEE' && (
         <EmployeeTab onEdit={openEdit} onDelete={handleDelete} onAdd={openCreate} />
       )}
 

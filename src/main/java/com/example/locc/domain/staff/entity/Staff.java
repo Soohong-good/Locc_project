@@ -66,7 +66,8 @@ public class Staff extends BaseEntity {
 
     public enum StaffCategory {
         MINISTER,       // 교역자
-        EMPLOYEE        // 교회 직원
+        EMPLOYEE,       // 교회 직원
+        ELDER           // 장로 (customPosition: 원로 | 은퇴 | 시무)
     }
 
     // ===== 팩토리 메서드 =====
