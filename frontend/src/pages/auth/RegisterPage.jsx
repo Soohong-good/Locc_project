@@ -281,7 +281,7 @@ const RegisterPage = () => {
     switch (name) {
       case 'password':
         if (!value) return '비밀번호를 입력해주세요.'
-        if (!/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(value)) return '8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.'
+        if (!/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/.test(value)) return '8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.'
         return ''
       case 'passwordConfirm':
         if (!value) return '비밀번호 확인을 입력해주세요.'
@@ -519,7 +519,7 @@ const RegisterPage = () => {
                 placeholder="8자 이상 영문, 숫자, 특수문자 포함"
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
-              <p className="mt-1 text-xs text-slate-500">8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해 주세요.</p>
+              <p className="mt-1 text-xs text-slate-500">8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해 주세요.</p>
               {fieldErrors.password && <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>}
             </div>
 

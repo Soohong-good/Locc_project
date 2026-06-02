@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { validateResetToken, resetPassword } from '@/api/auth'
 import toast from '@/utils/toast'
 
-const PW_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
+const PW_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/
 
 const ResetPasswordPage = () => {
   const [searchParams]            = useSearchParams()
@@ -22,7 +22,7 @@ const ResetPasswordPage = () => {
     let error = ''
     if (key === 'newPassword') {
       if (!value) error = '비밀번호를 입력해주세요.'
-      else if (!PW_REGEX.test(value)) error = '8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.'
+      else if (!PW_REGEX.test(value)) error = '8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.'
     } else if (key === 'confirmPassword') {
       if (!value) error = '비밀번호 확인을 입력해주세요.'
       else if (value !== form.newPassword) error = '비밀번호가 일치하지 않습니다.'
@@ -129,7 +129,7 @@ const ResetPasswordPage = () => {
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
               <p className="mt-1 text-xs text-slate-500">
-                8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.
+                8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.
               </p>
               {fieldErrors.newPassword && <p className="mt-1 text-xs text-red-500">{fieldErrors.newPassword}</p>}
             </div>
