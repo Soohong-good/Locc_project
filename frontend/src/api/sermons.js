@@ -22,6 +22,12 @@ export const getLatestSermons = async (limit = 5) => {
   return data.data
 }
 
+// 카테고리별 최신 설교 단건 조회
+export const getLatestSermonByCategory = async (category) => {
+  const { data } = await client.get(`/api/sermons/category/${encodeURIComponent(category)}/latest`)
+  return data.data
+}
+
 // 주일 2부 최신 설교 단건
 export const getLatestSundayMorning2 = async () => {
   const { data } = await client.get('/api/sermons/sunday-morning/2', { params: { page: 0, size: 1 } })

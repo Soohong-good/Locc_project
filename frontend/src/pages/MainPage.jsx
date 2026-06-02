@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getLatestSermons, getSundayMorningData, getSundayAfternoonData, getWeekdayData } from '@/api/sermons'
+import { getLatestSermonByCategory, getSundayMorningData, getSundayAfternoonData, getWeekdayData } from '@/api/sermons'
 import { fetchNewYear } from '@/api/newYearApi'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
@@ -314,38 +314,16 @@ export default function MainPage() {
   const [sermonTab, setSermonTab] = useState('newyear')
   const { user } = useAuthStore()
 
-  const { data: morning1Data } = useQuery({
-    queryKey: ['sermons', 'sunday-morning', 1, 'latest'],
-    queryFn: () => getSundayMorningData({ serviceNumber: 1, size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: morning2Data } = useQuery({
-    queryKey: ['sermons', 'sunday-morning', 2, 'latest'],
-    queryFn: () => getSundayMorningData({ serviceNumber: 2, size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: afternoonData } = useQuery({
-    queryKey: ['sermons', 'sunday-afternoon', 'latest'],
-    queryFn: () => getSundayAfternoonData({ size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: wednesdayData } = useQuery({
-    queryKey: ['sermons', 'weekday', 'wednesday', 'latest'],
-    queryFn: () => getWeekdayData({ type: 'wednesday', size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: fridayData } = useQuery({
-    queryKey: ['sermons', 'weekday', 'friday', 'latest'],
-    queryFn: () => getWeekdayData({ type: 'friday', size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
+  const { data: morningLatest }   = useQuery({ queryKey: ['sermons', 'cat', '주일오전'],  queryFn: () => getLatestSermonByCategory('주일오전'),  staleTime: 5 * 60 * 1000 })
+  const { data: afternoonLatest } = useQuery({ queryKey: ['sermons', 'cat', '주일오후'],  queryFn: () => getLatestSermonByCategory('주일오후'),  staleTime: 5 * 60 * 1000 })
+  const { data: wednesdayLatest } = useQuery({ queryKey: ['sermons', 'cat', 'wednesday'], queryFn: () => getWeekdayData({ type: 'wednesday', size: 1 }).then(r => r?.latestSermon ?? null), staleTime: 5 * 60 * 1000 })
+  const { data: fridayLatest }    = useQuery({ queryKey: ['sermons', 'cat', 'friday'],    queryFn: () => getWeekdayData({ type: 'friday',    size: 1 }).then(r => r?.latestSermon ?? null), staleTime: 5 * 60 * 1000 })
 
   const categorySermons = [
-    { label: '주일 오전 1부', item: morning1Data?.latestSermon },
-    { label: '주일 오전 2부', item: morning2Data?.latestSermon },
-    { label: '주일 오후 예배', item: afternoonData?.latestSermon },
-    { label: '수요 예배',      item: wednesdayData?.latestSermon },
-    { label: '금요 기도회',    item: fridayData?.latestSermon },
+    { label: '주일 오전 예배', item: morningLatest   ?? null },
+    { label: '주일 오후 예배', item: afternoonLatest ?? null },
+    { label: '수요 예배',      item: wednesdayLatest ?? null },
+    { label: '금요 기도회',    item: fridayLatest    ?? null },
   ]
 
   const { data: newYearData } = useQuery({
@@ -394,7 +372,7 @@ export default function MainPage() {
       if (!el.classList.contains('visible')) observer.observe(el)
     })
     return () => observer.disconnect()
-  }, [morning1Data, morning2Data, afternoonData, wednesdayData, fridayData, notices, galleryImages, sermonTab])
+  }, [morningLatest, afternoonLatest, wednesdayLatest, fridayLatest, notices, galleryImages, sermonTab])
 
   return (
     <>
