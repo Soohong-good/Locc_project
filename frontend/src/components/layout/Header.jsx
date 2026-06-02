@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import useAuthStore from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuth'
+import { getPendingCount } from '@/api/users'
 
 /**
  * 투명 헤더 라우트: 이 경로에서는 최상단에서 투명+흰 글씨,
@@ -160,6 +162,15 @@ const Header = () => {
   const { mutate: logout, isPending } = useLogout()
   const isAdmin = isAdminFn()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  // 관리자 전용: 승인 대기 회원 수 (1분 주기 polling)
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ['admin', 'users', 'pending', 'count'],
+    queryFn: getPendingCount,
+    enabled: isAdmin,
+    refetchInterval: 60 * 1000,
+    staleTime: 30 * 1000,
+  })
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
 
@@ -253,9 +264,16 @@ const Header = () => {
                   glass={glass}
                   label={
                     <span className="flex items-center gap-2">
-                      <span className={`w-7 h-7 rounded-full text-white text-xs flex items-center justify-center font-medium transition-colors
-                        ${glass ? 'bg-white/20' : 'bg-slate-900'}`}>
-                        {user.name?.charAt(0) ?? '?'}
+                      <span className="relative">
+                        <span className={`w-7 h-7 rounded-full text-white text-xs flex items-center justify-center font-medium transition-colors
+                          ${glass ? 'bg-white/20' : 'bg-slate-900'}`}>
+                          {user.name?.charAt(0) ?? '?'}
+                        </span>
+                        {isAdmin && pendingCount > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-0.5 border-2 border-white shadow-sm">
+                            {pendingCount > 9 ? '9+' : pendingCount}
+                          </span>
+                        )}
                       </span>
                       <span className={`text-lg font-medium transition-colors
                         ${glass ? 'text-white/90' : 'text-slate-700'}`}>
@@ -365,8 +383,15 @@ const Header = () => {
               {user ? (
                 <div className="space-y-1">
                   <div className="flex items-center gap-3 pb-3 mb-2 border-b border-slate-200">
-                    <span className="w-8 h-8 rounded-full bg-slate-900 text-white text-sm flex items-center justify-center font-medium">
-                      {user.name?.charAt(0) ?? '?'}
+                    <span className="relative">
+                      <span className="w-8 h-8 rounded-full bg-slate-900 text-white text-sm flex items-center justify-center font-medium">
+                        {user.name?.charAt(0) ?? '?'}
+                      </span>
+                      {isAdmin && pendingCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-0.5 border-2 border-white shadow-sm">
+                          {pendingCount > 9 ? '9+' : pendingCount}
+                        </span>
+                      )}
                     </span>
                     <div>
                       <p className="text-lg font-medium text-slate-900">{user.name}</p>
