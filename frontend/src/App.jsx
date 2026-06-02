@@ -59,6 +59,10 @@ const TrainingApplicationsPage = lazy(() => import('@/pages/training/TrainingApp
 const BulletinListPage       = lazy(() => import('@/pages/bulletins/BulletinListPage'))
 const BulletinDetailPage     = lazy(() => import('@/pages/bulletins/BulletinDetailPage'))
 
+const PraiseSheetListPage    = lazy(() => import('@/pages/praise-sheets/PraiseSheetListPage'))
+const PraiseSheetDetailPage  = lazy(() => import('@/pages/praise-sheets/PraiseSheetDetailPage'))
+const PraiseSheetWritePage   = lazy(() => import('@/pages/praise-sheets/PraiseSheetWritePage'))
+
 const DepartmentPage         = lazy(() => import('@/pages/departments/DepartmentPage'))
 const GalleryDetailPage      = lazy(() => import('@/pages/departments/GalleryDetailPage'))
 
@@ -156,6 +160,11 @@ const AppRoutes = () => {
           <Route path="/notices"         element={<NoticeListPage />} />
           <Route path="/notices/new"     element={<PrivateRoute><NoticeWritePage /></PrivateRoute>} />
           <Route path="/notices/:id"     element={<NoticeDetailPage />} />
+
+          {/* 찬양악보 */}
+          <Route path="/praise-sheets"      element={<PraiseSheetListPage />} />
+          <Route path="/praise-sheets/new"  element={<PrivateRoute><PraiseSheetWritePage /></PrivateRoute>} />
+          <Route path="/praise-sheets/:id"  element={<PraiseSheetDetailPage />} />
 
           {/* 시설·차량 신청 — 로그인 필수 */}
           <Route path="/applications"      element={<PrivateRoute><ApplicationListPage /></PrivateRoute>} />

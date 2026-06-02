@@ -160,6 +160,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
+                        // 찬양악보 — ADMIN + OPERATOR
+                        .requestMatchers(HttpMethod.POST, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
                         // 설교 — ADMIN + OPERATOR
                         .requestMatchers(HttpMethod.POST, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PUT, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
@@ -225,6 +230,8 @@ public class SecurityConfig {
 
                         // ========== 공개 조회 API (비로그인 허용) ==========
                         .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/praise-sheets/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/praise-sheets/*/views").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/sermons/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").permitAll()
                         // 부서 조회 — 단수(/api/department)·복수(/api/departments) 모두 허용

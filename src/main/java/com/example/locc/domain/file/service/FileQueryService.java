@@ -176,6 +176,19 @@ public class FileQueryService {
         return countByEntities(EntityType.NOTICE, entityIds);
     }
 
+    /** PraiseSheet 첨부파일 조회 */
+    public List<AttachmentInfo> getPraiseSheetAttachments(Long entityId) {
+        return fileRepository.findByEntityTypeAndEntityIdWithUploader(EntityType.PRAISE_SHEET, entityId)
+                .stream()
+                .map(AttachmentInfo::from)
+                .collect(Collectors.toList());
+    }
+
+    /** PraiseSheet 첨부파일 개수 일괄 조회 (N+1 방지) */
+    public Map<Long, Long> countPraiseSheetAttachments(List<Long> entityIds) {
+        return countByEntities(EntityType.PRAISE_SHEET, entityIds);
+    }
+
     /** Sermon 첨부파일 조회 → AttachmentInfo 변환까지 담당 */
     public List<AttachmentInfo> getSermonAttachments(Long entityId) {
         return fileRepository.findByEntityTypeAndEntityIdWithUploader(EntityType.SERMON, entityId)
