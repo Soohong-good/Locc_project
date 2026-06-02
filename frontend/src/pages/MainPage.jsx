@@ -316,7 +316,7 @@ export default function MainPage() {
       if (!el.classList.contains('visible')) observer.observe(el)
     })
     return () => observer.disconnect()
-  }, [sermons, notices, galleryImages])
+  }, [sermons, notices, galleryImages, sermonTab])
 
   return (
     <>
