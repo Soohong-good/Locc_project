@@ -259,37 +259,51 @@ const css = `
 
   /* ── 모바일 폰트/레이아웃 보정 ── */
   @media (max-width:640px) {
+    /* 한국어 단어 단위 줄바꿈 — "예" + "배" 쪼개짐 방지 */
+    .dt-hero-title, .dt-hero-quote, .dt-h2,
+    .dt-intro-text, .dt-worship-about-sub, .dt-worship-verse-text,
+    .dt-sermon-title, .dt-news-main-title, .dt-news-item-title,
+    .dt-ministry-name, .dt-ministry-desc, .dt-info-value { word-break:keep-all; }
+
     /* Hero */
-    .dt-hero-content { padding:110px 16px 80px; }
-    .dt-hero-title   { font-size:clamp(24px,7.5vw,44px); letter-spacing:-.02em; }
-    .dt-hero-ref     { font-size:18px; margin-bottom:24px; }
-    .dt-hero-quote   { font-size:14px; line-height:2; margin-bottom:36px; }
-    .dt-hero-eyebrow { font-size:11px; }
+    .dt-hero-content { padding:100px 20px 70px; }
+    .dt-hero-title   { font-size:clamp(22px,6.5vw,40px); letter-spacing:-.02em; }
+    .dt-hero-ref     { font-size:17px; margin-bottom:20px; }
+    .dt-hero-quote   { font-size:13px; line-height:2.1; margin-bottom:32px; }
+    .dt-hero-eyebrow { font-size:11px; padding:5px 14px; }
 
     /* 섹션 공통 */
-    .dt-sec  { padding:64px 0; }
-    .dt-wrap { padding:0 18px; }
-    .dt-h2   { font-size:clamp(22px,6.5vw,34px); }
-    .dt-sub  { font-size:15px; margin-bottom:32px; }
+    .dt-sec  { padding:56px 0; }
+    .dt-wrap { padding:0 20px; }
+    .dt-h2   { font-size:clamp(20px,6vw,32px); }
+    .dt-sub  { font-size:14px; margin-bottom:28px; }
+    .dt-label { font-size:11px; }
 
     /* 예배시간표 */
-    .dt-worship-col          { padding:28px 16px 32px; }
-    .dt-worship-col-label    { font-size:13px; margin-bottom:16px; }
-    .dt-worship-row-name     { font-size:16px; }
-    .dt-worship-row-time     { font-size:20px; min-width:60px; }
-    .dt-worship-row-loc      { font-size:12px; min-width:48px; }
+    .dt-worship-col          { padding:24px 14px 28px; }
+    .dt-worship-col-label    { font-size:12px; margin-bottom:14px; }
+    .dt-worship-row-name     { font-size:15px; }
+    .dt-worship-row-time     { font-size:19px; min-width:56px; }
+    .dt-worship-row-loc      { font-size:11px; min-width:44px; }
 
     /* 설교 카드 */
-    .dt-sermon-title         { font-size:15px; }
-    .dt-sermon-body          { padding:14px; }
+    .dt-sermon-title         { font-size:14px; }
+    .dt-sermon-body          { padding:12px; }
+    .dt-sermon-meta          { font-size:12px; }
 
     /* 공지 */
-    .dt-news-main-title      { font-size:17px; }
+    .dt-news-main-title      { font-size:16px; }
+    .dt-news-excerpt         { font-size:13px; }
     .dt-news-item-title      { font-size:13px; }
+
+    /* 사역 부서 */
+    .dt-ministry-name        { font-size:15px; }
+    .dt-ministry-desc        { font-size:13px; }
 
     /* 연락처 */
     .dt-info-value           { font-size:14px; }
     .dt-transport-item       { font-size:13px; }
+    .dt-transport-title      { font-size:14px; }
   }
 `
 
