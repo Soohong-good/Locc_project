@@ -129,14 +129,13 @@ const EmailVerifyField = ({ suffix, email, setEmail, verified, setVerified, onVe
             onChange={(e) => {
               setEmail(e.target.value)
               setVerified(false)
-              setCodeSent(false)
               setEmailError('')
               setSendError('')
             }}
             required
             placeholder="example@email.com"
-            disabled={verified}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-slate-900 disabled:bg-slate-50 ${
+            disabled={verified || codeSent}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-slate-900 disabled:bg-slate-50 disabled:text-slate-500 ${
               emailError ? 'border-red-400 focus:ring-red-400' : 'border-slate-300'
             }`}
           />
@@ -161,6 +160,24 @@ const EmailVerifyField = ({ suffix, email, setEmail, verified, setVerified, onVe
       </div>
 
       {sendError && <p className="mt-1 text-xs text-red-500">{sendError}</p>}
+
+      {/* 코드 발송 후 이메일 변경 버튼 */}
+      {codeSent && !verified && (
+        <button
+          type="button"
+          onClick={() => {
+            setCodeSent(false)
+            setCode('')
+            setSendError('')
+            setVerifyError('')
+            clearInterval(timerRef.current)
+            setTimeLeft(0)
+          }}
+          className="mt-1 text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
+        >
+          이메일 변경하기
+        </button>
+      )}
 
       {/* 인증 완료 배지 */}
       {verified && (
