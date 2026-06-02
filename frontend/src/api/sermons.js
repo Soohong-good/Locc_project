@@ -22,10 +22,10 @@ export const getLatestSermons = async (limit = 5) => {
   return data.data
 }
 
-// 카테고리별 최신 설교 단건 조회
+// 카테고리별 최신 설교 단건 조회 (쿼리파라미터 사용 - Cloudflare 한국어 경로 문제 회피)
 export const getLatestSermonByCategory = async (category) => {
-  const { data } = await client.get(`/api/sermons/category/${encodeURIComponent(category)}/latest`)
-  return data.data
+  const { data } = await client.get('/api/sermons', { params: { category, size: 1, page: 0 } })
+  return data.data?.content?.[0] ?? null
 }
 
 // 주일 2부 최신 설교 단건
