@@ -166,8 +166,17 @@ const Step2 = ({ userType, onBack, onNext }) => {
   )
 }
 
+// JWT payload 디코딩 (검증 없이 표시용)
+const decodeTokenEmail = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.sub || payload.email || null
+  } catch { return null }
+}
+
 // ── Step 3: 정보 입력 ──────────────────────────────────────────────────────
 const Step3 = ({ userType, consent, tempToken, onBack }) => {
+  const email = decodeTokenEmail(tempToken)
   const navigate = useNavigate()
   const [form, setForm] = useState({
     name: '', gender: '', phoneNumber: '', birth: '',
@@ -257,6 +266,20 @@ const Step3 = ({ userType, consent, tempToken, onBack }) => {
           <div className="pb-2 border-b">
             <h3 className="text-lg font-medium text-slate-900">필수 정보</h3>
           </div>
+
+          {/* 이메일 (소셜 계정, 읽기 전용) */}
+          {email && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">이메일</label>
+              <input
+                type="email"
+                value={email}
+                readOnly
+                className="w-full px-4 py-3 border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+              />
+              <p className="mt-1 text-xs text-slate-400">소셜 로그인 계정 이메일은 변경할 수 없습니다.</p>
+            </div>
+          )}
 
           {/* 이름 */}
           <div>
