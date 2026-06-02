@@ -21,6 +21,7 @@ const RegisterCompletePage   = lazy(() => import('@/pages/auth/RegisterCompleteP
 const ForgotPasswordPage     = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage      = lazy(() => import('@/pages/auth/ResetPasswordPage'))
 const SocialRegisterPage     = lazy(() => import('@/pages/auth/SocialRegisterPage'))
+const SocialRegisterTypePage = lazy(() => import('@/pages/auth/SocialRegisterTypePage'))
 const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage'))
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
@@ -145,8 +146,9 @@ const AppRoutes = () => {
           <Route path="/register/complete" element={<GuestRoute><RegisterCompletePage /></GuestRoute>} />
           <Route path="/forgot-password"   element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
           <Route path="/reset-password"    element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
-          <Route path="/social/register"   element={<GuestRoute><SocialRegisterPage /></GuestRoute>} />
-          <Route path="/social/pending"    element={<GuestRoute><SocialPendingPage /></GuestRoute>} />
+          <Route path="/social/register"          element={<GuestRoute><SocialRegisterPage /></GuestRoute>} />
+          <Route path="/social/pending"           element={<GuestRoute><SocialPendingPage /></GuestRoute>} />
+          <Route path="/register/social/:provider" element={<GuestRoute><SocialRegisterTypePage /></GuestRoute>} />
 
           {/* 주보 — 로그인 필수 */}
           <Route path="/bulletin"     element={<PrivateRoute><BulletinListPage /></PrivateRoute>} />
