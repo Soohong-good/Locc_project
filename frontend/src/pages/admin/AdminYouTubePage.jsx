@@ -248,13 +248,14 @@ const SermonPlaylistSection = ({ onToast }) => {
             {isLoading ? (
               <div className="py-8 text-center text-gray-400 text-sm">불러오는 중...</div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b border-gray-100">
                   <tr>
-                    <th className="px-4 py-2.5 text-left font-medium text-gray-500 text-xs w-32">예배</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-gray-500 text-xs whitespace-nowrap">예배</th>
                     <th className="px-4 py-2.5 text-left font-medium text-gray-500 text-xs">현재 최신 영상</th>
                     <th className="px-4 py-2.5 text-left font-medium text-gray-500 text-xs hidden md:table-cell">재생목록 ID</th>
-                    <th className="px-4 py-2.5 text-right font-medium text-gray-500 text-xs w-24">갱신</th>
+                    <th className="px-4 py-2.5 text-right font-medium text-gray-500 text-xs whitespace-nowrap">갱신</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -262,7 +263,7 @@ const SermonPlaylistSection = ({ onToast }) => {
                     const s = statusMap[key]
                     return (
                       <tr key={key} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <span className="font-medium text-gray-800 text-sm">{label}</span>
                         </td>
                         <td className="px-4 py-4">
@@ -309,6 +310,7 @@ const SermonPlaylistSection = ({ onToast }) => {
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         ))}
@@ -492,7 +494,7 @@ const AdminYouTubePage = () => {
   }
 
   return (
-    <div className="p-8 space-y-10">
+    <div className="p-4 sm:p-8 space-y-10">
       <div>
         <h1 className="text-xl font-bold text-gray-900">YouTube 관리</h1>
         <p className="text-sm text-gray-500 mt-1">부서 채널 · 예배 영상 수동 갱신</p>
