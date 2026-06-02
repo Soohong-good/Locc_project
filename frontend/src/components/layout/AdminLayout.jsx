@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useAuthStore from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuth'
 
@@ -24,9 +24,9 @@ const ICONS = {
   popup:        'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm12 0a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
   youtube:      'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
   home:         'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
+  menu:         'M4 6h16M4 12h16M4 18h16',
+  close:        'M6 18L18 6M6 6l12 12',
 }
-
-// ── 섹션 구분 레이블 ──────────────────────────────────────────────────────
 
 const SectionLabel = ({ label }) => (
   <p className="px-3 pt-5 pb-1.5 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
@@ -34,12 +34,11 @@ const SectionLabel = ({ label }) => (
   </p>
 )
 
-// ── 단일 NavLink 항목 ─────────────────────────────────────────────────────
-
-const NavItem = ({ to, label, iconPath, end = false }) => (
+const NavItem = ({ to, label, iconPath, end = false, onClick }) => (
   <NavLink
     to={to}
     end={end}
+    onClick={onClick}
     className={({ isActive }) =>
       `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
         isActive
@@ -53,18 +52,16 @@ const NavItem = ({ to, label, iconPath, end = false }) => (
   </NavLink>
 )
 
-// ── 드롭다운 그룹 (게시물) ────────────────────────────────────────────────
-
 const POST_CHILDREN = [
-  { to: '/admin/sermons',   label: '설교',   iconPath: ICONS.sermon },
+  { to: '/admin/sermons',   label: '설교',    iconPath: ICONS.sermon },
   { to: '/admin/notices',   label: '공지사항', iconPath: ICONS.notice },
-  { to: '/admin/bulletins', label: '주보',   iconPath: ICONS.bulletin },
-  { to: '/admin/gallery',   label: '갤러리', iconPath: ICONS.gallery },
+  { to: '/admin/bulletins', label: '주보',    iconPath: ICONS.bulletin },
+  { to: '/admin/gallery',   label: '갤러리',  iconPath: ICONS.gallery },
 ]
 
 const POST_PATHS = POST_CHILDREN.map((c) => c.to)
 
-const NavGroup = ({ label, iconPath, children, defaultOpen }) => {
+const NavGroup = ({ label, iconPath, children, defaultOpen, onChildClick }) => {
   const [open, setOpen] = useState(defaultOpen)
 
   return (
@@ -93,6 +90,7 @@ const NavGroup = ({ label, iconPath, children, defaultOpen }) => {
             <NavLink
               key={to}
               to={to}
+              onClick={onChildClick}
               className={({ isActive }) =>
                 `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
                   isActive
@@ -117,83 +115,128 @@ const AdminLayout = () => {
   const { user } = useAuthStore()
   const { mutate: logout } = useLogout()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const isInPostGroup = POST_PATHS.some((p) => location.pathname.startsWith(p))
+
+  // 라우트 변경 시 모바일 사이드바 닫기
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
+
+  const closeSidebar = () => setSidebarOpen(false)
+
+  const sidebarContent = (
+    <>
+      {/* 로고 */}
+      <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] text-gray-500 mb-0.5 uppercase tracking-widest">관리자</p>
+          <p className="text-sm font-semibold text-white">그리스도사랑교회</p>
+        </div>
+        {/* 모바일 닫기 버튼 */}
+        <button
+          onClick={closeSidebar}
+          className="lg:hidden p-1 text-gray-400 hover:text-white"
+        >
+          <Icon path={ICONS.close} className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* 네비게이션 */}
+      <nav className="flex-1 px-3 py-3 overflow-y-auto">
+        <NavItem to="/admin" label="대시보드" iconPath={ICONS.dashboard} end onClick={closeSidebar} />
+
+        <SectionLabel label="콘텐츠" />
+        <div className="space-y-0.5">
+          <NavGroup
+            label="게시물"
+            iconPath={ICONS.posts}
+            defaultOpen={isInPostGroup}
+            onChildClick={closeSidebar}
+          >
+            {POST_CHILDREN}
+          </NavGroup>
+        </div>
+
+        <SectionLabel label="운영" />
+        <div className="space-y-0.5">
+          <NavItem to="/admin/users"         label="회원 관리"      iconPath={ICONS.users}    onClick={closeSidebar} />
+          <NavItem to="/admin/help-requests"  label="도움문의"       iconPath={ICONS.help}     onClick={closeSidebar} />
+          <NavItem to="/admin/applications"   label="시설·차량 신청" iconPath={ICONS.facility} onClick={closeSidebar} />
+        </div>
+
+        <SectionLabel label="설정" />
+        <div className="space-y-0.5">
+          <NavItem to="/admin/popups"  label="팝업 관리"    iconPath={ICONS.popup}   onClick={closeSidebar} />
+          <NavItem to="/admin/youtube" label="YouTube 관리" iconPath={ICONS.youtube} onClick={closeSidebar} />
+        </div>
+
+        <div className="border-t border-gray-700 mt-4 mb-2" />
+        <Link
+          to="/"
+          onClick={closeSidebar}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+        >
+          <Icon path={ICONS.home} />
+          홈페이지 메인
+        </Link>
+      </nav>
+
+      {/* 하단 유저 정보 */}
+      <div className="px-5 py-4 border-t border-gray-700">
+        <p className="text-xs text-gray-400 truncate">{user?.name}</p>
+        <button
+          onClick={() => logout()}
+          className="mt-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
+        >
+          로그아웃
+        </button>
+      </div>
+    </>
+  )
 
   return (
     <div className="min-h-screen flex bg-gray-100">
 
-      {/* 사이드바 */}
-      <aside className="w-56 bg-gray-900 text-gray-300 flex flex-col shrink-0">
-
-        {/* 로고 */}
-        <div className="px-5 py-4 border-b border-gray-700">
-          <p className="text-[10px] text-gray-500 mb-0.5 uppercase tracking-widest">관리자</p>
-          <p className="text-sm font-semibold text-white">그리스도사랑교회</p>
-        </div>
-
-        {/* 네비게이션 */}
-        <nav className="flex-1 px-3 py-3 overflow-y-auto">
-
-          {/* 대시보드 */}
-          <NavItem to="/admin" label="대시보드" iconPath={ICONS.dashboard} end />
-
-          {/* 콘텐츠 섹션 */}
-          <SectionLabel label="콘텐츠" />
-          <div className="space-y-0.5">
-            <NavGroup
-              label="게시물"
-              iconPath={ICONS.posts}
-              defaultOpen={isInPostGroup}
-            >
-              {POST_CHILDREN}
-            </NavGroup>
-          </div>
-
-          {/* 운영 섹션 */}
-          <SectionLabel label="운영" />
-          <div className="space-y-0.5">
-            <NavItem to="/admin/users"        label="회원 관리"    iconPath={ICONS.users} />
-            <NavItem to="/admin/help-requests" label="도움문의"     iconPath={ICONS.help} />
-            <NavItem to="/admin/applications"  label="시설·차량 신청" iconPath={ICONS.facility} />
-          </div>
-
-          {/* 설정 섹션 */}
-          <SectionLabel label="설정" />
-          <div className="space-y-0.5">
-            <NavItem to="/admin/popups"  label="팝업 관리"    iconPath={ICONS.popup} />
-            <NavItem to="/admin/youtube" label="YouTube 관리" iconPath={ICONS.youtube} />
-          </div>
-
-          {/* 구분선 */}
-          <div className="border-t border-gray-700 mt-4 mb-2" />
-
-          {/* 홈페이지 바로가기 */}
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
-          >
-            <Icon path={ICONS.home} />
-            홈페이지 메인
-          </Link>
-        </nav>
-
-        {/* 하단 유저 정보 */}
-        <div className="px-5 py-4 border-t border-gray-700">
-          <p className="text-xs text-gray-400 truncate">{user?.name}</p>
-          <button
-            onClick={() => logout()}
-            className="mt-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
-          >
-            로그아웃
-          </button>
-        </div>
+      {/* ── 데스크탑 사이드바 (lg 이상 항상 표시) ── */}
+      <aside className="hidden lg:flex w-56 bg-gray-900 text-gray-300 flex-col shrink-0">
+        {sidebarContent}
       </aside>
 
-      {/* 콘텐츠 영역 */}
-      <main className="flex-1 overflow-auto">
-        <Outlet />
-      </main>
+      {/* ── 모바일 사이드바 오버레이 ── */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={closeSidebar}
+        />
+      )}
+      <aside
+        className={`lg:hidden fixed top-0 left-0 h-full w-64 bg-gray-900 text-gray-300 flex flex-col z-50
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* ── 콘텐츠 영역 ── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* 모바일 상단 바 */}
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-30">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 rounded-md text-gray-600 hover:bg-gray-100"
+          >
+            <Icon path={ICONS.menu} className="w-5 h-5" />
+          </button>
+          <span className="text-sm font-semibold text-gray-800">그리스도사랑교회 관리자</span>
+        </div>
+
+        <main className="flex-1 overflow-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }
