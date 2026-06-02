@@ -401,13 +401,20 @@ const SocialRegisterPage = () => {
   const [userType, setUserType] = useState(null)
   const [consent,  setConsent]  = useState(null)
 
-  // 마운트 시 1회 실행 — tempToken 유효성 확인 및 Daum 주소 API 스크립트 로드
+  // 마운트 시 1회 실행 — tempToken 유효성 확인, 사전 선택된 교인구분 적용, Daum 스크립트 로드
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!tempToken) {
       toast.error('잘못된 접근입니다.')
       navigate('/login')
       return
+    }
+    // 회원가입 페이지에서 미리 선택한 교인구분이 있으면 Step1 스킵
+    const preSelected = sessionStorage.getItem('social_register_user_type')
+    if (preSelected === 'REGISTERED' || preSelected === 'UNREGISTERED') {
+      sessionStorage.removeItem('social_register_user_type')
+      setUserType(preSelected)
+      setStep(2)
     }
     if (!document.querySelector('script[src*="postcode.v2"]')) {
       const script = document.createElement('script')
