@@ -7,6 +7,7 @@ import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import PopupOverlay from '@/components/common/PopupOverlay'
 import KakaoMap from '@/components/ui/KakaoMap'
 import useAuthStore from '@/stores/authStore'
 
@@ -852,6 +853,7 @@ export default function MainPage() {
       </section>
 
       {modalVideoId && <VideoModal videoId={modalVideoId} onClose={() => setModalVideoId(null)} />}
+      <PopupOverlay />
     </div>
     <Footer />
     </>

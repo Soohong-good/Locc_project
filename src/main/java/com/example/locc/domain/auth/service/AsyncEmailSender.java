@@ -168,54 +168,54 @@ public class AsyncEmailSender {
                 <head>
                   <meta charset="UTF-8">
                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
                 </head>
-                <body style="margin:0;padding:0;font-family:'Malgun Gothic','맑은 고딕',Arial,sans-serif;background-color:#f5f5f5;">
-                  <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
+                <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Noto Sans KR','Malgun Gothic',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:32px 16px;">
                     <tr>
                       <td align="center">
                         <table width="600" cellpadding="0" cellspacing="0"
-                               style="background-color:#ffffff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                          <!-- 헤더 -->
-                          <tr>
-                            <td style="padding:40px 40px 30px;text-align:center;border-bottom:1px solid #e5e5e5;">
-                              <h1 style="margin:0;font-size:24px;font-weight:300;color:#1e293b;">그리스도 사랑교회</h1>
-                            </td>
-                          </tr>
+                               style="background-color:#ffffff;border:1px solid #e4e4e7;box-shadow:0 2px 8px -4px rgba(0,0,0,0.05);max-width:600px;width:100%%;">
                           <!-- 본문 -->
                           <tr>
-                            <td style="padding:40px;">
-                              <h2 style="margin:0 0 20px;font-size:20px;font-weight:500;color:#0f172a;">이메일 인증 코드</h2>
-                              <p style="margin:0 0 30px;font-size:15px;line-height:1.6;color:#475569;">
-                                회원가입을 위한 이메일 인증 코드를 안내해 드립니다.<br>
-                                아래 인증 코드를 입력하여 이메일 인증을 완료해주세요.
-                              </p>
-                              <!-- 인증 코드 박스 -->
-                              <div style="background-color:#f8fafc;border:2px solid #e2e8f0;border-radius:8px;padding:30px;text-align:center;margin:30px 0;">
-                                <div style="font-size:14px;color:#64748b;margin-bottom:10px;font-weight:500;">인증 코드</div>
-                                <div style="font-size:36px;font-weight:700;letter-spacing:8px;color:#0f172a;font-family:'Courier New',monospace;">
-                                  %s
-                                </div>
+                            <td style="padding:48px 56px 40px;">
+                              <!-- 헤더: 로고 -->
+                              <div style="margin-bottom:48px;">
+                                <img src="https://locc.kr/logo.png" alt="그리스도 사랑교회" height="36"
+                                     style="height:36px;width:auto;display:block;">
                               </div>
-                              <!-- 안내 -->
-                              <div style="background-color:#fef3c7;border-left:4px solid #f59e0b;padding:15px 20px;margin:30px 0;border-radius:4px;">
-                                <p style="margin:0;font-size:14px;color:#92400e;line-height:1.6;">
-                                  <strong>⏱️ 유효 시간:</strong> 이 코드는 <strong>5분간</strong> 유효합니다.<br>
-                                  <strong>🔒 보안:</strong> 본인이 요청하지 않았다면 이 메일을 무시하세요.
+                              <!-- 제목 -->
+                              <h1 style="margin:0 0 24px;font-size:30px;font-weight:500;letter-spacing:-0.5px;color:#18181b;line-height:1.2;">
+                                이메일 인증 코드
+                              </h1>
+                              <!-- 설명 -->
+                              <p style="margin:0 0 36px;font-size:15px;color:#52525b;line-height:2;">
+                                안녕하세요.<br>
+                                요청하신 이메일 인증 코드를 발송해 드립니다.<br>
+                                아래의 6자리 코드를 진행 중인 화면에 입력하여 인증을 완료해 주세요.
+                              </p>
+                              <!-- 인증 코드 -->
+                              <div style="margin:0 0 36px;padding:28px 0;border-top:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;">
+                                <span style="font-family:'ui-monospace','Courier New',monospace;font-size:52px;font-weight:300;letter-spacing:0.25em;color:#18181b;">
+                                  %s
+                                </span>
+                              </div>
+                              <!-- 안내 사항 -->
+                              <div style="margin:0 0 56px;">
+                                <p style="margin:0 0 10px;font-size:13px;color:#71717a;line-height:1.7;display:flex;align-items:flex-start;">
+                                  <span style="margin-right:8px;color:#d4d4d8;">•</span>
+                                  이 인증 코드는 발송 시점으로부터 <strong style="font-weight:500;color:#27272a;">&nbsp;5분 동안만&nbsp;</strong> 유효합니다.
+                                </p>
+                                <p style="margin:0;font-size:13px;color:#71717a;line-height:1.7;display:flex;align-items:flex-start;">
+                                  <span style="margin-right:8px;color:#d4d4d8;">•</span>
+                                  본인이 요청하지 않은 경우 이 이메일을 무시하셔도 됩니다. 보안을 위해 절대 타인에게 이 코드를 알려주지 마세요.
                                 </p>
                               </div>
-                              <p style="margin:30px 0 0;font-size:14px;color:#64748b;line-height:1.6;">
-                                감사합니다.<br>
-                                <strong style="color:#475569;">그리스도 사랑교회</strong> 드림
-                              </p>
-                            </td>
-                          </tr>
-                          <!-- 푸터 -->
-                          <tr>
-                            <td style="padding:30px;background-color:#f8fafc;border-top:1px solid #e5e5e5;text-align:center;border-radius:0 0 8px 8px;">
-                              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">
-                                이 이메일은 회원가입 시 자동으로 발송된 메일입니다.<br>
-                                문의사항이 있으시면 교회로 연락 주시기 바랍니다.
-                              </p>
+                              <!-- 푸터 -->
+                              <div style="padding-top:24px;border-top:1px solid #f4f4f5;">
+                                <p style="margin:0 0 4px;font-size:11px;color:#a1a1aa;line-height:1.8;">본 메일은 발신 전용입니다. 관련된 문의사항은 교회 사무실로 연락해 주시기 바랍니다.</p>
+                                <p style="margin:0;font-size:11px;color:#a1a1aa;">© 그리스도 사랑교회. All rights reserved.</p>
+                              </div>
                             </td>
                           </tr>
                         </table>
