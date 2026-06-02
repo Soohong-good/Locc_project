@@ -341,11 +341,11 @@ export default function MainPage() {
   })
 
   const categorySermons = [
-    { label: '주일 오전 1부', item: morning1Data?.content?.[0] },
-    { label: '주일 오전 2부', item: morning2Data?.content?.[0] },
-    { label: '주일 오후 예배', item: afternoonData?.content?.[0] },
-    { label: '수요 예배',      item: wednesdayData?.content?.[0] },
-    { label: '금요 기도회',    item: fridayData?.content?.[0] },
+    { label: '주일 오전 1부', item: morning1Data?.latestSermon },
+    { label: '주일 오전 2부', item: morning2Data?.latestSermon },
+    { label: '주일 오후 예배', item: afternoonData?.latestSermon },
+    { label: '수요 예배',      item: wednesdayData?.latestSermon },
+    { label: '금요 기도회',    item: fridayData?.latestSermon },
   ]
 
   const { data: newYearData } = useQuery({
