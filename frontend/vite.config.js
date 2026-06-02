@@ -42,6 +42,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // 새 SW가 활성화되면 즉시 모든 탭 제어 (구 청크 404 방지)
+        clientsClaim: true,
         // API, OAuth 요청은 캐시 안 함
         navigateFallbackDenylist: [/^\/api\//, /^\/oauth2\//, /^\/login\/oauth2\//],
         runtimeCaching: [
