@@ -273,8 +273,7 @@ export default function MainPage() {
   const { data: newYearData } = useQuery({
     queryKey: ['newyear'],
     queryFn: fetchNewYear,
-    enabled: sermonTab === 'newyear',
-    staleTime: 10 * 60 * 1000,
+    staleTime: Infinity,
   })
 
   const { data: noticesData } = useQuery({

@@ -375,6 +375,8 @@ const WorshipSection = ({ onToast }) => {
     onSuccess: () => {
       onToast('송구영신예배 영상이 갱신되었습니다', 'success')
       queryClient.invalidateQueries({ queryKey: ['admin', 'youtube', 'worship'] })
+      queryClient.invalidateQueries({ queryKey: ['newyear'] })
+      queryClient.invalidateQueries({ queryKey: ['worship', 'newyear'] })
     },
     onError: () => onToast('갱신 중 오류가 발생했습니다', 'error'),
   })

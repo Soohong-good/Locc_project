@@ -239,6 +239,7 @@ export default function NewYearServicePage() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['worship', 'newyear'],
     queryFn: fetchNewYear,
+    staleTime: Infinity,
   })
 
   const title            = data?.title            || '송구영신예배'
