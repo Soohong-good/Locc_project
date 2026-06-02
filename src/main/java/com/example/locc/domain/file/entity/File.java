@@ -65,7 +65,8 @@ public class File extends BaseEntity {
         GALLERY("갤러리"),
         DEPARTMENT("부서"),
         STAFF("교역자"),
-        POPUP("팝업");
+        POPUP("팝업"),
+        PRAISE_SHEET("찬양악보");
 
         private final String description;
 

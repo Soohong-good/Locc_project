@@ -39,9 +39,10 @@ const NAV_MENUS = [
     label: '공지 및 자료실',
     minWidth: '210px',
     children: [
-      { href: '/notices',      label: '공지' },
-      { href: '/bulletin',     label: '주보' },
-      { href: '/applications', label: '신청양식' },
+      { href: '/notices',       label: '공지' },
+      { href: '/bulletin',      label: '주보' },
+      { href: '/praise-sheets', label: '찬양악보' },
+      { href: '/applications',  label: '신청양식' },
     ],
   },
   {

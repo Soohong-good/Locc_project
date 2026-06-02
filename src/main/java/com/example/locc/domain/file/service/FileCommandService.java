@@ -247,6 +247,21 @@ public class FileCommandService {
         deleteAllByEntity(File.EntityType.NOTICE, entityId);
     }
 
+    /** PraiseSheet 첨부파일 업로드 */
+    public List<File> uploadPraiseSheetAttachments(List<MultipartFile> files, Long entityId, String email) {
+        return uploadFiles(files, File.EntityType.PRAISE_SHEET, entityId, File.FileCategory.ATTACHMENT, email);
+    }
+
+    /** PraiseSheet 본문 이미지 업로드 */
+    public String uploadPraiseSheetContentImage(MultipartFile image, String email) {
+        return uploadContentImage(image, File.EntityType.PRAISE_SHEET, email);
+    }
+
+    /** PraiseSheet 엔티티의 모든 파일 삭제 */
+    public void deletePraiseSheetFiles(Long entityId) {
+        deleteAllByEntity(File.EntityType.PRAISE_SHEET, entityId);
+    }
+
     /** Sermon 첨부파일 업로드 */
     public List<File> uploadSermonAttachments(List<MultipartFile> files, Long entityId, String email) {
         return uploadFiles(files, File.EntityType.SERMON, entityId, File.FileCategory.ATTACHMENT, email);
