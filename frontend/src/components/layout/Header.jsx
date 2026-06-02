@@ -197,6 +197,7 @@ const Header = () => {
         ${glass
           ? 'bg-transparent border-b border-transparent'
           : 'bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm'}`}
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="w-full px-6 xl:px-12">
         <div className="flex items-center justify-between h-[95px]">
