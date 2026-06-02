@@ -290,11 +290,20 @@ public class UserCommandService {
 
     /**
      * 회원 차단 (비활성화)
+     * - 승인 대기(PENDING) 상태인 회원을 차단하면 승인 거부(REJECTED)로도 처리
+     *   → 승인 대기 목록에서 자동으로 제거됨
      */
     public void disable(UUID userId) {
         log.info("Disabling user: {}", userId);
 
         User user = userQueryService.findById(userId);
+
+        // PENDING 상태 회원을 차단하면 승인 대기 목록에서 제거
+        if (user.getApprovalStatus() == User.ApprovalStatus.PENDING) {
+            user.reject(null);
+            log.info("Pending user rejected due to block: {}", userId);
+        }
+
         user.disable();
 
         // RefreshToken 삭제 (재로그인 방지)
