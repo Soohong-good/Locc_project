@@ -42,8 +42,12 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // 새 SW가 설치되면 대기 없이 즉시 활성화
+        skipWaiting: true,
         // 새 SW가 활성화되면 즉시 모든 탭 제어 (구 청크 404 방지)
         clientsClaim: true,
+        // 구버전 프리캐시 항목 자동 정리 (배포 후 404 방지)
+        cleanupOutdatedCaches: true,
         // API, OAuth 요청은 캐시 안 함
         navigateFallbackDenylist: [/^\/api\//, /^\/oauth2\//, /^\/login\/oauth2\//],
         runtimeCaching: [
