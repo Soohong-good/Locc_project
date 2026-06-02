@@ -28,9 +28,9 @@
   --header-h: 95px;
 }
 
-/* pt-page: 고정 헤더 높이 + 여백 (pt-[140px] 대체) */
+/* pt-page: 고정 헤더 높이 + 여백 + iOS 노치 높이 */
 @utility pt-page {
-  padding-top: calc(var(--header-h) + 45px);
+  padding-top: calc(var(--header-h) + 45px + env(safe-area-inset-top, 0px));
 }
 
 /* eyebrow 레이블 공통 색상 */
@@ -53,11 +53,14 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
 }
 
 body {
   background-color: #fff;
   color: #0f172a;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
+  max-width: 100vw;
 }
 
 /* ── 버튼 커서 ────────────────────────────────────── */
