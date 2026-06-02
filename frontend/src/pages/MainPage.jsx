@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getLatestSermons } from '@/api/sermons'
+import { fetchNewYear } from '@/api/newYearApi'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
 import Header from '@/components/layout/Header'
@@ -146,6 +147,24 @@ const css = `
   .dt-worship-verse-text { font-size:16px; color:var(--navy); line-height:1.9; }
   @media (max-width:900px) { .dt-worship-about { grid-template-columns:1fr; gap:36px; } }
 
+
+  /* ── SERMON TABS ── */
+  .dt-sermon-tabs { display:flex; gap:0; margin-bottom:40px; border-bottom:1px solid #e8ecf2; }
+  .dt-sermon-tab { padding:10px 20px; font-size:14px; font-weight:600; color:#aab; border-bottom:2px solid transparent; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; transition:color .2s,border-color .2s; letter-spacing:.04em; }
+  .dt-sermon-tab:hover { color:var(--navy); }
+  .dt-sermon-tab.active { color:var(--navy); border-bottom-color:var(--navy); }
+  /* 송구영신예배 대형 카드 */
+  .dt-newyear-feature { max-width:1060px; margin:0 auto; cursor:pointer; }
+  .dt-newyear-thumb { position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.15); }
+  .dt-newyear-thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+  .dt-newyear-feature:hover .dt-newyear-thumb img { transform:scale(1.03); }
+  .dt-newyear-play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(10,18,40,.25); transition:background .2s; }
+  .dt-newyear-feature:hover .dt-newyear-play { background:rgba(10,18,40,.4); }
+  .dt-newyear-play-circle { width:72px; height:72px; background:rgba(255,255,255,.92); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(0,0,0,.2); transition:transform .2s; }
+  .dt-newyear-feature:hover .dt-newyear-play-circle { transform:scale(1.08); }
+  .dt-newyear-info { text-align:center; margin-top:20px; }
+  .dt-newyear-tag { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--navy); opacity:.5; margin-bottom:8px; }
+  .dt-newyear-title { font-size:22px; font-weight:700; color:var(--navy); line-height:1.4; }
 
   /* ── SERMON ── */
   .dt-sermon-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:40px; }
@@ -292,12 +311,19 @@ const css = `
 export default function MainPage() {
   const navigate = useNavigate()
   const [modalVideoId, setModalVideoId] = useState(null)
+  const [sermonTab, setSermonTab] = useState('newyear')
   const { user } = useAuthStore()
 
   const { data: sermons = [] } = useQuery({
     queryKey: ['sermons', 'latest', 3],
     queryFn: () => getLatestSermons(3),
     staleTime: 5 * 60 * 1000,
+  })
+
+  const { data: newYearData } = useQuery({
+    queryKey: ['newyear'],
+    queryFn: fetchNewYear,
+    staleTime: Infinity,
   })
 
   const { data: noticesData } = useQuery({
@@ -340,7 +366,7 @@ export default function MainPage() {
       if (!el.classList.contains('visible')) observer.observe(el)
     })
     return () => observer.disconnect()
-  }, [sermons, notices, galleryImages])
+  }, [sermons, notices, galleryImages, sermonTab])
 
   return (
     <>
@@ -487,41 +513,90 @@ export default function MainPage() {
             <a href="/worship/sermon/sunday-morning" className="dt-see-all">전체 보기 →</a>
           </div>
 
-          <div className="dt-sermon-grid">
-            {sermons.map((s, i) => {
-              const vid = extractVideoId(s.videoUrl)
-              return (
-                <div key={s.id} className="dt-sermon-card dt-fade"
-                  style={{ transitionDelay: `${i * 0.12}s`, cursor: 'pointer' }}
-                  onClick={() => vid ? setModalVideoId(vid) : navigate(`/worship/sermon/sunday-morning`)}>
-                  <div className="dt-sermon-thumb">
-                    {vid
-                      ? <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={s.title} />
-                      : <div style={{width:'100%',height:'100%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5">
-                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                          </svg>
+          {/* 카테고리 탭 */}
+          <div className="dt-sermon-tabs">
+            <button
+              className={`dt-sermon-tab ${sermonTab === 'newyear' ? 'active' : ''}`}
+              onClick={() => setSermonTab('newyear')}
+            >
+              송구영신예배
+            </button>
+            <button
+              className={`dt-sermon-tab ${sermonTab === 'latest' ? 'active' : ''}`}
+              onClick={() => setSermonTab('latest')}
+            >
+              최근 설교
+            </button>
+          </div>
+
+          {/* 최근 설교 탭 */}
+          {sermonTab === 'latest' && (
+            <div className="dt-sermon-grid">
+              {sermons.map((s, i) => {
+                const vid = extractVideoId(s.videoUrl)
+                return (
+                  <div key={s.id} className="dt-sermon-card dt-fade" style={{transitionDelay:`${i*0.12}s`,cursor:'pointer'}}
+                    onClick={() => vid ? setModalVideoId(vid) : navigate(`/worship/sermon/${s.id}`)}>
+                    <div className="dt-sermon-thumb">
+                      {vid
+                        ? <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={s.title} />
+                        : <div style={{width:'100%',height:'100%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5">
+                              <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                            </svg>
+                          </div>
+                      }
+                      <div className="dt-play-btn">
+                        <div className="dt-play-circle">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
                         </div>
-                    }
-                    <div className="dt-play-btn">
-                      <div className="dt-play-circle">
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
                       </div>
                     </div>
-                  </div>
-                  <div className="dt-sermon-body">
-                    <div className="dt-sermon-meta">
-                      <span className="dt-sermon-tag">{s.category || '설교'}</span>
-                      <span>{fmtDate(s.sermonDate || s.createdAt)}</span>
+                    <div className="dt-sermon-body">
+                      <div className="dt-sermon-meta">
+                        <span className="dt-sermon-tag">{s.category || '설교'}</span>
+                        <span>{fmtDate(s.sermonDate || s.createdAt)}</span>
+                      </div>
+                      <div className="dt-sermon-title">{s.title}</div>
+                      {s.preacher && <div className="dt-sermon-speaker">{s.preacher}</div>}
+                      {s.bibleVerses && <div className="dt-sermon-verse">{s.bibleVerses}</div>}
                     </div>
-                    <div className="dt-sermon-title">{s.title}</div>
-                    {s.preacher && <div className="dt-sermon-speaker">{s.preacher}</div>}
-                    {s.bibleVerses && <div className="dt-sermon-verse">{s.bibleVerses}</div>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* 송구영신예배 탭 — 중앙 대형 표시 */}
+          {sermonTab === 'newyear' && (
+            newYearData?.latestVideoId ? (
+              <div className="dt-newyear-feature dt-fade"
+                onClick={() => setModalVideoId(newYearData.latestVideoId)}>
+                <div className="dt-newyear-thumb">
+                  <img
+                    src={`https://img.youtube.com/vi/${newYearData.latestVideoId}/maxresdefault.jpg`}
+                    alt={newYearData.title || '송구영신예배'}
+                    onError={(e) => { e.currentTarget.src = `https://img.youtube.com/vi/${newYearData.latestVideoId}/mqdefault.jpg` }}
+                  />
+                  <div className="dt-newyear-play">
+                    <div className="dt-newyear-play-circle">
+                      <svg viewBox="0 0 24 24" width="28" height="28" fill="#1a2744">
+                        <polygon points="6,3 20,12 6,21"/>
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              )
-            })}
-          </div>
+                <div className="dt-newyear-info">
+                  <div className="dt-newyear-tag">송구영신예배</div>
+                  <div className="dt-newyear-title">{newYearData.title || '송구영신예배'}</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{padding:'48px 0',textAlign:'center',color:'#aab',fontSize:15}}>
+                등록된 송구영신예배 영상이 없습니다
+              </div>
+            )
+          )}
         </div>
       </section>
 
