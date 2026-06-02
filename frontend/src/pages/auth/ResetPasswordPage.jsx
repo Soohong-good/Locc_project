@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { validateResetToken, resetPassword } from '@/api/auth'
 import toast from '@/utils/toast'
 
-const PW_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+const PW_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
 
 const ResetPasswordPage = () => {
   const [searchParams]            = useSearchParams()
@@ -12,9 +12,23 @@ const ResetPasswordPage = () => {
   const token                     = searchParams.get('token') ?? ''
 
   const [tokenValid, setTokenValid] = useState(null) // null=확인중 | true | false
-  const [form, setForm]           = useState({ newPassword: '', confirmPassword: '' })
-  const [formError, setFormError] = useState('')
+  const [form, setForm]             = useState({ newPassword: '', confirmPassword: '' })
+  const [formError, setFormError]   = useState('')
+  const [fieldErrors, setFieldErrors] = useState({})
   const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }))
+
+  const handleBlur = (key) => (e) => {
+    const value = e.target.value
+    let error = ''
+    if (key === 'newPassword') {
+      if (!value) error = '비밀번호를 입력해주세요.'
+      else if (!PW_REGEX.test(value)) error = '8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.'
+    } else if (key === 'confirmPassword') {
+      if (!value) error = '비밀번호 확인을 입력해주세요.'
+      else if (value !== form.newPassword) error = '비밀번호가 일치하지 않습니다.'
+    }
+    setFieldErrors((prev) => ({ ...prev, [key]: error || undefined }))
+  }
 
   // 토큰 유효성 사전 검증
   const { mutate: validate } = useMutation({
@@ -109,13 +123,15 @@ const ResetPasswordPage = () => {
               </label>
               <input
                 type="password" value={form.newPassword} onChange={set('newPassword')}
+                onBlur={handleBlur('newPassword')}
                 required minLength={8} autoComplete="new-password"
-                placeholder="8자 이상 영문 대소문자, 숫자, 특수문자"
+                placeholder="8자 이상 영문 대소문자, 숫자, 특수문자 포함"
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
               <p className="mt-1 text-xs text-slate-500">
-                8자 이상의 영문 대소문자, 숫자, 특수문자를 포함해야 합니다.
+                8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.
               </p>
+              {fieldErrors.newPassword && <p className="mt-1 text-xs text-red-500">{fieldErrors.newPassword}</p>}
             </div>
 
             <div>
@@ -124,10 +140,12 @@ const ResetPasswordPage = () => {
               </label>
               <input
                 type="password" value={form.confirmPassword} onChange={set('confirmPassword')}
+                onBlur={handleBlur('confirmPassword')}
                 required minLength={8} autoComplete="new-password"
                 placeholder="비밀번호를 다시 입력해주세요"
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
+              {fieldErrors.confirmPassword && <p className="mt-1 text-xs text-red-500">{fieldErrors.confirmPassword}</p>}
             </div>
 
             <button

@@ -5,6 +5,13 @@ import { register, checkEmail, sendVerificationCode, verifyEmailCode } from '@/a
 import useDaumPostcode from '@/hooks/useDaumPostcode'
 import { DateInput } from '@/components/ui/DateInput'
 
+const formatPhone = (val) => {
+  const d = val.replace(/[^0-9]/g, '')
+  if (d.length <= 3) return d
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7, 11)}`
+}
+
 // ─── 이용약관 모달 ────────────────────────────────────────────────
 const TermsModal = ({ onClose }) => (
   <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6">
@@ -270,6 +277,38 @@ const RegisterPage = () => {
 
   const set = (key) => (e) => setForm((p) => ({ ...p, [key]: e.target.value }))
 
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'password':
+        if (!value) return '비밀번호를 입력해주세요.'
+        if (!/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(value)) return '8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.'
+        return ''
+      case 'passwordConfirm':
+        if (!value) return '비밀번호 확인을 입력해주세요.'
+        if (value !== form.password) return '비밀번호가 일치하지 않습니다.'
+        return ''
+      case 'name':
+        if (!value) return '이름을 입력해주세요.'
+        if (value.trim().length < 2) return '이름은 2자 이상이어야 합니다.'
+        return ''
+      case 'phoneNumber':
+        if (value && !/^01[0-9]-\d{3,4}-\d{4}$/.test(value)) return '올바른 전화번호 형식으로 입력해주세요. (예: 010-1234-5678)'
+        return ''
+      default:
+        return ''
+    }
+  }
+
+  const handleBlur = (name) => (e) => {
+    const error = validateField(name, e.target.value)
+    setFieldErrors((prev) => ({ ...prev, [name]: error || undefined }))
+    // 비밀번호가 바뀌면 passwordConfirm도 재검사
+    if (name === 'password' && form.passwordConfirm) {
+      const confirmError = e.target.value !== form.passwordConfirm ? '비밀번호가 일치하지 않습니다.' : ''
+      setFieldErrors((prev) => ({ ...prev, password: error || undefined, passwordConfirm: confirmError || undefined }))
+    }
+  }
+
   const { mutate: submit, isPending } = useMutation({
     mutationFn: register,
     onSuccess: (_, variables) => {
@@ -475,11 +514,12 @@ const RegisterPage = () => {
               </label>
               <input
                 type="password" value={form.password} onChange={set('password')}
+                onBlur={handleBlur('password')}
                 required minLength={8} autoComplete="new-password"
-                placeholder="8자 이상 영문, 숫자, 특수문자 사용"
+                placeholder="8자 이상 영문, 숫자, 특수문자 포함"
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
-              <p className="mt-1 text-xs text-slate-500">8자 이상의 영문, 숫자, 특수문자를 사용해 주세요.</p>
+              <p className="mt-1 text-xs text-slate-500">8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해 주세요.</p>
               {fieldErrors.password && <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>}
             </div>
 
@@ -490,6 +530,7 @@ const RegisterPage = () => {
               </label>
               <input
                 type="password" value={form.passwordConfirm} onChange={set('passwordConfirm')}
+                onBlur={handleBlur('passwordConfirm')}
                 required minLength={8} autoComplete="new-password"
                 placeholder="비밀번호를 다시 입력해주세요"
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
@@ -504,6 +545,7 @@ const RegisterPage = () => {
               </label>
               <input
                 type="text" value={form.name} onChange={set('name')}
+                onBlur={handleBlur('name')}
                 required placeholder="홍길동"
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
@@ -532,8 +574,10 @@ const RegisterPage = () => {
                 전화번호 <span className="text-red-500">*</span>
               </label>
               <input
-                type="tel" value={form.phoneNumber} onChange={set('phoneNumber')}
-                required placeholder="010-1234-5678"
+                type="tel" value={form.phoneNumber}
+                onChange={(e) => setForm((p) => ({ ...p, phoneNumber: formatPhone(e.target.value) }))}
+                onBlur={handleBlur('phoneNumber')}
+                required placeholder="010-1234-5678" maxLength={13}
                 className="w-full px-4 py-3 border border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
               />
               {fieldErrors.phoneNumber && <p className="mt-1 text-xs text-red-500">{fieldErrors.phoneNumber}</p>}
