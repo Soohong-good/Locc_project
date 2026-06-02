@@ -53,7 +53,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         "/api/auth/register",                   new RateLimitPolicy(5,  Duration.ofMinutes(10)),
         "/api/auth/refresh",                    new RateLimitPolicy(10, Duration.ofMinutes(1)),
         "/api/auth/password/reset-request",     new RateLimitPolicy(3,  Duration.ofMinutes(10)),
-        "/api/auth/email/send-code",            new RateLimitPolicy(3,  Duration.ofMinutes(10)),
+        "/api/auth/email/send-code",            new RateLimitPolicy(5,  Duration.ofMinutes(10)),
         "/api/auth/check-email",                new RateLimitPolicy(10, Duration.ofMinutes(1)),
         "/api/social/complete-registration",    new RateLimitPolicy(5,  Duration.ofMinutes(10)),
         // 비로그인 공개 API — 개인정보(이름/전화/이메일) 수집 엔드포인트이므로 스팸 방지 적용
