@@ -140,7 +140,7 @@ const EmailVerifyField = ({ suffix, email, setEmail, verified, setVerified, onVe
       <label className="block text-sm font-medium text-slate-700 mb-2">
         이메일 <span className="text-red-500">*</span>
       </label>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <input
             type="email"
@@ -172,7 +172,7 @@ const EmailVerifyField = ({ suffix, email, setEmail, verified, setVerified, onVe
           type="button"
           onClick={handleSend}
           disabled={!email || isPendingAll || verified}
-          className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:bg-slate-400 transition text-sm whitespace-nowrap"
+          className="w-full sm:w-auto px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:bg-slate-400 transition text-sm whitespace-nowrap"
         >
           {checking ? '확인 중...' : isSending ? '발송 중...' : codeSent ? '재발송' : '인증 코드 발송'}
         </button>
@@ -232,12 +232,12 @@ const EmailVerifyField = ({ suffix, email, setEmail, verified, setVerified, onVe
               type="text" value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               maxLength={6} placeholder="000000"
-              className="flex-1 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono"
+              className="flex-1 min-w-0 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono"
             />
             <button
               type="button" onClick={() => verifyCode()}
               disabled={code.length < 6 || isVerifying || timeLeft === 0}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition whitespace-nowrap"
+              className="flex-shrink-0 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition whitespace-nowrap"
             >
               {isVerifying ? '확인 중...' : '확인'}
             </button>
