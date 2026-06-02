@@ -35,6 +35,7 @@ public class AsyncEmailSender {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom("그리스도사랑교회 <noreply@getitstudy.by-works.net>");
             helper.setTo(to);
             helper.setSubject("[그리스도 사랑교회] 이메일 인증 코드");
             helper.setText(buildVerificationCodeHtml(code), true);
@@ -61,6 +62,7 @@ public class AsyncEmailSender {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
+            helper.setFrom("그리스도사랑교회 <noreply@getitstudy.by-works.net>");
             helper.setTo(to);
             helper.setSubject("[그리스도 사랑교회] 비밀번호 재설정");
 
@@ -93,6 +95,7 @@ public class AsyncEmailSender {
         try {
             MimeMessage mail = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mail, true, "UTF-8");
+            helper.setFrom("그리스도사랑교회 <noreply@getitstudy.by-works.net>");
             helper.setTo(adminEmail);
             helper.setSubject("[그리스도 사랑교회] " + subject);
             helper.setText(buildErrorAlertHtml(errorType, message, detail), true);
