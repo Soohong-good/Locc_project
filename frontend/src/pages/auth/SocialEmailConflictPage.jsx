@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
  */
 const SocialEmailConflictPage = () => {
   return (
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-md w-full">
 
         {/* 아이콘 */}
@@ -25,7 +25,7 @@ const SocialEmailConflictPage = () => {
           </div>
         </div>
 
-        <div className="bg-white p-8 md:p-10 border border-slate-200 shadow-sm text-center">
+        <div className="bg-white p-5 sm:p-8 md:p-10 border border-slate-200 shadow-sm text-center">
           <h1 className="text-2xl font-light text-slate-900 mb-3">이미 가입된 이메일입니다</h1>
           <p className="text-sm text-slate-500 font-light leading-relaxed mb-6">
             소셜 계정과 동일한 이메일로 이미 일반 회원가입이 되어 있습니다.<br />
