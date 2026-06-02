@@ -205,7 +205,7 @@ const EditTab = ({ user, onCancel }) => {
 }
 
 // ─── 비밀번호 강도 정규식 (ResetPasswordPage와 동일 기준) ──────────
-const PW_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
+const PW_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/
 
 // ─── 비밀번호 변경 탭 ────────────────────────────────
 const PasswordTab = ({ onCancel }) => {
@@ -219,7 +219,7 @@ const PasswordTab = ({ onCancel }) => {
     let error = ''
     if (id === 'newPassword') {
       if (!value) error = '새 비밀번호를 입력해주세요.'
-      else if (!PW_REGEX.test(value)) error = '8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다.'
+      else if (!PW_REGEX.test(value)) error = '8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.'
     } else if (id === 'newPasswordConfirm') {
       if (!value) error = '비밀번호 확인을 입력해주세요.'
       else if (value !== form.newPassword) error = '비밀번호가 일치하지 않습니다.'
@@ -255,7 +255,7 @@ const PasswordTab = ({ onCancel }) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {[
           { id: 'currentPassword', label: '현재 비밀번호', hint: '' },
-          { id: 'newPassword',     label: '새 비밀번호',   hint: '8자 이상의 영문, 숫자, 특수문자(@$!%*?&)를 각각 1자 이상 포함해야 합니다' },
+          { id: 'newPassword',     label: '새 비밀번호',   hint: '8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다' },
           { id: 'newPasswordConfirm', label: '새 비밀번호 확인', hint: '' },
         ].map(({ id, label, hint }) => (
           <div key={id}>
