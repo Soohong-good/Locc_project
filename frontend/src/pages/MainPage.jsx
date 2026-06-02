@@ -314,8 +314,8 @@ export default function MainPage() {
   const [sermonTab, setSermonTab] = useState('newyear')
   const { user } = useAuthStore()
 
-  const { data: morningLatest }   = useQuery({ queryKey: ['sermons', 'cat', '주일오전'],  queryFn: () => getLatestSermonByCategory('주일오전'),  staleTime: 5 * 60 * 1000 })
-  const { data: afternoonLatest } = useQuery({ queryKey: ['sermons', 'cat', '주일오후'],  queryFn: () => getLatestSermonByCategory('주일오후'),  staleTime: 5 * 60 * 1000 })
+  const { data: morningLatest }   = useQuery({ queryKey: ['sermons', 'cat', 'morning'],   queryFn: () => getLatestSermonByCategory('주일오전'), staleTime: 5 * 60 * 1000 })
+  const { data: afternoonLatest } = useQuery({ queryKey: ['sermons', 'cat', 'afternoon'], queryFn: () => getLatestSermonByCategory('주일오후'), staleTime: 5 * 60 * 1000 })
   const { data: wednesdayLatest } = useQuery({ queryKey: ['sermons', 'cat', 'wednesday'], queryFn: () => getWeekdayData({ type: 'wednesday', size: 1 }).then(r => r?.latestSermon ?? null), staleTime: 5 * 60 * 1000 })
   const { data: fridayLatest }    = useQuery({ queryKey: ['sermons', 'cat', 'friday'],    queryFn: () => getWeekdayData({ type: 'friday',    size: 1 }).then(r => r?.latestSermon ?? null), staleTime: 5 * 60 * 1000 })
 
