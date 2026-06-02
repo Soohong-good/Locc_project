@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import {
-  getSundayMorningData,
-  getSundayAfternoonData,
-  getWeekdayData,
-} from '@/api/sermons'
+import { getLatestSermons } from '@/api/sermons'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
 import Header from '@/components/layout/Header'
@@ -150,10 +146,6 @@ const css = `
   .dt-worship-verse-text { font-size:16px; color:var(--navy); line-height:1.9; }
   @media (max-width:900px) { .dt-worship-about { grid-template-columns:1fr; gap:36px; } }
 
-  /* ── LATEST SERMON GRID ── */
-  .dt-latest-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:20px; }
-  @media (max-width:1000px) { .dt-latest-grid { grid-template-columns:repeat(3,1fr); } }
-  @media (max-width:600px)  { .dt-latest-grid { grid-template-columns:1fr; } }
 
   /* ── SERMON ── */
   .dt-sermon-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:40px; }
@@ -302,39 +294,11 @@ export default function MainPage() {
   const [modalVideoId, setModalVideoId] = useState(null)
   const { user } = useAuthStore()
 
-  const { data: morning1Data } = useQuery({
-    queryKey: ['sermons', 'sunday-morning', 1, 'latest'],
-    queryFn: () => getSundayMorningData({ serviceNumber: 1, size: 1 }),
+  const { data: sermons = [] } = useQuery({
+    queryKey: ['sermons', 'latest', 3],
+    queryFn: () => getLatestSermons(3),
     staleTime: 5 * 60 * 1000,
   })
-  const { data: morning2Data } = useQuery({
-    queryKey: ['sermons', 'sunday-morning', 2, 'latest'],
-    queryFn: () => getSundayMorningData({ serviceNumber: 2, size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: afternoonData } = useQuery({
-    queryKey: ['sermons', 'sunday-afternoon', 'latest'],
-    queryFn: () => getSundayAfternoonData({ size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: wednesdayData } = useQuery({
-    queryKey: ['sermons', 'weekday', 'wednesday', 'latest'],
-    queryFn: () => getWeekdayData({ type: 'wednesday', size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-  const { data: fridayData } = useQuery({
-    queryKey: ['sermons', 'weekday', 'friday', 'latest'],
-    queryFn: () => getWeekdayData({ type: 'friday', size: 1 }),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const latestSermons = [
-    { label: '주일 오전 1부', href: '/worship/sermon/sunday-morning', item: morning1Data?.content?.[0] },
-    { label: '주일 오전 2부', href: '/worship/sermon/sunday-morning', item: morning2Data?.content?.[0] },
-    { label: '주일 오후 예배', href: '/worship/sermon/sunday-afternoon', item: afternoonData?.content?.[0] },
-    { label: '수요 예배',      href: '/worship/sermon/weekday',          item: wednesdayData?.content?.[0] },
-    { label: '금요 기도회',    href: '/worship/sermon/weekday',          item: fridayData?.content?.[0] },
-  ]
 
   const { data: noticesData } = useQuery({
     queryKey: ['notices', 'latest', 5],
@@ -376,7 +340,7 @@ export default function MainPage() {
       if (!el.classList.contains('visible')) observer.observe(el)
     })
     return () => observer.disconnect()
-  }, [morning1Data, morning2Data, afternoonData, wednesdayData, fridayData, notices, galleryImages])
+  }, [sermons, notices, galleryImages])
 
   return (
     <>
@@ -523,48 +487,36 @@ export default function MainPage() {
             <a href="/worship/sermon/sunday-morning" className="dt-see-all">전체 보기 →</a>
           </div>
 
-          <div className="dt-latest-grid">
-            {latestSermons.map(({ label, href, item }, i) => {
-              const vid = item ? extractVideoId(item.videoUrl) : null
+          <div className="dt-sermon-grid">
+            {sermons.map((s, i) => {
+              const vid = extractVideoId(s.videoUrl)
               return (
-                <div
-                  key={label}
-                  className="dt-sermon-card dt-fade"
-                  style={{ transitionDelay: `${i * 0.1}s`, cursor: item ? 'pointer' : 'default' }}
-                  onClick={() => {
-                    if (!item) return
-                    if (vid) setModalVideoId(vid)
-                    else navigate(href)
-                  }}
-                >
+                <div key={s.id} className="dt-sermon-card dt-fade"
+                  style={{ transitionDelay: `${i * 0.12}s`, cursor: 'pointer' }}
+                  onClick={() => vid ? setModalVideoId(vid) : navigate(`/worship/sermon/sunday-morning`)}>
                   <div className="dt-sermon-thumb">
-                    {vid ? (
-                      <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={item.title} />
-                    ) : (
-                      <div style={{width:'100%',height:'100%',background:'#e8ecf2',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#b0bec8" strokeWidth="1.5">
-                          <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                        </svg>
-                      </div>
-                    )}
-                    {vid && (
-                      <div className="dt-play-btn">
-                        <div className="dt-play-circle">
-                          <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
+                    {vid
+                      ? <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={s.title} />
+                      : <div style={{width:'100%',height:'100%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5">
+                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+                          </svg>
                         </div>
+                    }
+                    <div className="dt-play-btn">
+                      <div className="dt-play-circle">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
                       </div>
-                    )}
+                    </div>
                   </div>
                   <div className="dt-sermon-body">
                     <div className="dt-sermon-meta">
-                      <span className="dt-sermon-tag">{label}</span>
-                      {item && <span>{fmtDate(item.sermonDate || item.createdAt)}</span>}
+                      <span className="dt-sermon-tag">{s.category || '설교'}</span>
+                      <span>{fmtDate(s.sermonDate || s.createdAt)}</span>
                     </div>
-                    <div className="dt-sermon-title">
-                      {item ? item.title : '등록된 영상이 없습니다'}
-                    </div>
-                    {item?.preacher && <div className="dt-sermon-speaker">{item.preacher}</div>}
-                    {item?.bibleVerses && <div className="dt-sermon-verse">{item.bibleVerses}</div>}
+                    <div className="dt-sermon-title">{s.title}</div>
+                    {s.preacher && <div className="dt-sermon-speaker">{s.preacher}</div>}
+                    {s.bibleVerses && <div className="dt-sermon-verse">{s.bibleVerses}</div>}
                   </div>
                 </div>
               )
