@@ -72,8 +72,8 @@ const css = `
   .dt-hero-quote { font-size:26px; color:rgba(255,255,255,.75); line-height:2; margin-bottom:48px; }
   .dt-hero-quote strong { color:#fff; font-weight:700; }
   .dt-hero-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
-  .dt-hero-content { animation:heroIn .9s ease both; }
-  @keyframes heroIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
+  .dt-hero-content { animation:heroIn 1.1s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes heroIn { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:none; } }
   .dt-hero-scroll { position:absolute; bottom:36px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; color:rgba(255,255,255,.4); font-size:10px; letter-spacing:.1em; text-transform:uppercase; }
   .dt-scroll-line { width:1px; height:40px; background:linear-gradient(to bottom,transparent,rgba(255,255,255,.4)); }
 
@@ -118,10 +118,10 @@ const css = `
   .dt-see-all:hover { opacity:.6; }
 
   /* ── SCROLL REVEAL ── */
-  .dt-fade,.dt-fade-l,.dt-fade-r { transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
-  .dt-js .dt-fade   { opacity:0; transform:translateY(44px); }
-  .dt-js .dt-fade-l { opacity:0; transform:translateX(-44px); }
-  .dt-js .dt-fade-r { opacity:0; transform:translateX(44px); }
+  .dt-fade,.dt-fade-l,.dt-fade-r { transition:opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1); }
+  .dt-js .dt-fade   { opacity:0; transform:translateY(22px); }
+  .dt-js .dt-fade-l { opacity:0; transform:translateY(18px) translateX(-10px); }
+  .dt-js .dt-fade-r { opacity:0; transform:translateY(18px) translateX(10px); }
   .dt-js .dt-fade.visible,
   .dt-js .dt-fade-l.visible,
   .dt-js .dt-fade-r.visible { opacity:1; transform:none; }
@@ -309,7 +309,7 @@ export default function MainPage() {
           }
         })
       },
-      { threshold: 0.08, rootMargin: '0px 0px -60px 0px' }
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
     )
     const fadeEls = document.querySelectorAll('.dt-fade, .dt-fade-l, .dt-fade-r')
     fadeEls.forEach((el) => {
