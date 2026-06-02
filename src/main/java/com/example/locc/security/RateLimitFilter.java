@@ -49,15 +49,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
     // ───── 정책 정의 ─────────────────────────────────────────────────────────
 
     private static final Map<String, RateLimitPolicy> POLICIES = Map.of(
-        "/api/auth/login",                      new RateLimitPolicy(5,  Duration.ofMinutes(1)),
-        "/api/auth/register",                   new RateLimitPolicy(5,  Duration.ofMinutes(10)),
-        "/api/auth/refresh",                    new RateLimitPolicy(10, Duration.ofMinutes(1)),
-        "/api/auth/password/reset-request",     new RateLimitPolicy(3,  Duration.ofMinutes(10)),
-        "/api/auth/email/send-code",            new RateLimitPolicy(5,  Duration.ofMinutes(10)),
-        "/api/auth/check-email",                new RateLimitPolicy(10, Duration.ofMinutes(1)),
-        "/api/social/complete-registration",    new RateLimitPolicy(5,  Duration.ofMinutes(10)),
+        "/api/auth/login",                      new RateLimitPolicy(10, Duration.ofMinutes(1)),
+        "/api/auth/register",                   new RateLimitPolicy(10, Duration.ofMinutes(10)),
+        "/api/auth/refresh",                    new RateLimitPolicy(20, Duration.ofMinutes(1)),
+        "/api/auth/password/reset-request",     new RateLimitPolicy(5,  Duration.ofMinutes(10)),
+        "/api/auth/email/send-code",            new RateLimitPolicy(10, Duration.ofMinutes(10)),
+        "/api/auth/check-email",                new RateLimitPolicy(20, Duration.ofMinutes(1)),
+        "/api/social/complete-registration",    new RateLimitPolicy(10, Duration.ofMinutes(10)),
         // 비로그인 공개 API — 개인정보(이름/전화/이메일) 수집 엔드포인트이므로 스팸 방지 적용
-        "/api/help-request",                    new RateLimitPolicy(5,  Duration.ofMinutes(10))
+        "/api/help-request",                    new RateLimitPolicy(10, Duration.ofMinutes(10))
     );
 
     // 동적 경로 패턴 기반 Rate Limit 정책
@@ -139,12 +139,28 @@ public class RateLimitFilter extends OncePerRequestFilter {
     /**
      * 클라이언트 IP 추출
      *
-     * ForwardedHeaderFilter + forward-headers-strategy: FRAMEWORK 설정에 의해
-     * 신뢰된 리버스 프록시의 X-Forwarded-For가 이미 request.getRemoteAddr()에 반영됨
-     * → 이 필터에서 X-Forwarded-For 헤더를 직접 참조하지 않음
-     *   (클라이언트가 헤더를 조작하여 Rate Limit을 우회하는 공격 방지)
+     * 구조: 실제 클라이언트 → Cloudflare → Nginx(Docker) → Spring Boot
+     * getRemoteAddr()는 Nginx 컨테이너 IP(172.18.x.x)를 반환하므로 사용 불가.
+     *
+     * 우선순위:
+     *   1. CF-Connecting-IP  — Cloudflare가 직접 설정, 클라이언트 스푸핑 불가
+     *   2. X-Forwarded-For   — Cloudflare가 추가한 첫 번째 값 (실제 클라이언트 IP)
+     *   3. X-Real-IP         — Nginx가 설정한 값 (fallback)
+     *   4. getRemoteAddr()   — 최후 수단
      */
     private String extractClientIp(HttpServletRequest request) {
+        String cfIp = request.getHeader("CF-Connecting-IP");
+        if (cfIp != null && !cfIp.isBlank()) {
+            return cfIp.trim();
+        }
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isBlank()) {
+            return xRealIp.trim();
+        }
         return request.getRemoteAddr();
     }
 
