@@ -204,7 +204,7 @@ const AdminHelpRequestPage = () => {
   const totalElements = pageInfo?.totalElements ?? 0
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       {/* 헤더 */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">도움문의 관리</h1>

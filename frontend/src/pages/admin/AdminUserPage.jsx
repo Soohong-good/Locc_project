@@ -59,7 +59,7 @@ const AdminUserPage = () => {
   const totalPages = data?.pageInfo?.totalPages ?? 0
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <h1 className="text-xl font-bold text-gray-900 mb-6">회원 관리</h1>
 
       {/* 탭 */}
@@ -101,7 +101,8 @@ const AdminUserPage = () => {
         </p>
       ) : (
         <>
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          {/* ── 데스크탑 테이블 (sm 이상) ── */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hidden sm:block">
             <table className="w-full text-sm table-fixed">
               <colgroup>
                 <col className="w-36" />
@@ -224,6 +225,80 @@ const AdminUserPage = () => {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* ── 모바일 카드 목록 (sm 미만) ── */}
+          <div className="sm:hidden space-y-2">
+            {users.map((u) => {
+              const status = STATUS_LABEL[u.approvalStatus] ?? { label: u.approvalStatus, cls: 'bg-gray-100 text-gray-600' }
+              const roleLabel = ROLE_LABEL[u.role] ?? null
+              const isOperator = u.role === 'OPERATOR'
+              const isAdminAccount = u.role === 'ADMIN'
+              return (
+                <div key={`m-${u.id}`} className={`bg-white rounded-xl border border-gray-200 p-4 ${u.deleted ? 'opacity-50' : ''}`}>
+                  {/* 이름 + 상태 */}
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-semibold text-gray-900">{u.name}</span>
+                      {roleLabel && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleLabel.cls}`}>{roleLabel.label}</span>
+                      )}
+                      {!u.enabled && !u.deleted && (
+                        <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
+                      )}
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${status.cls}`}>{status.label}</span>
+                  </div>
+                  {/* 이메일 */}
+                  <p className="text-xs text-gray-400 truncate mb-3">{u.email}</p>
+                  {/* 관리 버튼 */}
+                  <div className="flex gap-2 flex-wrap">
+                    {u.approvalStatus === 'PENDING' && !u.deleted && (
+                      <>
+                        <button onClick={() => approveMutation.mutate(u.id)} disabled={approveMutation.isPending}
+                          className="text-xs font-medium text-green-600 border border-green-200 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40">
+                          승인
+                        </button>
+                        <button onClick={() => { setRejectModal({ userId: u.id, name: u.name }); setRejectReason('') }}
+                          className="text-xs font-medium text-orange-500 border border-orange-200 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-md transition-colors">
+                          반려
+                        </button>
+                        <button onClick={() => handleBlock(u.id, u.name)} disabled={disableMutation.isPending}
+                          className="text-xs font-medium text-red-400 border border-red-200 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40">
+                          차단
+                        </button>
+                      </>
+                    )}
+                    {u.approvalStatus === 'APPROVED' && !u.deleted && !isAdminAccount && (
+                      <>
+                        {u.enabled ? (
+                          <button onClick={() => handleBlock(u.id, u.name)} disabled={disableMutation.isPending}
+                            className="text-xs font-medium text-blue-500 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40">
+                            차단
+                          </button>
+                        ) : (
+                          <button onClick={() => enableMutation.mutate(u.id)} disabled={enableMutation.isPending}
+                            className="text-xs font-medium text-blue-500 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40">
+                            차단 해제
+                          </button>
+                        )}
+                        {isOperator ? (
+                          <button onClick={() => revokeOperatorMutation.mutate(u.id)} disabled={revokeOperatorMutation.isPending}
+                            className="text-xs font-medium text-purple-500 border border-purple-200 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40">
+                            운영자 해제
+                          </button>
+                        ) : (
+                          <button onClick={() => grantOperatorMutation.mutate(u.id)} disabled={grantOperatorMutation.isPending}
+                            className="text-xs font-medium text-purple-500 border border-purple-200 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-md transition-colors disabled:opacity-40">
+                            운영자 지정
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
           {totalPages > 1 && (

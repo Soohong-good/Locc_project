@@ -228,7 +228,7 @@ const AdminBulletinPage = () => {
   const currentPage = pageInfo.page ?? 0
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">주보 관리</h1>
