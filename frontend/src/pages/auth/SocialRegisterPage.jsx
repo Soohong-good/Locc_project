@@ -20,7 +20,7 @@ const Step1 = ({ onSelect }) => (
       <h1 className="text-4xl font-light text-slate-900 mb-4">소셜 회원가입</h1>
       <p className="text-slate-600 font-light">교인 구분을 선택해주세요</p>
     </div>
-    <div className="bg-white p-8 md:p-10 shadow-sm">
+    <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <button
           onClick={() => onSelect('REGISTERED')}
@@ -76,7 +76,7 @@ const Step2 = ({ userType, onBack, onNext }) => {
           {userType === 'REGISTERED' ? '등록교인 가입' : '미등록교인 가입'}
         </p>
       </div>
-      <div className="bg-white p-8 md:p-10 shadow-sm">
+      <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
         <div className="space-y-6">
           {/* 전체 동의 */}
           <div className="pb-4 border-b">
@@ -256,7 +256,7 @@ const Step3 = ({ userType, consent, tempToken, onBack }) => {
         </p>
       </div>
 
-      <div className="bg-white p-8 md:p-10 shadow-sm">
+      <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
         <div className="space-y-6">
           {/* 에러 */}
           {error && (
@@ -419,7 +419,7 @@ const SocialRegisterPage = () => {
   if (!tempToken) return null
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-2xl w-full">
         {step === 1 && (
           <Step1

@@ -374,13 +374,13 @@ const RegisterPage = () => {
   // ── 1단계: 교인 구분 ──────────────────────────
   if (step === 1) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+      <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
         <div className="max-w-2xl w-full">
           <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">회원가입</h1>
             <p className="text-slate-600 font-light">교인 구분을 선택해주세요</p>
           </div>
-          <div className="bg-white p-8 md:p-10 shadow-sm">
+          <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 { type: 'REGISTERED', title: '등록교인', desc: '그리스도 사랑교회에 등록된 교인' },
@@ -418,13 +418,13 @@ const RegisterPage = () => {
     return (
       <>
         {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
-        <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+        <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
           <div className="max-w-2xl w-full">
             <div className="text-center mb-10">
               <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">개인정보 수집·이용 동의</h1>
               <p className="text-slate-600 font-light">{typeLabel} 가입</p>
             </div>
-            <div className="bg-white p-8 md:p-10 shadow-sm">
+            <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
               <div className="space-y-6">
                 {/* 전체 동의 */}
                 <div className="pb-4 border-b">
@@ -493,7 +493,7 @@ const RegisterPage = () => {
   const typeLabel = userType === 'REGISTERED' ? '등록교인' : '미등록교인'
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-2xl w-full">
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">정보 입력</h1>
@@ -504,7 +504,7 @@ const RegisterPage = () => {
           </div>
         </div>
 
-        <div className="bg-white p-8 md:p-10 shadow-sm">
+        <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {apiError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">

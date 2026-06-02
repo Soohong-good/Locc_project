@@ -18,14 +18,14 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-md w-full">
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">비밀번호 찾기</h1>
           <p className="text-slate-600 font-light">가입하신 이메일 주소를 입력해주세요</p>
         </div>
 
-        <div className="bg-white p-8 md:p-10 shadow-sm">
+        <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
           {success ? (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-4 rounded text-sm text-center">
               <p className="font-medium mb-1">이메일이 발송되었습니다</p>

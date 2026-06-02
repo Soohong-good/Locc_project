@@ -1,9 +1,9 @@
 ﻿import { Link } from 'react-router-dom'
 
 const SocialPendingPage = () => (
-  <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+  <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
     <div className="max-w-md w-full">
-      <div className="bg-white p-8 md:p-10 shadow-sm text-center">
+      <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm text-center">
 
         {/* 아이콘 */}
         <div className="mb-6">

@@ -99,7 +99,7 @@ const LoginPage = () => {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-md w-full">
         <div className="text-center mb-10">
           <Link to="/">
@@ -109,7 +109,7 @@ const LoginPage = () => {
           <p className="text-sm text-slate-500 font-light">그리스도 사랑교회에 오신 것을 환영합니다</p>
         </div>
 
-        <div className="bg-white p-8 md:p-10 border border-slate-200 shadow-sm">
+        <div className="bg-white p-5 sm:p-8 md:p-10 border border-slate-200 shadow-sm">
           {/* TOTP 설정 화면 (최초 1회) */}
           {totpStep === 'setup' ? (
             <div className="space-y-5">
@@ -251,18 +251,16 @@ const LoginPage = () => {
                   </svg>
                   카카오로 계속하기
                 </a>
-                {/* 네이버 로그인 검수 승인 후 활성화 */}
-                <button
-                  disabled
-                  className="flex items-center justify-center w-full py-3 px-4 text-sm font-medium cursor-not-allowed opacity-40"
+                <a
+                  href="/oauth2/authorization/naver"
+                  className="flex items-center justify-center w-full py-3 px-4 text-sm font-medium transition-opacity hover:opacity-90"
                   style={{ backgroundColor: '#03C75A', color: '#FFFFFF' }}
-                  title="네이버 로그인 준비 중입니다"
                 >
                   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
                   </svg>
-                  네이버로 계속하기 (준비 중)
-                </button>
+                  네이버로 계속하기
+                </a>
               </div>
             </>
           )}

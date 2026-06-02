@@ -90,7 +90,7 @@ const ResetPasswordPage = () => {
   // 토큰 무효
   if (!tokenValid) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+      <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
         <div className="max-w-md w-full text-center">
           <div className="bg-white p-10 shadow-sm">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -116,14 +116,14 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-6 py-32">
+    <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-md w-full">
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">비밀번호 재설정</h1>
           <p className="text-slate-600 font-light">새로운 비밀번호를 입력해주세요</p>
         </div>
 
-        <div className="bg-white p-8 md:p-10 shadow-sm">
+        <div className="bg-white p-5 sm:p-8 md:p-10 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             {(formError || apiError) && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
