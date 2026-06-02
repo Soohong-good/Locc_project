@@ -1,10 +1,8 @@
 import { useEffect } from 'react'
 import toast from '@/utils/toast'
 
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_MAP_KEY
-const BASE_URL     = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
-const SCRIPT_URL   = KAKAO_JS_KEY ? `${BASE_URL}?appkey=${KAKAO_JS_KEY}` : BASE_URL
-const SCRIPT_ID    = 'daum-postcode-script'
+const SCRIPT_URL = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+const SCRIPT_ID  = 'daum-postcode-script'
 
 /**
  * 카카오(Daum) 주소 검색 API 훅
