@@ -256,6 +256,41 @@ const css = `
     .dt-gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto auto auto; }
     .dt-gallery-cell.tall { grid-row:span 1; }
   }
+
+  /* ── 모바일 폰트/레이아웃 보정 ── */
+  @media (max-width:640px) {
+    /* Hero */
+    .dt-hero-content { padding:110px 16px 80px; }
+    .dt-hero-title   { font-size:clamp(24px,7.5vw,44px); letter-spacing:-.02em; }
+    .dt-hero-ref     { font-size:18px; margin-bottom:24px; }
+    .dt-hero-quote   { font-size:14px; line-height:2; margin-bottom:36px; }
+    .dt-hero-eyebrow { font-size:11px; }
+
+    /* 섹션 공통 */
+    .dt-sec  { padding:64px 0; }
+    .dt-wrap { padding:0 18px; }
+    .dt-h2   { font-size:clamp(22px,6.5vw,34px); }
+    .dt-sub  { font-size:15px; margin-bottom:32px; }
+
+    /* 예배시간표 */
+    .dt-worship-col          { padding:28px 16px 32px; }
+    .dt-worship-col-label    { font-size:13px; margin-bottom:16px; }
+    .dt-worship-row-name     { font-size:16px; }
+    .dt-worship-row-time     { font-size:20px; min-width:60px; }
+    .dt-worship-row-loc      { font-size:12px; min-width:48px; }
+
+    /* 설교 카드 */
+    .dt-sermon-title         { font-size:15px; }
+    .dt-sermon-body          { padding:14px; }
+
+    /* 공지 */
+    .dt-news-main-title      { font-size:17px; }
+    .dt-news-item-title      { font-size:13px; }
+
+    /* 연락처 */
+    .dt-info-value           { font-size:14px; }
+    .dt-transport-item       { font-size:13px; }
+  }
 `
 
 export default function MainPage() {
