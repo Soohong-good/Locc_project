@@ -36,15 +36,15 @@
       password: ${REDIS_PASSWORD:}
   
   mail:
-    host: smtp.worksmobile.com
-    port: 465
+    host: smtp.gmail.com
+    port: 587
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
           auth: true
-          ssl:
+          starttls:
             enable: true
           connectiontimeout: 5000
           timeout: 5000
