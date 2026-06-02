@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getUsers, getPendingUsers, approveUser, rejectUser, disableUser, enableUser, deleteUser, grantOperator, revokeOperator } from '@/api/users'
+import { getUsers, getPendingUsers, approveUser, rejectUser, disableUser, enableUser, grantOperator, revokeOperator } from '@/api/users'
 import ErrorMessage from '@/components/common/ErrorMessage'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
 
@@ -47,13 +47,12 @@ const AdminUserPage = () => {
   })
   const disableMutation = useMutation({ mutationFn: disableUser, onSuccess: invalidate })
   const enableMutation = useMutation({ mutationFn: enableUser, onSuccess: invalidate })
-  const deleteMutation = useMutation({ mutationFn: deleteUser, onSuccess: invalidate })
   const grantOperatorMutation = useMutation({ mutationFn: grantOperator, onSuccess: invalidate })
   const revokeOperatorMutation = useMutation({ mutationFn: revokeOperator, onSuccess: invalidate })
 
-  const handleDelete = (userId, name) => {
-    if (!confirm(`"${name}" 회원을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return
-    deleteMutation.mutate(userId)
+  const handleBlock = (userId, name) => {
+    if (!confirm(`"${name}" 회원을 차단하시겠습니까?\n차단된 회원은 로그인이 불가합니다.`)) return
+    disableMutation.mutate(userId)
   }
 
   const users = data?.content ?? []
@@ -82,10 +81,10 @@ const AdminUserPage = () => {
       </div>
 
       {/* 에러 */}
-      {(approveMutation.error || rejectMutation.error || disableMutation.error || deleteMutation.error) && (
+      {(approveMutation.error || rejectMutation.error || disableMutation.error) && (
         <div className="mb-4">
           <ErrorMessage
-            error={approveMutation.error || rejectMutation.error || disableMutation.error || deleteMutation.error}
+            error={approveMutation.error || rejectMutation.error || disableMutation.error}
           />
         </div>
       )}
@@ -170,13 +169,20 @@ const AdminUserPage = () => {
                               >
                                 반려
                               </button>
+                              <button
+                                onClick={() => handleBlock(u.id, u.name)}
+                                disabled={disableMutation.isPending}
+                                className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
+                              >
+                                차단
+                              </button>
                             </>
                           )}
                           {u.approvalStatus === 'APPROVED' && !u.deleted && !isAdminAccount && (
                             <>
                               {u.enabled ? (
                                 <button
-                                  onClick={() => disableMutation.mutate(u.id)}
+                                  onClick={() => handleBlock(u.id, u.name)}
                                   disabled={disableMutation.isPending}
                                   className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors disabled:opacity-40"
                                 >
@@ -210,15 +216,6 @@ const AdminUserPage = () => {
                                 </button>
                               )}
                             </>
-                          )}
-                          {!u.deleted && !isAdminAccount && (
-                            <button
-                              onClick={() => handleDelete(u.id, u.name)}
-                              disabled={deleteMutation.isPending}
-                              className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
-                            >
-                              삭제
-                            </button>
                           )}
                         </div>
                       </td>

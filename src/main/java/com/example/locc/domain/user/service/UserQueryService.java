@@ -31,7 +31,7 @@ public class UserQueryService {
      */
     public Page<UserResponse> getPendingUsers(Pageable pageable) {
         log.debug("Finding pending users");
-        return userRepository.findByApprovalStatus(User.ApprovalStatus.PENDING, pageable)
+        return userRepository.findByApprovalStatusAndDeletedFalse(User.ApprovalStatus.PENDING, pageable)
                 .map(UserResponse::from);
     }
 
@@ -84,21 +84,21 @@ public class UserQueryService {
      * 승인 대기 중인 사용자 수 조회
      */
     public Long countPendingUsers() {
-        return userRepository.countByApprovalStatus(User.ApprovalStatus.PENDING);
+        return userRepository.countByApprovalStatusAndDeletedFalse(User.ApprovalStatus.PENDING);
     }
 
     /**
      * 승인 완료된 사용자 수 조회 (Admin용)
      */
     public Long countApprovedUsers() {
-        return userRepository.countByApprovalStatus(User.ApprovalStatus.APPROVED);
+        return userRepository.countByApprovalStatusAndDeletedFalse(User.ApprovalStatus.APPROVED);
     }
 
     /**
      * 반려된 사용자 수 조회 (Admin용)
      */
     public Long countRejectedUsers() {
-        return userRepository.countByApprovalStatus(User.ApprovalStatus.REJECTED);
+        return userRepository.countByApprovalStatusAndDeletedFalse(User.ApprovalStatus.REJECTED);
     }
 
     /**

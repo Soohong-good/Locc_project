@@ -44,12 +44,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findActiveByEmail(@Param("email") String email);
 
     /**
-     * 승인 상태별 사용자 조회
+     * 승인 상태별 사용자 조회 (삭제되지 않은 회원만)
      */
-    Page<User> findByApprovalStatus(User.ApprovalStatus approvalStatus, Pageable pageable);
+    Page<User> findByApprovalStatusAndDeletedFalse(User.ApprovalStatus approvalStatus, Pageable pageable);
 
     /**
-     * 승인 대기 중인 사용자 수 조회
+     * 승인 상태별 사용자 수 조회 (삭제되지 않은 회원만)
      */
-    Long countByApprovalStatus(User.ApprovalStatus approvalStatus);
+    Long countByApprovalStatusAndDeletedFalse(User.ApprovalStatus approvalStatus);
 }
