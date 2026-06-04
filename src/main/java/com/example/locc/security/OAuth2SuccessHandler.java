@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * OAuth2 로그인 성공 핸들러
@@ -62,12 +63,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         log.debug("OAuth2 로그인 성공");
 
-        // 신규 소셜 로그인 사용자 — 추가 정보 입력 필요
-        if (user.getApprovalStatus() == User.ApprovalStatus.PENDING &&
-                user.getPhoneNumber() == null) {
-            log.debug("신규 소셜 로그인 사용자 - 추가 정보 입력 필요");
+        // 신규 소셜 로그인 사용자 — DB 미저장 상태 (id == null), 폼 완료 후 DB 저장
+        if (user.getId() == null) {
+            log.debug("신규 소셜 로그인 사용자 - 추가 정보 입력 필요 (DB 미저장)");
             cookieUtil.clearAuthCookies(response);
-            String tempToken = jwtTokenProvider.generateOAuthTempToken(user.getEmail());
+            Map<String, Object> attrs = ((CustomOAuth2User) principal).getAttributes();
+            String provider   = (String) attrs.get("_oauth_provider");
+            String providerId = (String) attrs.get("_oauth_providerId");
+            String tempToken  = jwtTokenProvider.generateOAuthTempToken(user.getEmail(), provider, providerId);
             getRedirectStrategy().sendRedirect(request, response,
                     resolveUrl("/social/register?tempToken=" + tempToken));
             return;
