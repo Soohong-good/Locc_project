@@ -19,6 +19,7 @@ import { create } from 'zustand'
 const useAuthStore = create((set) => ({
   user: null,
   isInitialized: false,
+  permissions: [], // 영역별 작성 권한 목록 ex) ['NOTICE', 'BULLETIN']
 
   // 로그인 성공 후 호출
   setUser: (user) => set({ user }),
@@ -26,9 +27,12 @@ const useAuthStore = create((set) => ({
   // 앱 초기화 완료 표시
   setInitialized: () => set({ isInitialized: true }),
 
+  // 권한 목록 설정
+  setPermissions: (permissions) => set({ permissions }),
+
   // 로그아웃 — 서버가 쿠키 삭제, 클라이언트는 상태만 초기화
   clearAuth: () => {
-    set({ user: null })
+    set({ user: null, permissions: [] })
   },
 
   // 현재 로그인 유저 ID 조회
@@ -51,12 +55,19 @@ const useAuthStore = create((set) => ({
     return user.role === 'OPERATOR' || user.role === 'ROLE_OPERATOR'
   },
 
-  // 관리자 또는 운영자 여부 (게시물 CRUD 권한 체크용)
+  // 관리자 또는 운영자 여부
   isAdminOrOperator: () => {
     const { user } = useAuthStore.getState()
     if (!user?.role) return false
     const role = user.role
     return role === 'ADMIN' || role === 'ROLE_ADMIN' || role === 'OPERATOR' || role === 'ROLE_OPERATOR'
+  },
+
+  // 특정 영역 작성 권한 보유 여부 (관리자/운영자는 항상 true)
+  canWrite: (area) => {
+    const state = useAuthStore.getState()
+    if (state.isAdminOrOperator()) return true
+    return state.permissions.includes(area)
   },
 }))
 

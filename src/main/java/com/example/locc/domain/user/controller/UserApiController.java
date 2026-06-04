@@ -9,6 +9,7 @@ import com.example.locc.domain.user.dto.response.UserAuthResponse;
 import com.example.locc.domain.user.dto.response.UserDetailResponse;
 import com.example.locc.domain.user.dto.response.UserResponse;
 import com.example.locc.domain.user.service.UserCommandService;
+import com.example.locc.domain.user.service.UserPermissionService;
 import com.example.locc.domain.user.service.UserQueryService;
 import com.example.locc.security.CookieUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,8 +38,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserApiController {
 
-    private final UserCommandService userCommandService;
-    private final UserQueryService   userQueryService;
+    private final UserCommandService  userCommandService;
+    private final UserQueryService    userQueryService;
+    private final UserPermissionService userPermissionService;
     private final CookieUtil         cookieUtil;
 
     // ===== 인증 관련 API =====
@@ -169,5 +171,12 @@ public class UserApiController {
     @GetMapping("/admin/users/pending/count")
     public ResponseEntity<ApiResponse<Long>> getPendingCount() {
         return ResponseEntity.ok(ApiResponse.ok(userQueryService.countPendingUsers()));
+    }
+
+    /** 본인 영역 권한 목록 조회 */
+    @GetMapping("/me/permissions")
+    public ResponseEntity<ApiResponse<java.util.List<String>>> getMyPermissions(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                userPermissionService.getMyPermissions(authentication.getName())));
     }
 }

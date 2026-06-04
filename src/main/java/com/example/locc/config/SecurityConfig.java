@@ -130,6 +130,9 @@ public class SecurityConfig {
                         // ========== 마이페이지 — 로그인 필수 ==========
                         .requestMatchers("/api/mypage/**").authenticated()
 
+                        // ========== 영역별 권한 조회 — 로그인 필수 ==========
+                        .requestMatchers(HttpMethod.GET, "/api/users/me/permissions").authenticated()
+
                         // ========== 훈련 신청 — 로그인 필수 ==========
                         // [SECURITY] /api/applications/** 전체에 인증 필수 적용 (IDOR 방지)
                         .requestMatchers(HttpMethod.GET, "/api/applications/training/*/excel").hasRole("ADMIN")
