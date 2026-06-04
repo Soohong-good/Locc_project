@@ -3,7 +3,6 @@ package com.example.locc.domain.admin.controller;
 import com.example.locc.common.ApiResponse;
 import com.example.locc.domain.user.dto.request.UserRejectRequest;
 import com.example.locc.domain.user.entity.AreaType;
-import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.service.UserCommandService;
 import com.example.locc.domain.user.service.UserPermissionService;
 import lombok.RequiredArgsConstructor;
@@ -102,8 +101,8 @@ public class AdminUserApiController {
             @PathVariable UUID userId,
             @PathVariable String area,
             Authentication authentication) {
-        UUID grantedBy = ((User) authentication.getPrincipal()).getId();
-        userPermissionService.grantPermission(userId, AreaType.valueOf(area.toUpperCase()), grantedBy);
+        String adminEmail = authentication.getName();
+        userPermissionService.grantPermission(userId, AreaType.valueOf(area.toUpperCase()), adminEmail);
         return ResponseEntity.ok(ApiResponse.ok(null, "권한이 부여되었습니다."));
     }
 

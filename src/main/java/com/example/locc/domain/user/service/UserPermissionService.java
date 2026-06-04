@@ -46,7 +46,7 @@ public class UserPermissionService {
 
     /** 권한 부여 (이미 있으면 무시) */
     @Transactional
-    public void grantPermission(UUID userId, AreaType area, UUID grantedBy) {
+    public void grantPermission(UUID userId, AreaType area, String adminEmail) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -55,8 +55,11 @@ public class UserPermissionService {
             return;
         }
 
-        permissionRepository.save(UserAreaPermission.grant(user, area, grantedBy));
-        log.info("권한 부여: userId={}, area={}, grantedBy={}", userId, area, grantedBy);
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
+
+        permissionRepository.save(UserAreaPermission.grant(user, area, admin.getId()));
+        log.info("권한 부여: userId={}, area={}, grantedBy={}", userId, area, admin.getId());
     }
 
     /** 권한 회수 */
