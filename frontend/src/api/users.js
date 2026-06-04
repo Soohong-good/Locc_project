@@ -69,3 +69,29 @@ export const revokeOperator = async (userId) => {
   const { data } = await client.post(`/api/admin/users/${userId}/revoke-operator`)
   return data
 }
+
+// ── 영역별 작성 권한 ──────────────────────────────────────────────────
+
+// 본인 권한 목록 조회
+export const getMyPermissions = async () => {
+  const { data } = await client.get('/api/users/me/permissions')
+  return data.data ?? []
+}
+
+// 특정 사용자 권한 목록 조회 (관리자용)
+export const getUserPermissions = async (userId) => {
+  const { data } = await client.get(`/api/admin/users/${userId}/permissions`)
+  return data.data ?? []
+}
+
+// 권한 부여
+export const grantPermission = async ({ userId, area }) => {
+  const { data } = await client.post(`/api/admin/users/${userId}/permissions/${area}`)
+  return data
+}
+
+// 권한 회수
+export const revokePermission = async ({ userId, area }) => {
+  const { data } = await client.delete(`/api/admin/users/${userId}/permissions/${area}`)
+  return data
+}

@@ -1,8 +1,87 @@
 ﻿import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getUsers, getPendingUsers, approveUser, rejectUser, disableUser, enableUser, grantOperator, revokeOperator } from '@/api/users'
+import { getUsers, getPendingUsers, approveUser, rejectUser, disableUser, enableUser, grantOperator, revokeOperator, getUserPermissions, grantPermission, revokePermission } from '@/api/users'
 import ErrorMessage from '@/components/common/ErrorMessage'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
+
+const AREA_LABELS = {
+  NOTICE:       '공지사항',
+  BULLETIN:     '주보',
+  PRAISE_SHEET: '찬양악보',
+  DEPARTMENT:   '부서',
+}
+const ALL_AREAS = Object.keys(AREA_LABELS)
+
+// ── 권한 관리 모달 ────────────────────────────────────────────────────────
+const PermissionModal = ({ user, onClose }) => {
+  const queryClient = useQueryClient()
+
+  const { data: permissions = [], isLoading } = useQuery({
+    queryKey: ['admin', 'users', user.id, 'permissions'],
+    queryFn: () => getUserPermissions(user.id),
+  })
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin', 'users', user.id, 'permissions'] })
+
+  const grantMutation  = useMutation({ mutationFn: grantPermission,  onSuccess: invalidate })
+  const revokeMutation = useMutation({ mutationFn: revokePermission, onSuccess: invalidate })
+
+  const toggle = (area) => {
+    if (permissions.includes(area)) {
+      revokeMutation.mutate({ userId: user.id, area })
+    } else {
+      grantMutation.mutate({ userId: user.id, area })
+    }
+  }
+
+  const isPending = grantMutation.isPending || revokeMutation.isPending
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
+        <h3 className="text-base font-bold text-gray-900 mb-1">영역별 작성 권한</h3>
+        <p className="text-sm text-gray-500 mb-5">
+          <span className="font-medium text-gray-800">{user.name}</span> 님의 사용자 뷰 페이지 작성 권한을 설정합니다.
+        </p>
+
+        {isLoading ? (
+          <div className="text-center py-4 text-sm text-gray-400">불러오는 중...</div>
+        ) : (
+          <div className="space-y-3">
+            {ALL_AREAS.map((area) => {
+              const hasPermission = permissions.includes(area)
+              return (
+                <div key={area} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <span className="text-sm font-medium text-gray-700">{AREA_LABELS[area]}</span>
+                  <button
+                    onClick={() => toggle(area)}
+                    disabled={isPending}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
+                      hasPermission ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                        hasPermission ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          className="mt-6 w-full border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium py-2 rounded-lg transition-colors"
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  )
+}
 
 /**
  * 관리자 회원 관리 페이지
@@ -27,6 +106,7 @@ const AdminUserPage = () => {
   const [page, setPage] = useState(0)
   const [rejectModal, setRejectModal] = useState(null) // { userId, name }
   const [rejectReason, setRejectReason] = useState('')
+  const [permissionModal, setPermissionModal] = useState(null) // user 객체
   const queryClient = useQueryClient()
 
   const queryFn = tab === 'pending'
@@ -216,6 +296,15 @@ const AdminUserPage = () => {
                                   운영자 지정
                                 </button>
                               )}
+                              {/* 영역별 작성 권한 */}
+                              {!isOperator && (
+                                <button
+                                  onClick={() => setPermissionModal(u)}
+                                  className="text-xs font-medium text-teal-500 hover:text-teal-700 transition-colors"
+                                >
+                                  권한
+                                </button>
+                              )}
                             </>
                           )}
                         </div>
@@ -293,6 +382,12 @@ const AdminUserPage = () => {
                             운영자 지정
                           </button>
                         )}
+                        {!isOperator && (
+                          <button onClick={() => setPermissionModal(u)}
+                            className="text-xs font-medium text-teal-500 border border-teal-200 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-md transition-colors">
+                            권한 설정
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
@@ -317,6 +412,14 @@ const AdminUserPage = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* 권한 관리 모달 */}
+      {permissionModal && (
+        <PermissionModal
+          user={permissionModal}
+          onClose={() => setPermissionModal(null)}
+        />
       )}
 
       {/* 반려 모달 */}
