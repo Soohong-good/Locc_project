@@ -83,19 +83,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             }
         }
 
-        // 케이스 3: 신규 사용자 → 임시 계정 생성
+        // 케이스 3: 신규 사용자 → 폼 완료 시 DB 저장 (여기서는 저장하지 않음)
         String email = userInfo.getEmail() != null
                 ? userInfo.getEmail()
                 : provider.name().toLowerCase() + "_" + userInfo.getProviderId() + "@temp.local";
 
-        User newUser = userRepository.save(User.createOAuthTemporaryUser(email, userInfo.getName()));
-        SocialAccount newSocialAccount = SocialAccount.link(
-                provider, userInfo.getProviderId(), userInfo.getEmail(),
-                userInfo.getName(), newUser);
-        socialAccountRepository.save(newSocialAccount);
-        log.debug("신규 소셜 사용자 생성 완료: provider={}", provider);
+        User newUser = User.createOAuthTemporaryUser(email, userInfo.getName()); // DB 저장 안 함
+        log.debug("신규 소셜 사용자 인증 완료 (DB 미저장): provider={}", provider);
 
-        return createOAuth2User(newUser, oAuth2User.getAttributes(), registrationId);
+        return createOAuth2User(newUser, oAuth2User.getAttributes(), registrationId,
+                provider.name(), userInfo.getProviderId());
     }
 
     // ─── 공통 유틸 ───────────────────────────────────────────────────────────
@@ -110,7 +107,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> modifiedAttributes = new HashMap<>(attributes);
         modifiedAttributes.put("email", user.getEmail());
         modifiedAttributes.put("name", user.getName());
+        return new CustomOAuth2User(
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
+                modifiedAttributes,
+                getNameAttributeKey(registrationId),
+                user
+        );
+    }
 
+    /** 신규 사용자용 — provider/providerId를 attributes에 포함 */
+    private OAuth2User createOAuth2User(User user, Map<String, Object> attributes, String registrationId,
+                                        String provider, String providerId) {
+        Map<String, Object> modifiedAttributes = new HashMap<>(attributes);
+        modifiedAttributes.put("email", user.getEmail());
+        modifiedAttributes.put("name", user.getName());
+        modifiedAttributes.put("_oauth_provider", provider);
+        modifiedAttributes.put("_oauth_providerId", providerId);
         return new CustomOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())),
                 modifiedAttributes,

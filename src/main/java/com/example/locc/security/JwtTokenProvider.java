@@ -52,14 +52,26 @@ public class JwtTokenProvider {
     }
 
     /**
-     * OAuth2 임시 토큰 생성 (추가 정보 입력용)
+     * OAuth2 임시 토큰 생성 (추가 정보 입력용) — 기존 플로우 호환용
      * 10분 유효, type=oauth_temp
      */
     public String generateOAuthTempToken(String email) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "oauth_temp");
-        
-        long tempExpiration = 1000L * 60 * 10; // 10분
+        long tempExpiration = 1000L * 60 * 10;
+        return createToken(claims, email, tempExpiration);
+    }
+
+    /**
+     * OAuth2 임시 토큰 생성 (provider/providerId 포함 — 신규 사용자 폼 완료 시 DB 저장용)
+     * 10분 유효, type=oauth_temp
+     */
+    public String generateOAuthTempToken(String email, String provider, String providerId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "oauth_temp");
+        claims.put("provider", provider);
+        claims.put("providerId", providerId);
+        long tempExpiration = 1000L * 60 * 10;
         return createToken(claims, email, tempExpiration);
     }
 
@@ -110,22 +122,34 @@ public class JwtTokenProvider {
 
     /**
      * OAuth2 임시 토큰에서 이메일 추출 (type 검증 포함)
-     * OAuth2 추가 정보 입력 전용
      */
     public String getEmailFromOAuthTemp(String token) {
+        Claims claims = parseOAuthTempClaims(token);
+        return claims.getSubject();
+    }
+
+    /**
+     * OAuth2 임시 토큰에서 provider 추출 (신규 사용자 플로우 전용, 없으면 null)
+     */
+    public String getProviderFromOAuthTemp(String token) {
+        return (String) parseOAuthTempClaims(token).get("provider");
+    }
+
+    /**
+     * OAuth2 임시 토큰에서 providerId 추출 (신규 사용자 플로우 전용, 없으면 null)
+     */
+    public String getProviderIdFromOAuthTemp(String token) {
+        return (String) parseOAuthTempClaims(token).get("providerId");
+    }
+
+    private Claims parseOAuthTempClaims(String token) {
         String raw = token == null ? "" : token.trim();
-        if (raw.startsWith("Bearer ")) {
-            raw = raw.substring(7);
-        }
-
+        if (raw.startsWith("Bearer ")) raw = raw.substring(7);
         Claims claims = extractAllClaims(raw);
-
-        String type = (String) claims.get("type");
-        if (!"oauth_temp".equals(type)) {
+        if (!"oauth_temp".equals(claims.get("type"))) {
             throw new IllegalStateException("OAuth2 임시 토큰이 아닙니다.");
         }
-
-        return claims.getSubject(); // email
+        return claims;
     }
 
     /**
