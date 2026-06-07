@@ -25,7 +25,6 @@ const SocialRegisterTypePage = lazy(() => import('@/pages/auth/SocialRegisterTyp
 const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage'))
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
-const Main2Page              = lazy(() => import('@/pages/Main2Page'))
 const Template               = lazy(() => import('@/pages/Template'))
 const TestDashboard          = lazy(() => import('@/pages/TestDashboard'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
@@ -105,8 +104,8 @@ const AppRoutes = () => {
         {/* 구 메인 (비활성 — 삭제 전 보관) */}
         {/* <Route path="/main-legacy" element={<Layout><MainPage /></Layout>} /> */}
 
-        {/* 신규 메인 디자인 프리뷰 — 레이아웃 없음 */}
-        <Route path="/main2" element={<Main2Page />} />
+        {/* 신규 메인 디자인 프리뷰 — 작업 중, 추후 추가 예정 */}
+        {/* <Route path="/main2" element={<Main2Page />} /> */}
 
         {/* 구 메인 직접 접근용 (보관) */}
         <Route path="/template" element={<Template />} />
