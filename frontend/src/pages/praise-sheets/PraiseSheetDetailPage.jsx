@@ -115,27 +115,45 @@ const EditModal = ({ sheet, onClose, onSaved }) => {
                 </ul>
               </div>
             )}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">새 파일 첨부 <span className="text-xs text-slate-500">(PDF, HWP, JPG, PNG / 최대 20MB)</span></label>
-              <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 transition-colors cursor-pointer">
-                <span className="text-sm text-slate-500">파일 선택</span>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 tracking-wide">
+                새 파일 첨부 <span className="text-xs text-slate-500 font-normal ml-1">(PDF, HWP, JPG, PNG · 최대 20MB)</span>
+              </label>
+              <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition group">
+                <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition">
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">파일 추가</p>
+                  <p className="text-xs text-slate-400">PDF, HWP, JPG, PNG · 최대 20MB</p>
+                </div>
                 <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.hwp"
                   onChange={(e) => { setFiles(Array.from(e.target.files)); e.target.value = '' }} className="hidden" />
               </label>
               {files.length > 0 && (
-                <ul className="mt-2 space-y-1">
+                <ul className="space-y-1">
                   {files.map((f, i) => (
-                    <li key={i} className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 border px-3 py-2">
-                      <span className="truncate">{f.name}</span>
+                    <li key={i} className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5">
+                      <span className="truncate">✓ {f.name}</span>
                       <button type="button" onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="ml-2 text-slate-400 hover:text-red-500">✕</button>
+                        className="ml-2 text-slate-400 hover:text-red-500 shrink-0">✕</button>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-            {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 font-light">{error}</div>}
           </div>
+          {error && (
+            <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
           <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
             <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium">취소</button>
             <button onClick={handleSave} disabled={saving}
@@ -177,9 +195,9 @@ const PraiseSheetDetailPage = () => {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
+  const { canWrite: canWriteFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const isAdmin  = isAdminFn()
-  const canWrite = isAdminOrOperatorFn()
+  const canWrite = canWriteFn('PRAISE_SHEET')
   const userId   = getUserId()
 
   const [editOpen,   setEditOpen]   = useState(false)

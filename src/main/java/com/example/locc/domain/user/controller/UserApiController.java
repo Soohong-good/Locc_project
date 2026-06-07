@@ -174,7 +174,7 @@ public class UserApiController {
     }
 
     /** 본인 영역 권한 목록 조회 */
-    @GetMapping("/me/permissions")
+    @GetMapping("/users/me/permissions")
     public ResponseEntity<ApiResponse<java.util.List<String>>> getMyPermissions(Authentication authentication) {
         return ResponseEntity.ok(ApiResponse.ok(
                 userPermissionService.getMyPermissions(authentication.getName())));

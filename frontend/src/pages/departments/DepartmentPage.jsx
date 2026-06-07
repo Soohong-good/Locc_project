@@ -206,8 +206,15 @@ const BoardWriteModal = ({ deptCode, onClose, onSaved }) => {
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all resize-none"
             />
           </div>
-          {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3">{error}</div>}
         </div>
+        {error && (
+          <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="flex justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
           <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium transition">취소</button>
           <button onClick={handleSave} disabled={saving}
@@ -581,8 +588,15 @@ const GalleryUploadModal = ({ deptCode, onClose, onSaved }) => {
               </div>
             </div>
           )}
-          {error && <div className="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3">{error}</div>}
         </div>
+        {error && (
+          <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="flex justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
           <Button variant="ghost" size="md" onClick={onClose}>취소</Button>
           <Button variant="primary" size="md" onClick={handleSave} isLoading={saving}>
@@ -750,8 +764,16 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
             )}
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
+
+        {error && (
+          <div className="px-6 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
 
         {/* 푸터 */}
         <div className="flex justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100 flex-shrink-0">
@@ -1007,9 +1029,9 @@ const DEPT_BANNER_POSITION = {
 const DepartmentPage = () => {
   const { code }      = useParams()
   const [tab, setTab] = useState('about')
-  const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
+  const { canWrite: canWriteFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const isAdmin = isAdminFn()
-  const canWrite = isAdminOrOperatorFn()
+  const canWrite = canWriteFn('DEPARTMENT')
   const userId = getUserId()
 
   const { data: dept, isLoading, isError } = useQuery({

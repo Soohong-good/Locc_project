@@ -45,9 +45,9 @@ const NoticeListPage = () => {
 
   const [deleteTarget, setDeleteTarget] = useState(null) // { id, title }
 
-  const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
+  const { canWrite: canWriteFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const isAdmin = isAdminFn()
-  const canWrite = isAdminOrOperatorFn()
+  const canWrite = canWriteFn('NOTICE')
   const userId = getUserId()
 
   const queryClient = useQueryClient()

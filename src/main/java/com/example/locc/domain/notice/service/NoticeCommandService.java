@@ -6,8 +6,10 @@ import com.example.locc.domain.notice.dto.command.NoticeUpdateCommand;
 import com.example.locc.domain.notice.dto.response.NoticeDetailResponse;
 import com.example.locc.domain.notice.repository.NoticeRepository;
 import com.example.locc.domain.file.dto.response.AttachmentInfo;
+import com.example.locc.domain.user.entity.AreaType;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
+import com.example.locc.domain.user.service.UserPermissionService;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.file.service.FileQueryService;
 import com.example.locc.exception.NotFoundException;
@@ -37,12 +39,18 @@ public class NoticeCommandService {
     private final UserRepository userRepository;
     private final FileCommandService fileCommandService;
     private final FileQueryService fileQueryService;
+    private final UserPermissionService userPermissionService;
 
     /**
      * Notice 생성
      */
     public NoticeDetailResponse create(NoticeCreateCommand command) {
         log.debug("Creating notice: {}", command.getTitle());
+
+        // 작성 권한 검증 (관리자/운영자 또는 NOTICE 권한 보유자)
+        if (!userPermissionService.hasPermission(command.getCreatedByEmail(), AreaType.NOTICE)) {
+            throw new IllegalStateException("공지사항 작성 권한이 없습니다.");
+        }
 
         // 사용자 조회
         User author = findUserByEmail(command.getCreatedByEmail());
@@ -102,6 +110,9 @@ public class NoticeCommandService {
      * 본문 이미지 업로드 (에디터용)
      */
     public String uploadContentImage(MultipartFile image, String email) {
+        if (!userPermissionService.hasPermission(email, AreaType.NOTICE)) {
+            throw new IllegalStateException("공지사항 작성 권한이 없습니다.");
+        }
         return fileCommandService.uploadNoticeContentImage(image, email);
     }
 

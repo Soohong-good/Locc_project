@@ -7,8 +7,10 @@ import com.example.locc.domain.department.entity.Department;
 import com.example.locc.domain.department.entity.DepartmentBoard;
 import com.example.locc.domain.department.repository.DepartmentBoardRepository;
 import com.example.locc.domain.department.repository.DepartmentRepository;
+import com.example.locc.domain.user.entity.AreaType;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
+import com.example.locc.domain.user.service.UserPermissionService;
 import com.example.locc.exception.AccessDeniedException;
 import com.example.locc.exception.InvalidInputException;
 import com.example.locc.exception.NotFoundException;
@@ -24,9 +26,15 @@ public class DepartmentCommandService {
     private final DepartmentBoardRepository boardRepository;
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
+    private final UserPermissionService userPermissionService;
 
     // 게시글 생성
     public DepartmentBoardDetailResponse create(DepartmentBoardCreateCommand command, String email) {
+        // 작성 권한 검증 (관리자/운영자 또는 DEPARTMENT 권한 보유자)
+        if (!userPermissionService.hasPermission(email, AreaType.DEPARTMENT)) {
+            throw new AccessDeniedException("부서 게시판 작성 권한이 없습니다");
+        }
+
         User author = userRepository.findByEmail(email)
             .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다"));
 

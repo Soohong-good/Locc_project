@@ -6,8 +6,10 @@ import com.example.locc.domain.bulletin.dto.response.BulletinDetailResponse;
 import com.example.locc.domain.bulletin.entity.Bulletin;
 import com.example.locc.domain.bulletin.repository.BulletinRepository;
 import com.example.locc.domain.file.service.FileCommandService;
+import com.example.locc.domain.user.entity.AreaType;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
+import com.example.locc.domain.user.service.UserPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,15 +32,21 @@ public class BulletinCommandService {
     private final BulletinRepository bulletinRepository;
     private final UserRepository userRepository;
     private final FileCommandService fileCommandService;
+    private final UserPermissionService userPermissionService;
 
     /**
      * 주보 생성
      */
     public BulletinDetailResponse createBulletin(
-            BulletinCreateCommand command, 
+            BulletinCreateCommand command,
             MultipartFile file,
             String authorEmail) {
-        
+
+        // 작성 권한 검증 (관리자/운영자 또는 BULLETIN 권한 보유자)
+        if (!userPermissionService.hasPermission(authorEmail, AreaType.BULLETIN)) {
+            throw new IllegalStateException("주보 작성 권한이 없습니다.");
+        }
+
         User author = userRepository.findByEmail(authorEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
 

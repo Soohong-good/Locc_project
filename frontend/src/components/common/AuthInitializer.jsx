@@ -9,6 +9,7 @@ import useAuthStore from '@/stores/authStore'
  */
 const AuthInitializer = () => {
   const { setUser, setInitialized, clearAuth, setPermissions } = useAuthStore()
+  const user = useAuthStore((state) => state.user)
 
   const { data, isError, isSuccess, isFetched } = useQuery({
     queryKey: ['auth', 'me'],
@@ -18,19 +19,26 @@ const AuthInitializer = () => {
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: permissionsData } = useQuery({
+  const { data: permissionsData, isFetched: isPermissionsFetched } = useQuery({
     queryKey: ['auth', 'me', 'permissions'],
     queryFn: getMyPermissions,
-    enabled: !!data,
+    enabled: !!user,
     retry: false,
     staleTime: 5 * 60 * 1000,
   })
 
+  // 1단계: 사용자 정보 로드
+  //   - 비로그인/오류 → 즉시 initialized
+  //   - 로그인 → setUser만, initialized는 권한 로드 후로 미룸
   useEffect(() => {
+    if (!isFetched) return
     if (isSuccess) {
-      if (data) setUser(data)
-      else clearAuth()
-      setInitialized()
+      if (data) {
+        setUser(data)
+      } else {
+        clearAuth()
+        setInitialized()
+      }
     }
     if (isError) {
       clearAuth()
@@ -38,9 +46,13 @@ const AuthInitializer = () => {
     }
   }, [isSuccess, isError, isFetched, data, setUser, setInitialized, clearAuth])
 
+  // 2단계: 권한 로드 완료 → 권한 저장 + initialized
+  //   - 성공/실패 모두 isFetched=true → 스피너 해제
   useEffect(() => {
-    if (permissionsData) setPermissions(permissionsData)
-  }, [permissionsData, setPermissions])
+    if (!isPermissionsFetched) return
+    setPermissions(permissionsData ?? [])
+    setInitialized()
+  }, [isPermissionsFetched, permissionsData, setPermissions, setInitialized])
 
   return null
 }

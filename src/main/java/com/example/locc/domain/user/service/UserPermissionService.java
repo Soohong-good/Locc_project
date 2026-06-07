@@ -72,11 +72,11 @@ public class UserPermissionService {
         log.info("권한 회수: userId={}, area={}", userId, area);
     }
 
-    /** 특정 이메일 사용자가 해당 영역 권한 보유 여부 */
+    /** 특정 이메일 사용자가 해당 영역 권한 보유 여부 (관리자/운영자는 항상 true) */
     @Transactional(readOnly = true)
     public boolean hasPermission(String email, AreaType area) {
         return userRepository.findByEmail(email)
-                .map(user -> permissionRepository.existsByUserAndArea(user, area))
+                .map(user -> user.isAdminOrOperator() || permissionRepository.existsByUserAndArea(user, area))
                 .orElse(false);
     }
 }

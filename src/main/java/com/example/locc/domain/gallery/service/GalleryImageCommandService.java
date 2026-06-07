@@ -10,8 +10,10 @@ import com.example.locc.domain.gallery.entity.GalleryImage;
 import com.example.locc.domain.gallery.repository.GalleryImageRepository;
 import com.example.locc.domain.gallery.service.ImageFileValidator;
 import com.example.locc.domain.gallery.service.ThumbnailGenerator;
+import com.example.locc.domain.user.entity.AreaType;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
+import com.example.locc.domain.user.service.UserPermissionService;
 import com.example.locc.exception.NotFoundException;
 import com.example.locc.exception.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class GalleryImageCommandService {
     private final ThumbnailGenerator thumbnailGenerator;
     private final ImageFileValidator imageFileValidator;
     private final FileProperties fileProperties;
+    private final UserPermissionService userPermissionService;
 
     /**
      * 갤러리 이미지 업로드 (다중)
@@ -48,6 +51,11 @@ public class GalleryImageCommandService {
     @CacheEvict(value = CacheConfig.CACHE_GALLERY_TITLES, allEntries = true)
     public List<GalleryImageDetailResponse> uploadImages(List<GalleryImageCreateCommand> commands, String userEmail) {
         log.debug("업로드 요청 - 커맨드 개수: {}, 사용자: {}", commands.size(), userEmail);
+
+        // 작성 권한 검증 (관리자/운영자 또는 DEPARTMENT 권한 보유자)
+        if (!userPermissionService.hasPermission(userEmail, AreaType.DEPARTMENT)) {
+            throw new AccessDeniedException("갤러리 업로드 권한이 없습니다.");
+        }
 
         // 1. 사용자 조회
         User uploader = userRepository.findByEmail(userEmail)
