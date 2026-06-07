@@ -102,8 +102,15 @@ const WriteModal = ({ onClose, onSaved }) => {
               rows={4} placeholder="주보 내용을 입력하세요 (선택)"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
+        {error && (
+          <div className="px-6 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="flex justify-end gap-2 px-6 py-4 bg-gray-50 border-t border-gray-100">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors">취소</button>
           <button onClick={handleSave} disabled={saving}
@@ -159,8 +166,15 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
             <textarea value={content} onChange={(e) => setContent(e.target.value)}
               rows={4} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
         </div>
+        {error && (
+          <div className="px-6 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm flex items-center gap-2">
+            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="flex justify-end gap-2 px-6 py-4 bg-gray-50 border-t border-gray-100">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">취소</button>
           <button onClick={handleSave} disabled={saving}

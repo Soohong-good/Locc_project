@@ -120,12 +120,12 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // ========== 주보 — 로그인 필수 ==========
+                        // ========== 주보 — 조회 로그인 필수, 쓰기는 authenticated (서비스에서 BULLETIN 권한 검증) ==========
                         .requestMatchers(HttpMethod.GET, "/api/bulletin/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/bulletin/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/bulletin/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/bulletin/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/bulletin/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/bulletin/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/bulletin/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/bulletin/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/bulletin/**").authenticated()
 
                         // ========== 마이페이지 — 로그인 필수 ==========
                         .requestMatchers("/api/mypage/**").authenticated()
@@ -158,31 +158,32 @@ public class SecurityConfig {
                         .requestMatchers("/api/files/**").hasAnyRole("ADMIN", "OPERATOR")
 
                         // ========== 도메인별 쓰기 API ==========
-                        // 공지사항 — ADMIN + OPERATOR
-                        .requestMatchers(HttpMethod.POST, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/notices/**").hasAnyRole("ADMIN", "OPERATOR")
-                        // 찬양악보 — ADMIN + OPERATOR
-                        .requestMatchers(HttpMethod.POST, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
+                        // 공지사항 — 쓰기 authenticated (서비스에서 NOTICE 권한 검증), 고정(PATCH)은 서비스에서 ADMIN 검증
+                        .requestMatchers(HttpMethod.POST, "/api/notices/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/notices/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/notices/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/notices/**").authenticated()
+                        // 찬양악보 — 조회수 증가는 permitAll, 고정(pin)은 ADMIN, 나머지 쓰기는 authenticated (서비스에서 PRAISE_SHEET 권한 검증)
+                        .requestMatchers(HttpMethod.POST, "/api/praise-sheets/*/views").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/praise-sheets/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/praise-sheets/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/praise-sheets/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/praise-sheets/**").authenticated()
                         // 설교 — ADMIN + OPERATOR
                         .requestMatchers(HttpMethod.POST, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PUT, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
-                        // 갤러리 — ADMIN + OPERATOR
-                        .requestMatchers(HttpMethod.POST, "/api/departments/*/gallery").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/departments/*/gallery/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/departments/*/gallery/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/departments/*/gallery/**").hasAnyRole("ADMIN", "OPERATOR")
-                        // 부서 게시판 쓰기 — ADMIN + OPERATOR
-                        .requestMatchers(HttpMethod.POST, "/api/department/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/department/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/department/**").hasAnyRole("ADMIN", "OPERATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/department/**").hasAnyRole("ADMIN", "OPERATOR")
+                        // 갤러리 — 쓰기 authenticated (서비스에서 DEPARTMENT 권한 검증)
+                        .requestMatchers(HttpMethod.POST, "/api/departments/*/gallery").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/departments/*/gallery/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/departments/*/gallery/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/departments/*/gallery/**").authenticated()
+                        // 부서 게시판 쓰기 — authenticated (서비스에서 DEPARTMENT 권한 검증), 고정(pin)은 서비스에서 ADMIN 검증
+                        .requestMatchers(HttpMethod.POST, "/api/department/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/department/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/department/**").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/department/**").authenticated()
                         // 스태프 — ADMIN + OPERATOR
                         .requestMatchers(HttpMethod.POST, "/api/staff/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PUT, "/api/staff/**").hasAnyRole("ADMIN", "OPERATOR")
@@ -235,7 +236,6 @@ public class SecurityConfig {
                         // ========== 공개 조회 API (비로그인 허용) ==========
                         .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/praise-sheets/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/praise-sheets/*/views").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/sermons/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").permitAll()
                         // 부서 조회 — 단수(/api/department)·복수(/api/departments) 모두 허용
@@ -252,6 +252,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/help-request").permitAll()
                         // 프론트 에러 리포트 — 비로그인 포함 허용
                         .requestMatchers(HttpMethod.POST, "/api/error-report").permitAll()
+                        // Spring 에러 페이지 — 401 루프 방지
+                        .requestMatchers("/error").permitAll()
 
                         // ========== 나머지 — 인증 필수 (기본 보안 정책) ==========
                         // [SECURITY] anyRequest().authenticated() 로 변경

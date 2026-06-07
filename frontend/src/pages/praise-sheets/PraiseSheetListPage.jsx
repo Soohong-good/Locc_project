@@ -1,12 +1,140 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getPraiseSheets, togglePraiseSheetPin, deletePraiseSheet } from '@/api/praiseSheets'
+import { getPraiseSheets, togglePraiseSheetPin, deletePraiseSheet, createPraiseSheet, uploadPraiseSheetImage } from '@/api/praiseSheets'
 import useAuthStore from '@/stores/authStore'
+import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import Button from '@/components/ui/Button'
 import PageHero from '@/components/ui/PageHero'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
 import toast from '@/utils/toast'
+
+const QUILL_STYLE = `
+  .ql-tooltip { display: none !important; }
+  .ql-container { min-height: 240px; font-size: 16px; border-color: #e2e8f0 !important; }
+  .ql-editor    { min-height: 240px; background-color: #f8fafc; font-family: inherit; }
+  .ql-editor:focus { background-color: #fff; }
+  .ql-toolbar   { background-color: #fff; border-color: #e2e8f0 !important; }
+`
+
+const WriteModal = ({ onClose, onSaved }) => {
+  const [title,  setTitle]  = useState('')
+  const [files,  setFiles]  = useState([])
+  const [error,  setError]  = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({ onImageUpload: uploadPraiseSheetImage })
+
+  const handleFileChange = (e) => {
+    const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png', '.hwp']
+    const newFiles = Array.from(e.target.files)
+    for (const f of newFiles) {
+      const ext = '.' + f.name.split('.').pop().toLowerCase()
+      if (!ALLOWED_EXTS.includes(ext)) { toast.error(`허용되지 않는 파일 형식: ${f.name}`); e.target.value = ''; return }
+      if (f.size > 20 * 1024 * 1024)  { toast.error(`파일 크기는 20MB 이하여야 합니다: ${f.name}`); e.target.value = ''; return }
+    }
+    setFiles((prev) => [...prev, ...newFiles])
+    e.target.value = ''
+  }
+
+  const handleSave = async () => {
+    setError('')
+    if (!title.trim()) return setError('제목을 입력해주세요.')
+    const fd = new FormData()
+    fd.append('title',    title.trim())
+    fd.append('content',  getHTML() || '')
+    fd.append('isPinned', 'false')
+    files.forEach((f) => fd.append('files', f))
+    setSaving(true)
+    try {
+      await createPraiseSheet(fd)
+      onSaved()
+    } catch (e) {
+      setError(e?.response?.data?.message ?? '등록에 실패했습니다.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      <style>{QUILL_STYLE}</style>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-white w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+          <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
+            <div>
+              <h2 className="text-2xl font-light text-slate-900 tracking-tight">찬양악보 등록</h2>
+              <p className="text-sm text-slate-500 mt-1 font-light">찬양 악보와 관련 자료를 등록합니다</p>
+            </div>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors p-2 hover:bg-slate-50 rounded-full">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">제목 <span className="text-red-500">*</span></label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                placeholder="악보 제목을 입력하세요"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all font-light" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">내용</label>
+              <div ref={containerRef} />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 tracking-wide">
+                첨부파일 <span className="text-xs text-slate-500 font-normal ml-1">(PDF, HWP, JPG, PNG · 최대 20MB)</span>
+              </label>
+              <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition group">
+                <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition">
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">파일 추가</p>
+                  <p className="text-xs text-slate-400">PDF, HWP, JPG, PNG · 최대 20MB</p>
+                </div>
+                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.hwp"
+                  onChange={handleFileChange} className="hidden" />
+              </label>
+              {files.length > 0 && (
+                <ul className="space-y-1">
+                  {files.map((f, i) => (
+                    <li key={i} className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5">
+                      <span className="truncate">✓ {f.name}</span>
+                      <button type="button" onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="ml-2 text-slate-400 hover:text-red-500 shrink-0">✕</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          {error && (
+            <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+          )}
+          <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
+            <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium">취소</button>
+            <button onClick={handleSave} disabled={saving}
+              className="px-8 py-2.5 bg-slate-900 text-white hover:bg-slate-800 font-medium disabled:opacity-60">
+              {saving ? '등록 중...' : '등록'}
+            </button>
+          </div>
+        </div>
+      </div>
+      <LinkTooltip />
+    </>
+  )
+}
 
 const DeleteModal = ({ title, onClose, onConfirm, deleting }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -34,16 +162,16 @@ const BookmarkIcon = ({ className = 'w-5 h-5' }) => (
 )
 
 const PraiseSheetListPage = () => {
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const page    = Number(searchParams.get('page') ?? 0)
   const keyword = searchParams.get('keyword') ?? ''
-  const [searchInput, setSearchInput] = useState(keyword)
+  const [searchInput,  setSearchInput]  = useState(keyword)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [writeOpen,    setWriteOpen]    = useState(false)
 
-  const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
+  const { canWrite: canWriteFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const isAdmin  = isAdminFn()
-  const canWrite = isAdminOrOperatorFn()
+  const canWrite = canWriteFn('PRAISE_SHEET')
   const userId   = getUserId()
   const queryClient = useQueryClient()
 
@@ -86,7 +214,7 @@ const PraiseSheetListPage = () => {
     <main>
       <PageHero eyebrow="Praise Sheet" title="찬양악보" subtitle="찬양 악보와 관련 자료를 확인하세요">
         {canWrite && (
-          <Button onClick={() => navigate('/praise-sheets/new')} variant="secondary" size="sm"
+          <Button onClick={() => setWriteOpen(true)} variant="secondary" size="sm"
             className="border-white text-white hover:bg-white hover:text-slate-900">
             + 새 악보 등록
           </Button>
@@ -234,6 +362,16 @@ const PraiseSheetListPage = () => {
           )}
         </div>
       </section>
+
+      {writeOpen && (
+        <WriteModal
+          onClose={() => setWriteOpen(false)}
+          onSaved={() => {
+            setWriteOpen(false)
+            queryClient.invalidateQueries({ queryKey: ['praise-sheets'] })
+          }}
+        />
+      )}
 
       {deleteTarget && (
         <DeleteModal

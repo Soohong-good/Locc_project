@@ -8,8 +8,10 @@ import com.example.locc.domain.praisesheet.repository.PraiseSheetRepository;
 import com.example.locc.domain.file.dto.response.AttachmentInfo;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.file.service.FileQueryService;
+import com.example.locc.domain.user.entity.AreaType;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
+import com.example.locc.domain.user.service.UserPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,8 +33,12 @@ public class PraiseSheetCommandService {
     private final UserRepository userRepository;
     private final FileCommandService fileCommandService;
     private final FileQueryService fileQueryService;
+    private final UserPermissionService userPermissionService;
 
     public PraiseSheetDetailResponse create(PraiseSheetCreateCommand command) {
+        if (!userPermissionService.hasPermission(command.getCreatedByEmail(), AreaType.PRAISE_SHEET)) {
+            throw new IllegalStateException("찬양악보 작성 권한이 없습니다.");
+        }
         User author = findUser(command.getCreatedByEmail());
         PraiseSheet ps = PraiseSheet.create(command.withDefaults(), author);
         PraiseSheet saved = praiseSheetRepository.save(ps);
@@ -71,6 +77,9 @@ public class PraiseSheetCommandService {
     }
 
     public String uploadContentImage(MultipartFile image, String email) {
+        if (!userPermissionService.hasPermission(email, AreaType.PRAISE_SHEET)) {
+            throw new IllegalStateException("찬양악보 작성 권한이 없습니다.");
+        }
         return fileCommandService.uploadPraiseSheetContentImage(image, email);
     }
 

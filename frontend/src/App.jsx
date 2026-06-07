@@ -25,6 +25,7 @@ const SocialRegisterTypePage = lazy(() => import('@/pages/auth/SocialRegisterTyp
 const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage'))
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
+const Main2Page              = lazy(() => import('@/pages/Main2Page'))
 const Template               = lazy(() => import('@/pages/Template'))
 const TestDashboard          = lazy(() => import('@/pages/TestDashboard'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
@@ -62,7 +63,6 @@ const BulletinDetailPage     = lazy(() => import('@/pages/bulletins/BulletinDeta
 
 const PraiseSheetListPage    = lazy(() => import('@/pages/praise-sheets/PraiseSheetListPage'))
 const PraiseSheetDetailPage  = lazy(() => import('@/pages/praise-sheets/PraiseSheetDetailPage'))
-const PraiseSheetWritePage   = lazy(() => import('@/pages/praise-sheets/PraiseSheetWritePage'))
 
 const DepartmentPage         = lazy(() => import('@/pages/departments/DepartmentPage'))
 const GalleryDetailPage      = lazy(() => import('@/pages/departments/GalleryDetailPage'))
@@ -104,6 +104,9 @@ const AppRoutes = () => {
 
         {/* 구 메인 (비활성 — 삭제 전 보관) */}
         {/* <Route path="/main-legacy" element={<Layout><MainPage /></Layout>} /> */}
+
+        {/* 신규 메인 디자인 프리뷰 — 레이아웃 없음 */}
+        <Route path="/main2" element={<Main2Page />} />
 
         {/* 구 메인 직접 접근용 (보관) */}
         <Route path="/template" element={<Template />} />
@@ -164,9 +167,8 @@ const AppRoutes = () => {
           <Route path="/notices/:id"     element={<NoticeDetailPage />} />
 
           {/* 찬양악보 */}
-          <Route path="/praise-sheets"      element={<PraiseSheetListPage />} />
-          <Route path="/praise-sheets/new"  element={<PrivateRoute><PraiseSheetWritePage /></PrivateRoute>} />
-          <Route path="/praise-sheets/:id"  element={<PraiseSheetDetailPage />} />
+          <Route path="/praise-sheets"     element={<PraiseSheetListPage />} />
+          <Route path="/praise-sheets/:id" element={<PraiseSheetDetailPage />} />
 
           {/* 시설·차량 신청 — 로그인 필수 */}
           <Route path="/applications"      element={<PrivateRoute><ApplicationListPage /></PrivateRoute>} />
