@@ -6,6 +6,9 @@ import com.example.locc.domain.sermon.dto.request.SermonSearchCondition;
 import com.example.locc.domain.sermon.dto.response.SermonDetailResponse;
 import com.example.locc.domain.sermon.dto.response.SermonPageResponse;
 import com.example.locc.domain.sermon.dto.response.SermonResponse;
+import com.example.locc.domain.sermon.dto.response.SundayMorningGroupDetailResponse;
+import com.example.locc.domain.sermon.dto.response.SundayMorningGroupResponse;
+import com.example.locc.domain.sermon.dto.response.SundayMorningPageGroupResponse;
 import com.example.locc.domain.sermon.entity.Sermon;
 import com.example.locc.domain.sermon.repository.SermonRepository;
 import com.example.locc.domain.file.dto.response.AttachmentInfo;
@@ -19,7 +22,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -224,6 +229,77 @@ public class SermonQueryService {
                 .totalItems(sermons.getTotalElements())
                 .selectedServiceNumber(serviceNumber)
                 .build();
+    }
+
+    // ─────────────────────────────────────────────
+    // 주일오전 날짜 기반 그룹핑 조회
+    // ─────────────────────────────────────────────
+
+    /**
+     * 주일오전 날짜별 그룹 목록 (탭 없이 단일 리스트)
+     * - 쿼리 2회: distinct dates 페이징 + 해당 날짜 설교 일괄 조회
+     * - keyword: 제목 검색 (관리자 통합 목록용, null/공백이면 전체)
+     */
+    public SundayMorningPageGroupResponse getSundayMorningGroupedPage(int page, int size, String keyword) {
+        String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        Page<LocalDate> datePage = sermonRepository.findDistinctDatesByCategory(
+                "주일오전", normalizedKeyword, PageRequest.of(page, size));
+        List<LocalDate> dates = datePage.getContent();
+
+        if (dates.isEmpty()) {
+            List<Map<String, String>> youtubeVideos = fetchYoutubeVideos("sunday-morning-2");
+            return SundayMorningPageGroupResponse.builder()
+                    .groups(List.of()).latestGroup(null)
+                    .youtubeVideos(youtubeVideos)
+                    .currentPage(page).totalPages(0).totalItems(0)
+                    .build();
+        }
+
+        // 해당 날짜들의 설교를 한 번에 조회 후 메모리 그룹핑
+        List<Sermon> sermons = sermonRepository.findByCategoryAndDateIn("주일오전", dates);
+        Map<LocalDate, List<Sermon>> grouped = sermons.stream()
+                .collect(Collectors.groupingBy(Sermon::getSermonDate, LinkedHashMap::new, Collectors.toList()));
+
+        List<SundayMorningGroupResponse> groups = dates.stream()
+                .map(date -> SundayMorningGroupResponse.fromSermons(date, grouped.getOrDefault(date, List.of())))
+                .collect(Collectors.toList());
+
+        List<Map<String, String>> youtubeVideos = fetchYoutubeVideos("sunday-morning-2");
+
+        return SundayMorningPageGroupResponse.builder()
+                .groups(groups)
+                .latestGroup(groups.isEmpty() ? null : groups.get(0))
+                .youtubeVideos(youtubeVideos)
+                .currentPage(page)
+                .totalPages(datePage.getTotalPages())
+                .totalItems(datePage.getTotalElements())
+                .build();
+    }
+
+    /**
+     * 주일오전 날짜별 상세 (1부 + 2부) — content + attachments 포함
+     */
+    public SundayMorningGroupDetailResponse getSundayMorningGroupDetail(LocalDate date) {
+        List<Sermon> sermons = sermonRepository.findByCategoryAndDate("주일오전", date);
+        if (sermons.isEmpty()) {
+            throw new NotFoundException("해당 날짜의 주일오전 설교를 찾을 수 없습니다: " + date);
+        }
+
+        Sermon part1Sermon = sermons.stream()
+                .filter(s -> s.getServiceNumber() == null || Integer.valueOf(1).equals(s.getServiceNumber()))
+                .findFirst().orElse(null);
+        Sermon part2Sermon = sermons.stream()
+                .filter(s -> Integer.valueOf(2).equals(s.getServiceNumber()))
+                .findFirst().orElse(null);
+
+        SermonDetailResponse part1 = part1Sermon != null
+                ? SermonDetailResponse.from(part1Sermon, fileQueryService.getSermonAttachments(part1Sermon.getId()))
+                : null;
+        SermonDetailResponse part2 = part2Sermon != null
+                ? SermonDetailResponse.from(part2Sermon, fileQueryService.getSermonAttachments(part2Sermon.getId()))
+                : null;
+
+        return SundayMorningGroupDetailResponse.of(date, part1, part2);
     }
 
     // ─────────────────────────────────────────────

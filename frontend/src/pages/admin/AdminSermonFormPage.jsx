@@ -22,7 +22,7 @@ const AdminSermonFormPage = () => {
 
   const [fields, setFields] = useState({
     title: '', scripture: '', preacher: '',
-    category: '주일오전', serviceNumber: '',
+    category: '주일오후', serviceNumber: '',
     sermonDate: '', videoUrl: '', audioUrl: '',
   })
   const [content, setContent] = useState('')
@@ -132,9 +132,11 @@ const AdminSermonFormPage = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">카테고리 <span className="text-red-500">*</span></label>
+            {/* 주일오전은 통합 폼(/admin/sermons/sunday-morning)에서 관리 — 신규 등록 시 선택 제외, 기존 행 수정 시에만 표시 */}
             <select value={fields.category} onChange={set('category')} required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {(isEdit && fields.category === '주일오전' ? CATEGORIES : CATEGORIES.filter((c) => c !== '주일오전'))
+                .map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           {showServiceNumber && (

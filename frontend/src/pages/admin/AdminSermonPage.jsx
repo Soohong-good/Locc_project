@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  getSundayMorningData,
+  getSundayMorningGroupedData,
   getSundayAfternoonData,
   getWeekdayData,
   getTrainingMessageData,
@@ -12,9 +12,9 @@ import ErrorMessage from '@/components/common/ErrorMessage'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
 
 // ── 탭 정의 ──────────────────────────────────────────────────────────────
+// 주일오전은 사용자단(날짜 그룹)과 동일하게 1부/2부 통합 단일 탭
 const TABS = [
-  { key: 'sm1',      label: '주일오전 1부' },
-  { key: 'sm2',      label: '주일오전 2부' },
+  { key: 'sm',       label: '주일오전' },
   { key: 'sa',       label: '주일오후' },
   { key: 'wed',      label: '수요예배' },
   { key: 'fri',      label: '금요기도회' },
@@ -24,8 +24,7 @@ const TABS = [
 // ── 탭별 API 호출 함수 ───────────────────────────────────────────────────
 const fetchByTab = (tabKey, page, keyword) => {
   switch (tabKey) {
-    case 'sm1':      return getSundayMorningData({ serviceNumber: 1, page, size: 15, keyword })
-    case 'sm2':      return getSundayMorningData({ serviceNumber: 2, page, size: 15, keyword })
+    case 'sm':       return getSundayMorningGroupedData({ page, size: 15, keyword })
     case 'sa':       return getSundayAfternoonData({ page, size: 15, keyword })
     case 'wed':      return getWeekdayData({ type: 'wednesday', page, size: 15, keyword })
     case 'fri':      return getWeekdayData({ type: 'friday',    page, size: 15, keyword })
@@ -109,8 +108,90 @@ const SermonTable = ({ sermons, onDelete, isPending }) => {
   )
 }
 
+// ── 주일오전 날짜 그룹 테이블 (사용자단과 동일: 날짜당 한 건) ────────────
+// 1부/2부는 같은 설교 — 제목·설교자는 대표값, 영상 보유 여부만 부별 뱃지로 표시
+const SundayMorningGroupTable = ({ groups, onDeleteGroup, isPending }) => {
+  if (groups.length === 0) {
+    return (
+      <p className="text-center text-sm text-gray-400 py-16">등록된 설교가 없습니다.</p>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table className="w-full text-sm table-fixed">
+        <colgroup>
+          <col />
+          <col className="w-28" />
+          <col className="w-24 hidden md:table-column" />
+          <col className="w-28" />
+          <col className="w-24" />
+        </colgroup>
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">제목</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 hidden md:table-cell">설교자</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 hidden md:table-cell">설교일</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">영상</th>
+            <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">관리</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {groups.map((group) => {
+            const title    = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
+            const preacher = group.representativePreacher ?? group.part1?.preacher ?? group.part2?.preacher
+            return (
+              <tr key={group.sermonDate} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3">
+                  <Link
+                    to={`/worship/sermon/sunday-morning/${group.sermonDate}`}
+                    className="text-gray-800 font-medium hover:text-blue-600 hover:underline truncate max-w-xs block"
+                  >
+                    {title}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-gray-500 hidden md:table-cell whitespace-nowrap">
+                  {preacher ?? '-'}
+                </td>
+                <td className="px-4 py-3 text-gray-400 hidden md:table-cell whitespace-nowrap">
+                  {group.sermonDate}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className={`text-xs mr-1.5 ${group.part1?.videoUrl ? 'text-red-400' : 'text-gray-300'}`}>
+                    1부{group.part1?.videoUrl ? ' ▶' : ' -'}
+                  </span>
+                  <span className={`text-xs ${group.part2?.videoUrl ? 'text-red-400' : 'text-gray-300'}`}>
+                    2부{group.part2?.videoUrl ? ' ▶' : ' -'}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      to={`/admin/sermons/sunday-morning/${group.sermonDate}/edit`}
+                      className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors"
+                    >
+                      수정
+                    </Link>
+                    <button
+                      onClick={() => onDeleteGroup(group)}
+                      disabled={isPending}
+                      className="text-xs font-medium text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 // ── 탭별 콘텐츠 ──────────────────────────────────────────────────────────
-const TabContent = ({ tabKey, onDelete, isPending }) => {
+const TabContent = ({ tabKey, onDelete, onDeleteGroup, isPending }) => {
   const [page, setPage] = useState(0)
   const [searchInput, setSearchInput] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -121,7 +202,9 @@ const TabContent = ({ tabKey, onDelete, isPending }) => {
     staleTime: 30 * 1000,
   })
 
+  const isGrouped  = tabKey === 'sm'
   const sermons    = data?.sermons    ?? []
+  const groups     = data?.groups     ?? []
   const totalPages = data?.totalPages ?? 0
 
   const handleSearch = (e) => {
@@ -171,6 +254,8 @@ const TabContent = ({ tabKey, onDelete, isPending }) => {
         </div>
       ) : error ? (
         <ErrorMessage error={error} fallback="설교 목록을 불러올 수 없습니다." />
+      ) : isGrouped ? (
+        <SundayMorningGroupTable groups={groups} onDeleteGroup={onDeleteGroup} isPending={isPending} />
       ) : (
         <SermonTable sermons={sermons} onDelete={onDelete} isPending={isPending} />
       )}
@@ -199,7 +284,7 @@ const TabContent = ({ tabKey, onDelete, isPending }) => {
 
 // ── 메인 페이지 ───────────────────────────────────────────────────────────
 const AdminSermonPage = () => {
-  const [activeTab, setActiveTab] = useState('sm1')
+  const [activeTab, setActiveTab] = useState('sm')
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
@@ -208,9 +293,27 @@ const AdminSermonPage = () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'sermons'] }),
   })
 
+  // 주일오전 날짜 그룹 삭제: 해당 날짜의 1부·2부 행을 함께 삭제
+  const deleteGroupMutation = useMutation({
+    mutationFn: async (group) => {
+      if (group.part1) await deleteSermon(group.part1.id)
+      if (group.part2) await deleteSermon(group.part2.id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'sermons'] })
+      queryClient.invalidateQueries({ queryKey: ['sermons'] })
+    },
+  })
+
   const handleDelete = (id, title) => {
     if (!confirm(`"${title}" 설교를 삭제하시겠습니까?`)) return
     deleteMutation.mutate(id)
+  }
+
+  const handleDeleteGroup = (group) => {
+    const title = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
+    if (!confirm(`${group.sermonDate} "${title}" 설교(1·2부)를 모두 삭제하시겠습니까?`)) return
+    deleteGroupMutation.mutate(group)
   }
 
   return (
@@ -219,16 +322,16 @@ const AdminSermonPage = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">설교 관리</h1>
         <Link
-          to="/admin/sermons/new"
+          to={activeTab === 'sm' ? '/admin/sermons/sunday-morning/new' : '/admin/sermons/new'}
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + 새 설교
         </Link>
       </div>
 
-      {deleteMutation.error && (
+      {(deleteMutation.error || deleteGroupMutation.error) && (
         <div className="mb-4">
-          <ErrorMessage error={deleteMutation.error} />
+          <ErrorMessage error={deleteMutation.error || deleteGroupMutation.error} />
         </div>
       )}
 
@@ -254,7 +357,8 @@ const AdminSermonPage = () => {
         key={activeTab}
         tabKey={activeTab}
         onDelete={handleDelete}
-        isPending={deleteMutation.isPending}
+        onDeleteGroup={handleDeleteGroup}
+        isPending={deleteMutation.isPending || deleteGroupMutation.isPending}
       />
     </div>
   )

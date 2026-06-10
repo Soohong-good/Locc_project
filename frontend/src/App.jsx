@@ -26,6 +26,10 @@ const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
 const Template               = lazy(() => import('@/pages/Template'))
+
+// ── 디자인 템플릿 (리디자인 작업 중) ──────────────────────────────────────
+const MainTempl              = lazy(() => import('@/pages/templates/MainTempl'))
+const SalvationTempl         = lazy(() => import('@/pages/templates/SalvationTempl'))
 const TestDashboard          = lazy(() => import('@/pages/TestDashboard'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
 const NotFoundPage           = lazy(() => import('@/pages/NotFoundPage'))
@@ -48,7 +52,8 @@ const SundayMorningPage      = lazy(() => import('@/pages/worship/SundayMorningP
 const SundayAfternoonPage    = lazy(() => import('@/pages/worship/SundayAfternoonPage'))
 const WeekdayPage            = lazy(() => import('@/pages/worship/WeekdayPage'))
 const TrainingMessagePage    = lazy(() => import('@/pages/worship/TrainingMessagePage'))
-const WorshipSermonDetailPage = lazy(() => import('@/pages/worship/SermonDetailPage'))
+const WorshipSermonDetailPage     = lazy(() => import('@/pages/worship/SermonDetailPage'))
+const SundayMorningDetailPage    = lazy(() => import('@/pages/worship/SundayMorningDetailPage'))
 const TrainingIntroPage      = lazy(() => import('@/pages/training/TrainingIntroPage'))
 
 const TrainingListPage       = lazy(() => import('@/pages/training/TrainingListPage'))
@@ -75,6 +80,7 @@ const AdminNoticePage            = lazy(() => import('@/pages/admin/AdminNoticeP
 const AdminNoticeFormPage        = lazy(() => import('@/pages/admin/AdminNoticeFormPage'))
 const AdminSermonPage            = lazy(() => import('@/pages/admin/AdminSermonPage'))
 const AdminSermonFormPage        = lazy(() => import('@/pages/admin/AdminSermonFormPage'))
+const AdminSundayMorningFormPage = lazy(() => import('@/pages/admin/AdminSundayMorningFormPage'))
 const AdminUserPage              = lazy(() => import('@/pages/admin/AdminUserPage'))
 const AdminPopupPage             = lazy(() => import('@/pages/admin/AdminPopupPage'))
 const AdminPopupFormPage         = lazy(() => import('@/pages/admin/AdminPopupFormPage'))
@@ -104,8 +110,9 @@ const AppRoutes = () => {
         {/* 구 메인 (비활성 — 삭제 전 보관) */}
         {/* <Route path="/main-legacy" element={<Layout><MainPage /></Layout>} /> */}
 
-        {/* 신규 메인 디자인 프리뷰 — 작업 중, 추후 추가 예정 */}
-        {/* <Route path="/main2" element={<Main2Page />} /> */}
+        {/* 디자인 템플릿 영역 — 리디자인 작업 중 */}
+        <Route path="/template/main"       element={<MainTempl />} />
+        <Route path="/template/salvation"  element={<SalvationTempl />} />
 
         {/* 구 메인 직접 접근용 (보관) */}
         <Route path="/template" element={<Template />} />
@@ -128,11 +135,12 @@ const AppRoutes = () => {
 
           {/* 예배 페이지 */}
           <Route path="/worship/newyear"                 element={<NewYearServicePage />} />
-          <Route path="/worship/sermon/sunday-morning"   element={<SundayMorningPage />} />
-          <Route path="/worship/sermon/sunday-afternoon" element={<SundayAfternoonPage />} />
-          <Route path="/worship/sermon/weekday"          element={<WeekdayPage />} />
-          <Route path="/worship/sermon/training-message" element={<TrainingMessagePage />} />
-          <Route path="/worship/sermon/:id"              element={<WorshipSermonDetailPage />} />
+          <Route path="/worship/sermon/sunday-morning"          element={<SundayMorningPage />} />
+          <Route path="/worship/sermon/sunday-morning/:date"  element={<SundayMorningDetailPage />} />
+          <Route path="/worship/sermon/sunday-afternoon"      element={<SundayAfternoonPage />} />
+          <Route path="/worship/sermon/weekday"               element={<WeekdayPage />} />
+          <Route path="/worship/sermon/training-message"      element={<TrainingMessagePage />} />
+          <Route path="/worship/sermon/:id"                   element={<WorshipSermonDetailPage />} />
           <Route path="/worship/training-intro"          element={<TrainingIntroPage />} />
 
           {/* 훈련신청 — 로그인 필수 */}
@@ -189,6 +197,9 @@ const AppRoutes = () => {
           <Route path="sermons"          element={<AdminSermonPage />} />
           <Route path="sermons/new"      element={<AdminSermonFormPage />} />
           <Route path="sermons/:id/edit" element={<AdminSermonFormPage />} />
+          {/* 주일오전 통합 폼 — 1·2부를 날짜 단위로 한 페이지에서 관리 */}
+          <Route path="sermons/sunday-morning/new"         element={<AdminSundayMorningFormPage />} />
+          <Route path="sermons/sunday-morning/:date/edit"  element={<AdminSundayMorningFormPage />} />
           <Route path="users"            element={<AdminUserPage />} />
           <Route path="popups"           element={<AdminPopupPage />} />
           <Route path="popups/new"       element={<AdminPopupFormPage />} />
