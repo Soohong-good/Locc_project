@@ -123,6 +123,39 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
     @Query("SELECT s FROM Sermon s ORDER BY s.sermonDate DESC, s.createdAt DESC")
     List<Sermon> findLatest(Pageable pageable);
 
+    // ─────────────────────────────────────────────
+    // 주일오전 날짜 기반 그룹핑 조회
+    // ─────────────────────────────────────────────
+
+    /**
+     * 카테고리별 중복 없는 날짜 목록 (최신순 페이징, 제목 검색 옵션)
+     * - 주일오전 그룹핑 리스트용 (관리자 검색 포함)
+     * - keyword: null이면 전체, 있으면 해당 날짜의 1부/2부 중 하나라도 제목 매칭 시 날짜 포함
+     * - countQuery 명시: DISTINCT 쿼리에서 Spring Data JPA 자동 파생 count가 전체 행 수를 반환할 수 있음
+     */
+    @Query(value = "SELECT DISTINCT s.sermonDate FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND (:keyword IS NULL OR s.title LIKE CONCAT('%', :keyword, '%')) ORDER BY s.sermonDate DESC",
+           countQuery = "SELECT COUNT(DISTINCT s.sermonDate) FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND (:keyword IS NULL OR s.title LIKE CONCAT('%', :keyword, '%'))")
+    Page<java.time.LocalDate> findDistinctDatesByCategory(@Param("category") String category,
+                                                          @Param("keyword") String keyword,
+                                                          Pageable pageable);
+
+    /**
+     * 카테고리 + 날짜 IN 조회 (author fetch join, serviceNumber 오름차순)
+     * - null serviceNumber는 1부로 취급 (COALESCE)
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT s FROM Sermon s WHERE s.category = :category AND s.sermonDate IN :dates ORDER BY s.sermonDate DESC, COALESCE(s.serviceNumber, 1) ASC")
+    List<Sermon> findByCategoryAndDateIn(@Param("category") String category,
+                                         @Param("dates") List<java.time.LocalDate> dates);
+
+    /**
+     * 카테고리 + 단일 날짜 조회 (상세용)
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT s FROM Sermon s WHERE s.category = :category AND s.sermonDate = :date ORDER BY COALESCE(s.serviceNumber, 1) ASC")
+    List<Sermon> findByCategoryAndDate(@Param("category") String category,
+                                       @Param("date") java.time.LocalDate date);
+
     /**
      * 특정 날짜 이후 생성된 설교 개수 (Admin용)
      */

@@ -42,11 +42,23 @@ export const getSermonsByCategory = async ({ category, page = 0, size = 10, keyw
   return data.data
 }
 
-// 주일오전 (serviceNumber: 1 | 2)
+// 주일오전 (serviceNumber: 1 | 2) — 기존 유지 (관리자 등에서 사용 가능)
 export const getSundayMorningData = async ({ serviceNumber = 1, page = 0, size = 9, keyword, preacher } = {}) => {
   const { data } = await client.get(`/api/sermons/sunday-morning/${serviceNumber}`, {
     params: { page, size, keyword, preacher },
   })
+  return data.data
+}
+
+// 주일오전 날짜 기반 그룹 목록 (탭 없는 단일 리스트, keyword=제목 검색)
+export const getSundayMorningGroupedData = async ({ page = 0, size = 9, keyword } = {}) => {
+  const { data } = await client.get('/api/sermons/sunday-morning/grouped', { params: { page, size, keyword } })
+  return data.data
+}
+
+// 주일오전 날짜별 상세 (1부 + 2부)
+export const getSundayMorningByDate = async (date) => {
+  const { data } = await client.get(`/api/sermons/sunday-morning/date/${date}`)
   return data.data
 }
 

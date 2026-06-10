@@ -18,7 +18,12 @@ import java.time.LocalDate;
  * - 비즈니스 로직을 Entity에 응집
  */
 @Entity
-@Table(name = "sermon")
+// 인덱스: 카테고리별 날짜 조회(목록·distinct 날짜 페이징)가 주 접근 패턴
+// 운영 DB는 ddl-auto=validate라 자동 생성되지 않음 → 서버에 수동 적용 필요:
+//   CREATE INDEX idx_sermon_category_date ON sermon (category, sermon_date);
+@Table(name = "sermon", indexes = {
+        @Index(name = "idx_sermon_category_date", columnList = "category, sermon_date")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

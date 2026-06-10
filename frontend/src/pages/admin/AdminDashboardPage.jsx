@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import useAuthStore from '@/stores/authStore'
 import { getDashboard } from '@/api/dashboard'
 import { getNotices } from '@/api/notices'
-import { getSundayMorningData, getSundayAfternoonData, getWeekdayData, getTrainingMessageData } from '@/api/sermons'
+import { getSundayMorningGroupedData, getWeekdayData, getTrainingMessageData } from '@/api/sermons'
 import { getBulletins } from '@/api/bulletins'
 import { getRecentGallery } from '@/api/departments'
 
@@ -296,14 +296,9 @@ const PostTable = ({ hasTag = false, viewAllTo, viewAllLabel = '전체 보기 �
 
 // ── 설교 서브패널 (2단 탭 유지) ─────────────────────────────────────────
 
+// 주일오전: 사용자단·설교관리와 동일하게 1부/2부 통합 (날짜 그룹)
 const SERMON_MAIN_TABS = [
-  {
-    key: 'sunday_morning', label: '주일 오전',
-    subs: [
-      { key: 'sunday_morning_1', label: '1부' },
-      { key: 'sunday_morning_2', label: '2부' },
-    ],
-  },
+  { key: 'sunday_morning', label: '주일 오전' },
   {
     key: 'weekday', label: '기타예배',
     subs: [
@@ -315,16 +310,14 @@ const SERMON_MAIN_TABS = [
 ]
 
 const SERMON_VIEW_ALL = {
-  sunday_morning_1:  '/worship/sermon/sunday-morning',
-  sunday_morning_2:  '/worship/sermon/sunday-morning',
+  sunday_morning:    '/worship/sermon/sunday-morning',
   weekday_wednesday: '/worship/sermon/weekday',
   weekday_friday:    '/worship/sermon/weekday',
   training:          '/worship/sermon/training-message',
 }
 
 const LEAF_LABEL = {
-  sunday_morning_1:  '주일 1부',
-  sunday_morning_2:  '주일 2부',
+  sunday_morning:    '주일오전',
   weekday_wednesday: '수요예배',
   weekday_friday:    '금요기도회',
   training:          '훈련예배',
@@ -332,7 +325,7 @@ const LEAF_LABEL = {
 
 const SermonSubPanel = () => {
   const [activeMain, setActiveMain] = useState('sunday_morning')
-  const [activeSub,  setActiveSub]  = useState('sunday_morning_1')
+  const [activeSub,  setActiveSub]  = useState('sunday_morning')
 
   const handleMainTab = (tab) => {
     setActiveMain(tab.key)
@@ -344,15 +337,22 @@ const SermonSubPanel = () => {
     return main?.subs ? activeSub : activeMain
   })()
 
-  const sm1Q = useQuery({ queryKey: ['dash','sermon','sm1'], queryFn: () => getSundayMorningData({ serviceNumber:1, page:0, size:10 }), staleTime: 60 * 1000 })
-  const sm2Q = useQuery({ queryKey: ['dash','sermon','sm2'], queryFn: () => getSundayMorningData({ serviceNumber:2, page:0, size:10 }), staleTime: 60 * 1000 })
+  const smQ  = useQuery({ queryKey: ['dash','sermon','sm'],  queryFn: () => getSundayMorningGroupedData({ page:0, size:10 }), staleTime: 60 * 1000 })
   const wedQ = useQuery({ queryKey: ['dash','sermon','wed'], queryFn: () => getWeekdayData({ type:'wednesday', page:0, size:10 }), staleTime: 60 * 1000 })
   const friQ = useQuery({ queryKey: ['dash','sermon','fri'], queryFn: () => getWeekdayData({ type:'friday',    page:0, size:10 }), staleTime: 60 * 1000 })
   const trnQ = useQuery({ queryKey: ['dash','sermon','trn'], queryFn: () => getTrainingMessageData({ page:0, size:10 }), staleTime: 60 * 1000 })
 
-  const QMAP    = { sunday_morning_1: sm1Q, sunday_morning_2: sm2Q, weekday_wednesday: wedQ, weekday_friday: friQ, training: trnQ }
+  const QMAP    = { sunday_morning: smQ, weekday_wednesday: wedQ, weekday_friday: friQ, training: trnQ }
   const current = QMAP[activeLeaf]
-  const items   = (current?.data?.sermons ?? []).slice(0, 10)
+  // 주일오전은 날짜 그룹 응답(groups) → 행 단위 표시용으로 변환 (날짜 상세 링크)
+  const items = activeLeaf === 'sunday_morning'
+    ? (current?.data?.groups ?? []).slice(0, 10).map((g) => ({
+        id:         g.sermonDate,
+        title:      g.representativeTitle ?? g.part1?.title ?? g.part2?.title,
+        sermonDate: g.sermonDate,
+        to:         `/worship/sermon/sunday-morning/${g.sermonDate}`,
+      }))
+    : (current?.data?.sermons ?? []).slice(0, 10)
   const currentMain = SERMON_MAIN_TABS.find(t => t.key === activeMain)
 
   return (
@@ -396,7 +396,7 @@ const SermonSubPanel = () => {
                   tag={LEAF_LABEL[activeLeaf]}
                   title={item.title}
                   date={formatDateShort(item.sermonDate ?? item.createdAt)}
-                  to={`/worship/sermon/${item.id}`}
+                  to={item.to ?? `/worship/sermon/${item.id}`}
                 />
               ))
         }

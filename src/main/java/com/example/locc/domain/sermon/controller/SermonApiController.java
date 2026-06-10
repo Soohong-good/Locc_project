@@ -7,6 +7,9 @@ import com.example.locc.domain.sermon.dto.request.SermonSearchCondition;
 import com.example.locc.domain.sermon.dto.response.SermonDetailResponse;
 import com.example.locc.domain.sermon.dto.response.SermonPageResponse;
 import com.example.locc.domain.sermon.dto.response.SermonResponse;
+import com.example.locc.domain.sermon.dto.response.SundayMorningGroupDetailResponse;
+import com.example.locc.domain.sermon.dto.response.SundayMorningPageGroupResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import com.example.locc.domain.sermon.service.SermonCommandService;
 import com.example.locc.domain.sermon.service.SermonQueryService;
 import jakarta.validation.Valid;
@@ -20,6 +23,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +82,34 @@ public class SermonApiController {
     // 페이지 전용 통합 조회 API (React SPA용)
     // ─────────────────────────────────────────────
 
-    @GetMapping("/sunday-morning/{serviceNumber}")
+    /**
+     * 주일오전 날짜 기반 그룹 목록 (탭 없이 단일 리스트)
+     * - keyword: 제목 검색 (관리자 통합 목록용)
+     */
+    @GetMapping("/sunday-morning/grouped")
+    public ResponseEntity<ApiResponse<SundayMorningPageGroupResponse>> getSundayMorningGrouped(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                sermonQueryService.getSundayMorningGroupedPage(page, size, keyword)));
+    }
+
+    /**
+     * 주일오전 날짜별 상세 (1부 + 2부) — content + attachments 포함
+     */
+    @GetMapping("/sunday-morning/date/{date}")
+    public ResponseEntity<ApiResponse<SundayMorningGroupDetailResponse>> getSundayMorningByDate(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                sermonQueryService.getSundayMorningGroupDetail(date)));
+    }
+
+    /**
+     * 주일오전 1부/2부 목록
+     * - 정규식 [0-9]+ : 숫자만 허용 → "grouped", "date" 등 문자열과 충돌 방지
+     */
+    @GetMapping("/sunday-morning/{serviceNumber:[0-9]+}")
     public ResponseEntity<ApiResponse<SermonPageResponse>> getSundayMorningData(
             @PathVariable Integer serviceNumber,
             @RequestParam(defaultValue = "0") int page,
