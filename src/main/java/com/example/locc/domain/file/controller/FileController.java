@@ -13,7 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URLEncoder;
+import org.springframework.http.ContentDisposition;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -96,13 +97,14 @@ public class FileController {
         File file = fileQueryService.getFile(fileId);
         Resource resource = fileQueryService.loadFileAsResource(fileId);
 
-        String encodedFileName = URLEncoder.encode(file.getOriginalFileName(), StandardCharsets.UTF_8)
-                .replace("+", "%20");
+        String contentDisposition = ContentDisposition.attachment()
+                .filename(file.getOriginalFileName(), StandardCharsets.UTF_8)
+                .build()
+                .toString();
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(file.getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + encodedFileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
                 .body(resource);
     }
 
