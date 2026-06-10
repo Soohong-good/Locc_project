@@ -89,7 +89,8 @@
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION:18000000}
+  # 차단된 회원도 토큰 만료까지 권한이 유지되므로 짧게 유지 (refresh rotation으로 UX 보완)
+  expiration: ${JWT_EXPIRATION:3600000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 app:

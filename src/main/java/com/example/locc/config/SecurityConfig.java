@@ -74,9 +74,10 @@ public class SecurityConfig {
                         )
                 )
                 .csrf(csrf -> csrf
-                        // JWT + Stateless 구조에서 CSRF 방어는 /api/** 불필요
-                        // (세션 쿠키 기반이 아닌 HttpOnly JWT 쿠키 + Bearer 방식이므로 CSRF 공격 벡터 없음)
-                        // Thymeleaf 화면이 제거된 현재 구조에서는 /api/** 전체 비활성화가 올바른 설계
+                        // /api/** CSRF 토큰 비활성화 근거:
+                        // accessToken은 HttpOnly 쿠키로도 전달되므로 CSRF 벡터가 완전히 없는 것은 아니나,
+                        // SameSite=Lax 쿠키 정책(CookieUtil)이 cross-site POST/PUT/DELETE에서 쿠키 전송을
+                        // 차단하므로 상태 변경 요청에 대한 CSRF가 방어됨 (Lax는 top-level GET만 쿠키 허용)
                         .ignoringRequestMatchers("/api/**", "/login/oauth2/**", "/oauth2/**")
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

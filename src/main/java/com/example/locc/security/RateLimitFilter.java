@@ -23,11 +23,7 @@ import java.util.regex.Pattern;
 /**
  * IP 기반 Rate Limiting 필터
  *
- * 적용 엔드포인트 (POST 전용):
- *   - /api/auth/login                  : 5회  / 1분
- *   - /api/auth/check-email            : 10회 / 1분  (계정 열거 방지)
- *   - /api/auth/password/reset-request : 3회  / 10분
- *   - /api/auth/email/send-code        : 3회  / 10분
+ * 적용 엔드포인트 (POST 전용) — 실제 정책은 아래 POLICIES 맵 참조
  *
  * 방식: Redis INCR + TTL (슬라이딩 윈도우 근사)
  *   - 최초 요청 시 카운터 생성 및 TTL 설정
@@ -48,16 +44,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     // ───── 정책 정의 ─────────────────────────────────────────────────────────
 
-    private static final Map<String, RateLimitPolicy> POLICIES = Map.of(
-        "/api/auth/login",                      new RateLimitPolicy(10, Duration.ofMinutes(1)),
-        "/api/auth/register",                   new RateLimitPolicy(10, Duration.ofMinutes(10)),
-        "/api/auth/refresh",                    new RateLimitPolicy(20, Duration.ofMinutes(1)),
-        "/api/auth/password/reset-request",     new RateLimitPolicy(5,  Duration.ofMinutes(10)),
-        "/api/auth/email/send-code",            new RateLimitPolicy(10, Duration.ofMinutes(10)),
-        "/api/auth/check-email",                new RateLimitPolicy(20, Duration.ofMinutes(1)),
-        "/api/social/complete-registration",    new RateLimitPolicy(10, Duration.ofMinutes(10)),
+    private static final Map<String, RateLimitPolicy> POLICIES = Map.ofEntries(
+        Map.entry("/api/auth/login",                   new RateLimitPolicy(10, Duration.ofMinutes(1))),
+        Map.entry("/api/auth/register",                new RateLimitPolicy(10, Duration.ofMinutes(10))),
+        Map.entry("/api/auth/refresh",                 new RateLimitPolicy(20, Duration.ofMinutes(1))),
+        Map.entry("/api/auth/password/reset-request",  new RateLimitPolicy(5,  Duration.ofMinutes(10))),
+        Map.entry("/api/auth/email/send-code",         new RateLimitPolicy(10, Duration.ofMinutes(10))),
+        Map.entry("/api/auth/check-email",             new RateLimitPolicy(20, Duration.ofMinutes(1))),
+        Map.entry("/api/social/complete-registration", new RateLimitPolicy(10, Duration.ofMinutes(10))),
         // 비로그인 공개 API — 개인정보(이름/전화/이메일) 수집 엔드포인트이므로 스팸 방지 적용
-        "/api/help-request",                    new RateLimitPolicy(10, Duration.ofMinutes(10))
+        Map.entry("/api/help-request",                 new RateLimitPolicy(10, Duration.ofMinutes(10))),
+        // TOTP 2차 인증 — preAuthToken 유효시간(5분) 내 6자리 코드 무차별 대입 방지
+        Map.entry("/api/auth/totp/verify",             new RateLimitPolicy(10, Duration.ofMinutes(5))),
+        Map.entry("/api/auth/totp/enable",             new RateLimitPolicy(10, Duration.ofMinutes(5)))
     );
 
     // 동적 경로 패턴 기반 Rate Limit 정책
