@@ -16,7 +16,7 @@ ENV VITE_KAKAO_MAP_KEY=$VITE_KAKAO_MAP_KEY
 
 # 소스 코드 복사 후 빌드
 COPY . .
-RUN npm run build
+RUN NODE_OPTIONS=--max-old-space-size=1536 npm run build
 
 # ── Stage 2: Nginx로 정적 파일 서빙 ──────────────────────────────
 FROM nginx:1.25-alpine
