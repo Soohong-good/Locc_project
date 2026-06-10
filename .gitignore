@@ -41,6 +41,13 @@ out/
 application-local.yml
 application-prod.yml
 
+# 로컬 작업용 민감 파일 (계정정보·운영 DB 덤프 — 절대 커밋 금지)
+login.json
+cookies.txt
+headers.txt
+dump.sql
+*.pem
+
 # Logs
 logs/
 *.log
@@ -74,3 +81,6 @@ out/
 *.iws
 *.ipr
 .vscode/
+
+# Claude Code
+.claude/

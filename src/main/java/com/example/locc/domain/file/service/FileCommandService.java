@@ -331,19 +331,49 @@ public class FileCommandService {
             );
         }
 
-        // 5. 이미지 파일 — 실제 바이트 파싱으로 Magic Bytes 검증 (MIME 위조 방지)
+        // 5. 이미지 파일 — 헤더 파싱으로 Magic Bytes + 픽셀 크기 검증 (MIME 위조 방지)
+        //    전체 디코딩(ImageIO.read) 대신 헤더만 읽어 대형 이미지 디코딩으로 인한 OOM 방지
         //    PDF는 uploadPdfWithThumbnail()에서 PDFBox 파싱으로 별도 검증됨
         if (contentType.startsWith("image/")) {
-            try {
-                java.awt.image.BufferedImage image =
-                        javax.imageio.ImageIO.read(file.getInputStream());
-                if (image == null) {
-                    throw new IllegalArgumentException("유효한 이미지 파일이 아닙니다. (MIME 타입 위조 의심)");
-                }
-            } catch (IOException e) {
-                log.warn("이미지 파일 Magic Bytes 검증 실패: {}", originalFilename);
+            validateImageHeader(file, originalFilename);
+        }
+    }
+
+    // 픽셀 수 상한 — 약 8000×5000. 파일 크기가 작아도 디코딩 시 메모리가 픽셀 수에 비례하므로 제한
+    private static final long MAX_IMAGE_PIXELS = 40_000_000L;
+
+    /**
+     * 이미지 헤더 검증
+     * - ImageReader 탐색 자체가 Magic Bytes 기반 → 포맷 위조 검출
+     * - 헤더의 가로/세로만 읽으므로 전체 디코딩 메모리 비용 없음
+     */
+    private void validateImageHeader(MultipartFile file, String originalFilename) {
+        try (javax.imageio.stream.ImageInputStream in =
+                     javax.imageio.ImageIO.createImageInputStream(file.getInputStream())) {
+            if (in == null) {
                 throw new IllegalArgumentException("이미지 파일을 읽을 수 없습니다.");
             }
+            java.util.Iterator<javax.imageio.ImageReader> readers =
+                    javax.imageio.ImageIO.getImageReaders(in);
+            if (!readers.hasNext()) {
+                throw new IllegalArgumentException("유효한 이미지 파일이 아닙니다. (MIME 타입 위조 의심)");
+            }
+            javax.imageio.ImageReader reader = readers.next();
+            try {
+                reader.setInput(in);
+                long width = reader.getWidth(0);
+                long height = reader.getHeight(0);
+                if (width <= 0 || height <= 0 || width * height > MAX_IMAGE_PIXELS) {
+                    throw new IllegalArgumentException(
+                            String.format("이미지 크기가 제한을 초과했습니다. (최대 %d만 픽셀, 업로드 시도: %d×%d)",
+                                    MAX_IMAGE_PIXELS / 10_000, width, height));
+                }
+            } finally {
+                reader.dispose();
+            }
+        } catch (IOException e) {
+            log.warn("이미지 파일 헤더 검증 실패: {}", originalFilename);
+            throw new IllegalArgumentException("이미지 파일을 읽을 수 없습니다.");
         }
     }
 
