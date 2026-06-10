@@ -207,13 +207,17 @@ const TrainingFormModal = ({ detail, onClose }) => {
               </div>
             </div>
 
-            {/* 에러 */}
-            {saveMutation.error && (
-              <p className="text-sm text-red-600 bg-red-50 px-4 py-3">
-                {getErrorMessage(saveMutation.error, '저장 중 오류가 발생했습니다.')}
-              </p>
-            )}
           </div>
+
+          {/* 에러 - 스크롤 영역 밖, 버튼 바로 위 고정 */}
+          {saveMutation.error && (
+            <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {getErrorMessage(saveMutation.error, '저장 중 오류가 발생했습니다.')}
+            </div>
+          )}
 
           {/* 하단 버튼 */}
           <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-slate-100 bg-slate-50 flex-shrink-0">

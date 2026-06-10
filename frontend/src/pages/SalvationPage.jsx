@@ -81,11 +81,6 @@ const HelpModal = ({ onClose }) => {
                 예수님에 대해 더 알고 싶으시거나 신앙 상담이 필요하신가요?<br />
                 아래 정보를 남겨주시면 교회에서 연락드리겠습니다.
               </p>
-              {error && (
-                <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
-                  요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
-                </div>
-              )}
               <form onSubmit={handleSubmit} className="space-y-6">
                 {[
                   { id: 'name',  label: '이름',     type: 'text',  placeholder: '홍길동' },
@@ -124,6 +119,14 @@ const HelpModal = ({ onClose }) => {
                     </span>
                   </label>
                 </div>
+                {error && (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm">
+                    <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+                  </div>
+                )}
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit" disabled={isPending || !agreed}

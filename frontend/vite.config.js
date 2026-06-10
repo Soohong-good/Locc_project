@@ -99,6 +99,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    strictPort: true,
     // ngrok 등 외부 터널링 도구 사용 시 호스트 허용
     allowedHosts: true,
     // 개발 환경: /api/** 요청을 Spring Boot(8080)으로 프록시
