@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/Soohong-good/Locc_project#readme",
   "dependencies": {
-    "playwright": "^1.57.0"
+    "playwright": "^1.60.0"
   }
 }
