@@ -227,7 +227,7 @@ const SermonDetailPage = () => {
           {/* 본문 — detail.html: th:utext + quill-custom 클래스 그대로 */}
           <div className="prose prose-lg prose-slate max-w-none">
             <div
-              className="text-slate-700 leading-[1.9] font-light text-lg"
+              className="ql-editor ql-output text-slate-700 leading-[1.9] font-light text-lg"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(sermon.content || '' )}}
             />
           </div>

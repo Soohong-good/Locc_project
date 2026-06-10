@@ -16,10 +16,10 @@ import { SkeletonRow } from '@/components/ui/SkeletonCard'
 const QUILL_STYLE = `
   .ql-tooltip { display: none !important; }
   .ql-container { min-height: 240px; font-size: 16px; border-color: #e2e8f0 !important; }
-  .ql-editor    { min-height: 240px; background-color: #f8fafc; font-family: inherit; }
-  .ql-editor:focus { background-color: #fff; }
+  .ql-container .ql-editor    { min-height: 240px; background-color: #f8fafc; font-family: inherit; }
+  .ql-container .ql-editor:focus { background-color: #fff; }
   .ql-toolbar   { background-color: #fff; border-color: #e2e8f0 !important; }
-  .ql-editor a  { color: #2563eb !important; text-decoration: underline !important; }
+  .ql-container .ql-editor a  { color: #2563eb !important; text-decoration: underline !important; }
 `
 
 /* ── 날짜 포맷: 원본 yyyy. MM. dd ───────────────────────────────── */
@@ -440,7 +440,7 @@ const NoticeDetailPage = () => {
         <article className="max-w-4xl mx-auto">
           <div className="prose prose-lg prose-slate max-w-none">
             <div
-              className="text-slate-700 leading-[1.9] font-light text-lg"
+              className="ql-editor ql-output text-slate-700 leading-[1.9] font-light text-lg"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(notice.content ?? '' )}}
             />
           </div>

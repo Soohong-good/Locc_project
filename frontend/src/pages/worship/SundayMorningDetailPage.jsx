@@ -248,14 +248,14 @@ const SundayMorningDetailPage = () => {
         </div>
       </section>
 
-      {/* ── 설교 내용 ── */}
-      {sermon?.content && (
+      {/* ── 설교 내용 (1·2부 공통 — 탭 전환에 무관하게 1부 우선 표시) ── */}
+      {(group.part1?.content ?? group.part2?.content) && (
         <section className="py-24 bg-white px-6">
           <article className="max-w-4xl mx-auto">
             <div className="prose prose-lg prose-slate max-w-none">
               <div
-                className="text-slate-700 leading-[1.9] font-light text-lg"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(sermon.content) }}
+                className="ql-editor ql-output text-slate-700 leading-[1.9] font-light text-lg"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(group.part1?.content ?? group.part2?.content) }}
               />
             </div>
           </article>

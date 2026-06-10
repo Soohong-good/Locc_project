@@ -198,6 +198,56 @@ select {
   background: #94a3b8;
 }
 
+/* ── Quill 출력 전용 오버라이드 ───────────────────────────────── */
+/* .ql-editor 클래스가 갖는 에디터 전용 속성(height/overflow/padding)을 제거 */
+.ql-editor.ql-output {
+  height: auto;
+  overflow-y: visible;
+  padding: 0;
+  white-space: normal;
+  line-height: inherit;
+}
+
+/* 단락 간격: ql-editor가 margin:0 으로 리셋하므로 복원 */
+.ql-editor.ql-output p {
+  margin-bottom: 0.65em;
+}
+
+/* 제목 크기: .ql-snow .ql-editor h* 셀렉터가 없으므로 직접 정의 */
+.ql-editor.ql-output h1 { font-size: 2em;    font-weight: 700; margin: 0.8em 0 0.4em; }
+.ql-editor.ql-output h2 { font-size: 1.5em;  font-weight: 700; margin: 0.8em 0 0.4em; }
+.ql-editor.ql-output h3 { font-size: 1.17em; font-weight: 600; margin: 0.8em 0 0.3em; }
+
+/* 인용구: .ql-snow .ql-editor blockquote 대체 */
+.ql-editor.ql-output blockquote {
+  border-left: 4px solid #cbd5e1;
+  padding: 0.4em 0 0.4em 1em;
+  margin: 0.6em 0;
+  color: #475569;
+}
+
+/* ── 본문 콘텐츠 링크 스타일 ─────────────────────────────────── */
+/* prose / sermon-body / ql-editor 안의 <a> 태그 공통 */
+.prose a,
+.sermon-body a,
+.ql-editor a {
+  color: #2563eb;
+  text-decoration: none;
+  border-bottom: 1.5px solid #bfdbfe;
+  padding-bottom: 1px;
+  font-weight: 500;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  border-radius: 2px;
+}
+
+.prose a:hover,
+.sermon-body a:hover,
+.ql-editor a:hover {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+  background-color: #eff6ff;
+}
+
 /* ─── 설교 녹취록 구조 스타일 ──────────────────────────────────── */
 .sermon-body {
   font-size: 1.02rem;

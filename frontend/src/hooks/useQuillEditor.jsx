@@ -10,7 +10,7 @@ import 'quill/dist/quill.snow.css'
 import { useEffect, useRef, useCallback, useState } from 'react'
 import toast from '@/utils/toast'
 
-const FONT_SIZES    = ['10px','12px','14px','16px','18px','20px','24px','28px','32px','36px']
+const FONT_SIZES    = [false, '10px','12px','14px','16px','18px','20px','24px','28px','32px','36px']
 
 // 링크 툴팁 초기 상태
 const TIP_INIT = { visible: false, top: 0, left: 0, url: '', text: '' }
