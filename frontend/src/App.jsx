@@ -27,9 +27,6 @@ const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage
 const MainPage               = lazy(() => import('@/pages/MainPage'))
 const Template               = lazy(() => import('@/pages/Template'))
 
-// ── 디자인 템플릿 (리디자인 작업 중) ──────────────────────────────────────
-const MainTempl              = lazy(() => import('@/pages/templates/MainTempl'))
-const SalvationTempl         = lazy(() => import('@/pages/templates/SalvationTempl'))
 const TestDashboard          = lazy(() => import('@/pages/TestDashboard'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
 const NotFoundPage           = lazy(() => import('@/pages/NotFoundPage'))
@@ -109,10 +106,6 @@ const AppRoutes = () => {
 
         {/* 구 메인 (비활성 — 삭제 전 보관) */}
         {/* <Route path="/main-legacy" element={<Layout><MainPage /></Layout>} /> */}
-
-        {/* 디자인 템플릿 영역 — 리디자인 작업 중 */}
-        <Route path="/template/main"       element={<MainTempl />} />
-        <Route path="/template/salvation"  element={<SalvationTempl />} />
 
         {/* 구 메인 직접 접근용 (보관) */}
         <Route path="/template" element={<Template />} />
