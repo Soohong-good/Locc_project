@@ -84,3 +84,9 @@ out/
 
 # Claude Code
 .claude/
+
+# Template
+/template
+
+# 리디자인 작업 중 템플릿 (배포 제외, 로컬 전용)
+frontend/src/pages/templates/
