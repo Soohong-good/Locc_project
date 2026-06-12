@@ -66,6 +66,23 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
                                                   Pageable pageable);
 
     /**
+     * 카테고리 + 부 구분 + 검색 (제목 + 본문 + 설교자, serviceNumber null 포함)
+     * - 기타예배 수요/금요 검색용
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT s FROM Sermon s " +
+           "WHERE s.category = :category " +
+           "  AND (s.serviceNumber = :serviceNumber OR s.serviceNumber IS NULL) " +
+           "  AND (s.title LIKE %:keyword% " +
+           "       OR s.scripture LIKE %:keyword% " +
+           "       OR s.preacher LIKE %:keyword%) " +
+           "ORDER BY s.sermonDate DESC, s.createdAt DESC")
+    Page<Sermon> searchByCategoryAndServiceNumber(@Param("category") String category,
+                                                   @Param("serviceNumber") Integer serviceNumber,
+                                                   @Param("keyword") String keyword,
+                                                   Pageable pageable);
+
+    /**
      * 카테고리 + 부 구분 최신 조회
      * serviceNumber가 null인 경우도 포함 — 기존 데이터 호환용
      */
@@ -130,11 +147,11 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
     /**
      * 카테고리별 중복 없는 날짜 목록 (최신순 페이징, 제목 검색 옵션)
      * - 주일오전 그룹핑 리스트용 (관리자 검색 포함)
-     * - keyword: null이면 전체, 있으면 해당 날짜의 1부/2부 중 하나라도 제목 매칭 시 날짜 포함
+     * - keyword: null이면 전체, 있으면 해당 날짜의 1부/2부 중 하나라도 제목 또는 설교자 매칭 시 날짜 포함
      * - countQuery 명시: DISTINCT 쿼리에서 Spring Data JPA 자동 파생 count가 전체 행 수를 반환할 수 있음
      */
-    @Query(value = "SELECT DISTINCT s.sermonDate FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND (:keyword IS NULL OR s.title LIKE CONCAT('%', :keyword, '%')) ORDER BY s.sermonDate DESC",
-           countQuery = "SELECT COUNT(DISTINCT s.sermonDate) FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND (:keyword IS NULL OR s.title LIKE CONCAT('%', :keyword, '%'))")
+    @Query(value = "SELECT DISTINCT s.sermonDate FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND (:keyword IS NULL OR s.title LIKE CONCAT('%', :keyword, '%') OR s.scripture LIKE CONCAT('%', :keyword, '%') OR s.preacher LIKE CONCAT('%', :keyword, '%')) ORDER BY s.sermonDate DESC",
+           countQuery = "SELECT COUNT(DISTINCT s.sermonDate) FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND (:keyword IS NULL OR s.title LIKE CONCAT('%', :keyword, '%') OR s.scripture LIKE CONCAT('%', :keyword, '%') OR s.preacher LIKE CONCAT('%', :keyword, '%'))")
     Page<java.time.LocalDate> findDistinctDatesByCategory(@Param("category") String category,
                                                           @Param("keyword") String keyword,
                                                           Pageable pageable);

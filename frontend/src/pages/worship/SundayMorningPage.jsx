@@ -5,6 +5,7 @@ import { getSundayMorningGroupedData, deleteSermon } from '@/api/sermons'
 import useAuthStore from '@/stores/authStore'
 import YoutubeLatestSection from '@/components/sermon/YoutubeLatestSection'
 import SermonPagination from '@/components/sermon/SermonPagination'
+import SermonSearchBar from '@/components/sermon/SermonSearchBar'
 import SundayMorningModal from '@/components/sermon/SundayMorningModal'
 import Button from '@/components/ui/Button'
 import PageHero from '@/components/ui/PageHero'
@@ -118,6 +119,7 @@ const GroupCard = ({ group, canEdit, onEditGroup, onDeleteGroup }) => {
 // ── 페이지 ───────────────────────────────────────────────────────────────────
 const SundayMorningPage = () => {
   const [page, setPage] = useState(0)
+  const [keyword, setKeyword] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editGroup, setEditGroup] = useState(null)
 
@@ -127,8 +129,8 @@ const SundayMorningPage = () => {
   const queryClient = useQueryClient()
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['sermons', 'sunday-morning', 'grouped', page],
-    queryFn: () => getSundayMorningGroupedData({ page }),
+    queryKey: ['sermons', 'sunday-morning', 'grouped', page, keyword],
+    queryFn: () => getSundayMorningGroupedData({ page, keyword }),
     placeholderData: (prev) => prev,
   })
 
@@ -176,6 +178,13 @@ const SundayMorningPage = () => {
           title="주일오전 최신 설교"
         />
       )}
+
+      {/* 검색 (제목·설교자 통합) */}
+      <SermonSearchBar
+        initialKeyword={keyword}
+        hidePreacher
+        onSearch={(k) => { setKeyword(k); setPage(0) }}
+      />
 
       {/* 날짜 기반 목록 */}
       <section className="py-16 bg-slate-50 px-6">

@@ -62,18 +62,18 @@ export const getSundayMorningByDate = async (date) => {
   return data.data
 }
 
-// 주일오후
-export const getSundayAfternoonData = async ({ page = 0, size = 9, keyword, preacher } = {}) => {
+// 주일오후 (keyword: 제목·본문·설교자 통합 검색)
+export const getSundayAfternoonData = async ({ page = 0, size = 9, keyword } = {}) => {
   const { data } = await client.get('/api/sermons/sunday-afternoon', {
-    params: { page, size, keyword, preacher },
+    params: { page, size, keyword },
   })
   return data.data
 }
 
-// 기타예배 (type: 'wednesday' | 'friday')
-export const getWeekdayData = async ({ type = 'wednesday', page = 0, size = 9, keyword, preacher } = {}) => {
+// 기타예배 (type: 'wednesday' | 'friday', keyword: 제목·본문·설교자 통합 검색)
+export const getWeekdayData = async ({ type = 'wednesday', page = 0, size = 9, keyword } = {}) => {
   const { data } = await client.get(`/api/sermons/weekday/${type}`, {
-    params: { page, size, keyword, preacher },
+    params: { page, size, keyword },
   })
   return data.data
 }
