@@ -160,4 +160,25 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
      * 특정 날짜 이후 생성된 설교 개수 (Admin용)
      */
     Long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
+
+    // ─────────────────────────────────────────────
+    // YouTube 자동 동기화용
+    // ─────────────────────────────────────────────
+
+    /**
+     * YouTube 영상 ID 중복 체크
+     */
+    boolean existsByYoutubeVideoId(String youtubeVideoId);
+
+    /**
+     * 카테고리 + 날짜 + 부 중복 체크 (serviceNumber non-null: 주일오전 1·2부)
+     */
+    boolean existsByCategoryAndSermonDateAndServiceNumber(String category,
+                                                          java.time.LocalDate sermonDate,
+                                                          Integer serviceNumber);
+
+    /**
+     * 카테고리 + 날짜 중복 체크 (serviceNumber null: 주일오후·수요·금요)
+     */
+    boolean existsByCategoryAndSermonDate(String category, java.time.LocalDate sermonDate);
 }
