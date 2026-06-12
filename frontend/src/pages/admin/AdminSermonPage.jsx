@@ -7,6 +7,7 @@ import {
   getWeekdayData,
   getTrainingMessageData,
   deleteSermon,
+  syncYouTubeAll,
 } from '@/api/sermons'
 import ErrorMessage from '@/components/common/ErrorMessage'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
@@ -108,8 +109,7 @@ const SermonTable = ({ sermons, onDelete, isPending }) => {
   )
 }
 
-// ── 주일오전 날짜 그룹 테이블 (사용자단과 동일: 날짜당 한 건) ────────────
-// 1부/2부는 같은 설교 — 제목·설교자는 대표값, 영상 보유 여부만 부별 뱃지로 표시
+// ── 주일오전 날짜 그룹 테이블 ────────────────────────────────────────────
 const SundayMorningGroupTable = ({ groups, onDeleteGroup, isPending }) => {
   if (groups.length === 0) {
     return (
@@ -125,7 +125,7 @@ const SundayMorningGroupTable = ({ groups, onDeleteGroup, isPending }) => {
           <col className="w-28" />
           <col className="w-24 hidden md:table-column" />
           <col className="w-28" />
-          <col className="w-24" />
+          <col className="w-36" />
         </colgroup>
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
@@ -140,6 +140,7 @@ const SundayMorningGroupTable = ({ groups, onDeleteGroup, isPending }) => {
           {groups.map((group) => {
             const title    = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
             const preacher = group.representativePreacher ?? group.part1?.preacher ?? group.part2?.preacher
+            const hasBoth  = !!(group.part1 && group.part2)
             return (
               <tr key={group.sermonDate} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">
@@ -165,7 +166,7 @@ const SundayMorningGroupTable = ({ groups, onDeleteGroup, isPending }) => {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 whitespace-nowrap">
                     <Link
                       to={`/admin/sermons/sunday-morning/${group.sermonDate}/edit`}
                       className="text-xs font-medium text-blue-500 hover:text-blue-700 transition-colors"
@@ -293,6 +294,16 @@ const AdminSermonPage = () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'sermons'] }),
   })
 
+  const [syncResult, setSyncResult] = useState(null)
+  const syncMutation = useMutation({
+    mutationFn: syncYouTubeAll,
+    onSuccess: (data) => {
+      setSyncResult(data)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'sermons'] })
+      queryClient.invalidateQueries({ queryKey: ['sermons'] })
+    },
+  })
+
   // 주일오전 날짜 그룹 삭제: 해당 날짜의 1부·2부 행을 함께 삭제
   const deleteGroupMutation = useMutation({
     mutationFn: async (group) => {
@@ -321,14 +332,36 @@ const AdminSermonPage = () => {
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-900">설교 관리</h1>
-        <Link
-          to={activeTab === 'sm' ? '/admin/sermons/sunday-morning/new' : '/admin/sermons/new'}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + 새 설교
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setSyncResult(null); syncMutation.mutate() }}
+            disabled={syncMutation.isPending}
+            className="border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {syncMutation.isPending ? '동기화 중...' : 'YouTube 동기화'}
+          </button>
+          <Link
+            to={activeTab === 'sm' ? '/admin/sermons/sunday-morning/new' : '/admin/sermons/new'}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + 새 설교
+          </Link>
+        </div>
       </div>
 
+      {syncResult && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+          동기화 완료 —{' '}
+          {Object.entries(syncResult)
+            .map(([key, count]) => `${key}: ${count}건`)
+            .join(', ')}
+        </div>
+      )}
+      {syncMutation.error && (
+        <div className="mb-4">
+          <ErrorMessage error={syncMutation.error} fallback="YouTube 동기화 중 오류가 발생했습니다." />
+        </div>
+      )}
       {(deleteMutation.error || deleteGroupMutation.error) && (
         <div className="mb-4">
           <ErrorMessage error={deleteMutation.error || deleteGroupMutation.error} />

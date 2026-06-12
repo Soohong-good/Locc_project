@@ -118,6 +118,18 @@ export const deleteSermon = async (id) => {
   return data
 }
 
+// YouTube 전체 동기화 (관리자)
+export const syncYouTubeAll = async () => {
+  const { data } = await client.post('/api/admin/sermons/sync')
+  return data.data
+}
+
+// YouTube 재생목록별 동기화 (관리자)
+export const syncYouTubeByKey = async (playlistKey) => {
+  const { data } = await client.post(`/api/admin/sermons/sync/${playlistKey}`)
+  return data.data
+}
+
 // 송구영신예배 최신 정보
 export const getNewYearVideo = async () => {
   const { data } = await client.get('/api/newyear')
