@@ -26,6 +26,18 @@ class ErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    // 청크 로드 실패 (배포 후 구버전 캐시) → 자동 새로고침으로 복구
+    const isChunkError =
+      error?.message?.includes('Failed to fetch dynamically imported module') ||
+      error?.message?.includes('Loading chunk') ||
+      error?.message?.includes('Importing a module script failed')
+
+    if (isChunkError && !sessionStorage.getItem('chunk_reload_attempted')) {
+      sessionStorage.setItem('chunk_reload_attempted', '1')
+      window.location.reload()
+      return
+    }
+
     console.error('[ErrorBoundary]', error, info)
     // 백엔드로 에러 리포트 전송 (실패해도 UI에 영향 없음)
     fetch('/api/error-report', {
