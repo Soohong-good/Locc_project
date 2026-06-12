@@ -104,11 +104,14 @@ public class Sermon extends BaseEntity {
     /**
      * YouTube 자동 동기화 설교 생성 (author 없음, autoCreated=true)
      */
-    public static Sermon createFromYouTube(String title, String category, Integer serviceNumber,
+    public static Sermon createFromYouTube(String title, String scripture, String preacher,
+                                           String category, Integer serviceNumber,
                                            java.time.LocalDate sermonDate, String videoUrl,
                                            String thumbnailUrl, String youtubeVideoId) {
         return Sermon.builder()
                 .title(title)
+                .scripture(scripture)
+                .preacher(preacher)
                 .category(category)
                 .serviceNumber(serviceNumber)
                 .sermonDate(sermonDate)

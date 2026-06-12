@@ -1,22 +1,15 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { getSundayMorningGroupedData } from '@/api/sermons'
+import { useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { getSundayMorningGroupedData, deleteSermon } from '@/api/sermons'
 import useAuthStore from '@/stores/authStore'
-import useSermonCrud from '@/hooks/useSermonCrud'
 import YoutubeLatestSection from '@/components/sermon/YoutubeLatestSection'
 import SermonPagination from '@/components/sermon/SermonPagination'
-import SermonModal from '@/components/sermon/SermonModal'
-import SermonDeleteModal from '@/components/sermon/SermonDeleteModal'
+import SundayMorningModal from '@/components/sermon/SundayMorningModal'
 import Button from '@/components/ui/Button'
 import PageHero from '@/components/ui/PageHero'
 import SkeletonGrid from '@/components/ui/SkeletonCard'
 import ErrorMessage from '@/components/common/ErrorMessage'
-
-const SERVICE_NUMBER_OPTIONS = [
-  { value: 1, label: '1부 예배' },
-  { value: 2, label: '2부 예배' },
-]
 
 const extractVideoId = (url) => {
   if (!url) return null
@@ -28,7 +21,8 @@ const extractVideoId = (url) => {
 }
 
 // ── 날짜 카드 ────────────────────────────────────────────────────────────────
-const GroupCard = ({ group }) => {
+const GroupCard = ({ group, canEdit, onEditGroup, onDeleteGroup }) => {
+  const navigate = useNavigate()
   const hasBoth = group.part1 && group.part2
   const dateStr = group.sermonDate
     ? String(group.sermonDate).replace(/-/g, '. ')
@@ -37,10 +31,31 @@ const GroupCard = ({ group }) => {
   const videoId  = extractVideoId(videoUrl)
 
   return (
-    <Link
-      to={`/worship/sermon/sunday-morning/${group.sermonDate}`}
-      className="group flex flex-col bg-white border border-slate-200 hover:border-slate-400 hover:shadow-md transition-all duration-200 overflow-hidden"
+    <article
+      className="group flex flex-col bg-white border border-slate-200 hover:border-slate-400 hover:shadow-md transition-all duration-200 overflow-hidden relative cursor-pointer"
+      onClick={() => navigate(`/worship/sermon/sunday-morning/${group.sermonDate}`)}
     >
+      {/* 관리자 버튼 */}
+      {canEdit && (
+        <div
+          className="absolute top-3 right-3 flex gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={() => onEditGroup(group)}
+            className="px-2.5 py-1.5 text-xs font-medium bg-white border border-slate-300 hover:border-slate-700 hover:text-slate-900 shadow-sm transition-colors"
+          >
+            수정
+          </button>
+          <button
+            onClick={() => onDeleteGroup(group)}
+            className="px-2.5 py-1.5 text-xs font-medium bg-white border border-red-200 text-red-500 hover:border-red-500 hover:text-red-600 shadow-sm transition-colors"
+          >
+            삭제
+          </button>
+        </div>
+      )}
+
       {/* 썸네일 */}
       <div className="aspect-video bg-slate-100 overflow-hidden">
         {videoId ? (
@@ -71,27 +86,18 @@ const GroupCard = ({ group }) => {
 
       {/* 설교 정보 */}
       <div className="flex-1 px-6 py-5">
-        {/* 제목 */}
         <h3 className="text-lg font-medium text-slate-900 mb-3 group-hover:text-slate-600 transition-colors leading-snug line-clamp-2">
           {group.representativeTitle ?? '(제목 없음)'}
         </h3>
-
-        {/* 설교자 */}
         {group.representativePreacher && (
           <p className="text-sm text-slate-500 mb-4">{group.representativePreacher}</p>
         )}
-
-        {/* 1부/2부 뱃지 */}
         <div className="flex gap-2 mt-auto">
           {group.part1 && (
-            <span className="px-2.5 py-1 text-xs font-medium bg-slate-900 text-white">
-              1부
-            </span>
+            <span className="px-2.5 py-1 text-xs font-medium bg-slate-900 text-white">1부</span>
           )}
           {group.part2 && (
-            <span className="px-2.5 py-1 text-xs font-medium bg-slate-600 text-white">
-              2부
-            </span>
+            <span className="px-2.5 py-1 text-xs font-medium bg-slate-600 text-white">2부</span>
           )}
           {!hasBoth && (
             <span className="text-xs text-slate-400 self-center">
@@ -105,33 +111,52 @@ const GroupCard = ({ group }) => {
       <div className="px-6 pb-5 flex justify-end">
         <span className="text-slate-300 group-hover:text-slate-600 transition-colors text-lg">→</span>
       </div>
-    </Link>
+    </article>
   )
 }
 
 // ── 페이지 ───────────────────────────────────────────────────────────────────
 const SundayMorningPage = () => {
   const [page, setPage] = useState(0)
-  const { isAdminOrOperator: isAdminOrOperatorFn } = useAuthStore()
-  const canWrite = isAdminOrOperatorFn()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editGroup, setEditGroup] = useState(null)
 
-  const queryKey = ['sermons', 'sunday-morning', 'grouped', page]
+  const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn } = useAuthStore()
+  const canWrite = isAdminOrOperatorFn()
+  const isAdmin  = isAdminFn()
+  const queryClient = useQueryClient()
 
   const { data, isLoading, error } = useQuery({
-    queryKey,
+    queryKey: ['sermons', 'sunday-morning', 'grouped', page],
     queryFn: () => getSundayMorningGroupedData({ page }),
     placeholderData: (prev) => prev,
   })
 
-  // 등록/수정/삭제 시 그룹 목록 전체 invalidate (page 무관)
-  const crud = useSermonCrud([['sermons', 'sunday-morning', 'grouped']])
+  const openCreate = () => { setEditGroup(null); setIsModalOpen(true) }
+  const openEdit   = (group) => { setEditGroup(group); setIsModalOpen(true) }
+  const closeModal = () => setIsModalOpen(false)
+
+  // 그룹 삭제 (1부·2부 동시 삭제)
+  const deleteGroupMutation = useMutation({
+    mutationFn: async (group) => {
+      if (group.part1) await deleteSermon(group.part1.id)
+      if (group.part2) await deleteSermon(group.part2.id)
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['sermons', 'sunday-morning', 'grouped'] }),
+  })
+
+  const handleDeleteGroup = (group) => {
+    const title = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
+    if (!confirm(`${group.sermonDate} "${title}" 설교(1·2부)를 모두 삭제하시겠습니까?`)) return
+    deleteGroupMutation.mutate(group)
+  }
 
   return (
     <>
       <PageHero eyebrow="Sunday Morning Service" title="주일오전 예배"
         bgImage="/images/bg-worship.jpg">
         {canWrite && (
-          <Button variant="secondary" size="sm" onClick={crud.openCreate}
+          <Button variant="secondary" size="sm" onClick={openCreate}
             className="border-white text-white hover:bg-white hover:text-slate-900">
             + 설교 등록
           </Button>
@@ -164,7 +189,13 @@ const SundayMorningPage = () => {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {data.groups.map((group) => (
-                    <GroupCard key={group.sermonDate} group={group} />
+                    <GroupCard
+                      key={group.sermonDate}
+                      group={group}
+                      canEdit={canWrite && isAdmin}
+                      onEditGroup={openEdit}
+                      onDeleteGroup={handleDeleteGroup}
+                    />
                   ))}
                 </div>
               )}
@@ -178,25 +209,11 @@ const SundayMorningPage = () => {
         </div>
       </section>
 
-      {/* 등록 모달 */}
-      <SermonModal
-        isOpen={crud.isModalOpen}
-        onClose={crud.closeModal}
-        onSave={crud.handleSave}
-        isSaving={crud.isSaving}
-        isLoadingDetail={crud.isLoadingDetail}
-        editTarget={crud.editTarget}
-        fixedCategory="주일오전"
-        serviceNumberOptions={SERVICE_NUMBER_OPTIONS}
-        defaultServiceNumber={1}
-      />
-
-      {/* 삭제 모달 */}
-      <SermonDeleteModal
-        target={crud.deleteTarget}
-        onCancel={() => crud.setDeleteTarget(null)}
-        onConfirm={crud.handleDeleteConfirm}
-        isDeleting={crud.isDeleting}
+      {/* 등록/수정 모달 (1부·2부 통합) */}
+      <SundayMorningModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        editGroup={editGroup}
       />
     </>
   )

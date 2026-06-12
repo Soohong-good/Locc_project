@@ -48,6 +48,71 @@ public class SermonYouTubeSyncService {
             Pattern.compile("(?<!\\d)(\\d{2})(\\d{2})(\\d{2})(?!\\d)")
     );
 
+    // 제목 앞 날짜 제거용 (위치 무관 추출 패턴과 달리 앞부분 전용)
+    private static final Pattern LEADING_DATE_PATTERN = Pattern.compile(
+            "^\\d{2,4}[.\\-/]\\s*\\d{1,2}[.\\-/]\\s*\\d{1,2}\\.?\\s*"
+    );
+    // 예배 유형 키워드 (날짜 뒤에 오는 경우)
+    private static final Pattern SERVICE_TYPE_PATTERN = Pattern.compile(
+            "^(수요예배|금요기도회|금요예배|주일오전예배|주일오후예배|주일오전|주일오후|주일예배|새벽기도회|새벽기도|[12]부)[.。,\\s]*"
+    );
+    // 성경 구절: 괄호 안에 숫자:숫자 형식 (잠 11:30 / 마 5:1-12 등)
+    private static final Pattern SCRIPTURE_PATTERN = Pattern.compile(
+            "\\(([^)]*\\d+[:\\-]\\d+[^)]*)\\)"
+    );
+    // 설교자: 끝에 한글이름(2~4자) + 직함
+    private static final Pattern PREACHER_PATTERN = Pattern.compile(
+            "([가-힣]{2,4})\\s*(목사님?|전도사님?|강도사님?|장로님?|집사님?)\\s*$"
+    );
+
+    private record ParsedTitle(String title, String scripture, String preacher) {}
+
+    private ParsedTitle parseTitle(String rawTitle) {
+        if (rawTitle == null) return new ParsedTitle("제목 없음", null, null);
+
+        String text = rawTitle.trim();
+
+        // 1. 앞 날짜 제거 (26.06.10 / 2026.06.10 형식)
+        Matcher dateMatcher = LEADING_DATE_PATTERN.matcher(text);
+        if (dateMatcher.find()) {
+            text = text.substring(dateMatcher.end()).trim();
+        }
+
+        // 2. 예배 유형 키워드 제거
+        Matcher typeMatcher = SERVICE_TYPE_PATTERN.matcher(text);
+        if (typeMatcher.find()) {
+            text = text.substring(typeMatcher.end()).trim();
+        }
+
+        // 2-1. 주일 1부 / 주일 2부 제거 (위치 무관)
+        text = text.replaceAll("주일\\s*[12]부[.。,\\s]*", "").trim();
+
+        // 3. 성경 구절 추출
+        String scripture = null;
+        Matcher scriptureMatcher = SCRIPTURE_PATTERN.matcher(text);
+        if (scriptureMatcher.find()) {
+            scripture = scriptureMatcher.group(1).trim();
+            if (scripture.length() > 100) scripture = scripture.substring(0, 100);
+            text = (text.substring(0, scriptureMatcher.start()) + text.substring(scriptureMatcher.end())).trim();
+        }
+
+        // 4. 설교자 추출 (끝에 이름+직함)
+        String preacher = null;
+        Matcher preacherMatcher = PREACHER_PATTERN.matcher(text);
+        if (preacherMatcher.find()) {
+            preacher = preacherMatcher.group(0).trim();
+            if (preacher.length() > 50) preacher = preacher.substring(0, 50);
+            text = text.substring(0, preacherMatcher.start()).trim();
+        }
+
+        // 5. 끝 구두점 정리
+        text = text.replaceAll("[.。,\\s]+$", "").trim();
+        if (text.isEmpty()) text = rawTitle; // 파싱 실패 시 원본 유지
+        if (text.length() > 200) text = text.substring(0, 200);
+
+        return new ParsedTitle(text, scripture, preacher);
+    }
+
     // ── 스케줄 메서드 ────────────────────────────────────────────────
 
     @Scheduled(cron = "0 0 3 * * MON", zone = "Asia/Seoul")
@@ -157,12 +222,16 @@ public class SermonYouTubeSyncService {
                 continue;
             }
 
-            // ④ 설교 자동 생성
+            // ④ 제목 정제 (날짜·예배유형 제거, 성경구절·설교자 분리)
+            ParsedTitle parsed = parseTitle(title);
+
+            // ⑤ 설교 자동 생성
             String videoUrl = "https://www.youtube.com/watch?v=" + videoId;
-            Sermon sermon = Sermon.createFromYouTube(title, category, serviceNumber, sermonDate,
-                    videoUrl, thumbnail, videoId);
+            Sermon sermon = Sermon.createFromYouTube(parsed.title(), parsed.scripture(), parsed.preacher(),
+                    category, serviceNumber, sermonDate, videoUrl, thumbnail, videoId);
             sermonRepository.save(sermon);
-            log.info("[YouTube 동기화] 설교 생성: category={}, date={}, title={}", category, sermonDate, title);
+            log.info("[YouTube 동기화] 설교 생성: category={}, date={}, title={}, preacher={}, scripture={}",
+                    category, sermonDate, parsed.title(), parsed.preacher(), parsed.scripture());
             created++;
         }
         return created;
