@@ -158,8 +158,8 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
               className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-800 outline-none transition text-sm" />
           </div>
 
-          {/* 날짜 / 설교자 / 성경구절 */}
-          <div className="grid sm:grid-cols-3 gap-4">
+          {/* 날짜 / 성경구절 */}
+          <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">날짜 <span className="text-red-500">*</span></label>
               <DateInput
@@ -170,30 +170,32 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">설교자</label>
-              <div className="flex gap-2">
-                <input type="text" value={fields.preacher}
-                  onChange={preacherReadOnly ? undefined : set('preacher')}
-                  readOnly={preacherReadOnly}
-                  placeholder={preacherReadOnly ? '설교자 이름' : '이름 직접 입력'}
-                  className={`flex-1 px-3 py-2.5 border border-slate-200 focus:border-slate-800 outline-none transition text-sm ${preacherReadOnly ? 'bg-slate-100 cursor-default' : 'bg-slate-50 focus:bg-white'}`}
-                />
-                <select onChange={handlePreacherSelect} defaultValue="" style={selectStyle}
-                  className="w-28 px-3 py-2.5 bg-slate-50 border border-slate-200 outline-none transition text-sm appearance-none">
-                  <option value="">교역자</option>
-                  {ministers.map((m) => {
-                    const text = `${m.name} ${m.displayPosition}`
-                    return <option key={m.id} value={text}>{text}</option>
-                  })}
-                  <option value="__DIRECT__">직접 입력</option>
-                </select>
-              </div>
-            </div>
-            <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">성경 구절</label>
               <input type="text" value={fields.scripture} onChange={set('scripture')} maxLength={100}
                 placeholder="예: 요한복음 3:16"
                 className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-800 outline-none transition text-sm" />
+            </div>
+          </div>
+
+          {/* 설교자 */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">설교자</label>
+            <div className="flex gap-2">
+              <input type="text" value={fields.preacher}
+                onChange={preacherReadOnly ? undefined : set('preacher')}
+                readOnly={preacherReadOnly}
+                placeholder={preacherReadOnly ? '설교자 이름' : '이름 직접 입력'}
+                className={`flex-1 px-3 py-2.5 border border-slate-200 focus:border-slate-800 outline-none transition text-sm ${preacherReadOnly ? 'bg-slate-100 cursor-default' : 'bg-slate-50 focus:bg-white'}`}
+              />
+              <select onChange={handlePreacherSelect} defaultValue="" style={selectStyle}
+                className="w-36 px-3 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-800 outline-none transition text-sm appearance-none">
+                <option value="">교역자 선택</option>
+                {ministers.map((m) => {
+                  const text = `${m.name} ${m.displayPosition}`
+                  return <option key={m.id} value={text}>{text}</option>
+                })}
+                <option value="__DIRECT__">직접 입력</option>
+              </select>
             </div>
           </div>
 
