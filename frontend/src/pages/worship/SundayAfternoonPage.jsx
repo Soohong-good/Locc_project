@@ -17,25 +17,23 @@ import SkeletonGrid from '@/components/ui/SkeletonCard'
 const SundayAfternoonPage = () => {
   const [page, setPage] = useState(0)
   const [keyword, setKeyword] = useState('')
-  const [preacher, setPreacher] = useState('')
   const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const canWrite = isAdminOrOperatorFn()
   const isAdmin = isAdminFn()
   const userId = getUserId()
 
-  const queryKey = ['sermons', 'sunday-afternoon', page, keyword, preacher]
+  const queryKey = ['sermons', 'sunday-afternoon', page, keyword]
 
   const { data, isLoading, error } = useQuery({
     queryKey,
-    queryFn: () => getSundayAfternoonData({ page, keyword, preacher }),
+    queryFn: () => getSundayAfternoonData({ page, keyword }),
     placeholderData: (prev) => prev,
   })
 
-  const crud = useSermonCrud([['sermons', 'sunday-afternoon', page, keyword, preacher]])
+  const crud = useSermonCrud([['sermons', 'sunday-afternoon', page, keyword]])
 
-  const handleSearch = (kw, pr) => {
+  const handleSearch = (kw) => {
     setKeyword(kw)
-    setPreacher(pr)
     setPage(0)
   }
 
@@ -60,11 +58,11 @@ const SundayAfternoonPage = () => {
         />
       )}
 
-      {/* 검색 */}
+      {/* 검색 (제목·본문·설교자 통합) */}
       <SermonSearchBar
         initialKeyword={keyword}
-        initialPreacher={preacher}
-        onSearch={handleSearch}
+        hidePreacher
+        onSearch={(kw) => handleSearch(kw)}
       />
 
       {/* 목록 */}

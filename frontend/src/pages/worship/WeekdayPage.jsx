@@ -29,32 +29,29 @@ const WeekdayPage = () => {
   const [type, setType] = useState('wednesday')
   const [page, setPage] = useState(0)
   const [keyword, setKeyword] = useState('')
-  const [preacher, setPreacher] = useState('')
   const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
   const canWrite = isAdminOrOperatorFn()
   const isAdmin = isAdminFn()
   const userId = getUserId()
 
-  const queryKey = ['sermons', 'weekday', type, page, keyword, preacher]
+  const queryKey = ['sermons', 'weekday', type, page, keyword]
 
   const { data, isLoading, error } = useQuery({
     queryKey,
-    queryFn: () => getWeekdayData({ type, page, keyword, preacher }),
+    queryFn: () => getWeekdayData({ type, page, keyword }),
     placeholderData: (prev) => prev,
   })
 
-  const crud = useSermonCrud([['sermons', 'weekday', type, page, keyword, preacher]])
+  const crud = useSermonCrud([['sermons', 'weekday', type, page, keyword]])
 
   const handleTabChange = (val) => {
     setType(val)
     setPage(0)
     setKeyword('')
-    setPreacher('')
   }
 
-  const handleSearch = (kw, pr) => {
+  const handleSearch = (kw) => {
     setKeyword(kw)
-    setPreacher(pr)
     setPage(0)
   }
 
@@ -91,13 +88,6 @@ const WeekdayPage = () => {
         </div>
       </section>
 
-      {/* 검색 */}
-      <SermonSearchBar
-        initialKeyword={keyword}
-        initialPreacher={preacher}
-        onSearch={handleSearch}
-      />
-
       {/* YouTube 최신 섹션 */}
       {data && (
         <YoutubeLatestSection
@@ -106,6 +96,13 @@ const WeekdayPage = () => {
           title={`${currentLabel} 최신 설교`}
         />
       )}
+
+      {/* 검색 (제목·본문·설교자 통합) */}
+      <SermonSearchBar
+        initialKeyword={keyword}
+        hidePreacher
+        onSearch={(kw) => handleSearch(kw)}
+      />
 
       {/* 목록 */}
       <section className="py-16 bg-slate-50 px-6">

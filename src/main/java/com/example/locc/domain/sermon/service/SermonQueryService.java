@@ -169,10 +169,10 @@ public class SermonQueryService {
     /**
      * 주일오후 통합 조회
      */
-    public SermonPageResponse getSundayAfternoonPage(int page, int size) {
+    public SermonPageResponse getSundayAfternoonPage(int page, int size, String keyword) {
         List<Map<String, String>> youtubeVideos = fetchYoutubeVideos("sunday-afternoon");
         SermonSearchCondition condition = SermonSearchCondition.builder()
-                .category("주일오후").page(page).size(size).build();
+                .category("주일오후").keyword(keyword).page(page).size(size).build();
         Page<SermonResponse> sermons = findList(condition);
         List<SermonResponse> latestList = findLatestByCategory("주일오후", 1);
 
@@ -189,13 +189,17 @@ public class SermonQueryService {
     /**
      * 기타예배 통합 조회 (수요 / 금요)
      */
-    public SermonPageResponse getWeekdayPage(String type, int page, int size) {
+    public SermonPageResponse getWeekdayPage(String type, int page, int size, String keyword) {
         if (!"wednesday".equals(type) && !"friday".equals(type)) {
             throw new InvalidInputException("지원하지 않는 예배 타입입니다. (허용: wednesday, friday)");
         }
         int serviceNumber = "wednesday".equals(type) ? 1 : 2;
         List<Map<String, String>> youtubeVideos = fetchYoutubeVideos(type);
-        Page<SermonResponse> sermons = findByCategoryAndServiceNumber("기타예배", serviceNumber, page, size);
+        String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        Page<SermonResponse> sermons = (normalizedKeyword == null)
+                ? findByCategoryAndServiceNumber("기타예배", serviceNumber, page, size)
+                : sermonRepository.searchByCategoryAndServiceNumber("기타예배", serviceNumber, normalizedKeyword, PageRequest.of(page, size))
+                        .map(SermonResponse::from);
         List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("기타예배", serviceNumber, 1);
 
         return SermonPageResponse.builder()
