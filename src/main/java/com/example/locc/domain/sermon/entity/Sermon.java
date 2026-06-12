@@ -73,8 +73,15 @@ public class Sermon extends BaseEntity {
     @JoinColumn(name = "author_id", columnDefinition = "BINARY(16)")
     private User author;
 
+    // YouTube 자동 동기화 필드
+    @Column(length = 100, unique = true)
+    private String youtubeVideoId;
+
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private boolean autoCreated;
+
     // ===== 팩토리 메서드 =====
-    
+
     /**
      * Sermon 생성
      */
@@ -91,6 +98,24 @@ public class Sermon extends BaseEntity {
                 .category(command.getCategory())
                 .serviceNumber(command.getServiceNumber())
                 .author(author)
+                .build();
+    }
+
+    /**
+     * YouTube 자동 동기화 설교 생성 (author 없음, autoCreated=true)
+     */
+    public static Sermon createFromYouTube(String title, String category, Integer serviceNumber,
+                                           java.time.LocalDate sermonDate, String videoUrl,
+                                           String thumbnailUrl, String youtubeVideoId) {
+        return Sermon.builder()
+                .title(title)
+                .category(category)
+                .serviceNumber(serviceNumber)
+                .sermonDate(sermonDate)
+                .videoUrl(videoUrl)
+                .thumbnailUrl(thumbnailUrl)
+                .youtubeVideoId(youtubeVideoId)
+                .autoCreated(true)
                 .build();
     }
 
