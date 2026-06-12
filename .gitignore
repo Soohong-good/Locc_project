@@ -85,6 +85,10 @@ out/
 # Claude Code
 .claude/
 
+# 스크린샷 작업 파일
+screens/
+screenshot.mjs
+
 # Template
 /template
 
