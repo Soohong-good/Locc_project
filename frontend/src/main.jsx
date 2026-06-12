@@ -5,13 +5,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import App from './App'
 
-// PWA: 서비스 워커 업데이트 감지 → 자동 페이지 리로드
-// 새 배포 후 구 JS 청크 파일이 없어져 "Failed to fetch dynamically imported module"
-// 오류 발생을 방지하기 위해 SW가 교체되면 즉시 새 index.html로 리로드
+// PWA 제거 후속: 남아있는 서비스 워커/캐시 정리 (자폭 sw.js와 함께 이중 안전)
+// 옛 SW가 옛 자산을 캐시 서빙하는 문제 방지 — 등록된 SW 해제 + 캐시 삭제
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload()
-  })
+  navigator.serviceWorker.getRegistrations()
+    .then((regs) => regs.forEach((reg) => reg.unregister()))
+    .catch(() => {})
+  if (window.caches?.keys) {
+    caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {})
+  }
 }
 
 const queryClient = new QueryClient({
