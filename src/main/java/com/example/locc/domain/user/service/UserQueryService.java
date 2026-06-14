@@ -8,7 +8,9 @@ import com.example.locc.exception.InvalidInputException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +38,14 @@ public class UserQueryService {
     }
 
     /**
-     * 전체 회원 목록 조회
+     * 승인 완료 회원 목록 조회 ("회원" 탭 — 승인 대기/거부/삭제 제외)
      */
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        log.debug("Finding all users");
-        return userRepository.findAll(pageable)
+        log.debug("Finding approved users");
+        // 운영자·총관리자를 상단에 모음: role STRING 정렬(ADMIN→OPERATOR→USER), 같은 권한 내 최신 가입순
+        Pageable sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                Sort.by(Sort.Order.asc("role"), Sort.Order.desc("createdAt")));
+        return userRepository.findByApprovalStatusAndDeletedFalse(User.ApprovalStatus.APPROVED, sorted)
                 .map(UserResponse::from);
     }
 
