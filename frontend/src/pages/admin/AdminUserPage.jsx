@@ -101,6 +101,12 @@ const ROLE_LABEL = {
   USER:     null,
 }
 
+// 교인 구분 (userType)
+const USER_TYPE_LABEL = {
+  REGISTERED:   { label: '등록교인',   cls: 'text-emerald-600' },
+  UNREGISTERED: { label: '미등록교인', cls: 'text-slate-400' },
+}
+
 const AdminUserPage = () => {
   const [tab, setTab] = useState('all') // 'all' | 'pending'
   const [page, setPage] = useState(0)
@@ -145,8 +151,8 @@ const AdminUserPage = () => {
       {/* 탭 */}
       <div className="flex gap-1 mb-5 bg-gray-100 rounded-lg p-1 w-fit">
         {[
-          { key: 'all', label: '전체' },
-          { key: 'pending', label: '승인 대기' },
+          { key: 'all', label: '회원' },
+          { key: 'pending', label: '승인대기' },
         ].map(({ key, label }) => (
           <button
             key={key}
@@ -185,7 +191,7 @@ const AdminUserPage = () => {
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hidden sm:block">
             <table className="w-full text-sm table-fixed">
               <colgroup>
-                <col className="w-36" />
+                <col className="w-44" />
                 <col />
                 <col className="w-20" />
                 <col className="w-28" />
@@ -204,25 +210,29 @@ const AdminUserPage = () => {
                 {users.map((u) => {
                   const status = STATUS_LABEL[u.approvalStatus] ?? { label: u.approvalStatus, cls: 'bg-gray-100 text-gray-600' }
                   const roleLabel = ROLE_LABEL[u.role] ?? null
+                  const userTypeLabel = USER_TYPE_LABEL[u.userType] ?? null
                   const isOperator = u.role === 'OPERATOR'
                   const isAdminAccount = u.role === 'ADMIN'
                   return (
                     <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${u.deleted ? 'opacity-50' : ''}`}>
                       <td className="px-4 py-3 font-medium text-gray-800">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {u.name}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="truncate">{u.name}</span>
                           {roleLabel && (
-                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleLabel.cls}`}>
+                            <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${roleLabel.cls}`}>
                               {roleLabel.label}
                             </span>
                           )}
                           {!u.enabled && !u.deleted && (
-                            <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
+                            <span className="shrink-0 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
                           )}
                           {u.deleted && (
-                            <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">삭제됨</span>
+                            <span className="shrink-0 text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">삭제됨</span>
                           )}
                         </div>
+                        {userTypeLabel && (
+                          <span className={`block text-xs mt-0.5 ${userTypeLabel.cls}`}>{userTypeLabel.label}</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{u.email}</td>
                       <td className="px-4 py-3">
@@ -321,19 +331,25 @@ const AdminUserPage = () => {
             {users.map((u) => {
               const status = STATUS_LABEL[u.approvalStatus] ?? { label: u.approvalStatus, cls: 'bg-gray-100 text-gray-600' }
               const roleLabel = ROLE_LABEL[u.role] ?? null
+              const userTypeLabel = USER_TYPE_LABEL[u.userType] ?? null
               const isOperator = u.role === 'OPERATOR'
               const isAdminAccount = u.role === 'ADMIN'
               return (
                 <div key={`m-${u.id}`} className={`bg-white rounded-xl border border-gray-200 p-4 ${u.deleted ? 'opacity-50' : ''}`}>
                   {/* 이름 + 상태 */}
                   <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-gray-900">{u.name}</span>
-                      {roleLabel && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleLabel.cls}`}>{roleLabel.label}</span>
-                      )}
-                      {!u.enabled && !u.deleted && (
-                        <span className="text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-semibold text-gray-900 truncate">{u.name}</span>
+                        {roleLabel && (
+                          <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-medium ${roleLabel.cls}`}>{roleLabel.label}</span>
+                        )}
+                        {!u.enabled && !u.deleted && (
+                          <span className="shrink-0 text-xs bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">차단</span>
+                        )}
+                      </div>
+                      {userTypeLabel && (
+                        <span className={`block text-xs mt-0.5 ${userTypeLabel.cls}`}>{userTypeLabel.label}</span>
                       )}
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${status.cls}`}>{status.label}</span>
