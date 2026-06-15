@@ -43,7 +43,6 @@ const NAV_MENUS = [
     children: [
       { href: '/notices',       label: '공지' },
       { href: '/bulletin',      label: '주보' },
-      { href: '/praise-sheets', label: '찬양악보' },
       { href: '/applications',  label: '신청양식' },
     ],
   },
@@ -60,6 +59,7 @@ const NAV_MENUS = [
       { href: '/department/healing',      label: '치유부' },
     ],
   },
+  { label: '찬양', href: '/praise-sheets' },
   { label: '훈련 신청', href: '/training' },
 ]
 
