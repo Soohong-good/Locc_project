@@ -36,7 +36,7 @@
 |------|------|
 | Container | Docker · Docker Compose |
 | Web Server | Nginx (정적 서빙 + API 리버스 프록시) |
-| CI/CD | (별도 구성) |
+| CI/CD | GitHub Actions (테스트 · 빌드 자동 검증) |
 
 ---
 
