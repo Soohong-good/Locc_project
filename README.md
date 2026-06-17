@@ -40,6 +40,61 @@
 
 ---
 
+## 시스템 아키텍처
+
+Nginx를 단일 진입점으로 두고, 백엔드·DB·캐시는 외부에 노출하지 않는 **단일 도메인 / 내부 네트워크** 구조입니다.
+React 정적 파일은 Nginx가 직접 서빙하고, `/api/**` 요청만 Spring Boot로 리버스 프록시합니다.
+
+```mermaid
+flowchart TB
+    User([사용자 브라우저])
+
+    subgraph external["외부 서비스"]
+        OAuth["Kakao / Naver<br/>OAuth2"]
+        Mail["Gmail SMTP"]
+        YT["YouTube Data API"]
+        Map["Kakao Map API"]
+    end
+
+    subgraph host["배포 서버 (Docker Compose · locc-network)"]
+        Nginx["Nginx (locc-nginx)<br/>:80 / :443<br/>React 정적 서빙 + API 프록시"]
+        App["Spring Boot (locc-app)<br/>:8080 (내부 전용)<br/>REST API · JWT · 배치"]
+        DB[("MariaDB (locc-mariadb)<br/>:3306")]
+        Redis[("Redis (locc-redis)<br/>:6379 (loopback)<br/>Rate Limit · 토큰")]
+    end
+
+    subgraph volumes["영속 볼륨"]
+        VUp["uploads_data<br/>(업로드 파일)"]
+        VLog["logs_data<br/>(애플리케이션 로그)"]
+        VDB["mariadb_data"]
+        VRedis["redis_data"]
+    end
+
+    User -- "HTTPS" --> Nginx
+    Nginx -- "정적 파일" --> User
+    Nginx -- "/api/** 프록시" --> App
+
+    App --> DB
+    App --> Redis
+    App -- "인증 코드 / 비밀번호 재설정" --> Mail
+    App -- "소셜 로그인" --> OAuth
+    App -- "@Scheduled 동기화" --> YT
+    User -. "지도 SDK" .-> Map
+
+    App -.-> VUp
+    App -.-> VLog
+    DB -.-> VDB
+    Redis -.-> VRedis
+```
+
+### 요청 흐름 요약
+1. 사용자의 모든 트래픽은 **Nginx(80/443)** 로만 진입합니다. (`app`·`db`·`redis`는 외부 미노출)
+2. 정적 React 자산은 Nginx가 직접 응답하고, `/api/**` 만 내부의 **Spring Boot(8080)** 로 프록시됩니다.
+3. Spring Boot는 **MariaDB**(영속 데이터)·**Redis**(Rate Limit·토큰)와 통신하고, 필요 시 **외부 API**(OAuth2·메일·YouTube)를 호출합니다.
+4. 업로드 파일·로그·DB·Redis 데이터는 **Docker 볼륨**으로 분리되어 재배포 시에도 보존됩니다.
+
+---
+
 ## 주요 기능
 
 ### 사용자
