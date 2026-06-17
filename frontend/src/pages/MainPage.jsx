@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getLatestSermonByCategory, getSundayMorningData, getSundayAfternoonData, getWeekdayData } from '@/api/sermons'
+import { getLatestSermonByCategory, getWeekdayData } from '@/api/sermons'
 import { fetchNewYear } from '@/api/newYearApi'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'

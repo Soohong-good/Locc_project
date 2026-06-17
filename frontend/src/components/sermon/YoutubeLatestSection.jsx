@@ -65,7 +65,7 @@ const VideoModal = ({ videoId, title, onClose }) => {
 }
 
 // ── 재생 가능한 썸네일 카드 ─────────────────────────────
-const PlayableThumbnail = ({ videoId, title, subtitle, onClick }) => (
+const PlayableThumbnail = ({ videoId, title, onClick }) => (
   <div
     className="group relative cursor-pointer overflow-hidden"
     onClick={onClick}

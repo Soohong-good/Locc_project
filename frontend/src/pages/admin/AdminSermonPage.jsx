@@ -140,7 +140,6 @@ const SundayMorningGroupTable = ({ groups, onDeleteGroup, isPending }) => {
           {groups.map((group) => {
             const title    = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
             const preacher = group.representativePreacher ?? group.part1?.preacher ?? group.part2?.preacher
-            const hasBoth  = !!(group.part1 && group.part2)
             return (
               <tr key={group.sermonDate} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">

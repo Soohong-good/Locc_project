@@ -1,5 +1,5 @@
 ﻿import { Navigate, useLocation } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import useAuthStore from '@/stores/authStore'
 import toast from '@/utils/toast'
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAdminApplication, completeApplication, updateApplicationMemo } from '@/api/applications'
-import VehicleFormPrint, { parseVehicleMemo } from '@/components/applications/VehicleFormPrint'
+import VehicleFormPrint from '@/components/applications/VehicleFormPrint'
 
 const STATUS_BADGE = {
   PENDING:   'bg-yellow-100 text-yellow-700',
@@ -49,7 +49,6 @@ const AdminApplicationDetailPage = () => {
 
   const isPending   = application.status === 'PENDING'
   const isVehicle   = application.categoryName === '차량신청'
-  const vehicleData = isVehicle ? parseVehicleMemo(application.memo) : null
   const plainMemo   = !isVehicle ? application.memo : null
 
   const handlePrint = () => window.print()

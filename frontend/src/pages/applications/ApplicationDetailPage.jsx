@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getApplication, cancelApplication } from '@/api/applications'
 import useAuthStore from '@/stores/authStore'
-import VehicleFormPrint, { parseVehicleMemo } from '@/components/applications/VehicleFormPrint'
+import VehicleFormPrint from '@/components/applications/VehicleFormPrint'
 
 const STATUS_BADGE = {
   PENDING:   'bg-yellow-100 text-yellow-700',

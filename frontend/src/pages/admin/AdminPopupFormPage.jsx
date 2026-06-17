@@ -225,7 +225,7 @@ const AdminPopupFormPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const { containerRef, getHTML, setHTML, LinkTooltip } = useQuillEditor({
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({
     onImageUpload: handleUpload,
     onReady: handleReady,
   })

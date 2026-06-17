@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import DOMPurify from 'dompurify'
 import { getActivePopups } from '@/api/popups'
@@ -34,7 +34,7 @@ const saveClosedToday = (idSet) => {
       date: new Date().toDateString(),
       ids:  Array.from(idSet),
     }))
-  } catch {}
+  } catch { /* localStorage 접근 실패 시 무시 */ }
 }
 
 // ── 슬라이더 팝업 ────────────────────────────────────────────────────────────

@@ -200,7 +200,6 @@ const AdminHelpRequestPage = () => {
   const pageInfo = data?.pageInfo
 
   // 통계 (현재 페이지 기준이 아닌 전체 수는 별도 카운트 API 없으므로 생략)
-  const pendingCount = items.filter((i) => i.status === 'PENDING').length
   const totalElements = pageInfo?.totalElements ?? 0
 
   return (

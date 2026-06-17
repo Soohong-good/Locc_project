@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { getMyInfo, updateProfile, changePassword } from '@/api/mypage'
-import useAuthStore from '@/stores/authStore'
 import { getErrorMessage } from '@/lib/apiError'
 import useDaumPostcode from '@/hooks/useDaumPostcode'
 import { DateInput } from '@/components/ui/DateInput'
@@ -75,7 +74,7 @@ const EditTab = ({ user, onCancel }) => {
   const [fields, setFields] = useState({
     name: '', phoneNumber: '', roadAddress: '', detailAddress: '', gender: '', birth: '',
   })
-  const [success, setSuccess] = useState(false)
+  const [success] = useState(false)
   const set = (k) => (e) => setFields((p) => ({ ...p, [k]: e.target.value }))
 
   const { open: openPostcode } = useDaumPostcode((roadAddress) => {

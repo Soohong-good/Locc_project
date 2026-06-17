@@ -788,7 +788,7 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
   )
 }
 
-const GalleryTab = ({ dept, isAdmin, canWrite, userId }) => {
+const GalleryTab = ({ dept, canWrite }) => {
   const navigate     = useNavigate()
   const queryClient  = useQueryClient()
   const [page,       setPage]       = useState(0)
