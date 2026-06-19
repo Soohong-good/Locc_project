@@ -38,7 +38,12 @@ chmod +x ./gradlew            # 클라우드 체크아웃 시 실행권한 종�
 sed -i 's/JavaLanguageVersion.of(21)/JavaLanguageVersion.of(17)/' build.gradle
 git checkout gradlew
 ```
-> PC에는 JDK 17이 있으므로 PC에선 그냥 `./gradlew test` 하면 됨.
+> **PC 환경 (확인됨, 2026-06 세션)**: JDK 17이 `C:\Users\zaqxs\.jdks\temurin-17.0.19`에 설치돼 있음(IntelliJ가 받은 temurin). 단 **`java`가 시스템 PATH에 없어서** `gradlew`가 그냥은 JDK를 못 찾는다. PowerShell에서 `JAVA_HOME`을 지정해 실행할 것:
+> ```powershell
+> $env:JAVA_HOME = "C:\Users\zaqxs\.jdks\temurin-17.0.19"
+> & "C:\dev\locc\gradlew.bat" -p "C:\dev\locc" test --tests "*XxxTest" --no-daemon --console=plain
+> ```
+> **build.gradle은 17 그대로 두면 됨(PC에선 토글 불필요).** 21 토글은 클라우드 전용.
 
 ### (B) 클라우드 세션은 DB를 못 띄움 (중요)
 Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)**. 즉 클라우드에서는:
@@ -48,6 +53,7 @@ Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)
 
 ### (C) GitHub Actions API 응답이 심하게 캐시됨
 이 환경의 MCP GitHub 도구는 잡 상태를 **실제보다 수 분~십 분 늦게** 반영함("in_progress"로 박혀 있음). 실제 완료 여부는 `list_workflow_jobs`의 `completed_at` 또는 잡 재조회로 판단. 폴링을 과하게 반복하지 말 것.
+> **PC 세션 주의**: PC(로컬)에는 `gh` CLI도 MCP GitHub 도구도 **없다**. repo가 private이라 WebFetch도 404. → CI 결과는 **GitHub 웹 Actions 탭**에서 보거나 **클라우드 세션**(MCP GitHub 있음)에서 확인한다. PC에선 push까지만 하고 CI 확인은 다음 클라우드 세션/웹으로 미룬다.
 
 ### (D) 엔티티 빌더가 private
 `Notice`, `User`, `UserAreaPermission` 등은 `@Builder(access = PRIVATE)`. 테스트에서 직접 `builder()` 못 씀.
@@ -65,14 +71,18 @@ Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)
 | Phase 1 | 프론트 ESLint 검사 추가 + 기존 린트 에러 정리 (`<Icon/>` 미사용 오탐은 코드 삭제가 아니라 **설정으로 해결**) | ✅ |
 | Phase 2 | 백엔드 단위 테스트 (Mockito, DB 불필요) | 🔄 진행 중 |
 
-### Phase 2 테스트 인벤토리 (현재 32개 단위 + contextLoads)
+### Phase 2 테스트 인벤토리 (현재 78개 단위 + contextLoads)
 - `notice/service/NoticeCommandServiceTest` (6): 작성/이미지 권한, 작성자 미존재, 고정토글 NotFound/비관리자, 삭제 권한
 - `notice/service/NoticeQueryServiceTest` (5): 상세/내부 NotFound, 키워드 유무 라우팅, countRecent
 - `sermon/service/SermonQueryServiceTest` (8): 입력검증, 통합조회 조립, 최신1건 null, countRecent
 - `user/service/UserPermissionServiceTest` (13): 권한 조회/부여/회수/보유여부 전 경로
+- `user/service/UserQueryServiceTest` (17): 목록(PENDING/APPROVED 정렬)·단건 조회·카운트·이메일 중복검증 정상/예외
+- `user/service/UserMyPageServiceTest` (8): 조회 NotFound, 프로필 수정, 비번 변경(소셜계정 차단/현재비번 불일치/성공)
+- `user/service/UserCommandServiceTest` (18): 회원가입(중복·인증), 운영자 권한(ADMIN 차단), 승인/반려, 차단(PENDING 동시반려)/삭제, TOTP 활성화/검증
+- `user/service/CustomUserDetailsServiceTest` (3): 인증 로드 — 미존재/소셜전용/정상
 - `LoccApplicationTests` (1): contextLoads (CI에서 실DB로 검증)
 
-모든 단위 테스트는 **로컬·CI 양쪽에서 GREEN 확인 완료**.
+**user 도메인 5개 서비스 단위 테스트 완결.** 로컬(PC JDK17) GREEN 확인 완료. (CI는 PC 세션에서 직접 확인 불가 → push 후 웹/클라우드에서 확인할 것 — §2C)
 
 ---
 
@@ -82,10 +92,9 @@ Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)
 
 | 우선 | 도메인 | 변경횟수 | 메모 |
 |------|--------|---------|------|
-| ✅완료 | user (권한) | 36 | UserPermissionService 완료. **나머지 서비스 남음** |
-| 다음 | **user 나머지** | — | `UserQueryService`, `UserMyPageService`, `UserCommandService`, `CustomUserDetailsService` → 클라우드에서 단위 테스트 가능 |
-| 그다음 | **training** | 20 | 서비스 로직이면 클라우드 가능 |
-| | **department** | 18 | 〃 |
+| ✅완료 | **user (전체)** | 36 | 5개 서비스(Permission·Query·MyPage·Command·UserDetails) 단위 테스트 **완결** |
+| 다음 | **training** | 20 | 서비스 로직이면 클라우드/PC 단위 테스트 가능 |
+| 그다음 | **department** | 18 | 〃 |
 | | admin | 29 | 대부분 **컨트롤러** → DB 필요 → PC/CI |
 
 ### 향후 더 키울 수 있는 축 (선택)
