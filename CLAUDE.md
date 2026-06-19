@@ -71,7 +71,7 @@ Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)
 | Phase 1 | 프론트 ESLint 검사 추가 + 기존 린트 에러 정리 (`<Icon/>` 미사용 오탐은 코드 삭제가 아니라 **설정으로 해결**) | ✅ |
 | Phase 2 | 백엔드 단위 테스트 (Mockito, DB 불필요) | 🔄 진행 중 |
 
-### Phase 2 테스트 인벤토리 (현재 78개 단위 + contextLoads)
+### Phase 2 테스트 인벤토리 (현재 108개 단위 + contextLoads)
 - `notice/service/NoticeCommandServiceTest` (6): 작성/이미지 권한, 작성자 미존재, 고정토글 NotFound/비관리자, 삭제 권한
 - `notice/service/NoticeQueryServiceTest` (5): 상세/내부 NotFound, 키워드 유무 라우팅, countRecent
 - `sermon/service/SermonQueryServiceTest` (8): 입력검증, 통합조회 조립, 최신1건 null, countRecent
@@ -80,9 +80,14 @@ Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)
 - `user/service/UserMyPageServiceTest` (8): 조회 NotFound, 프로필 수정, 비번 변경(소셜계정 차단/현재비번 불일치/성공)
 - `user/service/UserCommandServiceTest` (18): 회원가입(중복·인증), 운영자 권한(ADMIN 차단), 승인/반려, 차단(PENDING 동시반려)/삭제, TOTP 활성화/검증
 - `user/service/CustomUserDetailsServiceTest` (3): 인증 로드 — 미존재/소셜전용/정상
+- `training/service/TrainingCommandServiceTest` (6): 생성 사용자 미존재, 수정/삭제/마감 권한 검증
+- `training/service/TrainingApplyCommandServiceTest` (5): 신청(미존재/마감/중복), 취소 권한
+- `training/service/TrainingQueryServiceTest` (7): 상세 NotFound, 목록/상태별/검색 위임
+- `training/service/TrainingApplyQueryServiceTest` (12): 신청서 NotFound, **IDOR 방지(본인/관리자)**, 목록/카운트 위임
 - `LoccApplicationTests` (1): contextLoads (CI에서 실DB로 검증)
 
-**user 도메인 5개 서비스 단위 테스트 완결.** 로컬(PC JDK17) GREEN 확인 완료. (CI는 PC 세션에서 직접 확인 불가 → push 후 웹/클라우드에서 확인할 것 — §2C)
+**user(5개)·training(4개) 서비스 단위 테스트 완결.** 로컬(PC JDK17) GREEN 확인 완료. (CI는 PC 세션에서 직접 확인 불가 → push 후 웹/클라우드에서 확인할 것 — §2C)
+> training의 `ApplicationExcelService`(POI 엑셀 생성)는 미작성 — 필요 시 추가.
 
 ---
 
@@ -93,8 +98,9 @@ Docker 데몬은 켤 수 있으나 **DB 이미지 다운로드가 차단됨(403)
 | 우선 | 도메인 | 변경횟수 | 메모 |
 |------|--------|---------|------|
 | ✅완료 | **user (전체)** | 36 | 5개 서비스(Permission·Query·MyPage·Command·UserDetails) 단위 테스트 **완결** |
-| 다음 | **training** | 20 | 서비스 로직이면 클라우드/PC 단위 테스트 가능 |
-| 그다음 | **department** | 18 | 〃 |
+| ✅완료 | **training** | 20 | 4개 서비스(Command·ApplyCommand·Query·ApplyQuery) **완결**. ExcelService만 남음 |
+| 다음 | **department** | 18 | 서비스 로직이면 클라우드/PC 단위 테스트 가능 |
+| 그다음 | training `ApplicationExcelService` | — | POI 엑셀(DB 불필요면 단위 가능) |
 | | admin | 29 | 대부분 **컨트롤러** → DB 필요 → PC/CI |
 
 ### 향후 더 키울 수 있는 축 (선택)
