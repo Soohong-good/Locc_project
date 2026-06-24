@@ -827,7 +827,7 @@ export default function MainPage() {
                     icon: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 14a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3.12h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.9A16 16 0 0 0 13.1 16.1l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17.14"/> },
                   { label:'팩스', value:'053-961-0862',
                     icon: <><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 2H8v5h8V2z"/></> },
-                  { label:'이메일', value:'magamedia8948@gmail.com',
+                  { label:'이메일', value:'cmedia881213@gmail.com',
                     icon: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></> },
                 ].map((info) => (
                   <div key={info.label} className="dt-info-row">

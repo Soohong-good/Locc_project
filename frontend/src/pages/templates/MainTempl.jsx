@@ -439,7 +439,7 @@ const LocationSection = () => (
             <p className="text-lg font-medium leading-relaxed text-neutral-900">
               T. 053-962-8948, 053-961-0931<br />
               F. 053-961-0862<br />
-              E. magamedia8948@gmail.com
+              E. cmedia881213@gmail.com
             </p>
           </div>
         </div>
