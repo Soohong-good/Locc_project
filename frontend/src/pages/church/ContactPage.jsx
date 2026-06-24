@@ -77,10 +77,10 @@ export default function ContactPage() {
                 <div>
                   <p className="text-sm text-slate-500 mb-1">이메일</p>
                   <a
-                    href="mailto:magamedia8948@gmail.com"
+                    href="mailto:cmedia881213@gmail.com"
                     className="hover:text-slate-900 transition-colors break-all"
                   >
-                    magamedia8948@gmail.com
+                    cmedia881213@gmail.com
                   </a>
                 </div>
               </div>

@@ -247,8 +247,8 @@ const Footer = () => {
                   Fax.&nbsp;053-961-0862
                 </p>
                 <p>
-                  <a href="mailto:magamedia8948@gmail.com" className="hover:text-white transition-colors text-xs">
-                    magamedia8948@gmail.com
+                  <a href="mailto:cmedia881213@gmail.com" className="hover:text-white transition-colors text-xs">
+                    cmedia881213@gmail.com
                   </a>
                 </p>
               </div>
