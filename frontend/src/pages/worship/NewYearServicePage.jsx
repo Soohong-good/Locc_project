@@ -9,7 +9,7 @@ import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
 import { formatTranscript } from '@/utils/formatTranscript'
-import BiblePassageSection from '@/components/sermon/BiblePassageSection'
+import { getBiblePassage } from '@/api/bible'
 
 function isEmptyTranscript(html) {
   if (!html) return true
@@ -119,6 +119,42 @@ const Sidebar = () => (
     </div>
   </aside>
 )
+
+// ─── 본문 성경 구절 섹션 (다크 2단 패널) ──────────────────────────
+const ScriptureSection = ({ scripture }) => {
+  const ref = scripture?.trim()
+
+  const { data } = useQuery({
+    queryKey: ['bible-passage', ref],
+    queryFn: () => getBiblePassage(ref),
+    enabled: !!ref,
+    staleTime: Infinity,
+  })
+
+  if (!data?.verses?.length) return null
+
+  return (
+    <section className="bg-[#171717] text-[#FAF9F6] border-b border-[#333]">
+      <div className="max-w-[1600px] mx-auto border-x border-[#333] grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#333]">
+        <div className="lg:col-span-4 p-8 md:p-16 lg:p-24 flex flex-col justify-center border-b lg:border-b-0 border-[#333]">
+          <span className="text-xs font-mono text-[#A3A3A3] uppercase tracking-widest mb-6 block">Scripture Reading</span>
+          <h2 className="text-4xl lg:text-5xl font-bold mb-6 tracking-tight break-keep">{ref}</h2>
+          <p className="text-[#A3A3A3] font-light">본문 말씀</p>
+        </div>
+
+        <div className="lg:col-span-8 p-8 md:p-16 lg:p-24 bg-[#111]">
+          <div className="max-w-3xl space-y-8 text-[17px] leading-relaxed font-light text-[#D4D4D4] break-keep">
+            {data.verses.map((v) => (
+              <p key={v.verse}>
+                <sup className="text-xs text-[#737373] mr-1">{v.verse}</sup>{v.text}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 export default function NewYearServicePage() {
   const queryClient = useQueryClient()
@@ -379,7 +415,7 @@ export default function NewYearServicePage() {
         </div>
       </section>
 
-      <BiblePassageSection scripture={scripture} />
+      <ScriptureSection scripture={scripture} />
 
       {isModalOpen && (
         <TranscriptEditModal
