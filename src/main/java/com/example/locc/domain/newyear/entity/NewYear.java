@@ -46,6 +46,9 @@ public class NewYear {
     @Column
     private Long pdfFileId; // 업로드된 설교 PDF 파일 ID (files 테이블 참조)
 
+    @Column(length = 100)
+    private String scripture; // 본문 성경 참조 (예: "겔36:22-31") — BiblePassageSection 조회용
+
     // 정적 팩토리 메서드
     public static NewYear create(String title, String youtubePlaylistId, Integer year) {
         NewYear newYear = new NewYear();
@@ -84,5 +87,10 @@ public class NewYear {
     // PDF 파일 ID 업데이트
     public void updatePdfFileId(Long pdfFileId) {
         this.pdfFileId = pdfFileId;
+    }
+
+    // 본문 성경 참조 업데이트
+    public void updateScripture(String scripture) {
+        this.scripture = scripture;
     }
 }

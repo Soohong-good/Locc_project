@@ -18,6 +18,12 @@ export async function updateNewYearLatestVideo() {
     return data
 }
 
+// PUT /api/newyear/scripture — 본문 성경 참조 설정 (관리자 전용)
+export async function updateNewYearScripture({ scripture }) {
+    const { data } = await client.put('/api/newyear/scripture', { scripture })
+    return data
+}
+
 // POST /api/newyear/pdf — PDF 업로드 (관리자 전용)
 export async function uploadNewYearPdf(file) {
     const formData = new FormData()

@@ -16,6 +16,7 @@ public class NewYearResponse {
     private Integer year;
     private String transcript;
     private String pdfUrl; // PDF 스트리밍 URL (있으면 iframe으로 표시)
+    private String scripture; // 본문 성경 참조
 
     public static NewYearResponse from(NewYear entity) {
         if (entity == null) return null;
@@ -31,6 +32,7 @@ public class NewYearResponse {
                 .pdfUrl(entity.getPdfFileId() != null
                         ? "/api/files/pdf/" + entity.getPdfFileId()
                         : null)
+                .scripture(entity.getScripture())
                 .build();
     }
 

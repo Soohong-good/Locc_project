@@ -1,14 +1,15 @@
 import DOMPurify from 'dompurify'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { PlayCircle, DownloadSimple } from '@phosphor-icons/react'
-import { fetchNewYear, updateNewYearLatestVideo, updateNewYearTranscript, uploadNewYearPdf } from '@/api/newYearApi'
+import { PlayCircle, DownloadSimple, FilePdf } from '@phosphor-icons/react'
+import { fetchNewYear, updateNewYearLatestVideo, updateNewYearTranscript, updateNewYearScripture, uploadNewYearPdf } from '@/api/newYearApi'
 import { downloadByPath } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
 import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
 import { formatTranscript } from '@/utils/formatTranscript'
+import BiblePassageSection from '@/components/sermon/BiblePassageSection'
 
 function isEmptyTranscript(html) {
   if (!html) return true
@@ -136,8 +137,12 @@ export default function NewYearServicePage() {
   const latestVideoTitle = data?.latestVideoTitle ?? null
   const transcript       = data?.transcript       ?? ''
   const pdfUrl           = data?.pdfUrl           ?? null
+  const scripture        = data?.scripture        ?? ''
 
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [scriptureInput, setScriptureInput] = useState(scripture)
+
+  useEffect(() => { setScriptureInput(scripture) }, [scripture])
 
   const saveTranscriptMutation = useMutation({
     mutationFn: updateNewYearTranscript,
@@ -156,6 +161,15 @@ export default function NewYearServicePage() {
       await queryClient.invalidateQueries({ queryKey: ['worship', 'newyear'] })
     },
     onError: (e) => toast.error(e?.response?.data?.message ?? e?.message ?? '영상 업데이트에 실패했습니다.'),
+  })
+
+  const saveScriptureMutation = useMutation({
+    mutationFn: updateNewYearScripture,
+    onSuccess: async (res) => {
+      toast.success(res?.message ?? '저장되었습니다.')
+      await queryClient.invalidateQueries({ queryKey: ['worship', 'newyear'] })
+    },
+    onError: (e) => toast.error(e?.response?.data?.message ?? e?.message ?? '본문 참조 저장에 실패했습니다.'),
   })
 
   const uploadPdfMutation = useMutation({
@@ -197,6 +211,11 @@ export default function NewYearServicePage() {
               <p className="text-xl md:text-2xl lg:text-3xl font-light text-[#FAF9F6]/90 mb-12 break-keep">
                 {description}
               </p>
+              {scripture && (
+                <div className="flex items-center justify-center gap-4 text-sm font-mono text-[#FAF9F6]/60 uppercase tracking-widest border-t border-[#FAF9F6]/20 pt-8">
+                  <span>{scripture}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -205,7 +224,22 @@ export default function NewYearServicePage() {
       {/* ── 관리자 컨트롤 ────────────────────────────────────────── */}
       {isAdmin && (
         <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
-          <div className="max-w-[1600px] mx-auto flex justify-end gap-3">
+          <div className="max-w-[1600px] mx-auto flex flex-wrap justify-end items-center gap-3">
+            <input
+              type="text"
+              value={scriptureInput}
+              onChange={(e) => setScriptureInput(e.target.value)}
+              placeholder="본문 성경 참조 (예: 겔36:22-31)"
+              className="px-3 py-2 rounded-lg border border-amber-300 text-sm w-56"
+            />
+            <button
+              type="button"
+              onClick={() => saveScriptureMutation.mutate({ scripture: scriptureInput.trim() })}
+              disabled={saveScriptureMutation.isPending || scriptureInput.trim() === scripture}
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition text-sm font-medium disabled:opacity-50"
+            >
+              {saveScriptureMutation.isPending ? '저장 중...' : '본문 참조 저장'}
+            </button>
             <label className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
               uploadPdfMutation.isPending
                 ? 'bg-slate-400 text-white cursor-not-allowed'
@@ -297,10 +331,15 @@ export default function NewYearServicePage() {
               {pdfUrl && (
                 <div className="bg-[#F4F2EA] border-b border-[#E5E5E5] p-8 md:p-16 lg:p-24 xl:px-32 xl:py-20">
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-                    <div className="flex-1">
-                      <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#2C2C2C] font-mono mb-4 block">PDF Document</span>
-                      <h3 className="text-2xl md:text-3xl font-bold text-[#2C2C2C] mb-2 break-keep">설교 녹취록 PDF</h3>
-                      <p className="text-[#737373] font-light">{title} 설교 녹취록 파일</p>
+                    <div className="flex items-center gap-6 flex-1">
+                      <div className="w-14 h-14 bg-red-100 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
+                        <FilePdf size={28} weight="fill" />
+                      </div>
+                      <div>
+                        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#2C2C2C] font-mono mb-1 block">PDF Document</span>
+                        <h3 className="text-xl md:text-2xl font-bold text-[#2C2C2C] break-keep">설교 녹취록 PDF</h3>
+                        <p className="text-[#737373] font-light text-sm mt-1">{title} 설교 녹취록 파일</p>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -339,6 +378,8 @@ export default function NewYearServicePage() {
           </article>
         </div>
       </section>
+
+      <BiblePassageSection scripture={scripture} />
 
       {isModalOpen && (
         <TranscriptEditModal

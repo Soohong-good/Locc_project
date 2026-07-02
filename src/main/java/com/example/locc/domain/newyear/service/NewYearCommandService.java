@@ -120,6 +120,16 @@ public class NewYearCommandService {
     }
 
     /**
+     * 본문 성경 참조 업데이트
+     */
+    public void updateScripture(String scripture) {
+        NewYear newYear = getCurrentOrCreate();
+        newYear.updateScripture(scripture);
+        newYearRepository.save(newYear);
+        log.info("송구영신예배 본문 성경 참조 업데이트: {}", scripture);
+    }
+
+    /**
      * 설교 PDF 업로드
      * - 기존 PDF가 있으면 삭제 후 새 파일로 교체
      */

@@ -2,6 +2,7 @@ package com.example.locc.domain.newyear.controller;
 
 import com.example.locc.common.ApiResponse;
 import com.example.locc.domain.newyear.dto.request.NewYearPlaylistUpdateRequest;
+import com.example.locc.domain.newyear.dto.request.NewYearScriptureUpdateRequest;
 import com.example.locc.domain.newyear.dto.request.NewYearTranscriptUpdateRequest;
 import com.example.locc.domain.newyear.dto.response.NewYearResponse;
 import com.example.locc.domain.newyear.service.NewYearCommandService;
@@ -55,6 +56,13 @@ public class NewYearApiController {
     public ResponseEntity<ApiResponse<Void>> updateTranscript(@RequestBody NewYearTranscriptUpdateRequest request) {
         newYearCommandService.updateTranscript(request.getTranscript());
         return ResponseEntity.ok(ApiResponse.ok(null, "녹취본이 저장되었습니다."));
+    }
+
+    @PutMapping("/scripture")
+    @PreAuthorize("hasAnyRole('ADMIN','OPERATOR')")
+    public ResponseEntity<ApiResponse<Void>> updateScripture(@RequestBody NewYearScriptureUpdateRequest request) {
+        newYearCommandService.updateScripture(request.getScripture());
+        return ResponseEntity.ok(ApiResponse.ok(null, "본문 성경 참조가 저장되었습니다."));
     }
 
     @PostMapping(value = "/pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
