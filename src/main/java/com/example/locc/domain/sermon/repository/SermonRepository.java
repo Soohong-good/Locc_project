@@ -53,8 +53,8 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
     Page<Sermon> findByCategory(@Param("category") String category, Pageable pageable);
 
     /**
-     * 카테고리 + 부 구분 조회 (주일오전 1부/2부, 기타예배 수요/금요)
-     * serviceNumber가 null인 경우도 포함 — 기존 데이터 호환용
+     * 카테고리 + 부 구분 조회 (주일오전 1부/2부)
+     * serviceNumber가 null인 경우도 포함
      */
     @EntityGraph(attributePaths = {"author"})
     @Query("SELECT s FROM Sermon s " +
@@ -67,7 +67,7 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
 
     /**
      * 카테고리 + 부 구분 + 검색 (제목 + 본문 + 설교자, serviceNumber null 포함)
-     * - 기타예배 수요/금요 검색용
+     * - 수요예배/금요기도회 검색용
      */
     @EntityGraph(attributePaths = {"author"})
     @Query("SELECT s FROM Sermon s " +
@@ -177,6 +177,22 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
      * 특정 날짜 이후 생성된 설교 개수 (Admin용)
      */
     Long countByCreatedAtAfter(java.time.LocalDateTime dateTime);
+
+    /**
+     * 카테고리 내 주어진 날짜보다 이전인 가장 가까운 날짜 1건 (상세 페이지 "이전 설교" 네비게이션용)
+     */
+    @Query("SELECT DISTINCT s.sermonDate FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND s.sermonDate < :date ORDER BY s.sermonDate DESC")
+    List<java.time.LocalDate> findPrevDates(@Param("category") String category,
+                                             @Param("date") java.time.LocalDate date,
+                                             Pageable pageable);
+
+    /**
+     * 카테고리 내 주어진 날짜보다 이후인 가장 가까운 날짜 1건 (상세 페이지 "다음 설교" 네비게이션용)
+     */
+    @Query("SELECT DISTINCT s.sermonDate FROM Sermon s WHERE s.category = :category AND s.sermonDate IS NOT NULL AND s.sermonDate > :date ORDER BY s.sermonDate ASC")
+    List<java.time.LocalDate> findNextDates(@Param("category") String category,
+                                             @Param("date") java.time.LocalDate date,
+                                             Pageable pageable);
 
     // ─────────────────────────────────────────────
     // YouTube 자동 동기화용

@@ -22,12 +22,21 @@ public class SundayMorningGroupDetailResponse {
     /** 2부 설교 전체 상세 (없으면 null) */
     private final SermonDetailResponse part2;
 
+    /** 이전 설교 날짜 (없으면 null) — 상세 페이지 "이전 설교 보기" 네비게이션용 */
+    private final LocalDate prevDate;
+
+    /** 다음 설교 날짜 (없으면 null) — 상세 페이지 "다음 설교 보기" 네비게이션용 */
+    private final LocalDate nextDate;
+
     public static SundayMorningGroupDetailResponse of(
-            LocalDate sermonDate, SermonDetailResponse part1, SermonDetailResponse part2) {
+            LocalDate sermonDate, SermonDetailResponse part1, SermonDetailResponse part2,
+            LocalDate prevDate, LocalDate nextDate) {
         return SundayMorningGroupDetailResponse.builder()
                 .sermonDate(sermonDate)
                 .part1(part1)
                 .part2(part2)
+                .prevDate(prevDate)
+                .nextDate(nextDate)
                 .build();
     }
 }

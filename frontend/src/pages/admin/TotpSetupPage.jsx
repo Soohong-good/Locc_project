@@ -38,7 +38,7 @@ const TotpSetupPage = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto py-16 px-6">
+    <div className="h-full overflow-y-auto max-w-md mx-auto py-16 px-6">
       <h1 className="text-2xl font-light text-slate-900 mb-2">2차 인증 설정</h1>
       <p className="text-sm text-slate-500 mb-8">Google Authenticator 앱으로 2차 인증을 설정합니다.</p>
 

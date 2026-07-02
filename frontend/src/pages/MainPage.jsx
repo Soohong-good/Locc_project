@@ -1,20 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getLatestSermonByCategory, getSundayMorningData, getSundayAfternoonData, getWeekdayData } from '@/api/sermons'
+import {
+  ArrowRight, ArrowUpRight, Play, X,
+  Baby, Star, Backpack, Books, GraduationCap, Globe, Handshake, Heartbeat,
+  SpeakerNone, Plus, MapPin,
+} from '@phosphor-icons/react'
+import { getLatestSermonByCategory, getWeekdayData } from '@/api/sermons'
 import { fetchNewYear } from '@/api/newYearApi'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
+import { getChoirVideos } from '@/api/choir'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import PopupOverlay from '@/components/common/PopupOverlay'
 import KakaoMap from '@/components/ui/KakaoMap'
 import useAuthStore from '@/stores/authStore'
-
-// ── 비로그인 갤러리 대표 이미지 ──────────────────────────────────────────
-// 추후 이미지 파일을 public/images/ 에 추가하고 경로를 입력하세요
-// 예: '/images/gallery-placeholder.jpg'
-const GALLERY_PLACEHOLDER_IMG = ''
 
 function extractVideoId(url) {
   if (!url) return null
@@ -28,9 +29,10 @@ function extractVideoId(url) {
 function fmtDate(val) {
   if (!val) return ''
   const d = new Date(val)
-  return `${d.getFullYear()}. ${String(d.getMonth()+1).padStart(2,'0')}. ${String(d.getDate()).padStart(2,'0')}`
+  return `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}`
 }
 
+// ── 비디오 모달 ──────────────────────────────────────────────────
 const VideoModal = ({ videoId, onClose }) => {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -39,292 +41,598 @@ const VideoModal = ({ videoId, onClose }) => {
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
   }, [onClose])
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
-      <button onClick={onClose} className="absolute top-6 right-6 text-white hover:text-slate-300 z-10">
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <button onClick={onClose} className="absolute top-6 right-6 text-white/70 hover:text-white transition-colors">
+        <X size={32} />
       </button>
-      <div className="w-full max-w-5xl aspect-video">
-        <iframe src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-          frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen className="w-full h-full" />
+      <div className="w-full max-w-5xl mx-4 aspect-video" onClick={(e) => e.stopPropagation()}>
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+          className="w-full h-full"
+          allow="autoplay; encrypted-media"
+          allowFullScreen
+        />
       </div>
     </div>
   )
 }
 
+// ── 히어로 섹션 ──────────────────────────────────────────────────
+// 모바일: 이미지를 섹션 배경으로 깔고 어두운 오버레이 위에 흰 텍스트
+// 데스크탑(lg+): 기존 좌(텍스트, 흰 배경) / 우(이미지) 분할 레이아웃 유지
+const HeroSection = () => (
+  <section className="relative pt-20 border-b border-neutral-200 overflow-hidden">
+    {/* 모바일 전용 배경 이미지 + 오버레이 */}
+    <div className="absolute inset-0 lg:hidden">
+      <img
+        src="/images/bg-hero.jpg"
+        alt=""
+        className="w-full h-full object-cover"
+        onError={(e) => { e.currentTarget.style.display = 'none' }}
+      />
+      <div className="absolute inset-0 bg-neutral-900/80" />
+    </div>
 
-const css = `
-  :root { --navy:#1e3a5f; --navy-light:#274d7a; --gold:#ffffff; --gold-light:#f3f6fb; --bg:#f3f6fb; --text:#1a2e4a; }
+    <div className="relative max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-5rem)] divide-y lg:divide-y-0 lg:divide-x divide-neutral-200 border-x border-neutral-200 lg:bg-white">
+      <div className="lg:col-span-7 flex flex-col justify-center p-8 md:p-16 lg:p-24 xl:p-32 bg-transparent lg:bg-white">
+        <div className="flex items-center gap-4 mb-10">
+          <span className="w-12 h-px bg-white lg:bg-neutral-900" />
+          <span className="text-sm uppercase tracking-[0.2em] font-semibold text-white/70 lg:text-neutral-400 font-mono">
+            2026 Church Motto
+          </span>
+        </div>
+        <h1 className="text-6xl md:text-8xl lg:text-[6.5rem] font-bold tracking-tighter leading-[1.1] text-white lg:text-neutral-900 mb-10 break-keep">
+          "여호와의 거룩한<br />
+          이름을 위함이라"
+        </h1>
+        <p className="text-[26px] text-white/80 lg:text-neutral-400 mb-12 font-medium">에스겔 36:22</p>
+        <div className="space-y-6 text-white/90 lg:text-neutral-500 leading-relaxed font-light break-keep max-w-lg mb-16 text-2xl">
+          <p>"그러므로 너는 이스라엘 족속에게 이르기를 주 여호와께서 이같이 말씀하시되</p>
+          <p>
+            이스라엘 족속아 내가 이렇게 행함은{' '}
+            <strong className="font-medium text-white lg:text-neutral-900">너희를 위함이 아니요</strong>{' '}
+            너희가 들어간 그 이방 중에서 더럽힌{' '}
+            <strong className="font-medium text-white lg:text-neutral-900">나의 거룩한 이름을 위함이라</strong>"
+          </p>
+        </div>
+        <Link
+          to="/salvation"
+          className="group inline-flex items-center gap-4 text-base font-bold tracking-[0.1em] uppercase border-b border-white lg:border-neutral-900 text-white lg:text-neutral-900 pb-2 hover:text-white/70 lg:hover:text-neutral-500 hover:border-white/70 lg:hover:border-neutral-500 transition-all w-fit"
+        >
+          <span>복음말씀 듣기</span>
+          <ArrowRight size={18} className="transform group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+      <div className="hidden lg:block lg:col-span-5 relative min-h-full bg-neutral-50">
+        <img
+          src="/images/bg-hero.jpg"
+          alt="교회 전경"
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      </div>
+    </div>
+  </section>
+)
 
-  .dt-root { font-family:'Noto Sans KR',sans-serif; color:var(--text); background:#fff; }
-  .dt-wrap  { max-width:1140px; margin:0 auto; padding:0 24px; }
+// ── 예배 소개 섹션 ───────────────────────────────────────────────
+const SCRIPTURES = [
+  {
+    num: '01',
+    ref: '이사야 43:7',
+    text: '내 이름으로 불려지는 모든 자 곧\n내가 내 영광을 위하여 창조한 자를 오게 하라\n그를 내가 지었고 그를 내가 만들었느니라',
+  },
+  {
+    num: '02',
+    ref: '시편 16:11',
+    text: '주께서 생명의 길을 내게 보이시리니\n주의 앞에는 충만한 기쁨이 있고\n주의 오른쪽에는 영원한 즐거움이 있나이다',
+  },
+  {
+    num: '03',
+    ref: '요한복음 4:23',
+    text: '아버지께 참되게 예배하는 자들은\n영과 진리로 예배할 때가 오나니 곧 이 때라\n아버지께서는 자기에게 이렇게 예배하는 자들을 찾으시느니라',
+  },
+]
 
-  /* ── HERO ── */
-  .dt-hero { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#000; position:relative; overflow:hidden; text-align:center; }
-  .dt-hero-bg { position:absolute; inset:0; background:linear-gradient(rgba(60,60,60,.72),rgba(40,40,40,.80)), url('/images/bg-hero.jpg') center/cover; }
-  .dt-hero-content { max-width:820px; width:100%; padding:140px 24px 100px; position:relative; z-index:2; box-sizing:border-box; }
-  .dt-hero-eyebrow { display:inline-block; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.75); border:1px solid rgba(255,255,255,.35); padding:7px 18px; margin-bottom:36px; }
-  .dt-hero-title { font-size:clamp(44px,6vw,80px); font-weight:800; color:#fff; line-height:1.2; margin-bottom:20px; letter-spacing:-.01em; }
-  .dt-hero-ref { font-size:30px; color:rgba(255,255,255,.55); margin-bottom:32px; letter-spacing:.04em; }
-  .dt-hero-rule { width:40px; height:1px; background:rgba(255,255,255,.3); margin:0 auto 36px; }
-  .dt-hero-quote { font-size:26px; color:rgba(255,255,255,.75); line-height:2; margin-bottom:48px; }
-  .dt-hero-quote strong { color:#fff; font-weight:700; }
-  .dt-hero-actions { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
-  .dt-hero-content { animation:heroIn 1.1s cubic-bezier(.16,1,.3,1) both; }
-  @keyframes heroIn { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:none; } }
-  .dt-hero-scroll { position:absolute; bottom:36px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; color:rgba(255,255,255,.4); font-size:10px; letter-spacing:.1em; text-transform:uppercase; }
-  .dt-scroll-line { width:1px; height:40px; background:linear-gradient(to bottom,transparent,rgba(255,255,255,.4)); }
+const AboutWorshipSection = () => (
+  <section className="border-b border-neutral-200 bg-white">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-neutral-200 border-x border-neutral-200">
+      <div className="lg:col-span-5 p-8 md:p-16 lg:p-24 xl:p-32 flex flex-col justify-center bg-white">
+        <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-6 block">
+          About Worship
+        </span>
+        <h2 className="text-5xl lg:text-6xl font-bold tracking-tight mb-12 break-keep">그리스도 사랑교회의 예배</h2>
+        <h3 className="text-3xl font-bold mb-6 text-neutral-900 break-keep">우리의 믿음</h3>
+        <div className="space-y-6 text-neutral-500 text-[20px] leading-relaxed font-light break-keep">
+          <p>"하나님을 영화롭게 하며 그를 영원토록 즐거워하는 것"을 삶의 제일 되는 목적으로 삼은 성도들이 모여 영과 진리로 예배를 드립니다.</p>
+          <p>우리는 교회의 여러 사역 중 예배를 가장 소중히 여기며, 살아계신 삼위일체 하나님을 경배하고 기도하며, 선포되는 강해 설교를 통해 하나님의 말씀을 듣습니다.</p>
+        </div>
+      </div>
+      <div className="lg:col-span-7 flex flex-col divide-y divide-neutral-200 bg-neutral-50/30">
+        {SCRIPTURES.map(({ num, ref, text }) => (
+          <div key={num} className="flex-1 p-8 md:p-16 lg:p-20 flex flex-col justify-center hover:bg-neutral-50 transition-colors">
+            <span className="text-[28px] font-mono text-neutral-400 mb-6 block">{num}</span>
+            <h4 className="text-[24px] font-bold mb-4">{ref}</h4>
+            <p className="text-neutral-500 text-[20px] font-light leading-relaxed break-keep max-w-xl whitespace-pre-line">{text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)
 
-  /* ── BUTTONS ── */
-  .dt-btn { display:inline-flex; align-items:center; gap:8px; padding:15px 32px; border-radius:8px; font-size:16px; font-weight:600; text-decoration:none; transition:all .2s; cursor:pointer; border:none; }
-  .dt-btn-primary { background:var(--gold); color:var(--navy); }
-  .dt-btn-primary:hover { background:#e8eef5; }
-  .dt-btn-outline { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,.4); }
-  .dt-btn-outline:hover { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.7); }
-  .dt-btn-navy { background:var(--navy); color:#fff; }
-  .dt-btn-navy:hover { background:var(--navy-light); }
+// ── 예배 안내 섹션 ───────────────────────────────────────────────
+const SUNDAY = [
+  { name: '1부 예배', time: '09:00', place: '본당' },
+  { name: '2부 예배', time: '11:00', place: '본당' },
+  { name: '오후 예배', time: '15:00', place: '본당' },
+]
+const WEEKDAY = [
+  { name: '수요 예배', time: '20:00', place: '본당' },
+  { name: '금요 기도회', time: '21:00', place: '본당' },
+  { name: '새벽 기도', time: '05:30', place: '101호' },
+]
+const DEPARTMENTS = [
+  { name: '태영아부', time: '13:30', place: '204호' },
+  { name: '유아유치부', time: '11:00', place: '204호' },
+  { name: '초등부', time: '09:00', place: '206호' },
+  { name: '중·고등부', time: '10:30', place: '205호' },
+  { name: '대학청년부', time: '13:00', place: '교육관3층' },
+  { name: '다민족부', time: '13:00', place: '206호' },
+  { name: '새가족부', time: '10:00', place: '101호' },
+  { name: '치유부', time: '13:10', place: '101호' },
+]
 
-  /* ── WORSHIP ── */
-  .dt-worship { background:var(--navy); padding:0; }
-  .dt-worship-grid { display:grid; grid-template-columns:repeat(3,1fr); }
-  .dt-worship-col { padding:48px 36px 52px; border-right:1px solid rgba(255,255,255,.12); }
-  .dt-worship-col:last-child { border-right:none; }
-  .dt-worship-col-label { font-size:17px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:24px; padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.12); }
-  .dt-worship-row { display:flex; align-items:center; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.06); gap:8px; }
-  .dt-worship-row:last-child { border-bottom:none; }
-  .dt-worship-row-name { font-size:24px; font-weight:600; color:rgba(255,255,255,.8); flex:1; }
-  .dt-worship-row-time { font-size:30px; font-weight:800; color:var(--gold); min-width:80px; text-align:right; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
-  .dt-worship-row-loc { font-size:16px; color:rgba(255,255,255,.4); min-width:68px; text-align:right; }
-  /* 부서예배 컬럼 — 항목이 많아 행 크기 축소 */
-  .dt-worship-col--dept .dt-worship-row { padding:7px 0; }
-  .dt-worship-col--dept .dt-worship-row-name { font-size:17px; }
-  .dt-worship-col--dept .dt-worship-row-time { font-size:21px; min-width:64px; }
-  .dt-worship-col--dept .dt-worship-row-loc  { font-size:13px; min-width:60px; }
-  @media(max-width:768px){
-    .dt-worship-grid { grid-template-columns:1fr; }
-    .dt-worship-col { border-right:none; border-bottom:1px solid rgba(255,255,255,.12); }
-    .dt-worship-col:last-child { border-bottom:none; }
-  }
+const ScheduleItem = ({ name, time, place, small }) => (
+  <li className={`flex justify-between items-end ${small ? 'py-3' : 'py-5'} border-b border-neutral-200 group`}>
+    <span className="text-lg font-medium text-neutral-900 group-hover:text-neutral-500 transition-colors">{name}</span>
+    <div className={`${small ? 'flex gap-4 items-baseline' : 'text-right'}`}>
+      {small && <span className="text-sm text-neutral-400">{place}</span>}
+      <span className={`${small ? 'text-xl' : 'block text-3xl'} font-bold font-mono tracking-tighter text-neutral-900`}>{time}</span>
+      {!small && <span className="text-sm text-neutral-400">{place}</span>}
+    </div>
+  </li>
+)
 
-  /* ── SECTION COMMONS ── */
-  .dt-sec { padding:100px 0; }
-  .dt-label { font-size:13px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--navy); opacity:.5; margin-bottom:12px; }
-  .dt-h2 { font-size:clamp(34px,4vw,52px); font-weight:800; color:var(--navy); line-height:1.2; margin-bottom:16px; }
-  .dt-div { width:40px; height:3px; background:var(--navy); opacity:.25; border-radius:2px; margin-bottom:28px; }
-  .dt-sub { font-size:18px; color:#666; line-height:1.8; max-width:520px; margin-bottom:48px; }
-  .dt-see-all { font-size:16px; font-weight:600; color:var(--navy); text-decoration:none; border-bottom:1px solid rgba(30,58,95,.3); padding-bottom:2px; transition:opacity .2s; }
-  .dt-see-all:hover { opacity:.6; }
+const ScheduleSection = () => (
+  <section className="border-b border-neutral-200 bg-white">
+    <div className="max-w-[1600px] mx-auto p-8 md:p-16 lg:p-24 border-x border-b border-neutral-200 bg-white">
+      <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-4 block">Schedule</span>
+      <h2 className="text-5xl font-bold tracking-tight break-keep">예배 안내</h2>
+    </div>
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-neutral-200 border-x border-neutral-200 bg-white">
+      <div className="p-8 md:p-16 lg:p-20">
+        <span className="text-sm font-mono text-neutral-400 mb-6 block uppercase tracking-widest">Sunday</span>
+        <h3 className="text-3xl font-bold mb-12 break-keep">주일예배</h3>
+        <ul>{SUNDAY.map((s) => <ScheduleItem key={s.name} {...s} />)}</ul>
+      </div>
+      <div className="p-8 md:p-16 lg:p-20">
+        <span className="text-sm font-mono text-neutral-400 mb-6 block uppercase tracking-widest">Weekday</span>
+        <h3 className="text-3xl font-bold mb-12 break-keep">주중예배</h3>
+        <ul>{WEEKDAY.map((s) => <ScheduleItem key={s.name} {...s} />)}</ul>
+      </div>
+      <div className="p-8 md:p-16 lg:p-20">
+        <span className="text-sm font-mono text-neutral-400 mb-6 block uppercase tracking-widest">Department</span>
+        <h3 className="text-3xl font-bold mb-12 break-keep">부서예배</h3>
+        <ul>{DEPARTMENTS.map((s) => <ScheduleItem key={s.name} {...s} small />)}</ul>
+      </div>
+    </div>
+  </section>
+)
 
-  /* ── SCROLL REVEAL ── */
-  .dt-fade,.dt-fade-l,.dt-fade-r { transition:opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1); }
-  .dt-js .dt-fade   { opacity:0; transform:translateY(22px); }
-  .dt-js .dt-fade-l { opacity:0; transform:translateY(18px) translateX(-10px); }
-  .dt-js .dt-fade-r { opacity:0; transform:translateY(18px) translateX(10px); }
-  .dt-js .dt-fade.visible,
-  .dt-js .dt-fade-l.visible,
-  .dt-js .dt-fade-r.visible { opacity:1; transform:none; }
+// ── 강단 말씀 섹션 ───────────────────────────────────────────────
+const SERMON_TABS = [
+  { label: '송구영신예배', href: '/worship/newyear' },
+  { label: '최근 설교',   href: '/worship/sermon/sunday-morning' },
+]
 
-  /* ── INTRO ── */
-  .dt-intro { background:var(--bg); }
-  .dt-intro-grid { display:grid; grid-template-columns:1fr 1fr; gap:72px; align-items:center; }
-  .dt-intro-imgwrap { position:relative; }
-  .dt-intro-img { width:100%; border-radius:16px; object-fit:cover; aspect-ratio:4/5; display:block; }
-  .dt-intro-badge { position:absolute; bottom:-20px; right:-20px; background:var(--navy); color:#fff; border-radius:12px; padding:18px 24px; text-align:center; box-shadow:0 8px 32px rgba(30,58,95,.3); }
-  .dt-badge-num { font-size:32px; font-weight:800; color:var(--gold); line-height:1; }
-  .dt-badge-txt { font-size:11px; margin-top:4px; opacity:.7; }
-  .dt-verse { border-left:3px solid var(--navy); opacity:.8; padding:16px 20px; background:rgba(30,58,95,.05); border-radius:0 8px 8px 0; font-size:15px; font-style:italic; color:var(--navy); line-height:1.7; margin-bottom:24px; }
-  .dt-verse-ref { font-size:12px; font-style:normal; color:#888; margin-top:6px; }
-  .dt-intro-text { font-size:17px; color:#555; line-height:1.9; margin-bottom:16px; }
+const CATEGORY_LABELS = [
+  { key: 'morning',   label: '주일 오전 예배' },
+  { key: 'afternoon', label: '주일 오후 예배' },
+  { key: 'wednesday', label: '수요 예배' },
+  { key: 'friday',    label: '금요 기도회' },
+]
 
-  /* ── WORSHIP ABOUT ── */
-  .dt-worship-about { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start; margin-top:8px; }
-  .dt-worship-about-sub { font-size:22px; font-weight:700; color:var(--navy); margin-bottom:20px; }
-  .dt-worship-verses { display:flex; flex-direction:column; gap:0; }
-  .dt-worship-verse-card { padding:28px 28px 28px 24px; border-left:3px solid var(--navy); background:#fff; margin-bottom:12px; border-radius:0 8px 8px 0; box-shadow:0 2px 12px rgba(0,0,0,.05); }
-  .dt-worship-verse-ref { font-size:14px; color:#999; font-weight:600; letter-spacing:.06em; margin-bottom:10px; }
-  .dt-worship-verse-text { font-size:16px; color:var(--navy); line-height:1.9; }
-  @media (max-width:900px) { .dt-worship-about { grid-template-columns:1fr; gap:36px; } }
+const SermonSection = ({ newYearData, categorySermons, onPlayVideo }) => {
+  const [activeTab, setActiveTab] = useState(0)
 
+  const newYearVideoId = newYearData?.latestVideoId ?? null
+  const thumbSrc = newYearVideoId
+    ? `https://img.youtube.com/vi/${newYearVideoId}/maxresdefault.jpg`
+    : null
 
-  /* ── SERMON TABS ── */
-  .dt-sermon-tabs { display:flex; gap:0; margin-bottom:40px; border-bottom:1px solid #e8ecf2; }
-  .dt-sermon-tab { padding:10px 20px; font-size:14px; font-weight:600; color:#aab; border-bottom:2px solid transparent; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; transition:color .2s,border-color .2s; letter-spacing:.04em; }
-  .dt-sermon-tab:hover { color:var(--navy); }
-  .dt-sermon-tab.active { color:var(--navy); border-bottom-color:var(--navy); }
-  /* 송구영신예배 대형 카드 */
-  .dt-newyear-feature { max-width:1060px; margin:0 auto; cursor:pointer; }
-  .dt-newyear-thumb { position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.15); }
-  .dt-newyear-thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
-  .dt-newyear-feature:hover .dt-newyear-thumb img { transform:scale(1.03); }
-  .dt-newyear-play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(10,18,40,.25); transition:background .2s; }
-  .dt-newyear-feature:hover .dt-newyear-play { background:rgba(10,18,40,.4); }
-  .dt-newyear-play-circle { width:72px; height:72px; background:rgba(255,255,255,.92); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(0,0,0,.2); transition:transform .2s; }
-  .dt-newyear-feature:hover .dt-newyear-play-circle { transform:scale(1.08); }
-  .dt-newyear-info { text-align:center; margin-top:20px; }
-  .dt-newyear-tag { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--navy); opacity:.5; margin-bottom:8px; }
-  .dt-newyear-title { font-size:22px; font-weight:700; color:var(--navy); line-height:1.4; }
+  return (
+    <>
+      <section className="border-b border-neutral-200 bg-white">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-neutral-200 border-x border-neutral-200">
+          {/* 왼쪽 탭 */}
+          <div className="lg:col-span-5 p-8 md:p-16 lg:p-24 bg-white flex flex-col justify-between">
+            <div>
+              <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-6 block">
+                Sermon Archive
+              </span>
+              <h2 className="text-5xl lg:text-6xl font-bold tracking-tight mb-16 break-keep">강단 말씀</h2>
+              <div className="flex flex-col gap-2">
+                {SERMON_TABS.map((tab, i) => (
+                  <button
+                    key={tab.label}
+                    onClick={() => setActiveTab(i)}
+                    className={`flex justify-between items-center text-left py-5 border-b group transition-colors ${
+                      activeTab === i
+                        ? 'border-neutral-900 text-neutral-900'
+                        : 'border-neutral-200 text-neutral-400 hover:text-neutral-900'
+                    }`}
+                  >
+                    <span className={`text-xl group-hover:translate-x-2 transition-transform ${activeTab === i ? 'font-bold' : 'font-medium'}`}>
+                      {tab.label}
+                    </span>
+                    <ArrowRight size={20} className={activeTab !== i ? 'opacity-0 group-hover:opacity-100 transition-opacity' : ''} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="mt-16">
+              <Link
+                to={SERMON_TABS[activeTab].href}
+                className="inline-flex items-center gap-2 text-base font-bold tracking-[0.1em] uppercase hover:text-neutral-500 transition-colors border-b border-neutral-900 pb-1 hover:border-neutral-500"
+              >
+                전체 설교 보기 <ArrowUpRight size={18} />
+              </Link>
+            </div>
+          </div>
 
-  /* ── SERMON ── */
-  .dt-sermon-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:40px; }
-  .dt-sermon-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
-  .dt-sermon-card { border-radius:12px; overflow:hidden; border:1px solid #eee; transition:transform .2s,box-shadow .2s; }
-  .dt-sermon-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,.1); }
-  .dt-sermon-thumb { position:relative; aspect-ratio:16/9; overflow:hidden; }
-  .dt-sermon-thumb img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
-  .dt-sermon-card:hover .dt-sermon-thumb img { transform:scale(1.05); }
-  .dt-play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(30,58,95,.3); opacity:0; transition:opacity .2s; }
-  .dt-sermon-card:hover .dt-play-btn { opacity:1; }
-  .dt-play-circle { width:44px; height:44px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-  .dt-sermon-body { padding:20px; }
-  .dt-sermon-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:14px; color:#888; }
-  .dt-sermon-tag { background:rgba(30,58,95,.08); color:var(--navy); font-weight:600; font-size:13px; padding:3px 10px; border-radius:4px; }
-  .dt-sermon-title { font-size:18px; font-weight:700; color:var(--navy); margin-bottom:6px; line-height:1.4; }
-  .dt-sermon-speaker { font-size:15px; color:#666; margin-bottom:4px; }
-  .dt-sermon-verse { font-size:14px; color:var(--navy); opacity:.5; font-weight:600; }
+          {/* 오른쪽 콘텐츠 */}
+          <div className="lg:col-span-7">
+            {/* 탭 0: 송구영신예배 — 대형 썸네일 */}
+            {activeTab === 0 && (
+              <div
+                onClick={() => newYearVideoId && onPlayVideo(newYearVideoId)}
+                className={`relative group overflow-hidden min-h-[500px] bg-neutral-900 h-full ${newYearVideoId ? 'cursor-pointer' : 'cursor-default'}`}
+              >
+                {thumbSrc && (
+                  <img
+                    src={thumbSrc}
+                    alt={newYearData?.title || '송구영신예배'}
+                    className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-1000 ease-out"
+                    onError={(e) => {
+                      if (newYearVideoId) e.currentTarget.src = `https://img.youtube.com/vi/${newYearVideoId}/mqdefault.jpg`
+                    }}
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent group-hover:from-black/80 transition-colors duration-500" />
+                <div className="absolute inset-0 p-8 md:p-16 lg:p-24 flex flex-col justify-end">
+                  <span className="text-white/70 font-mono text-base mb-4 tracking-widest uppercase">
+                    송구영신예배
+                  </span>
+                  <h3 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-10 break-keep">
+                    {newYearData?.title || '송구영신예배'}
+                  </h3>
+                  {newYearVideoId && (
+                    <div className="w-16 h-16 bg-white text-neutral-900 flex items-center justify-center shadow-lg group-hover:bg-neutral-900 group-hover:text-white transition-colors duration-300">
+                      <Play size={20} weight="fill" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-  /* ── MINISTRY ── */
-  .dt-ministry-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-top:48px; }
-  .dt-ministry-item { background:#fff; border-radius:16px; padding:28px 24px 32px; border:1px solid #e8ecf2; transition:box-shadow .2s,transform .2s; }
-  .dt-ministry-item:hover { box-shadow:0 8px 28px rgba(30,58,95,.1); transform:translateY(-4px); }
-  .dt-ministry-icon { width:48px; height:48px; background:rgba(30,58,95,.07); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
-  .dt-ministry-icon svg { width:22px; height:22px; stroke:var(--navy); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-  .dt-ministry-name { font-size:17px; font-weight:700; color:var(--navy); margin-bottom:8px; }
-  .dt-ministry-desc { font-size:14px; color:#666; line-height:1.8; }
+            {/* 탭 1: 최근 설교 — 4개 카테고리 그리드 */}
+            {activeTab === 1 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-neutral-200 bg-neutral-200 gap-px">
+                {categorySermons.map(({ label, item }) => {
+                  const vid = item ? extractVideoId(item.videoUrl) : null
+                  return (
+                    <div
+                      key={label}
+                      className="bg-white p-8 hover:bg-neutral-50 transition-colors cursor-pointer group min-h-[260px] flex flex-col"
+                      onClick={() => {
+                        if (!item) return
+                        if (vid) onPlayVideo(vid)
+                      }}
+                    >
+                      {vid ? (
+                        <div className="relative aspect-video mb-6 overflow-hidden bg-neutral-100">
+                          <img
+                            src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`}
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-10 h-10 bg-white flex items-center justify-center">
+                              <Play size={16} weight="fill" className="text-neutral-900" />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="aspect-video mb-6 bg-neutral-100 flex items-center justify-center">
+                          <Play size={24} className="text-neutral-300" />
+                        </div>
+                      )}
+                      <span className="text-sm font-mono text-neutral-400 uppercase tracking-widest mb-2">{label}</span>
+                      <p className="text-lg font-bold text-neutral-900 leading-snug break-keep line-clamp-2">
+                        {item ? item.title : '등록된 설교가 없습니다'}
+                      </p>
+                      {item?.sermonDate && (
+                        <p className="text-sm text-neutral-400 mt-2 font-mono">{fmtDate(item.sermonDate)}</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}
 
-  /* ── NEWS ── */
-  .dt-news-layout { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
-  .dt-news-main { display:block; text-decoration:none; border-radius:12px; overflow:hidden; border:1px solid #eee; transition:box-shadow .2s; }
-  .dt-news-main:hover { box-shadow:0 8px 28px rgba(0,0,0,.1); }
-  .dt-news-main-img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; }
-  .dt-news-main-body { padding:24px; }
-  .dt-news-cat { font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--navy); opacity:.5; margin-bottom:8px; }
-  .dt-news-main-title { font-size:22px; font-weight:700; color:var(--navy); line-height:1.4; margin-bottom:10px; }
-  .dt-news-excerpt { font-size:15px; color:#666; line-height:1.8; margin-bottom:12px; }
-  .dt-news-date { font-size:14px; color:#aaa; }
-  .dt-news-list { display:flex; flex-direction:column; gap:12px; }
-  .dt-news-item { display:flex; gap:14px; align-items:center; text-decoration:none; padding:14px; border-radius:10px; border:1px solid #eee; transition:background .2s; }
-  .dt-news-item:hover { background:#fafafa; }
-  .dt-news-item-img { width:80px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0; }
-  .dt-news-item-cat { font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--navy); opacity:.5; margin-bottom:4px; }
-  .dt-news-item-title { font-size:15px; font-weight:600; color:var(--navy); line-height:1.4; margin-bottom:4px; }
-  .dt-news-item-date { font-size:13px; color:#bbb; }
+// ── 찬양대 영상 섹션 ─────────────────────────────────────────────
+const onChoirThumbError = (e) => {
+  const el = e.currentTarget
+  if (el.src.includes('maxresdefault')) el.src = el.src.replace('maxresdefault', 'hqdefault')
+}
 
-  /* ── GALLERY ── */
-  .dt-gallery { background:var(--navy); padding:60px 0 0; }
-  .dt-gallery-placeholder { width:100%; overflow:hidden; }
-  .dt-gallery-placeholder img { width:100%; max-height:500px; object-fit:cover; display:block; }
-  .dt-gallery-placeholder-empty { height:440px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:rgba(255,255,255,.2); }
-  .dt-gallery-top { margin-bottom:40px; }
-  .dt-gallery-top .dt-h2 { color:#fff; }
-  .dt-gallery-top .dt-label { color:rgba(255,255,255,.4); }
-  .dt-gallery-top .dt-div { background:rgba(255,255,255,.25); }
-  .dt-gallery-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:220px 220px 220px; gap:4px; }
-  .dt-gallery-cell { position:relative; overflow:hidden; }
-  .dt-gallery-cell.tall { grid-row:span 2; }
-  .dt-gallery-cell img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
-  .dt-gallery-cell:hover img { transform:scale(1.06); }
-  .dt-gallery-overlay { position:absolute; inset:0; background:rgba(20,40,70,.45); opacity:0; transition:opacity .3s; display:flex; flex-direction:column; justify-content:flex-end; }
-  .dt-gallery-cell:hover .dt-gallery-overlay { opacity:1; }
+const ChoirSection = ({ videos, onPlayVideo }) => (
+  <section className="border-b border-neutral-200 bg-white">
+    <div className="max-w-[1600px] mx-auto p-8 md:p-16 lg:p-24 border-x border-b border-neutral-200 bg-white flex items-end justify-between gap-6">
+      <div>
+        <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-4 block">Choir Video</span>
+        <h2 className="text-5xl font-bold tracking-tight break-keep">찬양대 영상</h2>
+      </div>
+      <Link
+        to="/praise/choir"
+        className="hidden sm:inline-flex items-center gap-2 text-base font-bold tracking-[0.1em] uppercase hover:text-neutral-500 transition-colors border-b border-neutral-900 pb-1 hover:border-neutral-500 shrink-0"
+      >
+        전체보기 <ArrowUpRight size={18} />
+      </Link>
+    </div>
+    {videos.length > 0 ? (
+      <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-neutral-200 gap-px border-x border-neutral-200">
+        {videos.map((video) => {
+          const vid = extractVideoId(video.videoUrl)
+          return (
+            <div
+              key={video.id}
+              onClick={() => vid && onPlayVideo(vid)}
+              className="bg-white p-6 md:p-10 group cursor-pointer"
+            >
+              <div className="aspect-video bg-neutral-100 relative overflow-hidden mb-6">
+                {vid ? (
+                  <img
+                    src={`https://img.youtube.com/vi/${vid}/maxresdefault.jpg`}
+                    alt={video.title}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    onError={onChoirThumbError}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Play size={24} className="text-neutral-300" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-neutral-900/30 flex items-center justify-center group-hover:bg-neutral-900/20 transition-colors">
+                  <div className="w-12 h-12 bg-white text-neutral-900 flex items-center justify-center">
+                    <Play size={18} weight="fill" />
+                  </div>
+                </div>
+              </div>
+              <span className="text-sm font-mono text-neutral-400 mb-2 block uppercase tracking-widest">
+                {video.choirName ?? 'Choir'}
+              </span>
+              <h4 className="text-base font-bold text-neutral-900 group-hover:text-neutral-500 transition-colors break-keep line-clamp-2">
+                {video.title}
+              </h4>
+            </div>
+          )
+        })}
+      </div>
+    ) : (
+      <div className="max-w-[1600px] mx-auto border-x border-neutral-200 bg-white py-20 text-center">
+        <p className="text-neutral-400 font-light">등록된 찬양대 영상이 없습니다</p>
+      </div>
+    )}
+  </section>
+)
 
-  /* ── CONTACT ── */
-  .dt-contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start; }
-  .dt-map-ph { background:#e8e6e0; border-radius:16px; aspect-ratio:4/3; position:relative; overflow:hidden; min-height:300px; }
-  .dt-map-pin { width:20px; height:20px; background:var(--navy); border-radius:50% 50% 50% 0; transform:rotate(-45deg); }
-  .dt-info-list { display:flex; flex-direction:column; gap:20px; margin-bottom:32px; }
-  .dt-info-row { display:flex; gap:14px; align-items:flex-start; }
-  .dt-info-icon { width:36px; height:36px; background:rgba(30,58,95,.06); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .dt-info-icon svg { stroke:var(--navy); fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-  .dt-info-label { font-size:13px; font-weight:700; color:#999; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px; }
-  .dt-info-value { font-size:16px; color:var(--navy); line-height:1.7; }
-  .dt-transport-title { font-size:16px; font-weight:700; color:var(--navy); margin-bottom:12px; }
-  .dt-transport-list { display:flex; flex-direction:column; gap:8px; }
-  .dt-transport-item { display:flex; gap:10px; align-items:flex-start; font-size:15px; color:#555; }
-  .dt-t-badge { font-size:12px; font-weight:700; padding:3px 9px; border-radius:4px; flex-shrink:0; margin-top:1px; }
-  .dt-subway { background:#2d6be4; color:#fff; }
-  .dt-bus    { background:#4caf50; color:#fff; }
-  .dt-car    { background:#888; color:#fff; }
+// ── 사역 부서 섹션 ───────────────────────────────────────────────
+const DEPT_CARDS = [
+  { icon: Baby,           name: '태영아부',   desc: '영아들을 말씀으로 돌보며 믿음의 첫 씨앗을 심어주는 부서입니다.',                       href: '/department/nursery' },
+  { icon: Star,           name: '유아유치부', desc: '유아들이 하나님의 사랑을 알아가며 밝고 건강하게 자라도록 인도합니다.',                   href: '/department/preschool' },
+  { icon: Backpack,       name: '초등부',     desc: '어린이들이 말씀 안에서 자라나고 믿음의 뿌리를 깊이 내리도록 양육합니다.',               href: '/department/children' },
+  { icon: Books,          name: '중·고등부',  desc: '청소년들이 말씀 안에서 정체성을 발견하고 하나님의 사람으로 성장하도록 돕습니다.',         href: '/department/youth' },
+  { icon: GraduationCap, name: '대학청년부', desc: '청년들이 하나님 안에서 비전을 발견하고 사명자로 세워지도록 함께합니다.',                 href: '/department/young-adults' },
+  { icon: Globe,          name: '다민족부',   desc: '다양한 민족이 한 몸으로 모여 복음을 나누며 함께 예배하는 공동체입니다.',                 href: '/department/multiethnic' },
+  { icon: Handshake,      name: '새가족부',   desc: '처음 방문하신 분들이 교회 가족으로 자연스럽게 정착하도록 따뜻하게 섬깁니다.',           href: '/department/newcomers' },
+  { icon: Heartbeat,      name: '치유부',     desc: '몸과 마음의 상처를 안고 있는 성도들이 주님 안에서 온전히 회복되도록 기도로 섬깁니다.',   href: '/department/healing' },
+]
 
+const DepartmentsSection = () => (
+  <section className="border-b border-neutral-200 bg-white">
+    <div className="max-w-[1600px] mx-auto p-8 md:p-16 lg:p-24 border-x border-b border-neutral-200 bg-white">
+      <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-4 block">Departments</span>
+      <h2 className="text-5xl font-bold tracking-tight break-keep">사역 부서</h2>
+    </div>
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-neutral-200 gap-px border-x border-neutral-200">
+      {DEPT_CARDS.map(({ icon: Icon, name, desc, href }) => (
+        <Link
+          key={name}
+          to={href}
+          className="bg-white p-8 md:p-12 hover:bg-neutral-50 transition-colors group flex flex-col h-full min-h-[300px]"
+        >
+          <Icon size={40} className="mb-8 text-neutral-300 group-hover:text-neutral-900 transition-colors" />
+          <h4 className="text-2xl font-bold mb-4">{name}</h4>
+          <p className="text-base text-neutral-500 font-light leading-relaxed mt-auto break-keep">{desc}</p>
+        </Link>
+      ))}
+    </div>
+  </section>
+)
 
-  @media (max-width:900px) {
-    .dt-intro-grid,.dt-contact-grid,.dt-news-layout { grid-template-columns:1fr; }
-    .dt-worship-grid { grid-template-columns:1fr 1fr; }
-    .dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr 1fr; }
-  }
-  @media (max-width:600px) {
-    .dt-worship-grid,.dt-sermon-grid,.dt-ministry-grid { grid-template-columns:1fr; }
-    .dt-gallery-grid { grid-template-columns:1fr 1fr; grid-template-rows:auto auto auto auto auto; }
-    .dt-gallery-cell.tall { grid-row:span 1; }
-  }
+// ── 공지 & 갤러리 섹션 ──────────────────────────────────────────
+const NoticeGallerySection = ({ notices, user, galleryImages, onNavigate }) => (
+  <section className="border-b border-neutral-200 bg-white">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 bg-neutral-200 gap-px border-x border-neutral-200">
+      {/* 공지 */}
+      <div className="bg-white p-8 md:p-16 lg:p-24 flex flex-col">
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-4 block">Notice</span>
+            <h2 className="text-4xl font-bold tracking-tight break-keep">교회 공지</h2>
+          </div>
+          <Link to="/notices" className="text-neutral-900 hover:text-neutral-400 transition-colors">
+            <Plus size={28} />
+          </Link>
+        </div>
+        {notices.length > 0 ? (
+          <ul className="flex-1 flex flex-col divide-y divide-neutral-100">
+            {notices.map((n) => (
+              <li key={n.id}>
+                <Link
+                  to={`/notices/${n.id}`}
+                  className="flex justify-between items-baseline gap-4 py-4 hover:text-neutral-500 transition-colors group"
+                >
+                  <span className="text-lg font-medium text-neutral-900 group-hover:text-neutral-500 transition-colors truncate">
+                    {n.isPinned && <span className="text-sm font-mono mr-2 text-neutral-400">📌</span>}
+                    {n.title}
+                  </span>
+                  <span className="text-sm text-neutral-400 shrink-0 font-mono">{fmtDate(n.createdAt)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="flex-1 flex flex-col justify-center border-t border-neutral-200 py-20">
+            <div className="text-center">
+              <SpeakerNone size={40} className="text-neutral-200 mb-4 mx-auto" />
+              <p className="text-neutral-400 font-light">등록된 공지가 없습니다</p>
+            </div>
+          </div>
+        )}
+      </div>
 
-  /* ── 모바일 폰트/레이아웃 보정 ── */
-  @media (max-width:640px) {
-    /* 한국어 단어 단위 줄바꿈 — "예" + "배" 쪼개짐 방지 */
-    .dt-hero-title, .dt-hero-quote, .dt-h2,
-    .dt-intro-text, .dt-worship-about-sub, .dt-worship-verse-text,
-    .dt-sermon-title, .dt-news-main-title, .dt-news-item-title,
-    .dt-ministry-name, .dt-ministry-desc, .dt-info-value { word-break:keep-all; }
+      {/* 갤러리 */}
+      <div className="bg-white p-8 md:p-16 lg:p-24 flex flex-col">
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-4 block">Gallery</span>
+            <h2 className="text-4xl font-bold tracking-tight break-keep">갤러리</h2>
+          </div>
+          <Link to="/department/gallery" className="text-neutral-900 hover:text-neutral-400 transition-colors">
+            <Plus size={28} />
+          </Link>
+        </div>
+        {user && galleryImages.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4">
+            {galleryImages.slice(0, 4).map((img) => (
+              <Link
+                key={img.id}
+                to={`/department/gallery/${img.id}`}
+                className="aspect-square bg-neutral-100 overflow-hidden relative group block"
+              >
+                <img
+                  src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
+                  alt={img.title}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-700"
+                  onError={(e) => { e.target.src = '/images/no-image.png' }}
+                />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex-1 flex flex-col justify-center border-t border-neutral-200 py-20">
+            <div className="text-center">
+              <p className="text-neutral-400 font-light">
+                {user ? '등록된 갤러리가 없습니다' : '로그인 후 갤러리를 확인할 수 있습니다'}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+)
 
-    /* Hero */
-    .dt-hero-content { padding:100px 20px 70px !important; }
-    .dt-hero-title   { font-size:clamp(22px,6.5vw,40px) !important; letter-spacing:-.02em; }
-    .dt-hero-ref     { font-size:17px !important; margin-bottom:20px; }
-    .dt-hero-quote   { font-size:13px !important; line-height:2.1; margin-bottom:32px; }
-    .dt-hero-eyebrow { font-size:11px !important; padding:5px 14px; }
+// ── 오시는 길 섹션 ───────────────────────────────────────────────
+const LocationSection = () => (
+  <section className="border-b border-neutral-200 bg-white">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-neutral-200 border-x border-neutral-200">
+      <div className="lg:col-span-5 p-8 md:p-16 lg:p-24 bg-white flex flex-col justify-center">
+        <span className="text-sm uppercase tracking-[0.2em] font-semibold text-neutral-400 font-mono mb-4 block">Location</span>
+        <h2 className="text-5xl font-bold tracking-tight mb-16 break-keep">오시는 길</h2>
+        <div className="space-y-12">
+          <div>
+            <h4 className="text-sm font-mono text-neutral-400 mb-3 uppercase tracking-widest">Address</h4>
+            <p className="text-xl font-medium leading-relaxed text-neutral-900 break-keep">
+              대구광역시 동구 안심로55길 59<br />그리스도사랑교회
+            </p>
+          </div>
+          <div>
+            <h4 className="text-sm font-mono text-neutral-400 mb-3 uppercase tracking-widest">Contact</h4>
+            <p className="text-xl font-medium leading-relaxed text-neutral-900">
+              T. 053-962-8948, 053-961-0931<br />
+              F. 053-961-0862<br />
+              E. cmedia881213@gmail.com
+            </p>
+          </div>
+          <div>
+            <h4 className="text-sm font-mono text-neutral-400 mb-3 uppercase tracking-widest">Transportation</h4>
+            <p className="text-base text-neutral-500 font-light leading-relaxed">
+              지하철: 1호선 반야월역 4번 출구 도보 10분<br />
+              버스: 경북교통앞 정류장 (805, 836, 동구4, 동구10, 북구3)<br />
+              주차: 교회 주차장 이용 가능
+            </p>
+          </div>
+          <Link
+            to="/church/contact"
+            className="inline-flex items-center gap-2 text-base font-bold tracking-[0.1em] uppercase hover:text-neutral-500 transition-colors border-b border-neutral-900 pb-1 hover:border-neutral-500"
+          >
+            자세히 보기 <MapPin size={16} />
+          </Link>
+        </div>
+      </div>
+      <div className="lg:col-span-7 min-h-[400px] overflow-hidden relative">
+        <KakaoMap />
+      </div>
+    </div>
+  </section>
+)
 
-    /* 섹션 공통 */
-    .dt-sec  { padding:56px 0; }
-    .dt-wrap { padding:0 20px; }
-    .dt-h2   { font-size:clamp(20px,6vw,32px); }
-    .dt-sub  { font-size:14px; margin-bottom:28px; }
-    .dt-label { font-size:11px; }
-
-    /* 예배시간표 */
-    .dt-worship-col          { padding:24px 14px 28px; }
-    .dt-worship-col-label    { font-size:12px; margin-bottom:14px; }
-    .dt-worship-row-name     { font-size:15px; }
-    .dt-worship-row-time     { font-size:19px; min-width:56px; }
-    .dt-worship-row-loc      { font-size:11px; min-width:44px; }
-
-    /* 설교 카드 */
-    .dt-sermon-title         { font-size:14px; }
-    .dt-sermon-body          { padding:12px; }
-    .dt-sermon-meta          { font-size:12px; }
-
-    /* 공지 */
-    .dt-news-main-title      { font-size:16px; }
-    .dt-news-excerpt         { font-size:13px; }
-    .dt-news-item-title      { font-size:13px; }
-
-    /* 사역 부서 */
-    .dt-ministry-name        { font-size:15px; }
-    .dt-ministry-desc        { font-size:13px; }
-
-    /* 연락처 */
-    .dt-info-value           { font-size:14px; }
-    .dt-transport-item       { font-size:13px; }
-    .dt-transport-title      { font-size:14px; }
-  }
-`
-
+// ── 메인 페이지 ──────────────────────────────────────────────────
 export default function MainPage() {
   const navigate = useNavigate()
   const [modalVideoId, setModalVideoId] = useState(null)
-  const [sermonTab, setSermonTab] = useState('newyear')
   const { user } = useAuthStore()
 
-  const { data: morningLatest }   = useQuery({ queryKey: ['sermons', 'cat', 'morning'],   queryFn: () => getLatestSermonByCategory('주일오전'), staleTime: 5 * 60 * 1000 })
-  const { data: afternoonLatest } = useQuery({ queryKey: ['sermons', 'cat', 'afternoon'], queryFn: () => getLatestSermonByCategory('주일오후'), staleTime: 5 * 60 * 1000 })
-  const { data: wednesdayLatest } = useQuery({ queryKey: ['sermons', 'cat', 'wednesday'], queryFn: () => getWeekdayData({ type: 'wednesday', size: 1 }).then(r => r?.latestSermon ?? null), staleTime: 5 * 60 * 1000 })
-  const { data: fridayLatest }    = useQuery({ queryKey: ['sermons', 'cat', 'friday'],    queryFn: () => getWeekdayData({ type: 'friday',    size: 1 }).then(r => r?.latestSermon ?? null), staleTime: 5 * 60 * 1000 })
+  const { data: morningLatest }   = useQuery({
+    queryKey: ['sermons', 'cat', 'morning'],
+    queryFn: () => getLatestSermonByCategory('주일오전'),
+    staleTime: 5 * 60 * 1000,
+  })
+  const { data: afternoonLatest } = useQuery({
+    queryKey: ['sermons', 'cat', 'afternoon'],
+    queryFn: () => getLatestSermonByCategory('주일오후'),
+    staleTime: 5 * 60 * 1000,
+  })
+  const { data: wednesdayLatest } = useQuery({
+    queryKey: ['sermons', 'cat', 'wednesday'],
+    queryFn: () => getWeekdayData({ type: 'wednesday', size: 1 }).then(r => r?.latestSermon ?? null),
+    staleTime: 5 * 60 * 1000,
+  })
+  const { data: fridayLatest } = useQuery({
+    queryKey: ['sermons', 'cat', 'friday'],
+    queryFn: () => getWeekdayData({ type: 'friday', size: 1 }).then(r => r?.latestSermon ?? null),
+    staleTime: 5 * 60 * 1000,
+  })
 
   const categorySermons = [
-    { label: '주일 오전 예배', item: morningLatest   ?? null },
-    { label: '주일 오후 예배', item: afternoonLatest ?? null },
-    { label: '수요 예배',      item: wednesdayLatest ?? null },
-    { label: '금요 기도회',    item: fridayLatest    ?? null },
+    { key: 'morning',   label: '주일 오전 예배', item: morningLatest   ?? null },
+    { key: 'afternoon', label: '주일 오후 예배', item: afternoonLatest ?? null },
+    { key: 'wednesday', label: '수요 예배',      item: wednesdayLatest ?? null },
+    { key: 'friday',    label: '금요 기도회',    item: fridayLatest    ?? null },
   ]
 
   const { data: newYearData } = useQuery({
@@ -332,6 +640,13 @@ export default function MainPage() {
     queryFn: fetchNewYear,
     staleTime: Infinity,
   })
+
+  const { data: choirData } = useQuery({
+    queryKey: ['choir', 'latest', 4],
+    queryFn: () => getChoirVideos({ page: 0, size: 4 }),
+    staleTime: 5 * 60 * 1000,
+  })
+  const choirVideos = choirData?.content ?? []
 
   const { data: noticesData } = useQuery({
     queryKey: ['notices', 'latest', 5],
@@ -342,520 +657,38 @@ export default function MainPage() {
 
   const { data: galleryData } = useQuery({
     queryKey: ['gallery', 'public', 'recent'],
-    queryFn: () => getPublicRecentGallery({ size: 11 }),
+    queryFn: () => getPublicRecentGallery({ size: 4 }),
     staleTime: 5 * 60 * 1000,
-    enabled: !!user,   // 로그인 시에만 API 호출
+    enabled: !!user,
   })
   const galleryImages = galleryData?.content ?? []
 
-  // dt-js 클래스: JS 실행 시에만 fade 숨김 활성화
-  useEffect(() => {
-    const root = document.querySelector('.dt-root')
-    root?.classList.add('dt-js')
-    return () => root?.classList.remove('dt-js')
-  }, [])
-
-  // IntersectionObserver: API 데이터 로드 후 새로 생긴 카드도 감지하도록 sermons/notices 의존
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    )
-    const fadeEls = document.querySelectorAll('.dt-fade, .dt-fade-l, .dt-fade-r')
-    fadeEls.forEach((el) => {
-      if (!el.classList.contains('visible')) observer.observe(el)
-    })
-    return () => observer.disconnect()
-  }, [morningLatest, afternoonLatest, wednesdayLatest, fridayLatest, notices, galleryImages, sermonTab])
-
   return (
     <>
-    <div className="dt-root">
-      <style>{css}</style>
+      <div className="bg-white text-neutral-900 selection:bg-neutral-900 selection:text-white">
+        <Header />
+        <HeroSection />
+        <AboutWorshipSection />
+        <ScheduleSection />
+        <SermonSection
+          newYearData={newYearData}
+          categorySermons={categorySermons}
+          onPlayVideo={setModalVideoId}
+        />
+        <ChoirSection videos={choirVideos} onPlayVideo={setModalVideoId} />
+        <DepartmentsSection />
+        <NoticeGallerySection
+          notices={notices}
+          user={user}
+          galleryImages={galleryImages}
+          onNavigate={navigate}
+        />
+        <LocationSection />
 
-      {/* ─── HEADER (공통 컴포넌트 사용 — 투명 모드 자동 적용) ─── */}
-      <Header />
-
-      {/* ─── HERO ─── */}
-      <section className="dt-hero">
-        <div className="dt-hero-bg" />
-        <div className="dt-hero-content">
-          <p className="dt-hero-eyebrow">2026 Church Motto</p>
-          <h1 className="dt-hero-title">여호와의 거룩한 이름을위함이라</h1>
-          <p className="dt-hero-ref">에스겔 36:22</p>
-          <div className="dt-hero-rule" />
-          <p className="dt-hero-quote">
-            "그러므로 너는 이스라엘 족속에게 이르기를<br />
-            주 여호와께서 이같이 말씀하시되<br />
-            이스라엘 족속아 내가 이렇게 행함은<br />
-            <strong>너희를 위함이 아니요</strong><br />
-            너희가 들어간 그 이방 중에서<br />
-            더럽힌 <strong>나의 거룩한 이름을 위함이라</strong>"
-          </p>
-          <div className="dt-hero-actions">
-            <a href="/salvation" className="dt-btn dt-btn-outline">복음말씀 →</a>
-          </div>
-        </div>
-        <div className="dt-hero-scroll">
-          <div className="dt-scroll-line" />
-          <span>scroll</span>
-        </div>
-      </section>
-
-
-      {/* ─── INTRO ─── */}
-      <section id="dt-intro" className="dt-intro dt-sec">
-        <div className="dt-wrap">
-          <div className="dt-fade">
-            <div className="dt-label">About Church</div>
-            <h2 className="dt-h2">그리스도 사랑교회의 예배</h2>
-            <div className="dt-div" />
-          </div>
-          <div className="dt-worship-about">
-            <div className="dt-fade" style={{transitionDelay:'0.1s'}}>
-              <h3 className="dt-worship-about-sub">우리의 믿음</h3>
-              <p className="dt-intro-text">
-                "하나님을 영화롭게 하며 그를 영원토록 즐거워하는 것"을<br />
-                삶의 제일 되는 목적으로 삼은 성도들이 모여<br />
-                영과 진리로 예배를 드립니다.
-              </p>
-              <p className="dt-intro-text">
-                우리는 교회의 여러 사역 중 예배를 가장 소중히 여기며,<br />
-                살아계신 삼위일체 하나님을 경배하고 기도하며,<br />
-                선포되는 강해 설교를 통해 하나님의 말씀을 듣습니다.
-              </p>
-            </div>
-            <div className="dt-worship-verses">
-              {[
-                { ref:'이사야 43:7', text:'내 이름으로 불려지는 모든 자 곧\n내가 내 영광을 위하여 창조한 자를 오게 하라\n그를 내가 지었고 그를 내가 만들었느니라' },
-                { ref:'시편 16:11',  text:'주께서 생명의 길을 내게 보이시리니\n주의 앞에는 충만한 기쁨이 있고\n주의 오른쪽에는 영원한 즐거움이 있나이다' },
-                { ref:'요한복음 4:23', text:'아버지께 참되게 예배하는 자들은\n영과 진리로 예배할 때가 오나니 곧 이 때라\n아버지께서는 자기에게 이렇게 예배하는 자들을 찾으시느니라' },
-              ].map((v, i) => (
-                <div key={v.ref} className="dt-worship-verse-card dt-fade" style={{transitionDelay:`${0.2 + i*0.12}s`}}>
-                  <div className="dt-worship-verse-ref">{v.ref}</div>
-                  <div className="dt-worship-verse-text">{v.text.split('\n').map((line, j) => <span key={j}>{line}<br/></span>)}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── WORSHIP SCHEDULE ─── */}
-      <section className="dt-worship">
-        <div className="dt-worship-grid">
-
-          {/* 주일 예배 */}
-          <div className="dt-worship-col">
-            <div className="dt-worship-col-label">Sunday Service · 주일예배</div>
-            {[
-              { name:'1부 예배',  time:'09:00', loc:'본당' },
-              { name:'2부 예배',  time:'11:00', loc:'본당' },
-              { name:'오후 예배', time:'15:00', loc:'본당' },
-            ].map(w => (
-              <div key={w.name} className="dt-worship-row">
-                <span className="dt-worship-row-name">{w.name}</span>
-                <span className="dt-worship-row-time">{w.time}</span>
-                <span className="dt-worship-row-loc">{w.loc}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* 주중 예배 */}
-          <div className="dt-worship-col">
-            <div className="dt-worship-col-label">Weekday Service · 주중예배</div>
-            {[
-              { name:'수요 예배',   time:'20:00', loc:'본당' },
-              { name:'금요 기도회', time:'21:00', loc:'본당' },
-              { name:'새벽 기도',   time:'05:30', loc:'101호' },
-            ].map(w => (
-              <div key={w.name} className="dt-worship-row">
-                <span className="dt-worship-row-name">{w.name}</span>
-                <span className="dt-worship-row-time">{w.time}</span>
-                <span className="dt-worship-row-loc">{w.loc}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* 부서 예배 — 행 크기 축소 클래스 적용 */}
-          <div className="dt-worship-col dt-worship-col--dept">
-            <div className="dt-worship-col-label">Department Service · 부서예배</div>
-            {[
-              { name:'태영아부',   time:'13:30', loc:'204호' },
-              { name:'유아유치부', time:'11:00', loc:'204호' },
-              { name:'초등부',     time:'09:00', loc:'206호' },
-              { name:'중고등부',   time:'10:30', loc:'205호' },
-              { name:'대학청년부', time:'13:00', loc:'교육관 3층' },
-              { name:'다민족부',   time:'13:00', loc:'206호' },
-              { name:'새가족부',   time:'10:00', loc:'101호' },
-              { name:'치유부',     time:'13:10', loc:'101호' },
-            ].map(w => (
-              <div key={w.name} className="dt-worship-row">
-                <span className="dt-worship-row-name">{w.name}</span>
-                <span className="dt-worship-row-time">{w.time}</span>
-                <span className="dt-worship-row-loc">{w.loc}</span>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ─── SERMON ─── */}
-      <section id="dt-sermon" className="dt-sec" style={{background:'#fff'}}>
-        <div className="dt-wrap">
-          <div className="dt-sermon-header dt-fade">
-            <div>
-              <div className="dt-label">Sermon Archive</div>
-              <h2 className="dt-h2">최근 설교</h2>
-              <div className="dt-div" />
-            </div>
-            <a href="/worship/sermon/sunday-morning" className="dt-see-all">전체 보기 →</a>
-          </div>
-
-          {/* 카테고리 탭 */}
-          <div className="dt-sermon-tabs">
-            <button
-              className={`dt-sermon-tab ${sermonTab === 'newyear' ? 'active' : ''}`}
-              onClick={() => setSermonTab('newyear')}
-            >
-              송구영신예배
-            </button>
-            <button
-              className={`dt-sermon-tab ${sermonTab === 'latest' ? 'active' : ''}`}
-              onClick={() => setSermonTab('latest')}
-            >
-              최근 설교
-            </button>
-          </div>
-
-          {/* 최근 설교 탭 — 예배 카테고리별 최신 1개 */}
-          {sermonTab === 'latest' && (
-            <div className="dt-sermon-grid">
-              {categorySermons.map(({ label, item }, i) => {
-                const vid = item ? extractVideoId(item.videoUrl) : null
-                return (
-                  <div key={label} className="dt-sermon-card dt-fade"
-                    style={{ transitionDelay: `${i * 0.1}s`, cursor: item ? 'pointer' : 'default' }}
-                    onClick={() => {
-                      if (!item) return
-                      if (vid) setModalVideoId(vid)
-                      else navigate(`/worship/sermon/${item.id}`)
-                    }}>
-                    <div className="dt-sermon-thumb">
-                      {vid
-                        ? <img src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`} alt={item.title} />
-                        : <div style={{width:'100%',height:'100%',background:'#1e3a5f',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="rgba(255,255,255,.3)" strokeWidth="1.5">
-                              <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-                            </svg>
-                          </div>
-                      }
-                      {vid && (
-                        <div className="dt-play-btn">
-                          <div className="dt-play-circle">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="#1a2744"><polygon points="5,3 19,12 5,21"/></svg>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="dt-sermon-body">
-                      <div className="dt-sermon-meta">
-                        <span className="dt-sermon-tag">{label}</span>
-                        {item && <span>{fmtDate(item.sermonDate || item.createdAt)}</span>}
-                      </div>
-                      <div className="dt-sermon-title">
-                        {item ? item.title : '등록된 설교가 없습니다'}
-                      </div>
-                      {item?.preacher && <div className="dt-sermon-speaker">{item.preacher}</div>}
-                      {item?.bibleVerses && <div className="dt-sermon-verse">{item.bibleVerses}</div>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* 송구영신예배 탭 — 중앙 대형 표시 */}
-          {sermonTab === 'newyear' && (
-            newYearData?.latestVideoId ? (
-              <div className="dt-newyear-feature dt-fade"
-                onClick={() => setModalVideoId(newYearData.latestVideoId)}>
-                <div className="dt-newyear-thumb">
-                  <img
-                    src={`https://img.youtube.com/vi/${newYearData.latestVideoId}/maxresdefault.jpg`}
-                    alt={newYearData.title || '송구영신예배'}
-                    onError={(e) => { e.currentTarget.src = `https://img.youtube.com/vi/${newYearData.latestVideoId}/mqdefault.jpg` }}
-                  />
-                  <div className="dt-newyear-play">
-                    <div className="dt-newyear-play-circle">
-                      <svg viewBox="0 0 24 24" width="28" height="28" fill="#1a2744">
-                        <polygon points="6,3 20,12 6,21"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div className="dt-newyear-info">
-                  <div className="dt-newyear-tag">송구영신예배</div>
-                  <div className="dt-newyear-title">{newYearData.title || '송구영신예배'}</div>
-                </div>
-              </div>
-            ) : (
-              <div style={{padding:'48px 0',textAlign:'center',color:'#aab',fontSize:15}}>
-                등록된 송구영신예배 영상이 없습니다
-              </div>
-            )
-          )}
-        </div>
-      </section>
-
-      {/* ─── MINISTRY ─── */}
-      <section id="dt-ministry" className="dt-intro dt-sec">
-        <div className="dt-wrap">
-          <div className="dt-fade" style={{maxWidth:'480px'}}>
-            <div className="dt-label">Ministry Departments</div>
-            <h2 className="dt-h2">사역 부서</h2>
-            <div className="dt-div" />
-            <p className="dt-sub">각 부서는 하나님의 나라를 세우는 한 몸의 지체입니다. 여러분의 은사로 함께 섬겨주세요.</p>
-          </div>
-          <div className="dt-ministry-grid">
-            {[
-              { name:'태영아부',   desc:'영아들을 말씀으로 돌보며 믿음의 첫 씨앗을 심어주는 부서입니다.',
-                icon: <><circle cx="12" cy="8" r="4"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/></> },
-              { name:'유아유치부', desc:'유아들이 하나님의 사랑을 알아가며 밝고 건강하게 자라도록 인도합니다.',
-                icon: <><path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/><path d="M6 20v-1a6 6 0 0 1 12 0v1"/><path d="M8 14l-2 2m10-2l2 2"/></> },
-              { name:'초등부',     desc:'어린이들이 말씀 안에서 자라나고 믿음의 뿌리를 깊이 내리도록 양육합니다.',
-                icon: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></> },
-              { name:'중·고등부', desc:'청소년들이 말씀 안에서 정체성을 발견하고 하나님의 사람으로 성장하도록 돕습니다.',
-                icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
-              { name:'대학청년부', desc:'청년들이 하나님 안에서 비전을 발견하고 사명자로 세워지도록 함께합니다.',
-                icon: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></> },
-              { name:'다민족부',   desc:'다양한 민족이 한 몸으로 모여 복음을 나누며 함께 예배하는 공동체입니다.',
-                icon: <><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></> },
-              { name:'새가족부',   desc:'처음 방문하신 분들이 교회 가족으로 자연스럽게 정착하도록 따뜻하게 섬깁니다.',
-                icon: <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></> },
-              { name:'치유부',     desc:'몸과 마음의 상처를 안고 있는 성도들이 주님 안에서 온전히 회복되도록 기도로 섬깁니다.',
-                icon: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/> },
-            ].map((m, i) => (
-              <div key={m.name} className="dt-ministry-item dt-fade" style={{transitionDelay:`${i*0.08}s`}}>
-                <div className="dt-ministry-icon">
-                  <svg viewBox="0 0 24 24">{m.icon}</svg>
-                </div>
-                <div className="dt-ministry-name">{m.name}</div>
-                <div className="dt-ministry-desc">{m.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── NOTICE ─── */}
-      <section id="dt-news" className="dt-sec" style={{background:'#fff'}}>
-        <div className="dt-wrap">
-          <div className="dt-sermon-header dt-fade">
-            <div>
-              <div className="dt-label">Church Notice</div>
-              <h2 className="dt-h2">교회 공지</h2>
-              <div className="dt-div" />
-            </div>
-            <a href="/notices" className="dt-see-all">전체 보기 →</a>
-          </div>
-          <div className="dt-news-layout">
-            {notices[0] ? (
-              <div className="dt-news-main dt-fade-l" style={{cursor:'pointer'}} onClick={() => navigate(`/notices/${notices[0].id}`)}>
-                {notices[0].thumbnailUrl ? (
-                  <img
-                    src={notices[0].thumbnailUrl}
-                    alt={notices[0].title}
-                    className="dt-news-main-img"
-                    onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex' }}
-                  />
-                ) : null}
-                <div style={{
-                  width:'100%', aspectRatio:'16/9',
-                  background:'linear-gradient(135deg,#1e3a5f,#274d7a)',
-                  display: notices[0].thumbnailUrl ? 'none' : 'flex',
-                  alignItems:'center', justifyContent:'center'
-                }}>
-                  <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="1.2">
-                    <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
-                    <path d="M9 7h6M9 11h6M9 15h4"/>
-                  </svg>
-                </div>
-                <div className="dt-news-main-body">
-                  <div className="dt-news-cat">{notices[0].isPinned ? '📌 고정공지' : '공지사항'}</div>
-                  <div className="dt-news-main-title">{notices[0].title}</div>
-                  <div className="dt-news-date">{fmtDate(notices[0].createdAt)}</div>
-                </div>
-              </div>
-            ) : (
-              <div className="dt-news-main dt-fade-l" style={{opacity:.4}}>
-                <div style={{width:'100%',aspectRatio:'16/9',background:'#f3f6fb'}} />
-                <div className="dt-news-main-body"><div className="dt-news-cat">공지사항</div><div className="dt-news-main-title">등록된 공지가 없습니다</div></div>
-              </div>
-            )}
-            <div className="dt-news-list">
-              {notices.slice(1).map((n, i) => (
-                <div key={n.id} className="dt-news-item dt-fade-r" style={{transitionDelay:`${i*0.08}s`,cursor:'pointer'}}
-                  onClick={() => navigate(`/notices/${n.id}`)}>
-                  {n.thumbnailUrl ? (
-                    <img
-                      src={n.thumbnailUrl}
-                      alt={n.title}
-                      className="dt-news-item-img"
-                      onError={(e) => { e.currentTarget.style.display='none'; e.currentTarget.nextSibling.style.display='flex' }}
-                    />
-                  ) : null}
-                  <div style={{
-                    width:80, height:64, borderRadius:6,
-                    background:'linear-gradient(135deg,#1e3a5f,#274d7a)',
-                    flexShrink:0, display: n.thumbnailUrl ? 'none' : 'flex',
-                    alignItems:'center', justifyContent:'center'
-                  }}>
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="rgba(255,255,255,.4)" strokeWidth="1.5">
-                      <path d="M9 7h6M9 11h6M9 15h4M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
-                    </svg>
-                  </div>
-                  <div className="dt-news-item-body">
-                    <div className="dt-news-item-cat">{n.isPinned ? '고정' : '공지'}</div>
-                    <div className="dt-news-item-title">{n.title}</div>
-                    <div className="dt-news-item-date">{fmtDate(n.createdAt)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── GALLERY ─── */}
-      <section id="dt-gallery" className="dt-gallery">
-        <div className="dt-wrap">
-          <div className="dt-gallery-top dt-fade">
-            <div className="dt-label" style={{color:'var(--gold-light)'}}>Photo Gallery</div>
-            <h2 className="dt-h2">갤러리</h2>
-            <div className="dt-div" style={{background:'rgba(255,255,255,.25)'}} />
-          </div>
-        </div>
-        {user ? (
-          /* ── 로그인: 실제 갤러리 ── */
-          galleryImages.length > 0 ? (
-            <div className="dt-gallery-grid">
-              {/* 첫 번째 이미지 — tall 셀 */}
-              <Link
-                to={`/department/${galleryImages[0].departmentCode}/gallery/${galleryImages[0].id}`}
-                className="dt-gallery-cell tall"
-                style={{display:'block'}}
-              >
-                <img
-                  src={`/uploads/gallery/${galleryImages[0].thumbnailFilename || galleryImages[0].storedFilename}`}
-                  alt={galleryImages[0].title}
-                  onError={(e) => { e.target.src = '/images/no-image.png' }}
-                />
-                <div className="dt-gallery-overlay">
-                  <div style={{position:'absolute',bottom:12,left:12,right:12}}>
-                    <div style={{fontSize:12,color:'rgba(255,255,255,.7)',marginBottom:4}}>{galleryImages[0].departmentName}</div>
-                    <div style={{fontSize:14,fontWeight:600,color:'#fff',lineHeight:1.3}}>{galleryImages[0].title}</div>
-                  </div>
-                </div>
-              </Link>
-              {/* 나머지 이미지 */}
-              {galleryImages.slice(1).map((img) => (
-                <Link
-                  key={img.id}
-                  to={`/department/${img.departmentCode}/gallery/${img.id}`}
-                  className="dt-gallery-cell"
-                  style={{display:'block'}}
-                >
-                  <img
-                    src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
-                    alt={img.title}
-                    onError={(e) => { e.target.src = '/images/no-image.png' }}
-                  />
-                  <div className="dt-gallery-overlay">
-                    <div style={{position:'absolute',bottom:8,left:8,right:8}}>
-                      <div style={{fontSize:11,color:'rgba(255,255,255,.7)',marginBottom:2}}>{img.departmentName}</div>
-                      <div style={{fontSize:13,fontWeight:600,color:'#fff',lineHeight:1.3}}>{img.title}</div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div style={{padding:'60px 0',textAlign:'center',color:'rgba(255,255,255,.3)',fontSize:15}}>
-              등록된 갤러리 이미지가 없습니다
-            </div>
-          )
-        ) : (
-          /* ── 비로그인: 지정 이미지 ── */
-          <div className="dt-gallery-placeholder">
-            {GALLERY_PLACEHOLDER_IMG ? (
-              <img src={GALLERY_PLACEHOLDER_IMG} alt="갤러리" loading="lazy" />
-            ) : (
-              /* GALLERY_PLACEHOLDER_IMG 상수에 이미지 경로 입력 시 표시됩니다 */
-              <div className="dt-gallery-placeholder-empty" />
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* ─── CONTACT ─── */}
-      <section id="dt-contact" className="dt-intro dt-sec">
-        <div className="dt-wrap">
-          <div className="dt-fade" style={{maxWidth:'480px',marginBottom:'44px'}}>
-            <div className="dt-label">Directions &amp; Contact</div>
-            <h2 className="dt-h2">오시는 길</h2>
-            <div className="dt-div" />
-          </div>
-          <div className="dt-contact-grid">
-            <div className="dt-map-ph dt-fade-l" style={{overflow:'hidden', padding:0}}>
-              <KakaoMap />
-            </div>
-            <div className="dt-fade-r">
-              <div className="dt-info-list">
-                {[
-                  { label:'주소', value:'대구광역시 동구\n안심로55길 59',
-                    icon: <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></> },
-                  { label:'전화', value:'053-962-8948 / 053-961-0931',
-                    icon: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 14a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 3.12h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10.9A16 16 0 0 0 13.1 16.1l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 17.14"/> },
-                  { label:'팩스', value:'053-961-0862',
-                    icon: <><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 2H8v5h8V2z"/></> },
-                  { label:'이메일', value:'cmedia881213@gmail.com',
-                    icon: <><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></> },
-                ].map((info) => (
-                  <div key={info.label} className="dt-info-row">
-                    <div className="dt-info-icon">
-                      <svg viewBox="0 0 24 24" width="16" height="16">{info.icon}</svg>
-                    </div>
-                    <div>
-                      <div className="dt-info-label">{info.label}</div>
-                      <div className="dt-info-value" style={{whiteSpace:'pre-line'}}>{info.value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="dt-transport-title">교통편 안내</div>
-              <div className="dt-transport-list">
-                <div className="dt-transport-item"><span className="dt-t-badge dt-subway">지하철</span><span>1호선 반야월역 4번 출구 도보 10분</span></div>
-                <div className="dt-transport-item"><span className="dt-t-badge dt-bus">버스</span><span>경북교통앞 정류장 (805, 836, 동구4, 동구10, 북구3)</span></div>
-                <div className="dt-transport-item"><span className="dt-t-badge dt-car">주차</span><span>교회 주차장 이용 가능</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {modalVideoId && <VideoModal videoId={modalVideoId} onClose={() => setModalVideoId(null)} />}
-      <PopupOverlay />
-    </div>
-    <Footer />
+        {modalVideoId && <VideoModal videoId={modalVideoId} onClose={() => setModalVideoId(null)} />}
+        <PopupOverlay />
+      </div>
+      <Footer />
     </>
   )
 }

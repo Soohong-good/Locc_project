@@ -26,7 +26,9 @@ public record GalleryGroupDto(
                 null,   // uploaderId
                 this.imageCount.intValue(),
                 0,
-                null    // createdAt
+                null,   // createdAt
+                null,   // departmentCode
+                null    // departmentName
         );
         
         return new GalleryGroupResponse(

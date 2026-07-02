@@ -20,10 +20,6 @@ public class DepartmentYouTubeUpdateService {
     private final DepartmentRepository departmentRepository;
     private final YouTubeService youTubeService;
 
-    // 중고등부: 채널 최신 영상이 라이브로 잡히는 문제로 재생목록에서 조회
-    private static final String YOUTH_CODE        = "youth";
-    private static final String YOUTH_PLAYLIST_ID = "PL0YvIuvg6pZ2A8eW2B03R2kMYM_SEtAGl";
-
     /**
      * 모든 부서의 최신 유튜브 영상 업데이트
      * 매일 오전 6시 실행
@@ -69,19 +65,11 @@ public class DepartmentYouTubeUpdateService {
 
     /**
      * 부서의 최신 영상 업데이트 (내부 메서드)
-     * 중고등부(youth)는 재생목록에서 조회하여 라이브 영상 문제를 방지
+     * 채널 최신 영상 중 생방송 다시보기를 제외한 일반 업로드(설교 편집본)를 조회
      */
     private boolean updateDepartmentVideo(Department department) {
         try {
-            String[] videoInfo;
-
-            if (YOUTH_CODE.equals(department.getCode())) {
-                // 중고등부: 채널이 아닌 지정 재생목록에서 최신 영상 조회
-                videoInfo = youTubeService.getLatestVideoFromPlaylist(YOUTH_PLAYLIST_ID);
-                log.debug("youth: playlist 조회 사용 (playlistId={})", YOUTH_PLAYLIST_ID);
-            } else {
-                videoInfo = youTubeService.getLatestVideo(department.getYoutubeChannelId());
-            }
+            String[] videoInfo = youTubeService.getLatestUploadedVideo(department.getYoutubeChannelId());
 
             if (videoInfo != null && videoInfo.length == 2) {
                 String videoId = videoInfo[0];

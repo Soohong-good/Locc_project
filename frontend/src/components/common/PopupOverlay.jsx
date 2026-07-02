@@ -16,6 +16,14 @@ const safeUrl = (url) => {
   }
 }
 
+/** 날짜 → YYYY.MM.DD */
+const fmtDate = (val) => {
+  if (!val) return ''
+  const d = new Date(val)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
 const getClosedToday = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_TODAY)
@@ -37,11 +45,12 @@ const saveClosedToday = (idSet) => {
   } catch {}
 }
 
-// ── 슬라이더 팝업 ────────────────────────────────────────────────────────────
+// ── 클래식 모달 팝업 (Design 01) ─────────────────────────────────────────────
 const SliderPopup = ({ popups, onClose, onCloseToday }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [sliding,      setSliding]      = useState(false)
   const [direction,    setDirection]    = useState('next')
+  const [dontShowToday, setDontShowToday] = useState(false)
 
   const safeIndex = Math.min(currentIndex, popups.length - 1)
   const popup     = popups[safeIndex]
@@ -53,6 +62,7 @@ const SliderPopup = ({ popups, onClose, onCloseToday }) => {
   const h  = firstPopup.popupHeight ?? 400
   const px = firstPopup.positionX   ?? 100
   const py = firstPopup.positionY   ?? 100
+  const bodyMax = Math.max(120, h - 112) // 헤더(약 56) + 푸터(56) 제외
 
   const goTo = (nextIndex, dir) => {
     if (sliding || nextIndex === safeIndex) return
@@ -64,10 +74,10 @@ const SliderPopup = ({ popups, onClose, onCloseToday }) => {
     }, 240)
   }
 
-  const handlePrev      = () => { if (safeIndex > 0)           goTo(safeIndex - 1, 'prev') }
-  const handleNext      = () => { if (safeIndex < total - 1)   goTo(safeIndex + 1, 'next') }
-  const handleClose      = () => { onClose() }
-  const handleCloseToday = () => { onCloseToday() }
+  const handlePrev = () => { if (safeIndex > 0)         goTo(safeIndex - 1, 'prev') }
+  const handleNext = () => { if (safeIndex < total - 1) goTo(safeIndex + 1, 'next') }
+  // 확인: "오늘 하루 보지 않기" 체크 시 오늘 하루 닫기, 아니면 일반 닫기
+  const handleConfirm = () => { dontShowToday ? onCloseToday() : onClose() }
 
   useEffect(() => {
     if (currentIndex >= popups.length && popups.length > 0) {
@@ -81,51 +91,36 @@ const SliderPopup = ({ popups, onClose, onCloseToday }) => {
       : 'translate-x-[10px] opacity-0'
     : 'translate-x-0 opacity-100'
 
-  // 도트 인디케이터가 차지할 높이 (팝업 2개 이상일 때만)
-  const DOT_AREA_H = total > 1 ? 36 : 0
-  // 콘텐츠 영역 실제 높이 = 등록 높이 - 도트 영역
-  const contentH = h - DOT_AREA_H
+  const dateStr = fmtDate(popup.displayStartDate ?? popup.createdAt)
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        top:      py,
-        left:     px,
-        width:    w,
-        zIndex:   9000,
-      }}
-      className="bg-white shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+      style={{ position: 'fixed', top: py, left: px, width: w, zIndex: 9000 }}
+      className="bg-[#FAF9F6] border border-[#E5E5E5] shadow-xl flex flex-col overflow-hidden"
     >
-      {/* ── 헤더: 제목 + 닫기만 ── */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="text-sm font-medium text-gray-800 truncate">{popup.title}</span>
+      {/* ── 헤더: 검은 바 ── */}
+      <div className="bg-[#171717] px-5 py-4 flex justify-between items-center text-[#FAF9F6] flex-shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm font-bold tracking-wide">공지사항</span>
           {total > 1 && (
-            <span className="flex-shrink-0 text-xs text-gray-400">
-              {safeIndex + 1}/{total}
-            </span>
+            <span className="text-xs font-mono text-[#737373]">{safeIndex + 1} / {total}</span>
           )}
         </div>
         <button
-          onClick={handleClose}
-          className="ml-2 p-1 text-gray-400 hover:text-gray-700 transition flex-shrink-0"
+          onClick={onClose}
+          className="text-[#737373] hover:text-white transition-colors"
           aria-label="닫기"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
-      {/* ── 콘텐츠 영역 (화살표 오버레이 + 도트 포함) ── */}
-      <div
-        className="relative flex-shrink-0"
-        style={{ maxHeight: h }}
-      >
-        {/* 슬라이드 콘텐츠 */}
+      {/* ── 본문 (이미지 + 날짜 + 제목 + 내용) ── */}
+      <div className="relative flex-shrink-0">
         <div
-          style={{ maxHeight: contentH, overflowY: 'auto' }}
+          style={{ maxHeight: bodyMax, overflowY: 'auto' }}
           className={`transition-all duration-[240ms] ease-in-out ${slideClass}`}
         >
           {popup.imageUrl && (
@@ -137,86 +132,88 @@ const SliderPopup = ({ popups, onClose, onCloseToday }) => {
               <img src={popup.imageUrl} alt={popup.title} loading="lazy" className="w-full object-cover" />
             )
           )}
-          {popup.content && (
-            <div
-              className="text-sm text-gray-700 ql-editor"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(popup.content) }}
-              style={{ padding: '1rem' }}
-            />
-          )}
+          <div className="p-6">
+            {dateStr && <span className="font-mono text-xs text-[#737373] mb-2 block">{dateStr}</span>}
+            <h2 className="text-xl font-bold text-[#171717] mb-4 tracking-tight">{popup.title}</h2>
+            {popup.content && (
+              <div
+                className="text-sm text-[#737373] leading-relaxed ql-editor"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(popup.content) }}
+                style={{ padding: 0 }}
+              />
+            )}
+          </div>
         </div>
 
-        {/* 도트 인디케이터 — 콘텐츠 영역 맨 아래 정중앙 */}
+        {/* 좌/우 화살표 (팝업 2개 이상) */}
         {total > 1 && (
-          <div
-            className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2"
-            style={{ height: DOT_AREA_H }}
-          >
-            {popups.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i, i > safeIndex ? 'next' : 'prev')}
-                className={`rounded-full transition-all duration-200 ${
-                  i === safeIndex
-                    ? 'w-5 h-2 bg-gray-700'
-                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-500'
-                }`}
-                aria-label={`${i + 1}번 팝업으로 이동`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* 좌측 화살표 — 세로 중앙, 콘텐츠 영역 왼쪽 사이드 */}
-        {total > 1 && (
-          <button
-            onClick={handlePrev}
-            disabled={safeIndex === 0 || sliding}
-            className="absolute left-0 top-0 bottom-0 flex items-center justify-center
-                       w-14 disabled:opacity-0 transition-all duration-150"
-            style={{ marginBottom: DOT_AREA_H }}
-            aria-label="이전 팝업"
-          >
-            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 transition">
-              <svg className="w-6 h-6 drop-shadow-lg text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </span>
-          </button>
-        )}
-
-        {/* 우측 화살표 — 세로 중앙, 콘텐츠 영역 오른쪽 사이드 */}
-        {total > 1 && (
-          <button
-            onClick={handleNext}
-            disabled={safeIndex === total - 1 || sliding}
-            className="absolute right-0 top-0 bottom-0 flex items-center justify-center
-                       w-14 disabled:opacity-0 transition-all duration-150"
-            style={{ marginBottom: DOT_AREA_H }}
-            aria-label="다음 팝업"
-          >
-            <span className="flex items-center justify-center w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 transition">
-              <svg className="w-6 h-6 drop-shadow-lg text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
-          </button>
+          <>
+            <button
+              onClick={handlePrev}
+              disabled={safeIndex === 0 || sliding}
+              className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center disabled:opacity-0 transition-opacity"
+              aria-label="이전 팝업"
+            >
+              <span className="flex items-center justify-center w-8 h-8 bg-[#171717]/70 hover:bg-[#171717] transition-colors">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </span>
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={safeIndex === total - 1 || sliding}
+              className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-center disabled:opacity-0 transition-opacity"
+              aria-label="다음 팝업"
+            >
+              <span className="flex items-center justify-center w-8 h-8 bg-[#171717]/70 hover:bg-[#171717] transition-colors">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </button>
+          </>
         )}
       </div>
 
-      {/* ── 하단 베젤: 오늘 하루 보지 않기 + 닫기 ── */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+      {/* 도트 인디케이터 */}
+      {total > 1 && (
+        <div className="flex items-center justify-center gap-2 py-2 border-t border-[#E5E5E5] flex-shrink-0">
+          {popups.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i, i > safeIndex ? 'next' : 'prev')}
+              className={`transition-all duration-200 ${
+                i === safeIndex ? 'w-5 h-1.5 bg-[#171717]' : 'w-1.5 h-1.5 bg-[#E5E5E5] hover:bg-[#737373]'
+              }`}
+              aria-label={`${i + 1}번 팝업으로 이동`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── 푸터: 오늘 하루 보지 않기(체크박스) + 확인 ── */}
+      <div className="flex border-t border-[#E5E5E5] h-14 flex-shrink-0">
+        <label className="flex-1 flex items-center px-4 cursor-pointer group hover:bg-[#E5E5E5]/30 transition-colors select-none">
+          <span className="relative w-4 h-4 border border-[#737373] group-hover:border-[#171717] bg-white flex items-center justify-center mr-3">
+            <input
+              type="checkbox"
+              checked={dontShowToday}
+              onChange={(e) => setDontShowToday(e.target.checked)}
+              className="peer absolute opacity-0 w-full h-full cursor-pointer"
+            />
+            <svg className="w-3 h-3 text-[#171717] opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" />
+            </svg>
+          </span>
+          <span className="text-xs text-[#737373] group-hover:text-[#171717]">오늘 하루 보지 않기</span>
+        </label>
+        <div className="w-[1px] bg-[#E5E5E5] h-full" />
         <button
-          onClick={handleCloseToday}
-          className="text-xs text-gray-500 hover:text-gray-700 transition"
+          onClick={handleConfirm}
+          className="w-28 bg-[#171717] text-[#FAF9F6] text-sm font-bold hover:bg-black transition-colors focus:outline-none"
         >
-          오늘 하루 보지 않기
-        </button>
-        <button
-          onClick={handleClose}
-          className="text-xs text-gray-500 hover:text-gray-700 transition"
-        >
-          닫기
+          확인
         </button>
       </div>
     </div>

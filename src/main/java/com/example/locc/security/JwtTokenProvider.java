@@ -4,6 +4,7 @@ import com.example.locc.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -21,11 +22,35 @@ public class JwtTokenProvider {
     private final SecretKey secretKey;
     private final long jwtExpiration;
     private final long refreshExpiration;
+    private final long adminExpiration;
+    private final long adminRefreshExpiration;
 
     public JwtTokenProvider(JwtProperties jwtProperties) {
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
         this.jwtExpiration = jwtProperties.getExpiration();
         this.refreshExpiration = jwtProperties.getRefreshExpiration();
+        this.adminExpiration = jwtProperties.getAdminExpiration();
+        this.adminRefreshExpiration = jwtProperties.getAdminRefreshExpiration();
+    }
+
+    /**
+     * 강한 권한 계정 여부 (ADMIN / OPERATOR)
+     * - 해당 계정은 Access·Refresh 만료를 짧게(기본 30분) 적용
+     */
+    private boolean isPrivileged(UserDetails userDetails) {
+        return userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> "ROLE_ADMIN".equals(a) || "ROLE_OPERATOR".equals(a));
+    }
+
+    /** 계정 권한에 따른 Access Token 유효시간(ms) */
+    public long getAccessTokenValidity(UserDetails userDetails) {
+        return isPrivileged(userDetails) ? adminExpiration : jwtExpiration;
+    }
+
+    /** 계정 권한에 따른 Refresh Token 유효시간(ms) */
+    public long getRefreshTokenValidity(UserDetails userDetails) {
+        return isPrivileged(userDetails) ? adminRefreshExpiration : refreshExpiration;
     }
 
     /**
@@ -85,7 +110,7 @@ public class JwtTokenProvider {
         claims.put("authorities", userDetails.getAuthorities().stream()
                 .map(auth -> auth.getAuthority())
                 .toList());
-        return createToken(claims, userDetails.getUsername(), jwtExpiration);
+        return createToken(claims, userDetails.getUsername(), getAccessTokenValidity(userDetails));
     }
 
     /**
@@ -94,7 +119,7 @@ public class JwtTokenProvider {
     public String generateRefreshToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("type", "refresh");
-        return createToken(claims, userDetails.getUsername(), refreshExpiration);
+        return createToken(claims, userDetails.getUsername(), getRefreshTokenValidity(userDetails));
     }
 
     /**

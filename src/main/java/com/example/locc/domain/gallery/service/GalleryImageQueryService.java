@@ -77,6 +77,39 @@ public class GalleryImageQueryService {
     }
 
     /**
+     * 통합 갤러리 이미지 목록 조회 (게시판 형태)
+     * departmentCode가 null이면 전체, 있으면 해당 부서만 필터링
+     * groupId별로 그룹화하여 첫 번째 이미지만 표시, 이미지 개수 포함
+     */
+    public Page<GalleryImageResponse> getImageListForBoardAll(String departmentCode, int page) {
+        PageRequest pageRequest = PageRequest.of(page, 12);
+        Page<GalleryImage> imagePage = galleryImageRepository.findForBoard(departmentCode, pageRequest);
+
+        List<String> groupIds = imagePage.getContent().stream()
+                .map(GalleryImage::getGroupId)
+                .toList();
+
+        Map<String, Integer> imageCountMap = galleryImageRepository.countByGroupIds(groupIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (String) row[0],
+                        row -> ((Long) row[1]).intValue()
+                ));
+
+        return imagePage.map(image ->
+                GalleryImageResponse.from(image, imageCountMap.getOrDefault(image.getGroupId(), 1)));
+    }
+
+    /**
+     * 이미지 ID로 같은 업로드 그룹의 전체 이미지 조회 (라이트박스/그룹 뷰용)
+     */
+    public List<GalleryImageResponse> getGroupImagesByImageId(Long imageId) {
+        GalleryImage image = galleryImageRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("갤러리 이미지를 찾을 수 없습니다."));
+        return getImagesByGroupId(image.getGroupId());
+    }
+
+    /**
      * 인스타그램 스타일: 부서별 갤러리 그룹 목록 조회 (title 기준 + 페이징)
      * 최적화: DTO 프로젝션으로 필요한 데이터만 조회 (1개 쿼리)
      */

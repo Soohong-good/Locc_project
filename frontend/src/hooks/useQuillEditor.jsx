@@ -15,14 +15,16 @@ const FONT_SIZES    = [false, '10px','12px','14px','16px','18px','20px','24px','
 // 링크 툴팁 초기 상태
 const TIP_INIT = { visible: false, top: 0, left: 0, url: '', text: '' }
 
-const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
+const useQuillEditor = ({ onImageUpload, onReady, onChange, initialValue } = {}) => {
   const containerRef   = useRef(null)
   const quillRef       = useRef(null)
   const uploadRef      = useRef(onImageUpload)
   const onReadyRef     = useRef(onReady)
+  const onChangeRef    = useRef(onChange)
   const initialValRef  = useRef(initialValue)   // 초기화 시점의 값 보존
   useEffect(() => { uploadRef.current    = onImageUpload }, [onImageUpload])
   useEffect(() => { onReadyRef.current   = onReady }, [onReady])
+  useEffect(() => { onChangeRef.current  = onChange }, [onChange])
   // initialValue가 나중에 변경될 경우(부모 데이터 로드 후) Quill에 주입
   useEffect(() => {
     if (!initialValue) return
@@ -82,6 +84,12 @@ const useQuillEditor = ({ onImageUpload, onReady, initialValue } = {}) => {
       setupPaste(quill)
       setupImageResize(quill)
       quillRef.current = quill
+
+      // 내용 변경 시 즉시 알림 (폴링 대체) — 미리보기 등에서 사용
+      quill.on('text-change', () => {
+        const html = quill.root.innerHTML
+        onChangeRef.current?.(html === '<p><br></p>' ? '' : html)
+      })
 
       // initialValue가 있으면 초기 내용 주입
       if (initialValRef.current) {

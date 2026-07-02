@@ -4,17 +4,40 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getPraiseSheets, togglePraiseSheetPin, deletePraiseSheet, createPraiseSheet, uploadPraiseSheetImage } from '@/api/praiseSheets'
 import useAuthStore from '@/stores/authStore'
 import useQuillEditor from '@/hooks/useQuillEditor.jsx'
-import Button from '@/components/ui/Button'
-import PageHero from '@/components/ui/PageHero'
-import { SkeletonRow } from '@/components/ui/SkeletonCard'
 import toast from '@/utils/toast'
+import {
+  MagnifyingGlass,
+  BookmarkSimple,
+  Paperclip,
+  CaretLeft,
+  CaretRight,
+} from '@phosphor-icons/react'
+import Button from '@/components/ui/Button'
+
+const PAGE_SIZE = 10
+const PAGE_WINDOW = 5
+
+const fmtDot = (val) => {
+  if (!val) return ''
+  const d = new Date(val)
+  if (Number.isNaN(d.getTime())) return String(val)
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
+const getPageRange = (current, total) => {
+  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
+  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
+  const end = Math.min(total, start + PAGE_WINDOW)
+  start = Math.max(0, end - PAGE_WINDOW)
+  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
+}
 
 const QUILL_STYLE = `
   .ql-tooltip { display: none !important; }
-  .ql-container { min-height: 240px; font-size: 16px; border-color: #e2e8f0 !important; }
-  .ql-editor    { min-height: 240px; background-color: #f8fafc; font-family: inherit; }
+  .ql-container { min-height: 240px; font-size: 16px; border-color: #E5E5E5 !important; }
+  .ql-editor    { min-height: 240px; background-color: #FAF9F6; font-family: inherit; }
   .ql-editor:focus { background-color: #fff; }
-  .ql-toolbar   { background-color: #fff; border-color: #e2e8f0 !important; }
+  .ql-toolbar   { background-color: #fff; border-color: #E5E5E5 !important; }
 `
 
 const WriteModal = ({ onClose, onSaved }) => {
@@ -59,14 +82,11 @@ const WriteModal = ({ onClose, onSaved }) => {
     <>
       <style>{QUILL_STYLE}</style>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative bg-white w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-          <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
-            <div>
-              <h2 className="text-2xl font-light text-slate-900 tracking-tight">찬양악보 등록</h2>
-              <p className="text-sm text-slate-500 mt-1 font-light">찬양 악보와 관련 자료를 등록합니다</p>
-            </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors p-2 hover:bg-slate-50 rounded-full">
+        <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
+        <div className="relative bg-[#FAF9F6] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E5E5E5]">
+          <div className="flex items-center justify-between px-8 py-6 border-b border-[#E5E5E5]">
+            <h2 className="text-xl font-bold text-[#2C2C2C]">찬양악보 등록</h2>
+            <button onClick={onClose} className="text-[#737373] hover:text-[#171717] transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -74,40 +94,30 @@ const WriteModal = ({ onClose, onSaved }) => {
           </div>
           <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">제목 <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-[#2C2C2C]">제목 <span className="text-red-500">*</span></label>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                 placeholder="악보 제목을 입력하세요"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all font-light" />
+                className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">내용</label>
+              <label className="text-sm font-medium text-[#2C2C2C]">내용</label>
               <div ref={containerRef} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700 tracking-wide">
-                첨부파일 <span className="text-xs text-slate-500 font-normal ml-1">(PDF, HWP, JPG, PNG · 최대 20MB)</span>
+              <label className="text-sm font-medium text-[#2C2C2C]">
+                첨부파일 <span className="text-xs text-[#737373] font-normal ml-1">(PDF, HWP, JPG, PNG · 최대 20MB)</span>
               </label>
-              <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition group">
-                <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition">
-                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-700">파일 추가</p>
-                  <p className="text-xs text-slate-400">PDF, HWP, JPG, PNG · 최대 20MB</p>
-                </div>
-                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.hwp"
-                  onChange={handleFileChange} className="hidden" />
+              <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[#E5E5E5] hover:border-[#171717] cursor-pointer transition">
+                <span className="text-sm text-[#737373]">파일 추가</span>
+                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.hwp" onChange={handleFileChange} className="hidden" />
               </label>
               {files.length > 0 && (
                 <ul className="space-y-1">
                   {files.map((f, i) => (
-                    <li key={i} className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5">
+                    <li key={i} className="flex items-center justify-between text-xs text-[#737373] bg-[#F4F2EA] border border-[#E5E5E5] px-3 py-1.5">
                       <span className="truncate">✓ {f.name}</span>
                       <button type="button" onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="ml-2 text-slate-400 hover:text-red-500 shrink-0">✕</button>
+                        className="ml-2 text-[#737373] hover:text-red-500 shrink-0">✕</button>
                     </li>
                   ))}
                 </ul>
@@ -115,17 +125,12 @@ const WriteModal = ({ onClose, onSaved }) => {
             </div>
           </div>
           {error && (
-            <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
-              <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {error}
-            </div>
+            <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm">{error}</div>
           )}
-          <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
-            <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium">취소</button>
+          <div className="flex items-center justify-end gap-3 px-8 py-5 bg-[#F4F2EA] border-t border-[#E5E5E5]">
+            <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-[#737373] hover:text-[#171717] transition-colors">취소</button>
             <button onClick={handleSave} disabled={saving}
-              className="px-8 py-2.5 bg-slate-900 text-white hover:bg-slate-800 font-medium disabled:opacity-60">
+              className="px-8 py-2 text-sm font-medium bg-[#171717] text-[#FAF9F6] hover:bg-[#2C2C2C] transition-colors disabled:opacity-50">
               {saving ? '등록 중...' : '등록'}
             </button>
           </div>
@@ -138,27 +143,22 @@ const WriteModal = ({ onClose, onSaved }) => {
 
 const DeleteModal = ({ title, onClose, onConfirm, deleting }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-    <div className="relative bg-white max-w-md w-full shadow-2xl">
+    <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative bg-[#FAF9F6] max-w-md w-full border border-[#E5E5E5]">
       <div className="p-8">
-        <h3 className="text-xl font-light text-slate-900 mb-2">찬양악보 삭제</h3>
-        <p className="text-slate-600 font-light mb-1">다음 항목을 삭제하시겠습니까?</p>
-        <p className="text-slate-900 font-medium">{title}</p>
+        <h3 className="text-xl font-bold text-[#2C2C2C] mb-2">찬양악보 삭제</h3>
+        <p className="text-[#737373] mb-1">다음 항목을 삭제하시겠습니까?</p>
+        <p className="text-[#2C2C2C] font-medium">{title}</p>
       </div>
-      <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-200">
-        <Button variant="ghost" onClick={onClose}>취소</Button>
-        <Button variant="danger" onClick={onConfirm} isLoading={deleting}>
+      <div className="flex items-center justify-end gap-3 px-8 py-5 bg-[#F4F2EA] border-t border-[#E5E5E5]">
+        <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-[#737373] hover:text-[#171717] transition-colors">취소</button>
+        <button onClick={onConfirm} disabled={deleting}
+          className="px-6 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50">
           {deleting ? '삭제 중...' : '삭제'}
-        </Button>
+        </button>
       </div>
     </div>
   </div>
-)
-
-const BookmarkIcon = ({ className = 'w-5 h-5' }) => (
-  <svg className={className} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-  </svg>
 )
 
 const PraiseSheetListPage = () => {
@@ -177,14 +177,14 @@ const PraiseSheetListPage = () => {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['praise-sheets', { page, keyword }],
-    queryFn:  () => getPraiseSheets({ page, size: 10, keyword }),
+    queryFn:  () => getPraiseSheets({ page, size: PAGE_SIZE, keyword }),
   })
 
-  const sheets     = data?.content            ?? []
+  const sheets     = data?.content                ?? []
   const totalPages = data?.pageInfo?.totalPages    ?? 0
   const totalElem  = data?.pageInfo?.totalElements ?? 0
   const pageNum    = data?.pageInfo?.page          ?? 0
-  const pageSize   = data?.pageInfo?.size          ?? 10
+  const pageSize   = data?.pageInfo?.size          ?? PAGE_SIZE
 
   const pinMutation = useMutation({
     mutationFn: (id) => togglePraiseSheetPin(id),
@@ -201,167 +201,151 @@ const PraiseSheetListPage = () => {
     onError: (e) => toast.error(e?.response?.data?.message ?? '삭제에 실패했습니다.'),
   })
 
+  useEffect(() => { setSearchInput(keyword) }, [keyword])
+
   const handleSearch = (e) => {
     e.preventDefault()
     setSearchParams({ page: 0, keyword: searchInput })
   }
 
-  useEffect(() => { setSearchInput(keyword) }, [keyword])
-
-  const goPage = (p) => setSearchParams({ page: p, keyword })
+  const goPage = (p) => {
+    setSearchParams({ page: p, keyword })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
-    <main>
-      <PageHero eyebrow="Praise Sheet" title="찬양악보" subtitle="찬양 악보와 관련 자료를 확인하세요">
-        {canWrite && (
-          <Button onClick={() => setWriteOpen(true)} variant="secondary" size="sm"
-            className="border-white text-white hover:bg-white hover:text-slate-900">
-            + 새 악보 등록
-          </Button>
-        )}
-      </PageHero>
-
-      <section className="py-5 bg-white px-6 border-b border-slate-200 shadow-sm">
-        <div className="max-w-6xl mx-auto">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="제목, 내용으로 검색"
-              className="flex-1 px-4 py-2.5 text-sm border border-slate-200 focus:border-slate-900 focus:outline-none transition-colors bg-slate-50 focus:bg-white" />
-            <Button type="submit" size="sm">검색</Button>
-            {keyword && (
-              <Button type="button" variant="ghost" size="sm"
-                onClick={() => { setSearchInput(''); setSearchParams({ page: 0, keyword: '' }) }}>
-                초기화
-              </Button>
+    <div className="min-h-screen bg-[#FAF9F6]">
+      {/* Hero */}
+      <section className="relative pt-20 text-[#FAF9F6] border-b border-[#2C2C2C] overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/praise_sheet.png)' }} />
+        <div className="absolute inset-0 bg-[#171717]/70" />
+        <div className="relative max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
+          <div>
+            <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Praise Sheets</span>
+            <h1 className="text-5xl font-bold tracking-tight">찬양악보</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            {canWrite && (
+              <button
+                onClick={() => setWriteOpen(true)}
+                className="text-xs font-bold tracking-[0.1em] uppercase bg-[#FAF9F6] text-[#171717] px-6 py-2.5 hover:bg-white transition-colors whitespace-nowrap"
+              >
+                + 새 악보 등록
+              </button>
             )}
-          </form>
+            <form onSubmit={handleSearch} className="relative w-full md:w-72">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="검색어를 입력하세요"
+                className="w-full h-10 pl-4 pr-10 bg-transparent border border-[#737373] text-[#FAF9F6] text-sm focus:outline-none focus:border-[#FAF9F6] transition-colors placeholder:text-[#737373]"
+              />
+              <button type="submit" className="absolute right-0 top-0 w-10 h-10 flex items-center justify-center text-[#737373] hover:text-[#FAF9F6] transition-colors">
+                <MagnifyingGlass size={16} weight="bold" />
+              </button>
+            </form>
+          </div>
         </div>
       </section>
 
-      <section className="py-16 bg-white px-6">
-        <div className="max-w-6xl mx-auto">
-          {isLoading ? (
-            <div className="space-y-0 border-t border-slate-200">
-              {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
+      {/* Table */}
+      <main className="max-w-[1200px] mx-auto px-6 pt-14 md:pt-20 pb-32">
+        <div className="h-px w-full bg-[#171717]" />
+        <div className="grid grid-cols-[60px_1fr_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">
+          <div>No.</div>
+          <div>Title</div>
+          <div className="text-right w-32">Date</div>
+        </div>
+
+        {isLoading && (
+          <div className="py-32 text-center font-mono text-sm text-[#737373] tracking-wider">불러오는 중...</div>
+        )}
+        {isError && (
+          <div className="py-32 text-center text-sm text-red-600">찬양악보를 불러올 수 없습니다.</div>
+        )}
+        {!isLoading && !isError && sheets.length === 0 && (
+          <div className="py-32 text-center text-sm text-[#737373]">
+            {keyword ? `"${keyword}"에 해당하는 찬양악보가 없습니다.` : '등록된 찬양악보가 없습니다.'}
+          </div>
+        )}
+
+        {!isLoading && !isError && sheets.map((sheet, idx) => (
+          <div key={sheet.id}
+            className={`grid grid-cols-[60px_1fr_auto] gap-4 px-4 py-5 border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors items-center group ${
+              sheet.isPinned ? 'bg-[#F4F2EA]' : ''
+            }`}
+          >
+            <div className="font-mono text-sm text-[#737373]">
+              {sheet.isPinned
+                ? <BookmarkSimple size={16} weight="fill" className="text-[#171717]" />
+                : totalElem - pageNum * pageSize - idx}
             </div>
-          ) : isError ? (
-            <div className="text-center py-20 text-red-500">찬양악보를 불러올 수 없습니다.</div>
-          ) : sheets.length === 0 ? (
-            <div className="text-center py-20">
-              <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
-              <p className="text-slate-500 font-light">등록된 찬양악보가 없습니다.</p>
-            </div>
-          ) : (
-            <>
-              <div className="hidden md:grid grid-cols-12 gap-4 py-4 px-4 border-b-2 border-slate-900 text-base font-medium text-slate-700">
-                <div className="col-span-1 text-center">No</div>
-                <div className="col-span-7">제목</div>
-                <div className="col-span-2 text-center">등록일</div>
-                <div className="col-span-2 text-center">조회수</div>
+            <div className="flex items-center gap-2 min-w-0">
+              <Link
+                to={`/praise-sheets/${sheet.id}`}
+                className={`text-base truncate group-hover:text-[#171717] transition-colors ${
+                  sheet.isPinned ? 'font-bold text-[#171717]' : 'font-medium text-[#2C2C2C]'
+                }`}
+              >
+                {sheet.title}
+              </Link>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {sheet.hasAttachments && <Paperclip size={13} className="text-[#A3A3A3]" />}
+                {sheet.isNew && (
+                  <span className="border border-[#171717] px-1.5 py-0.5 text-[10px] font-mono text-[#171717] uppercase tracking-wider leading-none">N</span>
+                )}
               </div>
-
-              {sheets.map((sheet, idx) => (
-                <div key={sheet.id}
-                  className={`grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 py-5 px-4 border-b border-slate-200
-                    hover:bg-slate-50 transition-all duration-200 items-center group
-                    ${sheet.isPinned ? 'bg-gradient-to-r from-slate-50 to-blue-50/30 border-l-4 border-blue-500' : ''}`}>
-
-                  <div className="hidden md:flex col-span-1 items-center justify-center">
-                    {sheet.isPinned
-                      ? <BookmarkIcon className="w-5 h-5 text-slate-900" />
-                      : <span className="text-slate-400 font-light text-sm">{totalElem - (pageNum * pageSize) - idx}</span>}
-                  </div>
-
-                  <div className="col-span-1 md:col-span-7">
-                    <div className="flex items-center gap-3">
-                      {sheet.isPinned && <span className="md:hidden flex-shrink-0"><BookmarkIcon className="w-5 h-5 text-slate-900" /></span>}
-                      <Link to={`/praise-sheets/${sheet.id}`}
-                        className={`text-base md:text-lg hover:underline hover:text-blue-600 flex-1 min-w-0 transition-colors
-                          ${sheet.isPinned ? 'text-slate-900 font-medium' : 'text-slate-700 font-light'}`}>
-                        {sheet.title}
-                      </Link>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {sheet.hasAttachments && (
-                          <span className="text-slate-400" title="첨부파일">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                            </svg>
-                          </span>
-                        )}
-                        {sheet.isNew && (
-                          <span className="px-2.5 py-0.5 text-xs font-semibold bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full shadow-sm">NEW</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="col-span-1 md:col-span-2 flex items-center md:justify-center">
-                    <span className="text-sm md:text-base text-slate-400 md:text-slate-500">
-                      {sheet.createdAt
-                        ? new Date(sheet.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '-').replace('.', '')
-                        : ''}
-                    </span>
-                  </div>
-
-                  <div className="col-span-1 md:col-span-2 flex items-center justify-between md:justify-center gap-4">
-                    <span className="text-sm md:text-base text-slate-400 md:text-slate-500 font-light">{sheet.viewCount}</span>
-                    {canWrite && (isAdmin || sheet.authorId === userId) && (
-                      <div className="flex gap-2">
-                        {isAdmin && (
-                          <button onClick={() => pinMutation.mutate(sheet.id)} disabled={pinMutation.isPending}
-                            title={sheet.isPinned ? '고정 해제' : '고정'}
-                            className={`p-2 rounded-lg transition-all duration-200 disabled:opacity-50
-                              ${sheet.isPinned ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                            <BookmarkIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button onClick={() => setDeleteTarget({ id: sheet.id, title: sheet.title })}
-                          className="p-2 bg-slate-100 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-12">
-                  <nav className="flex items-center gap-2">
-                    {page > 0 && (
-                      <button onClick={() => goPage(page - 1)} className="px-3 py-2 text-slate-600 hover:bg-slate-100 transition">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                    )}
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <button key={i} onClick={() => goPage(i)}
-                        className={`px-4 py-2 transition font-light ${i === page ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-                        {i + 1}
-                      </button>
-                    ))}
-                    {page < totalPages - 1 && (
-                      <button onClick={() => goPage(page + 1)} className="px-3 py-2 text-slate-600 hover:bg-slate-100 transition">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    )}
-                  </nav>
+              {canWrite && (isAdmin || sheet.authorId === userId) && (
+                <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isAdmin && (
+                    <button
+                      onClick={() => pinMutation.mutate(sheet.id)}
+                      disabled={pinMutation.isPending}
+                      className={`p-1.5 transition-colors border ${sheet.isPinned ? 'border-[#171717] bg-[#171717] text-[#FAF9F6]' : 'border-[#E5E5E5] text-[#737373] hover:border-[#171717]'}`}
+                    >
+                      <BookmarkSimple size={12} weight={sheet.isPinned ? 'fill' : 'regular'} />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setDeleteTarget({ id: sheet.id, title: sheet.title })}
+                    className="p-1.5 border border-[#E5E5E5] text-red-500 hover:border-red-500 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               )}
-            </>
-          )}
-        </div>
-      </section>
+            </div>
+            <div className="font-mono text-sm text-[#737373] text-right w-32">{fmtDot(sheet.createdAt)}</div>
+          </div>
+        ))}
+
+        {totalPages > 1 && (
+          <div className="mt-16 flex justify-center">
+            <nav className="inline-flex border border-[#E5E5E5]">
+              <button onClick={() => goPage(page - 1)} disabled={page === 0}
+                className="w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <CaretLeft size={14} weight="bold" />
+              </button>
+              {getPageRange(page, totalPages).map((p) => (
+                <button key={p} onClick={() => goPage(p)}
+                  className={`w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
+                    p === page ? 'bg-[#171717] text-white' : 'text-[#737373] hover:bg-[#F4F2EA] hover:text-[#171717]'
+                  }`}>
+                  {p + 1}
+                </button>
+              ))}
+              <button onClick={() => goPage(page + 1)} disabled={page >= totalPages - 1}
+                className="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <CaretRight size={14} weight="bold" />
+              </button>
+            </nav>
+          </div>
+        )}
+      </main>
 
       {writeOpen && (
         <WriteModal
@@ -372,7 +356,6 @@ const PraiseSheetListPage = () => {
           }}
         />
       )}
-
       {deleteTarget && (
         <DeleteModal
           title={deleteTarget.title}
@@ -381,7 +364,7 @@ const PraiseSheetListPage = () => {
           deleting={deleteMutation.isPending}
         />
       )}
-    </main>
+    </div>
   )
 }
 

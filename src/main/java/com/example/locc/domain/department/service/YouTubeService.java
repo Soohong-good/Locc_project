@@ -10,6 +10,8 @@ import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
+import com.google.api.services.youtube.model.Video;
+import com.google.api.services.youtube.model.VideoListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -73,6 +76,91 @@ public class YouTubeService {
 
         } catch (GeneralSecurityException | IOException e) {
             log.error("Error fetching YouTube video for channel: {}", channelId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 채널의 최신 "업로드" 영상 조회 (생방송 다시보기 제외)
+     * - 최근 영상 10개 중 liveStreamingDetails 가 없는(=일반 업로드) 첫 영상 선택
+     * - 후보가 없으면 search 결과 첫 번째 반환 (기존 getLatestVideo 동작과 동일)
+     * - videos.list 실패 시 getLatestVideo() 결과로 fallback
+     * @param channelId 유튜브 채널 ID
+     * @return 영상 ID, 제목을 담은 배열 [videoId, title]
+     */
+    public String[] getLatestUploadedVideo(String channelId) {
+        try {
+            YouTube youtube = new YouTube.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                JacksonFactory.getDefaultInstance(),
+                null
+            )
+            .setApplicationName(APPLICATION_NAME)
+            .build();
+
+            YouTube.Search.List request = youtube.search()
+                .list(List.of("snippet"))
+                .setKey(youTubeProperties.getApiKey())
+                .setChannelId(channelId)
+                .setOrder("date")
+                .setType(List.of("video"))
+                .setMaxResults(10L);
+
+            SearchListResponse response = request.execute();
+            List<SearchResult> searchResults = response.getItems();
+
+            if (searchResults == null || searchResults.isEmpty()) {
+                log.warn("No videos found for channel: {}", channelId);
+                return null;
+            }
+
+            // search 결과 순서(최신순) 유지하며 videoId → title 매핑
+            Map<String, String> idToTitle = new LinkedHashMap<>();
+            for (SearchResult result : searchResults) {
+                if (result.getId() != null && result.getId().getVideoId() != null) {
+                    idToTitle.put(result.getId().getVideoId(), result.getSnippet().getTitle());
+                }
+            }
+
+            try {
+                YouTube.Videos.List videosRequest = youtube.videos()
+                    .list(List.of("liveStreamingDetails"))
+                    .setKey(youTubeProperties.getApiKey())
+                    .setId(new ArrayList<>(idToTitle.keySet()));
+
+                VideoListResponse videoListResponse = videosRequest.execute();
+
+                // liveStreamingDetails 있는 영상(다시보기) ID 수집
+                Map<String, Boolean> isLive = new HashMap<>();
+                if (videoListResponse.getItems() != null) {
+                    for (Video video : videoListResponse.getItems()) {
+                        isLive.put(video.getId(), video.getLiveStreamingDetails() != null);
+                    }
+                }
+
+                // 최신순으로 일반 업로드(다시보기 아님) 첫 영상 선택
+                for (Map.Entry<String, String> entry : idToTitle.entrySet()) {
+                    if (!Boolean.TRUE.equals(isLive.get(entry.getKey()))) {
+                        log.info("Latest uploaded video found - Channel: {}, Video ID: {}, Title: {}",
+                            channelId, entry.getKey(), entry.getValue());
+                        return new String[]{entry.getKey(), entry.getValue()};
+                    }
+                }
+
+                // 후보 없음 → search 결과 첫 번째 반환 (기존 동작)
+                Map.Entry<String, String> first = idToTitle.entrySet().iterator().next();
+                log.warn("No non-live upload found, fallback to latest search result - Channel: {}, Video ID: {}",
+                    channelId, first.getKey());
+                return new String[]{first.getKey(), first.getValue()};
+
+            } catch (IOException e) {
+                // videos.list 실패 → 기존 getLatestVideo() 결과로 fallback
+                log.error("videos.list failed, fallback to getLatestVideo - Channel: {}", channelId, e);
+                return getLatestVideo(channelId);
+            }
+
+        } catch (GeneralSecurityException | IOException e) {
+            log.error("Error fetching latest uploaded video for channel: {}", channelId, e);
             return null;
         }
     }
@@ -245,5 +333,85 @@ public class YouTubeService {
             return "UU" + channelId.substring(2);
         }
         return channelId;
+    }
+
+    /**
+     * 재생목록에서 특정 날짜 이후 게시된 영상 전체 조회 (페이지네이션)
+     * - nextPageToken을 따라가며 전체 페이지 순회
+     * - 무한루프 방지를 위해 최대 페이지 수 제한 (20페이지 = 최대 1000개)
+     * @param playlistId 재생목록 ID
+     * @param sinceDate 이 날짜 이후(포함) 게시된 영상만 포함
+     * @return 영상 정보 리스트 (videoId, title, thumbnail, publishedAt)
+     */
+    public List<Map<String, String>> getAllVideosFromPlaylistSince(String playlistId, java.time.LocalDate sinceDate) {
+        log.info("YouTube 전체 페이지 조회 시작: playlistId={}, sinceDate={}", playlistId, sinceDate);
+
+        List<Map<String, String>> result = new ArrayList<>();
+        final int maxPages = 20;
+        final long pageSize = 50L;
+
+        try {
+            YouTube youtube = new YouTube.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                JacksonFactory.getDefaultInstance(),
+                null
+            )
+            .setApplicationName(APPLICATION_NAME)
+            .build();
+
+            String pageToken = null;
+            int pageCount = 0;
+
+            do {
+                YouTube.PlaylistItems.List request = youtube.playlistItems()
+                    .list(List.of("snippet", "contentDetails"))
+                    .setPlaylistId(playlistId)
+                    .setMaxResults(pageSize)
+                    .setKey(youTubeProperties.getApiKey());
+
+                if (pageToken != null) {
+                    request.setPageToken(pageToken);
+                }
+
+                PlaylistItemListResponse response = request.execute();
+                List<PlaylistItem> items = response.getItems();
+
+                if (items != null) {
+                    for (PlaylistItem item : items) {
+                        String publishedAt = item.getSnippet().getPublishedAt().toString();
+                        java.time.LocalDate publishedDate = parsePublishedDate(publishedAt);
+                        if (publishedDate == null || publishedDate.isBefore(sinceDate)) {
+                            continue;
+                        }
+
+                        Map<String, String> video = new HashMap<>();
+                        video.put("videoId", item.getContentDetails().getVideoId());
+                        video.put("title", item.getSnippet().getTitle());
+                        video.put("thumbnail", item.getSnippet().getThumbnails().getMedium().getUrl());
+                        video.put("publishedAt", publishedAt);
+                        result.add(video);
+                    }
+                }
+
+                pageToken = response.getNextPageToken();
+                pageCount++;
+            } while (pageToken != null && !pageToken.isBlank() && pageCount < maxPages);
+
+            log.info("YouTube 전체 페이지 조회 완료: playlistId={}, 영상 {}개, 페이지 {}개", playlistId, result.size(), pageCount);
+            return result;
+
+        } catch (GeneralSecurityException | IOException e) {
+            log.error("YouTube 전체 페이지 조회 실패: playlistId={}", playlistId, e);
+            return List.of();
+        }
+    }
+
+    private java.time.LocalDate parsePublishedDate(String publishedAt) {
+        if (publishedAt == null || publishedAt.length() < 10) return null;
+        try {
+            return java.time.LocalDate.parse(publishedAt.substring(0, 10));
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

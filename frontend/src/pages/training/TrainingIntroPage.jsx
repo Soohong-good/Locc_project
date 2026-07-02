@@ -1,245 +1,295 @@
+import { BookOpen, Clock, Info, CheckCircle, CaretRight, Desktop, ChalkboardTeacher, Books } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
 
-const TrainingIntroPage = () => {
-  return (
-    <div className="relative" style={{ backgroundColor: '#ffffff' }}>
+const programInfoItems = [
+  { label: 'Program', value: '리딩지저스 성경읽기' },
+  { label: 'Duration', value: '12주 과정' },
+  { label: 'Location', value: '교육관 3층' },
+  { label: 'Application', value: '교회 사무실 문의' },
+]
 
-      {/* ── 고정 배경 이미지 ──────────────────────────────── */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 0,
-          backgroundImage: 'url(/images/bg-training.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
+const features = [
+  {
+    num: '01',
+    icon: <BookOpen size={36} className="text-[#D4D4D4]" />,
+    title: '성경 전체 개관',
+    desc: '구약과 신약 전체를 균형 있게 읽으며 하나님의 구원 역사를 한눈에 파악합니다.',
+  },
+  {
+    num: '02',
+    icon: <Clock size={36} className="text-[#D4D4D4]" />,
+    title: '체계적 통독',
+    desc: '단순한 읽기를 넘어 본문의 맥락과 흐름을 이해하며 말씀 속에 깊이 들어갑니다.',
+  },
+  {
+    num: '03',
+    icon: <Info size={36} className="text-[#D4D4D4]" />,
+    title: '소그룹 나눔',
+    desc: '함께 읽고 나누며 공동체 안에서 말씀이 삶이 되는 경험을 합니다.',
+  },
+  {
+    num: '04',
+    icon: <BookOpen size={36} className="text-[#D4D4D4]" />,
+    title: '1년 1독 완성',
+    desc: '계획적인 읽기 일정을 통해 1년 안에 성경 1독을 완성할 수 있도록 돕습니다.',
+  },
+]
 
-      {/* ── Hero — 반투명 ─────────────────────────────────── */}
-      <section className="pt-page pb-20 px-6 text-white relative" style={{ zIndex: 1, backgroundColor: 'rgba(15,23,42,0.82)' }}>
-        <div className="max-w-6xl mx-auto animate-fade-in-up">
-          <p className="text-xs font-medium tracking-[0.3em] uppercase mb-3 text-eyebrow">
-            Training & Discipleship
-          </p>
-          <h1 className="text-4xl md:text-5xl font-light leading-tight tracking-tight">훈련소개</h1>
-          <p className="mt-4 text-lg font-light text-slate-300 max-w-2xl">
-            그리스도의 제자로 자라가는 훈련과 양육의 과정
-          </p>
-        </div>
-      </section>
+const processSteps = [
+  { step: '01', title: '등록 및 오리엔테이션', desc: '참가 신청 후 오리엔테이션을 통해 리딩지저스 방법론과 일정을 안내합니다.' },
+  { step: '02', title: '매주 읽기 & 소그룹', desc: '정해진 본문을 주중에 개인으로 읽고, 주말 소그룹에서 함께 나눕니다.' },
+  { step: '03', title: '수료 및 다음 단계', desc: '12주 과정 수료 후 그리스도 제자대학 진학 등 다음 훈련 단계로 연결됩니다.' },
+]
 
-      {/* ── 01. 리딩지저스 — 불투명 흰색 ────────────────── */}
-      <section className="py-32 px-6 relative" style={{ zIndex: 1, backgroundColor: '#ffffff' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-16">
-            <div className="text-6xl font-light text-slate-200 mb-6">01</div>
-            <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
-              리딩지저스 성경읽기와 나눔모임
-            </h2>
-            <div className="h-px w-16 bg-slate-300 mb-12" />
-          </div>
-          <div className="space-y-12">
-            <p className="text-lg md:text-xl text-slate-600 leading-[1.9] font-light mb-8">
-              리딩지저스는 신약성경을 통독하며 예수 그리스도를 만나는 성경읽기 프로그램입니다.<br />
-              매주 정해진 분량을 읽고, 소그룹으로 모여 받은 은혜를 나누고 적용하는 모임입니다.
-            </p>
-            <div className="bg-slate-50 p-8 md:p-10 mb-12">
-              <h3 className="text-2xl font-medium text-slate-900 mb-8">모임 안내</h3>
-              <div className="space-y-6">
-                {[
-                  { icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: '시간', value: '주일 오후 1시 / 1시 30분 / 2시' },
-                  { icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', label: '내용', value: '성경읽기를 통해 받은 은혜를 나누고 적용하는 모임' },
-                ].map(({ icon, label, value }) => (
-                  <div key={label} className="flex items-start gap-4">
-                    <svg className="w-6 h-6 text-slate-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={icon} />
-                    </svg>
-                    <div>
-                      <p className="text-lg font-medium text-slate-900 mb-2">{label}</p>
-                      <p className="text-base text-slate-600">{value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-slate-900 text-white p-8 md:p-10 mb-12">
-              <h3 className="text-2xl font-light mb-6">리딩지저스란?</h3>
-              <p className="text-lg leading-[1.9] font-light">
-                리딩지저스(Reading Jesus)는 신약성경 전체를 체계적으로 통독하며
-                예수 그리스도를 만나는 성경읽기 프로그램입니다.
-                단순히 성경을 읽는 것을 넘어, 말씀 속에서 살아계신 예수님을 만나고
-                그분의 음성을 듣는 것을 목표로 합니다.
-              </p>
-            </div>
-            <div className="mb-12">
-              <h3 className="text-2xl font-medium text-slate-900 mb-8">프로그램 특징</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                {[
-                  { title: '체계적 통독',   desc: '신약성경 전체를 52주 동안 체계적으로 읽어나갑니다. 매주 정해진 분량을 따라 읽으며 성경 전체의 맥락을 이해하게 됩니다.' },
-                  { title: '삶의 적용',     desc: '단순한 지식 습득이 아닌, 말씀을 삶에 적용하는 것을 강조합니다. QT 방식을 활용하여 개인의 삶에 말씀을 적용합니다.' },
-                  { title: '소그룹 나눔',   desc: '소그룹으로 모여 각자 받은 은혜를 나누고 함께 기도합니다. 서로의 신앙 여정을 격려하며 함께 성장합니다.' },
-                  { title: '그리스도 중심', desc: '신약성경 전체를 통해 예수 그리스도를 발견하고, 그분과의 관계를 깊이 있게 만들어갑니다.' },
-                ].map((item) => (
-                  <div key={item.title} className="border-l-4 border-slate-900 pl-6 py-4">
-                    <h4 className="text-xl font-medium text-slate-900 mb-3">{item.title}</h4>
-                    <p className="text-base text-slate-600 leading-relaxed">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-slate-50 p-8 md:p-10">
-              <h3 className="text-2xl font-medium text-slate-900 mb-8">진행 방식</h3>
-              <div className="space-y-6">
-                {[
-                  { step: '1', title: '개인 성경읽기', desc: '매주 정해진 분량(보통 1-2장)을 개인적으로 읽습니다. 읽으면서 받은 은혜와 깨달음을 기록합니다.' },
-                  { step: '2', title: '소그룹 모임',   desc: '주일 오후 소그룹으로 모여 읽은 말씀을 나눕니다. 각자의 은혜와 깨달음, 질문들을 함께 나눕니다.' },
-                  { step: '3', title: '삶의 적용',     desc: '말씀을 통해 받은 도전과 결단을 일주일 동안 실천합니다. 다음 주에 서로의 실천을 나누고 격려합니다.' },
-                ].map((item) => (
-                  <div key={item.step} className="flex gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center font-medium">
-                      {item.step}
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-medium text-slate-900 mb-2">{item.title}</h4>
-                      <p className="text-base text-slate-600 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 02. 그사랑제자대학 — 반투명 ─────────────────── */}
-      <section className="py-32 px-6 text-white relative" style={{ zIndex: 1, backgroundColor: 'rgba(15,23,42,0.82)' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-16">
-            <div className="text-6xl font-light text-white/20 mb-6">02</div>
-            <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8">그사랑제자대학</h2>
-            <div className="h-px w-16 bg-white/30 mb-12" />
-          </div>
-          <div className="space-y-12">
-            <p className="text-lg md:text-xl text-white/85 leading-[1.9] font-light mb-12">
-              그사랑제자대학은 신앙의 기초를 든든히 세우고,
-              그리스도의 제자로 자라가기 위한 체계적인 훈련 과정입니다.
-            </p>
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              {[
-                { badge: '봄',  title: '봄학기',  period: '3월 ~ 5월' },
-                { badge: '가을', title: '가을학기', period: '9월 ~ 11월' },
-              ].map((item) => (
-                <div key={item.title} className="bg-white/10 border border-white/20 p-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-white text-slate-900 rounded-full flex items-center justify-center text-xl font-light">
-                      {item.badge}
-                    </div>
-                    <h3 className="text-2xl font-medium text-white">{item.title}</h3>
-                  </div>
-                  <p className="text-lg text-white/70 leading-[1.8] font-light">{item.period}</p>
-                </div>
-              ))}
-            </div>
-            <div className="bg-white/10 border border-white/20 p-8 md:p-10 mb-12">
-              <h3 className="text-2xl font-light mb-6">교육 과정</h3>
-              <div className="space-y-4 text-lg leading-[1.9] font-light">
-                {[
-                  { subject: '조직신학',      desc: '성경이 가르치는 진리 체계' },
-                  { subject: '성경',          desc: '구약과 신약의 이해' },
-                  { subject: '교회사',        desc: '교회의 역사와 전통' },
-                  { subject: '성경적 세계관', desc: '그리스도인의 삶의 원리' },
-                  { subject: '소명',          desc: '부르심에 응답하는 삶' },
-                ].map((item) => (
-                  <div key={item.subject} className="flex items-start gap-3">
-                    <svg className="w-6 h-6 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <p><strong className="font-medium">{item.subject}</strong> — {item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-white/10 border border-white/20 p-8 md:p-10">
-              <h3 className="text-2xl font-medium text-white mb-6">수강 대상</h3>
-              <p className="text-lg text-white/85 leading-[1.9] font-light mb-4">
-                <strong className="font-medium text-white">새가족반 수료자</strong>
-              </p>
-              <p className="text-base text-white/60 leading-[1.8] font-light">
-                새가족반을 수료하신 모든 분들이 참여하실 수 있습니다.<br />
-                연 2회 진행되며, 봄학기 또는 가을학기에 등록하실 수 있습니다.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 03. 특강 및 기타 훈련 — 불투명 흰색 ────────── */}
-      <section className="py-32 px-6 relative" style={{ zIndex: 1, backgroundColor: '#ffffff' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-16">
-            <div className="text-6xl font-light text-slate-200 mb-6">03</div>
-            <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-8">
-              특강 및 기타 훈련
-            </h2>
-            <div className="h-px w-16 bg-slate-300 mb-12" />
-          </div>
-          <div className="space-y-12">
-            <p className="text-lg md:text-xl text-slate-600 leading-[1.9] font-light mb-12">
-              교회에서는 정기적인 훈련 외에도 다양한 특강과 세미나를 진행합니다.
-            </p>
-            <div className="grid md:grid-cols-2 gap-8">
-              {[
-                { path: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', title: '묵상훈련', desc: '하나님의 말씀을 깊이 묵상하고 적용하는 방법을 배우는 훈련', span: '' },
-                { path: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', title: '장로교육', desc: '교회의 직분자로서 섬김과 리더십을 배우는 교육', span: '' },
-                { path: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', title: '교사세미나', desc: '다음 세대를 가르치는 교사들을 위한 세미나', span: '' },
-                { path: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z', title: '신학세미나', desc: '신학적 주제를 깊이 있게 다루는 세미나', span: '' },
-                { path: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z', title: '전교인 수련회', desc: '전 교인이 함께 모여 하나님을 예배하고 교제하며 영적으로 재충전하는 시간', span: 'md:col-span-2' },
-              ].map((item) => (
-                <div key={item.title} className={`bg-slate-50 p-8 ${item.span}`}>
-                  <div className="flex items-center gap-3 mb-6">
-                    <svg className="w-8 h-8 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.path} />
-                    </svg>
-                    <h3 className="text-2xl font-medium text-slate-900">{item.title}</h3>
-                  </div>
-                  <p className="text-base text-slate-600 leading-[1.8] font-light">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA — 반투명 ─────────────────────────────────── */}
-      <section className="py-24 px-6 text-white relative" style={{ zIndex: 1, backgroundColor: 'rgba(15,23,42,0.85)' }}>
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-light text-white mb-6">
-            훈련에 참여하고 싶으신가요?
-          </h2>
-          <p className="text-lg md:text-xl text-slate-300 mb-12 font-light leading-[1.8]">
-            훈련 프로그램에 대한 자세한 정보는<br />
-            교회 사무실로 문의해 주세요.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/church/contact"
-              className="inline-flex items-center px-8 py-4 bg-white text-slate-900 hover:bg-slate-100 transition font-light tracking-wide">
-              연락처 보기
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link to="/"
-              className="inline-flex items-center px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-slate-900 transition font-light tracking-wide">
-              홈으로
-            </Link>
-          </div>
-        </div>
-      </section>
-
-    </div>
-  )
+const semesterCurriculum = {
+  spring: ['조직신학', '성경', '교리사', '성경의 세계관', '소명'],
+  fall: ['조직신학', '성경', '교리사', '성경의 세계관', '소명'],
 }
 
-export default TrainingIntroPage
+const SUBJECT_DESC = {
+  '조직신학': '성경이 가르치는 신앙 체계',
+  '성경': '구약과 신약의 이해',
+  '교리사': '교회의 역사와 전통',
+  '성경의 세계관': '그리스도인의 삶의 원리',
+  '소명': '부르심에 응답하는 삶',
+}
+
+const specialLectures = [
+  { num: '01', icon: <BookOpen size={36} />, title: '묵상훈련', desc: '하나님의 말씀을 묵상하고 기록하며 깊은 교제를 누리는 훈련' },
+  { num: '02', icon: <Desktop size={36} />, title: '정보교육', desc: '교회의 기본적인 시스템과 정보를 배우는 교육' },
+  { num: '03', icon: <ChalkboardTeacher size={36} />, title: '교사세미나', desc: '다음 세대를 위한 교사역할을 위한 세미나' },
+  { num: '04', icon: <Books size={36} />, title: '신학세미나', desc: '신약과 주제를 깊이 있게 다루는 세미나' },
+]
+
+const HeroSection = () => (
+  <section className="pt-20 border-b border-[#171717] bg-[#171717] text-[#FAF9F6] overflow-hidden">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 border-x border-white/10 min-h-[600px] lg:min-h-[700px]">
+      <div className="lg:col-span-8 p-8 md:p-16 lg:p-24 flex flex-col justify-end">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-white/60 font-mono mb-8 block">Training</span>
+        <h1 className="text-6xl md:text-8xl lg:text-[8rem] font-bold tracking-tighter leading-none text-[#FAF9F6] mb-6 break-keep">훈련소개</h1>
+        <p className="text-xl md:text-2xl font-light text-white/70 max-w-2xl break-keep">
+          말씀과 훈련을 통해 그리스도의 제자로 세워지는 과정입니다.
+        </p>
+      </div>
+      <div className="lg:col-span-4 bg-[#141414] border-l border-white/10 p-8 md:p-16 flex flex-col justify-end">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-white/40 font-mono mb-6 block">Programs</span>
+        <ul className="space-y-4 text-white/70">
+          {['01 리딩지저스 성경읽기', '02 그리스도 제자대학', '03 특강 및 기타 훈련'].map(item => (
+            <li key={item} className="flex items-center gap-3 text-base font-light">
+              <CaretRight size={14} className="text-white/40 shrink-0" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+)
+
+const ProgramInfoSection = () => (
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-2 lg:grid-cols-4 divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+      {programInfoItems.map(({ label, value }) => (
+        <div key={label} className="p-8 md:p-12 flex flex-col">
+          <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-3">{label}</span>
+          <span className="text-xl font-bold text-[#2C2C2C]">{value}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+)
+
+const ReadingJesusSection = () => (
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] relative overflow-hidden">
+      <span className="text-[120px] lg:text-[200px] font-mono font-bold text-[#2C2C2C]/5 absolute -top-10 right-4 md:right-12 leading-none select-none z-0">01</span>
+      <div className="relative z-10 pt-10 pb-0 p-8 md:p-16 lg:p-24">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Bible Reading</span>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#2C2C2C]">리딩지저스 성경읽기</h2>
+      </div>
+    </div>
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+      <div className="lg:col-span-5 p-8 md:p-16 lg:p-24 bg-[#171717] flex flex-col justify-center">
+        <h3 className="text-3xl font-bold text-[#FAF9F6] mb-8 break-keep">리딩지저스란?</h3>
+        <p className="text-lg text-white/70 font-light leading-relaxed break-keep mb-6">
+          리딩지저스는 성경 전체를 체계적으로 읽으며 하나님의 말씀을 가까이 하고 성경이 가르치는
+          예수 그리스도를 깊이 알아가는 성경읽기 프로그램입니다.
+        </p>
+        <p className="text-lg text-white/70 font-light leading-relaxed break-keep">
+          개인 읽기와 소그룹 나눔을 통해 말씀이 삶이 되는 경험을 함께합니다.
+        </p>
+      </div>
+      <div className="lg:col-span-7 p-8 md:p-16 lg:p-24 bg-[#FAF9F6]">
+        <h4 className="text-xl font-bold text-[#2C2C2C] mb-8 border-b border-[#E5E5E5] pb-4">프로그램 안내</h4>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {[
+            { dt: '대상', dd: '등록 교인 누구나' },
+            { dt: '기간', dd: '매년 1월 ~ 12월 (연간 운영)' },
+            { dt: '시간', dd: '주일 오후 (소그룹별 조율)' },
+            { dt: '장소', dd: '교육관 소그룹실' },
+          ].map(({ dt, dd }) => (
+            <div key={dt}>
+              <dt className="text-xs font-mono uppercase tracking-widest text-[#737373] mb-2">{dt}</dt>
+              <dd className="text-lg font-medium text-[#2C2C2C]">{dd}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  </section>
+)
+
+const FeaturesSection = () => (
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-[#E5E5E5] gap-px border-x border-[#E5E5E5]">
+      {features.map(({ num, icon, title, desc }) => (
+        <div key={num} className="bg-[#FAF9F6] p-8 md:p-12 hover:bg-[#F4F2EA] transition-colors flex flex-col min-h-[300px]">
+          <div className="mb-8">{icon}</div>
+          <h4 className="text-xl font-bold mb-4 flex items-center gap-3 text-[#2C2C2C]">
+            <span className="font-mono text-[#E5E5E5] text-lg font-bold">{num}</span>
+            {title}
+          </h4>
+          <p className="text-sm text-[#737373] font-light leading-relaxed mt-auto break-keep">{desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+)
+
+const ProcessSection = () => (
+  <section className="bg-[#171717] text-[#FAF9F6] border-b border-[#333333]">
+    <div className="max-w-[1600px] mx-auto border-x border-[#333333]">
+      <div className="p-8 md:p-16 lg:p-24 border-b border-[#333333]">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-white/40 font-mono mb-4 block">Process</span>
+        <h2 className="text-4xl font-bold tracking-tight text-[#FAF9F6]">진행 방식</h2>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#333333]">
+        {processSteps.map(({ step, title, desc }) => (
+          <div key={step} className="p-8 md:p-16 lg:p-20 flex flex-col min-h-[280px]">
+            <span className="text-4xl font-mono font-bold text-[#333333] mb-8">{step}</span>
+            <h3 className="text-xl font-bold text-[#FAF9F6] mb-4">{title}</h3>
+            <p className="text-white/50 font-light leading-relaxed break-keep text-sm mt-auto">{desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)
+
+const DiscipleUniversitySection = () => (
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] relative overflow-hidden">
+      <span className="text-[120px] lg:text-[200px] font-mono font-bold text-[#2C2C2C]/5 absolute -top-10 right-4 md:right-12 leading-none select-none z-0">02</span>
+      <div className="relative z-10 pt-10 pb-0 p-8 md:p-16 lg:p-24">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Disciple University</span>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#2C2C2C]">그리스도 제자대학</h2>
+      </div>
+    </div>
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+      <div className="p-8 md:p-16 lg:p-20">
+        <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-4 block">Spring Semester</span>
+        <h3 className="text-2xl font-bold text-[#2C2C2C] mb-8">봄학기</h3>
+        <p className="text-[#737373] font-light mb-8 break-keep">봄학기에는 신앙의 기초를 다지는 핵심 과목들을 수강합니다.</p>
+        <ul className="space-y-4">
+          {semesterCurriculum.spring.map(item => (
+            <li key={item} className="flex items-start gap-4">
+              <CheckCircle size={24} weight="fill" className="text-[#555] mt-0.5 shrink-0" />
+              <div>
+                <strong className="text-[#2C2C2C] font-medium block mb-1">{item}</strong>
+                <span className="text-[#737373] text-sm font-light">{SUBJECT_DESC[item]}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="bg-[#141414] p-8 md:p-16 lg:p-20">
+        <span className="text-xs font-mono uppercase tracking-[0.2em] text-white/40 mb-4 block">Fall Semester</span>
+        <h3 className="text-2xl font-bold text-[#FAF9F6] mb-8">가을학기</h3>
+        <p className="text-white/50 font-light mb-8 break-keep">가을학기에는 심화 과정과 현장 적용을 중심으로 훈련합니다.</p>
+        <ul className="space-y-4">
+          {semesterCurriculum.fall.map(item => (
+            <li key={item} className="flex items-start gap-4">
+              <CheckCircle size={24} weight="fill" className="text-[#555] mt-0.5 shrink-0" />
+              <div>
+                <strong className="text-white font-medium block mb-1 text-lg">{item}</strong>
+                <span className="text-[#A3A3A3] text-sm font-light break-keep block leading-relaxed">{SUBJECT_DESC[item]}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-12 p-8 bg-[#141414] border border-[#333]">
+          <h4 className="text-xl font-bold mb-4 text-white">수강 대상</h4>
+          <strong className="block text-xl font-medium mb-4 text-[#E5E5E5]">새가족반 수료자</strong>
+          <p className="text-[#A3A3A3] font-light leading-relaxed break-keep">
+            새가족반을 수료하신 모든 분들이 참여하실 수 있습니다.
+            연 2회 진행되며, 봄학기 또는 가을학기에 등록하실 수 있습니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+)
+
+const SpecialLecturesSection = () => (
+  <section className="bg-[#FAF9F6] text-[#2C2C2C] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto p-8 md:p-16 lg:p-24 border-x border-[#E5E5E5] relative overflow-hidden">
+      <span className="text-[120px] lg:text-[200px] font-mono font-bold text-[#2C2C2C]/5 absolute -top-12 right-4 md:right-12 lg:right-20 leading-none select-none z-0">03</span>
+      <div className="relative z-10 pt-10 pb-4">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Special Lectures</span>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight">특강 및 기타 훈련</h2>
+      </div>
+    </div>
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-[#E5E5E5] gap-px border-x border-[#E5E5E5]">
+      {specialLectures.map(({ num, icon, title, desc }) => (
+        <div key={num} className="bg-[#FAF9F6] p-8 md:p-12 hover:bg-[#F4F2EA] transition-colors flex flex-col min-h-[300px]">
+          <div className="mb-8 text-[#D4D4D4]">{icon}</div>
+          <h4 className="text-xl font-bold mb-4 flex items-center gap-3 text-[#2C2C2C]">
+            <span className="font-mono text-[#E5E5E5] text-lg font-bold">{num}</span>
+            {title}
+          </h4>
+          <p className="text-sm text-[#737373] font-light leading-relaxed mt-auto break-keep">{desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+)
+
+const CTASection = () => (
+  <section className="bg-[#171717] text-[#FAF9F6] border-b border-[#333333]">
+    <div className="max-w-[1600px] mx-auto p-16 md:p-24 lg:p-32 flex flex-col items-center text-center border-x border-[#333333]">
+      <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-8">훈련에 참여하고 싶으신가요?</h2>
+      <p className="text-lg text-[#A3A3A3] font-light mb-12 max-w-2xl break-keep leading-relaxed">
+        아래 훈련 프로그램에 대해 자세히 알아보고, 교회 사무실로 문의해 주세요.
+      </p>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+        <a
+          href="#"
+          className="w-full sm:w-auto px-10 py-5 bg-[#FAF9F6] text-[#2C2C2C] font-bold text-sm tracking-[0.2em] uppercase hover:bg-[#E5E5E5] transition-colors text-center"
+        >
+          온라인 신청
+        </a>
+        <Link
+          to="/church/contact"
+          className="w-full sm:w-auto px-10 py-5 border border-[#555] text-[#FAF9F6] font-bold text-sm tracking-[0.2em] uppercase hover:bg-[#222] transition-colors text-center"
+        >
+          교회 사무실 문의
+        </Link>
+      </div>
+    </div>
+  </section>
+)
+
+export default function TrainingIntroPage() {
+  return (
+    <main className="bg-[#FAF9F6] text-[#2C2C2C]">
+      <HeroSection />
+      <ProgramInfoSection />
+      <ReadingJesusSection />
+      <FeaturesSection />
+      <ProcessSection />
+      <DiscipleUniversitySection />
+      <SpecialLecturesSection />
+      <CTASection />
+    </main>
+  )
+}

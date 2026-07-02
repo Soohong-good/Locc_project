@@ -9,8 +9,11 @@ import com.example.locc.domain.admin.repository.SermonPlaylistCacheRepository;
 import com.example.locc.domain.bibleschool.entity.BibleSchool;
 import com.example.locc.domain.bibleschool.service.BibleSchoolQueryService;
 import com.example.locc.domain.department.dto.response.DepartmentResponse;
+import com.example.locc.domain.department.entity.Department;
+import com.example.locc.domain.department.repository.DepartmentRepository;
 import com.example.locc.domain.department.service.DepartmentQueryService;
 import com.example.locc.domain.department.service.YouTubeService;
+import com.example.locc.exception.NotFoundException;
 import com.example.locc.domain.newyear.dto.response.NewYearResponse;
 import com.example.locc.domain.newyear.entity.NewYear;
 import com.example.locc.domain.newyear.service.NewYearQueryService;
@@ -33,6 +36,7 @@ import java.util.stream.Collectors;
 public class AdminYouTubeQueryService {
 
     private final DepartmentQueryService departmentQueryService;
+    private final DepartmentRepository departmentRepository;
     private final NewYearQueryService newYearQueryService;
     private final BibleSchoolQueryService bibleSchoolQueryService;
     private final YouTubeService youTubeService;
@@ -85,10 +89,13 @@ public class AdminYouTubeQueryService {
                 .map(entry -> {
                     String key = entry.getKey();
                     SermonPlaylistCache cache = cacheMap.get(key);
+                    String playlistId = (cache != null && cache.getPlaylistIdOverride() != null)
+                            ? cache.getPlaylistIdOverride()
+                            : youTubeProperties.getPlaylistId(key);
                     return new SermonPlaylistStatus(
                             key,
                             entry.getValue(),
-                            youTubeProperties.getPlaylistId(key),
+                            playlistId,
                             cache != null ? cache.getLatestVideoId() : null,
                             cache != null ? cache.getLatestVideoTitle() : null
                     );
@@ -110,6 +117,30 @@ public class AdminYouTubeQueryService {
 
     public String getPlaylistId(String playlistKey) {
         return youTubeProperties.getPlaylistId(playlistKey);
+    }
+
+    /**
+     * 예배 재생목록 ID 수정 — DB override에 저장 (application.yml 값보다 우선 적용)
+     */
+    @Transactional
+    public void updateSermonPlaylistId(String playlistKey, String playlistId) {
+        if (!isValidPlaylistKey(playlistKey)) {
+            throw new InvalidInputException("지원하지 않는 재생목록 키입니다: " + playlistKey);
+        }
+        SermonPlaylistCache cache = sermonPlaylistCacheRepository.findByPlaylistKey(playlistKey)
+                .orElseGet(() -> SermonPlaylistCache.create(playlistKey));
+        cache.updatePlaylistId(playlistId);
+        sermonPlaylistCacheRepository.save(cache);
+    }
+
+    /**
+     * 부서 YouTube 채널 ID 수정
+     */
+    @Transactional
+    public void updateDepartmentChannelId(String code, String channelId) {
+        Department dept = departmentRepository.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("부서를 찾을 수 없습니다: " + code));
+        dept.setYoutubeChannel(channelId);
     }
 
     /**

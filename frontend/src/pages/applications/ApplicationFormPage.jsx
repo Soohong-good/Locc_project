@@ -4,8 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createApplication } from '@/api/applications'
 import useAuthStore from '@/stores/authStore'
 
-const NAV_BG = '#1e3a5f'
-
 // ── 신청 종류 고정 목록 (추가 시 여기에 이름만 넣으면 됨) ──────────────
 const FORM_TYPES = [
   '차량신청',
@@ -252,35 +250,32 @@ const ApplicationFormPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#FAF9F6]">
 
-      {/* ── 상단 배너 ── */}
-      <div style={{ background: NAV_BG }} className="pt-[95px]">
-        <div className="max-w-4xl mx-auto px-6 py-10">
-          <p className="text-xs font-semibold tracking-widest uppercase mb-2"
-            style={{ color: 'rgba(255,255,255,0.45)' }}>
-            Applications
-          </p>
-          <h1 className="text-2xl font-bold text-white">신청서 작성</h1>
-          <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+      {/* Hero */}
+      <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C]">
+        <div className="max-w-[1200px] mx-auto px-6 py-16">
+          <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Applications</span>
+          <h1 className="text-5xl font-bold tracking-tight break-keep">신청서 작성</h1>
+          <p className="mt-3 text-sm text-[#A3A3A3] break-keep">
             신청 종류를 선택하면 해당 신청서 양식이 표시됩니다.
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* ── 본문 ── */}
-      <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+      {/* 본문 */}
+      <main className="max-w-3xl mx-auto px-6 pt-14 md:pt-20 pb-32 space-y-6">
 
         {/* 신청 종류 선택 */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white border border-[#E5E5E5] p-5">
+          <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
             신청 종류 <span className="text-red-500">*</span>
           </label>
           <select
             value={formType}
             onChange={e => { setFormType(e.target.value); setErrors({}) }}
-            className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
-              errors.formType ? 'border-red-400' : 'border-gray-300'
+            className={`w-full px-3 py-2.5 border text-sm focus:outline-none focus:border-[#171717] bg-white ${
+              errors.formType ? 'border-red-400' : 'border-[#E5E5E5]'
             }`}
           >
             <option value="">선택해주세요</option>
@@ -305,12 +300,12 @@ const ApplicationFormPage = () => {
 
         {/* 필수 오류 안내 */}
         {Object.keys(errors).filter(k => k !== 'formType').length > 0 && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-3">
             필수 항목을 모두 입력해주세요.
           </p>
         )}
         {mutation.error && (
-          <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-3">
             신청 중 오류가 발생했습니다. 다시 시도해주세요.
           </p>
         )}
@@ -321,20 +316,19 @@ const ApplicationFormPage = () => {
             <button
               onClick={handleSubmit}
               disabled={mutation.isPending}
-              className="px-6 py-2.5 text-sm font-medium text-white rounded-lg disabled:opacity-50 transition hover:opacity-90"
-              style={{ background: NAV_BG }}
+              className="text-xs font-bold tracking-[0.1em] uppercase bg-[#171717] text-[#FAF9F6] px-6 py-2.5 hover:opacity-90 transition-colors disabled:opacity-50"
             >
               {mutation.isPending ? '제출 중...' : '신청하기'}
             </button>
             <button
               onClick={() => navigate('/applications')}
-              className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition"
+              className="text-xs font-bold tracking-[0.1em] uppercase border border-[#E5E5E5] text-[#737373] px-6 py-2.5 hover:border-[#171717] hover:text-[#171717] transition-colors"
             >
               취소
             </button>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }

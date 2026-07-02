@@ -129,7 +129,7 @@ public class SermonYouTubeSyncService {
     @Transactional
     public void syncWednesdayService() {
         log.info("[YouTube 동기화] 수요예배 시작");
-        syncPlaylist("wednesday", "기타예배", 1);
+        syncPlaylist("wednesday", "수요예배", null);
         log.info("[YouTube 동기화] 수요예배 완료");
     }
 
@@ -137,7 +137,7 @@ public class SermonYouTubeSyncService {
     @Transactional
     public void syncFridayService() {
         log.info("[YouTube 동기화] 금요기도회 시작");
-        syncPlaylist("friday", "기타예배", 2);
+        syncPlaylist("friday", "금요기도회", null);
         log.info("[YouTube 동기화] 금요기도회 완료");
     }
 
@@ -153,8 +153,8 @@ public class SermonYouTubeSyncService {
             case "sunday-morning-1" -> syncPlaylist("sunday-morning-1", "주일오전", 1);
             case "sunday-morning-2" -> syncPlaylist("sunday-morning-2", "주일오전", 2);
             case "sunday-afternoon" -> syncPlaylist("sunday-afternoon", "주일오후", null);
-            case "wednesday"        -> syncPlaylist("wednesday", "기타예배", 1);
-            case "friday"           -> syncPlaylist("friday", "기타예배", 2);
+            case "wednesday"        -> syncPlaylist("wednesday", "수요예배", null);
+            case "friday"           -> syncPlaylist("friday", "금요기도회", null);
             default -> throw new IllegalArgumentException("알 수 없는 재생목록 키: " + playlistKey);
         };
     }
@@ -169,8 +169,8 @@ public class SermonYouTubeSyncService {
                 "sunday-morning-1", syncPlaylist("sunday-morning-1", "주일오전", 1),
                 "sunday-morning-2", syncPlaylist("sunday-morning-2", "주일오전", 2),
                 "sunday-afternoon", syncPlaylist("sunday-afternoon", "주일오후", null),
-                "wednesday",        syncPlaylist("wednesday", "기타예배", 1),
-                "friday",           syncPlaylist("friday", "기타예배", 2)
+                "wednesday",        syncPlaylist("wednesday", "수요예배", null),
+                "friday",           syncPlaylist("friday", "금요기도회", null)
         );
     }
 

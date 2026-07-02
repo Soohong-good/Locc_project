@@ -64,7 +64,7 @@ public class Sermon extends BaseEntity {
 
     @Size(max = 50, message = "카테고리는 50자를 초과할 수 없습니다")
     @Column(length = 50)
-    private String category;  // 주일오전, 주일오후, 기타예배, 훈련용메시지 등
+    private String category;  // 주일오전, 주일오후, 수요예배, 금요기도회, 훈련용메시지
 
     @Column
     private Integer serviceNumber;  // 1부, 2부 구분 (주일오전/주일오후 등에서 사용, null 가능)
@@ -138,6 +138,16 @@ public class Sermon extends BaseEntity {
         this.sermonDate = command.getSermonDate();
         this.category = command.getCategory();
         this.serviceNumber = command.getServiceNumber();
+    }
+
+    /**
+     * PDF 자동 추출 본문 적용
+     * - 기존 content가 비어있을 때만 세팅 (수동 입력 덮어쓰기 방지)
+     */
+    public void applyExtractedContent(String html) {
+        if (html == null || html.isBlank()) return;
+        if (this.content != null && !this.content.isBlank()) return;
+        this.content = html;
     }
 
     // ===== 권한 검증 =====

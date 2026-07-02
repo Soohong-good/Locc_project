@@ -20,7 +20,9 @@ public record GalleryImageResponse(
         Integer imageCount,
         Integer viewCount,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String departmentCode,
+        String departmentName
 ) {
     public static GalleryImageResponse from(GalleryImage image) {
         return new GalleryImageResponse(
@@ -34,7 +36,9 @@ public record GalleryImageResponse(
                 image.getUploader().getId().toString(),
                 1,
                 image.getViewCount(),
-                image.getCreatedAt()
+                image.getCreatedAt(),
+                image.getDepartment().getCode(),
+                image.getDepartment().getName()
         );
     }
 
@@ -50,7 +54,9 @@ public record GalleryImageResponse(
                 image.getUploader().getId().toString(),
                 imageCount,
                 image.getViewCount(),
-                image.getCreatedAt()
+                image.getCreatedAt(),
+                image.getDepartment().getCode(),
+                image.getDepartment().getName()
         );
     }
 }

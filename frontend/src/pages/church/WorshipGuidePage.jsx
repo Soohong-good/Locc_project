@@ -1,183 +1,138 @@
-import PageHero from '@/components/ui/PageHero'
+const sundayItems  = [
+  { label: '1부 예배',  time: '오전 09:00', place: '본당' },
+  { label: '2부 예배',  time: '오전 11:00', place: '본당' },
+  { label: '오후 예배', time: '오후 15:00', note: '찬양 14:40', place: '본당' },
+]
+const weekdayItems = [
+  { label: '수요예배',   time: '수요일 20:00', place: '본당' },
+  { label: '금요기도회', time: '금요일 21:00', place: '본당' },
+  { label: '새벽기도회', time: '매일 05:30',   place: '101호' },
+]
+const departmentItems = [
+  { label: '태영아부',   time: '13:30', place: '204호' },
+  { label: '유아유치부', time: '11:00', place: '204호' },
+  { label: '초등부',     time: '09:00', place: '206호' },
+  { label: '중고등부',   time: '10:30', place: '205호' },
+  { label: '대청부',     time: '13:00', place: '교육관 3층' },
+  { label: '다민족부',   time: '13:00', place: '206호' },
+  { label: '새가족부',   time: '10:00', place: '101호' },
+  { label: '치유부',     time: '13:10', place: '101호' },
+]
+const choirItems = [
+  { service: '1부 예배',  name: '원니스' },
+  { service: '2부 예배',  name: '할렐루야' },
+  { service: '오후 예배', name: '미가엘 · 임마누엘' },
+  { service: '수요 예배', name: '주영광' },
+]
+const specialItems = ['산업선교', '상담치유', '교정전도부', '벧엘기도조', '금요전도학교']
 
-/* ── 예배 카드 ──────────────────────────────────────────────────────── */
-const WorshipCard = ({ eyebrow, title, items, accent = 'border-slate-200' }) => (
-  <div className={`bg-white border-t-4 ${accent} shadow-sm p-12 md:p-16`}>
-    <p className="text-sm font-medium tracking-[0.25em] uppercase text-eyebrow mb-2">{eyebrow}</p>
-    <h3 className="text-3xl font-light text-slate-900 mb-8">{title}</h3>
-    <table className="w-full">
-      <tbody>
-        {items.map(({ label, time, note, place }) => (
-          <tr key={label} className="border-b border-slate-100 last:border-0">
-            <td className="py-4 text-slate-700 font-medium text-2xl">{label}</td>
-            <td className="py-4 text-right">
-              <span className="text-slate-900 font-semibold text-xl tabular-nums">{time}</span>
-              {note && <div className="text-sm text-slate-400 mt-0.5">{note}</div>}
-            </td>
-            <td className="py-4 pl-4 text-right w-20">
-              {place && (
-                <span className="text-sm text-slate-400 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded whitespace-nowrap">
-                  {place}
-                </span>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+const HeroSection = () => (
+  <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C]">
+    <div className="max-w-[1600px] mx-auto px-8 md:px-16 lg:px-24 border-x border-[#2C2C2C]">
+      <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#888] font-mono mb-6 block">Worship</span>
+      <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-8">예배 안내</h1>
+      <p className="text-lg font-light text-[#888]">하나님께 드리는 예배 시간을 안내합니다</p>
+    </div>
+  </section>
+)
+
+const WorshipRow = ({ label, time, note, place }) => (
+  <div className="flex items-start justify-between py-6 border-b border-[#E5E5E5] last:border-b-0 group">
+    <span className="text-xl font-medium text-[#2C2C2C] group-hover:text-[#737373] transition-colors">{label}</span>
+    <div className="text-right">
+      <span className="block text-xl font-mono font-semibold text-[#2C2C2C] tabular-nums">{time}</span>
+      {note && <span className="block text-sm text-[#737373] mt-0.5">{note}</span>}
+      {place && <span className="block text-sm text-[#737373] mt-1">{place}</span>}
+    </div>
   </div>
 )
 
-/* ── 메인 ──────────────────────────────────────────────────────────── */
+const MainWorshipSection = () => (
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5]">
+      <div className="p-8 md:p-16 lg:p-24 border-b border-[#E5E5E5] flex flex-col items-center text-center">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Main Worship</span>
+        <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-[#2C2C2C]">주요 예배</h2>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5]">
+        <div className="p-8 md:p-16 lg:p-20">
+          <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-3 block">Sunday Service</span>
+          <h3 className="text-3xl font-bold text-[#2C2C2C] mb-10 border-l-4 border-[#2C2C2C] pl-4">주일예배</h3>
+          <div>{sundayItems.map((item) => <WorshipRow key={item.label} {...item} />)}</div>
+        </div>
+        <div className="p-8 md:p-16 lg:p-20">
+          <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-3 block">Weekday Service</span>
+          <h3 className="text-3xl font-bold text-[#2C2C2C] mb-10 border-l-4 border-[#E5E5E5] pl-4">주중 예배</h3>
+          <div>{weekdayItems.map((item) => <WorshipRow key={item.label} {...item} />)}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+)
+
+const DepartmentSection = () => (
+  <section className="bg-[#F4F2EA] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5]">
+      <div className="p-8 md:p-16 lg:p-24 border-b border-[#E5E5E5] flex flex-col items-center text-center">
+        <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Department Service</span>
+        <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-[#2C2C2C]">주일 기관별 예배</h2>
+      </div>
+      <div className="p-0">
+        {departmentItems.map(({ label, time, place }, i) => (
+          <div key={label} className={`max-w-[1600px] mx-auto flex items-center justify-between px-8 md:px-16 lg:px-24 py-6 ${i !== 0 ? 'border-t border-[#E5E5E5]' : ''} hover:bg-[#FAF9F6] transition-colors group`}>
+            <span className="text-xl font-medium text-[#2C2C2C] group-hover:text-[#737373] transition-colors">{label}</span>
+            <div className="flex items-center gap-6">
+              <span className="text-xl font-mono font-semibold text-[#2C2C2C] tabular-nums">{time}</span>
+              <span className="text-sm text-[#737373] bg-[#FAF9F6] border border-[#E5E5E5] px-3 py-1 min-w-[80px] text-center">{place}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)
+
+const ChoirAndSpecialSection = () => (
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+      <div className="p-8 md:p-16 lg:p-20">
+        <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-4 block">Choir</span>
+        <h3 className="text-3xl font-bold text-[#2C2C2C] mb-12">찬양대</h3>
+        <ul>
+          {choirItems.map(({ service, name }) => (
+            <li key={service} className="flex items-center gap-6 py-5 border-b border-[#E5E5E5] last:border-b-0 group hover:bg-[#F4F2EA] -mx-8 px-8 md:-mx-16 md:px-16 lg:-mx-20 lg:px-20 transition-colors">
+              <span className="text-[#737373] w-28 shrink-0 text-sm font-mono">{service}</span>
+              <span className="text-[#2C2C2C] font-medium text-lg group-hover:text-[#737373] transition-colors">{name}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="p-8 md:p-16 lg:p-20">
+        <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-4 block">Special Meeting</span>
+        <h3 className="text-3xl font-bold text-[#2C2C2C] mb-12">특별 모임</h3>
+        <ul>
+          {specialItems.map((name) => (
+            <li key={name} className="flex items-center gap-4 py-5 border-b border-[#E5E5E5] last:border-b-0 group hover:bg-[#F4F2EA] -mx-8 px-8 md:-mx-16 md:px-16 lg:-mx-20 lg:px-20 transition-colors">
+              <span className="w-2 h-2 bg-[#2C2C2C] inline-block shrink-0 group-hover:bg-[#737373] transition-colors" />
+              <span className="text-[#2C2C2C] text-lg font-medium group-hover:text-[#737373] transition-colors">{name}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-10 text-sm text-[#737373] font-light leading-relaxed">
+          각 모임은 정해진 시간과 장소에서 진행됩니다.<br />자세한 내용은 교회 사무실로 문의해주세요.
+        </p>
+      </div>
+    </div>
+  </section>
+)
+
 export default function WorshipGuidePage() {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <PageHero
-        eyebrow="Worship"
-        title="예배 안내"
-        subtitle="하나님께 드리는 예배 시간을 안내합니다"
-      />
-
-      {/* ── 주요 예배 ── */}
-      <section className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-
-          {/* 섹션 타이틀 */}
-          <div className="text-center mb-16">
-            <p className="text-sm tracking-[0.3em] text-eyebrow uppercase mb-3">Main Worship</p>
-            <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-4">주요 예배</h2>
-            <div className="h-px w-12 bg-slate-300 mx-auto" />
-          </div>
-
-          <div className="grid min-[1080px]:grid-cols-2 gap-6">
-
-            {/* 주일예배 */}
-            <WorshipCard
-              eyebrow="Sunday Service"
-              title="주일예배"
-              accent="border-slate-900"
-              items={[
-                { label: '1부 예배', time: '오전 09:00', place: '본당' },
-                { label: '2부 예배', time: '오전 11:00', place: '본당' },
-                { label: '오후 예배', time: '오후 15:00', note: '찬양 14:40', place: '본당' },
-              ]}
-            />
-
-            {/* 주중 예배 */}
-            <WorshipCard
-              eyebrow="Weekday Service"
-              title="주중 예배"
-              accent="border-slate-400"
-              items={[
-                { label: '수요예배',   time: '수요일 20:00', place: '본당' },
-                { label: '금요기도회', time: '금요일 21:00', place: '본당' },
-                { label: '새벽기도회', time: '매일 05:30',   place: '101호' },
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ── 구분선 ── */}
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="h-px bg-slate-200" />
-      </div>
-
-      {/* ── 기관별 예배 ── */}
-      <section className="py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-
-          <div className="text-center mb-16">
-            <p className="text-sm tracking-[0.3em] text-eyebrow uppercase mb-3">Department Service</p>
-            <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight mb-4">주일 기관별 예배</h2>
-            <div className="h-px w-12 bg-slate-300 mx-auto" />
-          </div>
-
-          <div className="bg-white shadow-sm border border-slate-100">
-            {[
-              { label: '태영아부',   time: '13:30', place: '204호' },
-              { label: '유아유치부', time: '11:00', place: '204호' },
-              { label: '초등부',     time: '09:00', place: '206호' },
-              { label: '중고등부',   time: '10:30', place: '205호' },
-              { label: '대청부',     time: '13:00', place: '교육관 3층' },
-              { label: '다민족부',   time: '13:00', place: '206호' },
-              { label: '새가족부',   time: '10:00', place: '101호' },
-              { label: '치유부',     time: '13:10', place: '101호' },
-            ].map(({ label, time, place }, i) => (
-              <div
-                key={label}
-                className={`flex items-center justify-between px-8 py-5 ${
-                  i !== 0 ? 'border-t border-slate-100' : ''
-                } hover:bg-slate-50 transition`}
-              >
-                <span className="text-slate-700 font-medium text-2xl">{label}</span>
-                <div className="flex items-center gap-4">
-                  <span className="text-slate-900 font-semibold text-xl tabular-nums">{time}</span>
-                  <span className="text-sm text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1 rounded">
-                    {place}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 구분선 ── */}
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="h-px bg-slate-200" />
-      </div>
-
-      {/* ── 찬양대 & 특별 모임 ── */}
-      <section className="py-24 px-6">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
-
-          {/* 찬양대 */}
-          <div>
-            <p className="text-sm tracking-[0.3em] text-eyebrow uppercase mb-3">Choir</p>
-            <h2 className="text-3xl font-light text-slate-900 mb-8">찬양대</h2>
-            <ul className="space-y-2">
-              {[
-                { service: '1부 예배',  name: '원니스' },
-                { service: '2부 예배',  name: '할렐루야' },
-                { service: '오후 예배', name: '미가엘 · 임마누엘' },
-                { service: '수요 예배', name: '주영광' },
-              ].map(({ service, name }) => (
-                <li key={service} className="flex items-center gap-4 py-4 border-b border-slate-100 last:border-0">
-                  <span className="text-base text-slate-500 w-28 flex-shrink-0">{service}</span>
-                  <span className="text-slate-900 font-medium text-lg">{name}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* 특별 모임 */}
-          <div>
-            <p className="text-sm tracking-[0.3em] text-eyebrow uppercase mb-3">Special Meeting</p>
-            <h2 className="text-3xl font-light text-slate-900 mb-8">특별 모임</h2>
-            <ul className="space-y-1">
-              {[
-                '산업선교',
-                '상담치유',
-                '교정전도부',
-                '벧엘기도조',
-                '금요전도학교',
-              ].map((name) => (
-                <li key={name} className="flex items-center gap-3 py-4 border-b border-slate-100 last:border-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 flex-shrink-0" />
-                  <span className="text-slate-700 text-lg">{name}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-6 text-base text-slate-400 leading-relaxed">
-              각 모임은 정해진 시간과 장소에서 진행됩니다.<br />
-              자세한 내용은 교회 사무실로 문의해주세요.
-            </p>
-          </div>
-
-        </div>
-      </section>
-
+    <div className="bg-[#FAF9F6] text-[#2C2C2C]">
+      <HeroSection />
+      <MainWorshipSection />
+      <DepartmentSection />
+      <ChoirAndSpecialSection />
     </div>
   )
 }

@@ -78,4 +78,18 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {
     @EntityGraph(attributePaths = {"author"})
     @Query("SELECT n FROM Notice n ORDER BY n.isPinned DESC, n.createdAt DESC")
     Page<Notice> findAllForAdmin(Pageable pageable);
+
+    /**
+     * 이전 글(작성일 기준 직전) 1건 — 상세 페이지 "이전 글" 네비게이션용
+     * - 고정글(isPinned=true)은 목록 상단에 별도 고정되는 항목이라 네비게이션 대상에서 제외
+     */
+    @Query("SELECT n FROM Notice n WHERE n.isPinned = false AND n.createdAt < :createdAt ORDER BY n.createdAt DESC, n.id DESC")
+    List<Notice> findPrevNotices(@Param("createdAt") java.time.LocalDateTime createdAt, Pageable pageable);
+
+    /**
+     * 다음 글(작성일 기준 직후) 1건 — 상세 페이지 "다음 글" 네비게이션용
+     * - 고정글(isPinned=true)은 목록 상단에 별도 고정되는 항목이라 네비게이션 대상에서 제외
+     */
+    @Query("SELECT n FROM Notice n WHERE n.isPinned = false AND n.createdAt > :createdAt ORDER BY n.createdAt ASC, n.id ASC")
+    List<Notice> findNextNotices(@Param("createdAt") java.time.LocalDateTime createdAt, Pageable pageable);
 }

@@ -39,6 +39,22 @@ public class JwtProperties {
     private long refreshExpiration = 604800000L;
 
     /**
+     * 관리자/운영자(ADMIN·OPERATOR) Access Token 만료 시간 (밀리초)
+     * 기본값: 5분 (300000ms)
+     * - Refresh(30분)보다 짧아야 access 만료 시 rotation이 일어나 idle 창이 슬라이딩됨
+     * - 짧을수록 "무활동 시간" 측정 정확도가 높아짐(회전 주기 = 측정 granularity)
+     */
+    private long adminExpiration = 300000L;
+
+    /**
+     * 관리자/운영자(ADMIN·OPERATOR) Refresh Token 만료 시간 (밀리초)
+     * 기본값: 30분 (1800000ms)
+     * - 이 값이 곧 "무활동 허용 시간". 활동(요청)이 있으면 rotation으로 30분 창이 갱신되고,
+     *   30분간 무활동이면 refresh 만료 → 다음 요청에서 재로그인 유도
+     */
+    private long adminRefreshExpiration = 1800000L;
+
+    /**
      * 애플리케이션 시작 시 JWT Secret 강도 검증
      * - 최소 32바이트(256비트) 미만이면 즉시 기동 중단
      * - 64바이트(512비트) 미만이면 경고 로그 출력

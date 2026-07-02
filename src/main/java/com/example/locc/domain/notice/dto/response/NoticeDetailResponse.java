@@ -37,11 +37,19 @@ public class NoticeDetailResponse {
     
     // 추가 정보
     private final boolean isNew;
-    
+
+    // 이전/다음 글 네비게이션 (없으면 null)
+    private final Long prevId;
+    private final String prevTitle;
+    private final LocalDateTime prevCreatedAt;
+    private final Long nextId;
+    private final String nextTitle;
+    private final LocalDateTime nextCreatedAt;
+
     /**
-     * Entity to Response (파일 정보 포함)
+     * Entity to Response (파일 정보 + 이전/다음 글 포함)
      */
-    public static NoticeDetailResponse from(Notice notice, List<AttachmentInfo> files) {
+    public static NoticeDetailResponse from(Notice notice, List<AttachmentInfo> files, Notice prev, Notice next) {
         return NoticeDetailResponse.builder()
                 .id(notice.getId())
                 .title(notice.getTitle())
@@ -55,14 +63,27 @@ public class NoticeDetailResponse {
                 .updatedAt(notice.getUpdatedAt())
                 .attachments(files)
                 .isNew(isNew(notice.getCreatedAt()))
+                .prevId(prev != null ? prev.getId() : null)
+                .prevTitle(prev != null ? prev.getTitle() : null)
+                .prevCreatedAt(prev != null ? prev.getCreatedAt() : null)
+                .nextId(next != null ? next.getId() : null)
+                .nextTitle(next != null ? next.getTitle() : null)
+                .nextCreatedAt(next != null ? next.getCreatedAt() : null)
                 .build();
     }
-    
+
+    /**
+     * Entity to Response (파일 정보 포함, 이전/다음 글 없이)
+     */
+    public static NoticeDetailResponse from(Notice notice, List<AttachmentInfo> files) {
+        return from(notice, files, null, null);
+    }
+
     /**
      * Entity to Response (파일 정보 없이)
      */
     public static NoticeDetailResponse from(Notice notice) {
-        return from(notice, null);
+        return from(notice, null, null, null);
     }
     
     /**

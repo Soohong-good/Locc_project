@@ -2,6 +2,10 @@ import DOMPurify from 'dompurify'
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  List, DownloadSimple, ArrowUp, ArrowDown, FileText, FilePdf, FileDoc,
+  PushPin, PencilSimple, Trash, User, CalendarBlank, Folder, Eye,
+} from '@phosphor-icons/react'
 import toast from '@/utils/toast'
 import {
   getNotice, increaseNoticeViews, toggleNoticePin,
@@ -180,13 +184,15 @@ const EditModal = ({ notice, onClose, onSaved }) => {
                     const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
                     const ALLOWED_EXTS  = ['.pdf', '.jpg', '.jpeg', '.png', '.hwp']
                     const selected = Array.from(e.target.files)
+                    const valid = []
                     for (const file of selected) {
                       const ext = '.' + file.name.split('.').pop().toLowerCase()
                       const typeOk = ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTS.includes(ext)
-                      if (!typeOk) { toast.error(`허용되지 않는 파일 형식입니다: ${file.name}`); e.target.value = ''; return }
-                      if (file.size > 10 * 1024 * 1024) { toast.error(`파일 크기는 10MB 이하여야 합니다: ${file.name}`); e.target.value = ''; return }
+                      if (!typeOk) { toast.error(`허용되지 않는 파일 형식입니다: ${file.name}`); continue }
+                      if (file.size > 10 * 1024 * 1024) { toast.error(`파일 크기는 10MB 이하여야 합니다: ${file.name}`); continue }
+                      valid.push(file)
                     }
-                    setFiles(selected)
+                    setFiles(valid)
                     e.target.value = ''
                   }}
                   className="hidden"
@@ -325,194 +331,192 @@ const NoticeDetailPage = () => {
   }
 
   if (isLoading) return (
-    <main>
-      <section className="pt-page pb-12 bg-slate-900 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="skeleton-shimmer h-3 w-24 mb-12 opacity-30 rounded" />
-          <div className="skeleton-shimmer h-4 w-20 mb-4 opacity-30 rounded" />
-          <div className="skeleton-shimmer h-10 w-3/4 mb-4 opacity-30 rounded" />
-          <div className="skeleton-shimmer h-px w-16 mb-8 opacity-30" />
-        </div>
-      </section>
-      <section className="py-24 bg-white px-6">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
-        </div>
-      </section>
+    <main className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] min-h-screen pt-20 bg-[#FAF9F6]">
+      <div className="max-w-[840px] mx-auto px-6 py-16 md:py-24 space-y-4">
+        <div className="skeleton-shimmer h-3 w-32 mb-6 rounded" />
+        <div className="skeleton-shimmer h-10 w-3/4 mb-8 rounded" />
+        {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
+      </div>
     </main>
   )
   if (isError) return (
-    <main className="pt-page pb-16 px-6">
-      <div className="max-w-4xl mx-auto text-red-500">공지사항을 불러올 수 없습니다.</div>
+    <main className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] min-h-screen pt-20 px-6">
+      <div className="text-red-500">공지사항을 불러올 수 없습니다.</div>
     </main>
   )
 
+  const fileIcon = (fileName) => {
+    const ext = (fileName?.split('.').pop() || '').toLowerCase()
+    if (ext === 'pdf') return FilePdf
+    if (['doc', 'docx', 'hwp'].includes(ext)) return FileDoc
+    return FileText
+  }
+
   return (
-    <main>
-      {/* Hero — 다크 패턴 통일 */}
-      <section className="pt-page pb-12 bg-slate-900 px-6">
-        <div className="max-w-4xl mx-auto">
+    <main className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] min-h-screen pt-20 bg-[#FAF9F6]">
+      <article className="w-full max-w-[840px] mx-auto px-6 py-16 md:py-24">
 
-          {/* 목록으로 — 원본 href /church/notice */}
-          <button
-            onClick={() => navigate('/notices')}
-            className="inline-flex items-center text-sm text-slate-400 hover:text-white mb-12 group transition-all duration-300"
-          >
-            <svg className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:-translate-x-1"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="font-light tracking-wide">목록으로</span>
-          </button>
-
-          <div className="mb-8">
-            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Notice</p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-white leading-[1.3] tracking-tight mb-8">
-              {notice.title}
-            </h1>
-            <div className="h-px w-16 bg-slate-600 mb-8" />
-          </div>
-
-          {/* 메타 정보 */}
-          <div className="flex flex-wrap items-center justify-between gap-6">
-            <div className="flex flex-wrap items-center gap-6 text-slate-400 font-light">
-              {/* 날짜 — 원본 yyyy. MM. dd */}
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{formatDate(notice.createdAt)}</span>
-              </div>
-              <span className="text-slate-600">•</span>
-              {/* 조회수 */}
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>{notice.viewCount}</span>
-              </div>
-            </div>
-
-            {/* 관리자 버튼 — 고정은 ADMIN만, 수정/삭제는 ADMIN 또는 본인 */}
-            {canWrite && (isAdmin || notice.authorId === userId) && (
-              <div className="flex gap-3">
-                {/* 고정 토글 — ADMIN 전용 */}
-                {isAdmin && (
-                  <button
-                    onClick={() => pinMutation.mutate()}
-                    disabled={pinMutation.isPending}
-                    className={`px-4 py-2 border-2 transition font-medium flex items-center gap-2 disabled:opacity-50
-                      ${notice.isPinned
-                        ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
-                        : 'border-slate-400 text-slate-200 hover:border-white hover:text-white'}`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                    <span>{notice.isPinned ? '고정 해제' : '최상단 고정'}</span>
-                  </button>
-                )}
-                <button
-                  onClick={() => setEditOpen(true)}
-                  className="px-4 py-2 border-2 border-slate-400 text-slate-200 hover:border-white hover:text-white transition font-medium"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => setDeleteOpen(true)}
-                  className="px-4 py-2 border-2 border-red-400 text-red-400 hover:border-red-300 hover:text-red-300 transition font-medium"
-                >
-                  삭제
-                </button>
-              </div>
+        {/* 관리자 버튼 */}
+        {canWrite && (isAdmin || notice.authorId === userId) && (
+          <div className="flex justify-end gap-5 font-mono text-[10px] text-[#737373] mb-8 tracking-[0.1em] uppercase">
+            {isAdmin && (
+              <button
+                onClick={() => pinMutation.mutate()}
+                disabled={pinMutation.isPending}
+                className={`flex items-center gap-1 transition-colors disabled:opacity-50 ${notice.isPinned ? 'text-amber-600' : 'hover:text-[#171717]'}`}
+              >
+                <PushPin size={14} weight={notice.isPinned ? 'fill' : 'regular'} />
+                <span>{notice.isPinned ? '고정 해제' : '상단고정'}</span>
+              </button>
             )}
+            <button onClick={() => setEditOpen(true)} className="flex items-center gap-1 hover:text-[#171717] transition-colors">
+              <PencilSimple size={14} />
+              <span>수정</span>
+            </button>
+            <button onClick={() => setDeleteOpen(true)} className="flex items-center gap-1 hover:text-red-600 transition-colors">
+              <Trash size={14} />
+              <span>삭제</span>
+            </button>
           </div>
+        )}
+
+        {/* 헤더 */}
+        <header className="mb-12">
+          <div className="font-mono text-[#737373] text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
+            <span className="w-2 h-2 bg-[#171717] block" />
+            NOTICE
+          </div>
+          <h1 className="text-3xl md:text-[2.75rem] font-bold text-[#171717] leading-[1.3] mb-8 break-keep tracking-tight">
+            {notice.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 text-[11px] font-mono text-[#737373] tracking-widest uppercase">
+            <span className="flex items-center gap-1.5"><User size={14} /> {notice.authorName}</span>
+            <span className="w-px h-3 bg-[#E5E5E5] block" />
+            <span className="flex items-center gap-1.5"><CalendarBlank size={14} /> {formatDate(notice.createdAt)}</span>
+            <span className="w-px h-3 bg-[#E5E5E5] block" />
+            <span className="flex items-center gap-1.5"><Folder size={14} /> 공지사항</span>
+            <span className="w-px h-3 bg-[#E5E5E5] block" />
+            <span className="flex items-center gap-1.5"><Eye size={14} /> {notice.viewCount}</span>
+          </div>
+        </header>
+
+        <hr className="border-t border-[#E5E5E5] mb-16" />
+
+        {/* 본문 */}
+        <div className="prose prose-lg max-w-none text-base md:text-lg leading-[1.8] text-[#2C2C2C] font-light tracking-[-0.01em] break-keep [&_p]:mb-8 min-h-[80px]">
+          <div
+            className="ql-editor ql-output"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(notice.content ?? '') }}
+          />
         </div>
-      </section>
 
-      {/* 본문 — 원본 th:utext */}
-      <section className="py-24 bg-white px-6">
-        <article className="max-w-4xl mx-auto">
-          <div className="prose prose-lg prose-slate max-w-none">
-            <div
-              className="ql-editor ql-output text-slate-700 leading-[1.9] font-light text-lg"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(notice.content ?? '' )}}
-            />
-          </div>
-
-          {/* 첨부파일 — 원본 구조 1:1 */}
-          {notice.attachments && notice.attachments.length > 0 && (
-            <div className="mt-20 pt-12 border-t border-slate-200">
-              <h3 className="text-sm tracking-[0.2em] text-eyebrow uppercase mb-6">Attachments</h3>
-              <div className="space-y-3">
-                {notice.attachments.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center gap-4 p-5 bg-slate-50 hover:bg-slate-100 transition-all duration-300 group"
-                  >
-                    {/* 파일 아이콘 */}
-                    <div className="w-12 h-12 flex items-center justify-center bg-white group-hover:bg-slate-900 transition-all duration-300">
-                      <svg className="w-6 h-6 text-slate-400 group-hover:text-white transition-colors duration-300"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    {/* 파일 정보 */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-light text-slate-900 truncate">{file.originalFileName}</p>
-                      <p className="text-sm text-slate-500 font-light">
-                        {file.fileSize ? `${(file.fileSize / 1024).toFixed(2)} KB` : ''}
-                      </p>
-                    </div>
-                    {/* 다운로드 — <a href> 방식은 Authorization 헤더 미전송으로 401 발생 */}
-                    <button
-                      onClick={() => downloadFile(file.id, file.originalFileName)}
-                      className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 transition-all duration-300 flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      다운로드
-                    </button>
-                    {/* 파일 삭제 — ADMIN 또는 본인 */}
-                    {canWrite && (isAdmin || notice.authorId === userId) && (
+        {/* 첨부파일 */}
+        {notice.attachments && notice.attachments.length > 0 && (
+          <div className="mt-24">
+            <div className="flex items-end justify-between border-b border-[#171717] pb-3 mb-2">
+              <h4 className="font-mono text-[11px] font-bold text-[#171717] tracking-widest uppercase">Attachments</h4>
+              <span className="font-mono text-[10px] text-[#737373] tracking-widest">{notice.attachments.length} FILES</span>
+            </div>
+            <ul className="flex flex-col">
+              {notice.attachments.map((file) => {
+                const Icon = fileIcon(file.originalFileName)
+                const ext = (file.originalFileName?.split('.').pop() || 'FILE').toUpperCase()
+                return (
+                  <li key={file.id}>
+                    <div className="flex items-center gap-4 py-4 border-b border-[#E5E5E5] group hover:bg-[#F4F2EA] transition-colors px-3 -mx-3">
+                      <Icon size={24} className="text-[#737373] group-hover:text-[#171717] shrink-0" />
                       <button
-                        onClick={() => deleteAttachment(file.id)}
-                        className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-all duration-300"
+                        onClick={() => downloadFile(file.id, file.originalFileName)}
+                        className="flex-1 text-left text-sm md:text-base text-[#171717] truncate group-hover:underline underline-offset-4 decoration-1"
                       >
-                        삭제
+                        {file.originalFileName}
                       </button>
-                    )}
-                  </div>
-                ))}
+                      <span className="font-mono text-[10px] text-[#737373] tracking-widest uppercase shrink-0">.{ext}</span>
+                      {file.fileSize && (
+                        <span className="font-mono text-[10px] text-[#737373] tracking-widest shrink-0 hidden md:block w-16 text-right">
+                          {(file.fileSize / 1024).toFixed(1)}KB
+                        </span>
+                      )}
+                      <button onClick={() => downloadFile(file.id, file.originalFileName)} className="shrink-0">
+                        <DownloadSimple size={18} className="text-[#737373] group-hover:text-[#171717]" />
+                      </button>
+                      {canWrite && (isAdmin || notice.authorId === userId) && (
+                        <button
+                          onClick={() => deleteAttachment(file.id)}
+                          className="ml-2 text-xs text-red-500 hover:text-red-600 font-medium shrink-0"
+                        >
+                          삭제
+                        </button>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* 이전글/다음글 */}
+        <nav className="border-y border-[#E5E5E5] mt-24 flex flex-col">
+          {notice.prevId ? (
+            <button
+              onClick={() => navigate(`/notices/${notice.prevId}`)}
+              className="flex flex-col sm:flex-row sm:items-center py-6 px-3 hover:bg-[#F4F2EA] transition-colors -mx-3 gap-2 sm:gap-8 group border-b border-[#E5E5E5] text-left"
+            >
+              <div className="flex items-center gap-2 w-20 shrink-0">
+                <ArrowUp size={14} className="text-[#737373] group-hover:text-[#171717]" />
+                <span className="font-mono text-[10px] sm:text-xs text-[#737373] group-hover:text-[#171717] tracking-widest transition-colors uppercase">PREV</span>
               </div>
+              <span className="text-sm sm:text-base text-[#171717] truncate flex-1 group-hover:underline underline-offset-4 decoration-1 font-medium">
+                {notice.prevTitle}
+              </span>
+              <span className="font-mono text-[10px] text-[#737373] shrink-0 hidden sm:block tracking-widest">{formatDate(notice.prevCreatedAt)}</span>
+            </button>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center py-6 px-3 -mx-3 gap-2 sm:gap-8 border-b border-[#E5E5E5]">
+              <div className="flex items-center gap-2 w-20 shrink-0 opacity-40">
+                <ArrowUp size={14} className="text-[#737373]" />
+                <span className="font-mono text-[10px] sm:text-xs text-[#737373] tracking-widest uppercase">PREV</span>
+              </div>
+              <span className="text-sm sm:text-base text-[#737373] flex-1">이전 글이 없습니다</span>
             </div>
           )}
-        </article>
-      </section>
+          {notice.nextId ? (
+            <button
+              onClick={() => navigate(`/notices/${notice.nextId}`)}
+              className="flex flex-col sm:flex-row sm:items-center py-6 px-3 hover:bg-[#F4F2EA] transition-colors -mx-3 gap-2 sm:gap-8 group text-left"
+            >
+              <div className="flex items-center gap-2 w-20 shrink-0">
+                <ArrowDown size={14} className="text-[#737373] group-hover:text-[#171717]" />
+                <span className="font-mono text-[10px] sm:text-xs text-[#737373] group-hover:text-[#171717] tracking-widest transition-colors uppercase">NEXT</span>
+              </div>
+              <span className="text-sm sm:text-base text-[#171717] truncate flex-1 group-hover:underline underline-offset-4 decoration-1 font-medium">
+                {notice.nextTitle}
+              </span>
+              <span className="font-mono text-[10px] text-[#737373] shrink-0 hidden sm:block tracking-widest">{formatDate(notice.nextCreatedAt)}</span>
+            </button>
+          ) : (
+            <div className="flex flex-col sm:flex-row sm:items-center py-6 px-3 -mx-3 gap-2 sm:gap-8">
+              <div className="flex items-center gap-2 w-20 shrink-0 opacity-40">
+                <ArrowDown size={14} className="text-[#737373]" />
+                <span className="font-mono text-[10px] sm:text-xs text-[#737373] tracking-widest uppercase">NEXT</span>
+              </div>
+              <span className="text-sm sm:text-base text-[#737373] flex-1">다음 글이 없습니다</span>
+            </div>
+          )}
+        </nav>
 
-      {/* 하단 목록으로 — 원본 Navigation 섹션 */}
-      <section className="py-12 bg-slate-50 px-6">
-        <div className="max-w-4xl mx-auto">
+        {/* 목록으로 */}
+        <div className="mt-20 flex justify-center pb-8">
           <button
             onClick={() => navigate('/notices')}
-            className="group inline-flex items-center px-8 py-4 border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 font-light tracking-wide"
+            className="border border-[#E5E5E5] bg-transparent text-xs font-bold tracking-[0.1em] uppercase py-5 px-16 text-[#171717] hover:bg-[#171717] hover:text-[#FAF9F6] hover:border-[#171717] transition-all duration-300 flex items-center gap-3"
           >
-            <svg className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            목록으로 돌아가기
+            <List size={18} />
+            <span>목록으로 돌아가기</span>
           </button>
         </div>
-      </section>
+      </article>
 
       {/* 수정 모달 */}
       {editOpen && (

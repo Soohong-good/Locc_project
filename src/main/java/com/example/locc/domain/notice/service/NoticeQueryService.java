@@ -62,14 +62,22 @@ public class NoticeQueryService {
      */
     public NoticeDetailResponse findDetail(Long id) {
         log.debug("Finding notice detail: {}", id);
-        
+
         Notice notice = noticeRepository.findDetailById(id)
                 .orElseThrow(() -> new NotFoundException("공지사항을 찾을 수 없습니다. ID: " + id));
-        
+
         // 파일 정보 조회
         List<AttachmentInfo> files = fileQueryService.getNoticeAttachments(id);
-        
-        return NoticeDetailResponse.from(notice, files);
+
+        // 이전/다음 글 (작성일 기준)
+        List<Notice> prevList = noticeRepository.findPrevNotices(
+                notice.getCreatedAt(), org.springframework.data.domain.PageRequest.of(0, 1));
+        List<Notice> nextList = noticeRepository.findNextNotices(
+                notice.getCreatedAt(), org.springframework.data.domain.PageRequest.of(0, 1));
+        Notice prev = prevList.isEmpty() ? null : prevList.get(0);
+        Notice next = nextList.isEmpty() ? null : nextList.get(0);
+
+        return NoticeDetailResponse.from(notice, files, prev, next);
     }
 
     /**

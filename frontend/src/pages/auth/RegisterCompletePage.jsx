@@ -1,8 +1,13 @@
-﻿import { Link, useLocation } from 'react-router-dom'
+﻿import { Link, useLocation, useSearchParams } from 'react-router-dom'
 
 const RegisterCompletePage = () => {
   const location = useLocation()
-  const email = location.state?.email ?? ''
+  const [searchParams] = useSearchParams()
+  const email = searchParams.get('email') ?? location.state?.email ?? ''
+  const appliedAtRaw = searchParams.get('appliedAt') ?? location.state?.appliedAt ?? ''
+  const appliedAt = appliedAtRaw
+    ? new Date(appliedAtRaw).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    : ''
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">

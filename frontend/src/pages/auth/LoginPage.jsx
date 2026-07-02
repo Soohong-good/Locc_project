@@ -84,12 +84,8 @@ const LoginPage = () => {
     try {
       const endpoint = totpStep === 'setup' ? '/api/auth/totp/enable' : '/api/auth/totp/verify'
       await client.post(endpoint, { preAuthToken, code: totpCode })
-      try {
-        const user = await getMe()
-        setUser(user)
-      } catch {
-        setUser({ role: 'ADMIN' })
-      }
+      const user = await getMe()
+      setUser(user)
       navigate('/')
     } catch (err) {
       setTotpError(err?.response?.data?.message || '인증 코드가 올바르지 않습니다.')

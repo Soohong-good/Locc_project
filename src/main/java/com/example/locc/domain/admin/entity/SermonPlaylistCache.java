@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 주일/기타예배 재생목록 최신 영상 캐시
+ * 주일/수요·금요예배 재생목록 최신 영상 캐시
  * - YouTube API 호출 결과를 DB에 저장해 새로고침 후에도 유지
  * - playlistKey: 'sunday-morning-1' | 'sunday-morning-2' | 'sunday-afternoon' | 'wednesday' | 'friday'
  */
@@ -29,6 +29,10 @@ public class SermonPlaylistCache {
     @Column(name = "latest_video_title", length = 500)
     private String latestVideoTitle;
 
+    /** application.yml 값을 덮어쓰는 재생목록 ID (null이면 application.yml 값 사용) */
+    @Column(name = "playlist_id_override", length = 255)
+    private String playlistIdOverride;
+
     public static SermonPlaylistCache create(String playlistKey) {
         SermonPlaylistCache cache = new SermonPlaylistCache();
         cache.playlistKey = playlistKey;
@@ -38,5 +42,9 @@ public class SermonPlaylistCache {
     public void updateLatestVideo(String videoId, String videoTitle) {
         this.latestVideoId = videoId;
         this.latestVideoTitle = videoTitle;
+    }
+
+    public void updatePlaylistId(String playlistId) {
+        this.playlistIdOverride = playlistId;
     }
 }

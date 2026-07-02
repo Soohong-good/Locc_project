@@ -31,8 +31,9 @@ public class CookieUtil {
     public static final String ACCESS_TOKEN_COOKIE  = "accessToken";
     public static final String REFRESH_TOKEN_COOKIE = "refreshToken";
 
-    private final AppProperties  appProperties;
-    private final JwtProperties  jwtProperties;
+    private final AppProperties     appProperties;
+    private final JwtProperties     jwtProperties;
+    private final JwtTokenProvider  jwtTokenProvider;
 
     // ───── 쿠키 추가 ─────
 
@@ -43,7 +44,7 @@ public class CookieUtil {
         ResponseCookie cookie = buildCookie(
                 ACCESS_TOKEN_COOKIE,
                 token,
-                (int) (jwtProperties.getExpiration() / 1000)
+                maxAgeFromToken(token, jwtProperties.getExpiration())
         );
         response.addHeader("Set-Cookie", cookie.toString());
     }
@@ -55,9 +56,24 @@ public class CookieUtil {
         ResponseCookie cookie = buildCookie(
                 REFRESH_TOKEN_COOKIE,
                 token,
-                (int) (jwtProperties.getRefreshExpiration() / 1000)
+                maxAgeFromToken(token, jwtProperties.getRefreshExpiration())
         );
         response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    /**
+     * 쿠키 maxAge(초)를 토큰 자체의 만료시각에서 도출.
+     * - 역할별 만료(관리자 30분 등)가 토큰에 이미 반영돼 있으므로 쿠키 수명도 자동 일치
+     * - 파싱 실패 시 전역 기본값(ms)으로 폴백
+     */
+    private int maxAgeFromToken(String token, long fallbackMs) {
+        try {
+            long remainMs = jwtTokenProvider.extractExpiration(token).getTime() - System.currentTimeMillis();
+            if (remainMs > 0) return (int) (remainMs / 1000);
+        } catch (RuntimeException ignored) {
+            // 폴백 사용
+        }
+        return (int) (fallbackMs / 1000);
     }
 
     // ───── 쿠키 삭제 ─────

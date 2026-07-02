@@ -70,7 +70,7 @@ export const getSundayAfternoonData = async ({ page = 0, size = 9, keyword } = {
   return data.data
 }
 
-// 기타예배 (type: 'wednesday' | 'friday', keyword: 제목·본문·설교자 통합 검색)
+// 수요예배/금요기도회 (type: 'wednesday' | 'friday', keyword: 제목·본문·설교자 통합 검색)
 export const getWeekdayData = async ({ type = 'wednesday', page = 0, size = 9, keyword } = {}) => {
   const { data } = await client.get(`/api/sermons/weekday/${type}`, {
     params: { page, size, keyword },

@@ -135,7 +135,7 @@ const AdminSundayMorningFormPage = () => {
   )
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="h-full overflow-y-auto p-8 max-w-3xl">
       <h1 className="text-xl font-bold text-gray-900 mb-2">
         {isEdit ? '주일오전 설교 수정' : '주일오전 설교 등록'}
       </h1>

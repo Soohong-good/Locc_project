@@ -92,6 +92,10 @@ jwt:
   # 차단된 회원도 토큰 만료까지 권한이 유지되므로 짧게 유지 (refresh rotation으로 UX 보완)
   expiration: ${JWT_EXPIRATION:3600000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  # 관리자/운영자(ADMIN·OPERATOR) — 무활동 30분 시 로그아웃 (rotation 기반 idle timeout)
+  #   access(5분) < refresh(30분): access 만료마다 회전이 일어나 활동 중이면 30분 창이 갱신됨
+  admin-expiration: ${JWT_ADMIN_EXPIRATION:300000}
+  admin-refresh-expiration: ${JWT_ADMIN_REFRESH_EXPIRATION:1800000}
 
 app:
   url: ${APP_URL:}
@@ -125,6 +129,8 @@ youtube:
     friday: ${YOUTUBE_PLAYLIST_FRIDAY:PLj3rgPIpeTF0xu1vRW8R5Det5MD_IrMYu}
     # 송구영신예배 재생목록 (없으면 빈값 → 관리자가 UI에서 직접 설정)
     newyear: ${YOUTUBE_PLAYLIST_NEWYEAR:}
+    # 찬양대 재생목록 (2025-01-01 이후 게시 영상만 동기화)
+    choir: ${YOUTUBE_PLAYLIST_CHOIR:PLj3rgPIpeTF0axEgx4eP185-x_zfQ9MfQ}
 
 # 파일 업로드 설정
 file:

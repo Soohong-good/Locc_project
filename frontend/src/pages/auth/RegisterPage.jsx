@@ -4,6 +4,9 @@ import { useMutation } from '@tanstack/react-query'
 import { register, checkEmail, sendVerificationCode, verifyEmailCode } from '@/api/auth'
 import useDaumPostcode from '@/hooks/useDaumPostcode'
 import { DateInput } from '@/components/ui/DateInput'
+import StepIndicator from '@/components/auth/StepIndicator'
+
+const REGISTER_STEPS = ['교인구분', '약관동의', '정보입력']
 
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -326,7 +329,8 @@ const RegisterPage = () => {
   const { mutate: submit, isPending } = useMutation({
     mutationFn: register,
     onSuccess: (_, variables) => {
-      navigate('/register/complete', { state: { email: variables.email } })
+      const appliedAt = new Date().toISOString()
+      navigate(`/register/complete?email=${encodeURIComponent(variables.email)}&appliedAt=${encodeURIComponent(appliedAt)}`, { state: { email: variables.email, appliedAt } })
     },
     onError: (e) => {
       const data = e?.response?.data
@@ -403,24 +407,24 @@ const RegisterPage = () => {
             {/* 소셜 가입 */}
             <div className="space-y-2.5">
               <a
-                href="/register/social/kakao"
+                href="/oauth2/authorization/kakao"
                 className="flex items-center justify-center w-full py-3.5 px-4 text-sm font-medium transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#FEE500', color: '#191919' }}
               >
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 3C6.48 3 2 6.58 2 11c0 2.78 1.83 5.23 4.58 6.81-.2.73-.75 2.81-.86 3.26-.14.57.21.56.44.41.18-.13 2.96-2.02 3.43-2.34.47.07.95.11 1.44.11 5.52 0 10-3.58 10-8S17.52 3 12 3z"/>
                 </svg>
-                카카오로 가입하기
+                카카오로 계속하기
               </a>
               <a
-                href="/register/social/naver"
+                href="/oauth2/authorization/naver"
                 className="flex items-center justify-center w-full py-3.5 px-4 text-sm font-medium transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#03C75A', color: '#FFFFFF' }}
               >
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z"/>
                 </svg>
-                네이버로 가입하기
+                네이버로 계속하기
               </a>
             </div>
 
@@ -430,6 +434,9 @@ const RegisterPage = () => {
               </Link>
             </div>
           </div>
+          <p className="text-center text-xs text-slate-400 mt-6 leading-relaxed">
+            가입 신청 후 관리자 승인이 필요하며, 영업일 기준 1~2일이 소요됩니다.
+          </p>
           <div className="text-center mt-8">
             <Link to="/" className="text-sm text-slate-600 hover:text-slate-900">← 홈으로 돌아가기</Link>
           </div>
@@ -443,6 +450,7 @@ const RegisterPage = () => {
     return (
       <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
         <div className="max-w-2xl w-full">
+          <StepIndicator current={1} steps={REGISTER_STEPS} />
           <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">회원가입</h1>
             <p className="text-slate-600 font-light">교인 구분을 선택해주세요</p>
@@ -488,6 +496,7 @@ const RegisterPage = () => {
         {showTerms && <TermsModal onClose={() => setShowTerms(false)} />}
         <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
           <div className="max-w-2xl w-full">
+            <StepIndicator current={2} steps={REGISTER_STEPS} />
             <div className="text-center mb-10">
               <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">개인정보 수집·이용 동의</h1>
               <p className="text-slate-600 font-light">{typeLabel} 가입</p>
@@ -563,6 +572,7 @@ const RegisterPage = () => {
   return (
     <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-2xl w-full">
+        <StepIndicator current={3} steps={REGISTER_STEPS} />
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">정보 입력</h1>
           <p className="text-slate-600 font-light">{typeLabel} 가입</p>

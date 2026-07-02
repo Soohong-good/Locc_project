@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from '@/utils/toast'
 import {
@@ -8,17 +8,9 @@ import {
   createDepartmentBoard,
   deleteDepartmentBoard,
   toggleDepartmentBoardPin,
-  getGalleryImageList,
-  getGalleryImagesByTitle,
-  uploadGalleryImages,
-  deleteGalleryImage,
-  deleteSingleGalleryImage,
-  updateGalleryGroup,
-  addImagesToGalleryGroup,
 } from '@/api/departments'
 import useAuthStore from '@/stores/authStore'
 import Button from '@/components/ui/Button'
-import SectionHeader from '@/components/ui/SectionHeader'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 
@@ -456,558 +448,11 @@ const BoardTab = ({ dept, isAdmin, canWrite, userId }) => {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// 갤러리 탭 — 원본 department-gallery-board.js 구조 그대로 이식
-// ────────────────────────────────────────────────────────────────────────────
-
-// 갤러리 업로드 모달
-const GalleryUploadModal = ({ deptCode, onClose, onSaved }) => {
-  const [title,  setTitle]  = useState('')
-  const [desc,   setDesc]   = useState('')
-  const [files,  setFiles]  = useState([])
-  const [preview, setPreview] = useState(null)   // { src, count }
-  const [error,  setError]  = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const handleFiles = (e) => {
-    const selected = Array.from(e.target.files)
-    const ALLOWED_IMG_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    const invalidType = selected.find((f) => !ALLOWED_IMG_TYPES.includes(f.type))
-    if (invalidType) { setError(`이미지 파일(JPG, PNG, GIF, WEBP)만 업로드 가능합니다: ${invalidType.name}`); return }
-    const over = selected.find((f) => f.size > 10 * 1024 * 1024)
-    if (over) { setError('파일 1개당 10MB를 초과할 수 없습니다.'); return }
-    setError('')
-    setFiles(selected)
-
-    // 첫 번째 이미지 미리보기
-    if (selected.length > 0) {
-      const reader = new FileReader()
-      reader.onload = (ev) => setPreview({ src: ev.target.result, count: selected.length })
-      reader.readAsDataURL(selected[0])
-    } else {
-      setPreview(null)
-    }
-  }
-
-  const handleSave = async () => {
-    setError('')
-    if (!title.trim()) { setError('제목을 입력해주세요.'); return }
-    if (files.length === 0) { setError('이미지를 선택해주세요.'); return }
-    setSaving(true)
-    const fd = new FormData()
-    fd.append('title', title.trim())
-    if (desc.trim()) fd.append('description', desc.trim())
-    files.forEach((f) => fd.append('imageFiles', f))
-    try {
-      await uploadGalleryImages(deptCode, fd)
-      onSaved()
-    } catch (e) {
-      setError(e?.response?.data?.message ?? '업로드에 실패했습니다.')
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
-          <h2 className="text-2xl font-light text-slate-900">이미지 업로드</h2>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-900 transition">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="overflow-y-auto flex-1 px-8 py-6 space-y-4">
-          {/* 제목 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              제목 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-              placeholder="예: 2024 여름수련회"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all"
-            />
-            <p className="text-xs text-slate-500 mt-1">같은 제목의 이미지들이 하나의 그룹으로 표시됩니다</p>
-          </div>
-          {/* 설명 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">설명</label>
-            <textarea
-              value={desc} onChange={(e) => setDesc(e.target.value)} rows={3}
-              placeholder="이미지에 대한 설명을 입력하세요"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all resize-none"
-            />
-          </div>
-          {/* 파일 선택 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              이미지 파일 <span className="text-red-500">*</span>
-            </label>
-            <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition group">
-              <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition">
-                <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-700">
-                  {files.length > 0 ? `${files.length}장 선택됨` : '이미지 추가'}
-                </p>
-                <p className="text-xs text-slate-400">JPG, PNG, GIF, WEBP · 최대 10MB · 여러 장 선택 가능</p>
-              </div>
-              <input
-                type="file" accept="image/*" multiple onChange={handleFiles}
-                className="hidden"
-              />
-            </label>
-          </div>
-          {/* 미리보기 — 첫 장 카드 스택 */}
-          {preview && (
-            <div className="relative" style={{ width: 300, height: 220, margin: '0 auto' }}>
-              {preview.count > 1 && (
-                <>
-                  <div className="absolute border border-slate-200 bg-white"
-                    style={{ top: 12, left: 12, width: 280, height: 200, zIndex: 1 }} />
-                  {preview.count > 2 && (
-                    <div className="absolute border border-slate-200 bg-white"
-                      style={{ top: 6, left: 6, width: 280, height: 200, zIndex: 2 }} />
-                  )}
-                </>
-              )}
-              <div className="absolute overflow-hidden border border-slate-200"
-                style={{ top: 0, left: 0, width: 280, height: 200, zIndex: 3 }}>
-                <img src={preview.src} alt="미리보기" className="w-full h-full object-cover" />
-                {preview.count > 1 && (
-                  <span className="absolute top-3 right-3 bg-slate-900/90 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    {preview.count}장
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-        {error && (
-          <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
-            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
-          </div>
-        )}
-        <div className="flex justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
-          <Button variant="ghost" size="md" onClick={onClose}>취소</Button>
-          <Button variant="primary" size="md" onClick={handleSave} isLoading={saving}>
-            {saving ? '업로드 중...' : '업로드'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── 갤러리 제목 수정 모달 ──────────────────────────────────────────────────
-const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
-  const queryClient = useQueryClient()
-
-  const [title,    setTitle]    = useState(image.title ?? '')
-  const [desc,     setDesc]     = useState(image.description ?? '')
-  const [newFiles, setNewFiles] = useState([])
-  const [previews, setPreviews] = useState([])
-  const [saving,   setSaving]   = useState(false)
-  const [error,    setError]    = useState('')
-
-  // 그룹 내 전체 이미지 불러오기
-  const { data: groupImages = [], isLoading: loadingGroup, refetch } = useQuery({
-    queryKey: ['gallery-group-edit', deptCode, image.title],
-    queryFn:  () => getGalleryImagesByTitle(deptCode, image.title),
-    enabled:  !!image.title,
-  })
-
-  // 개별 이미지 삭제
-  const singleDeleteMutation = useMutation({
-    mutationFn: (imgId) => deleteSingleGalleryImage(deptCode, imgId),
-    onSuccess: () => refetch(),
-    onError: () => toast.error('삭제에 실패했습니다.'),
-  })
-
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files)
-    setNewFiles(files)
-    setPreviews(files.map((f) => URL.createObjectURL(f)))
-  }
-
-  const handleSave = async () => {
-    if (!title.trim()) { setError('제목을 입력해주세요.'); return }
-    setSaving(true)
-    try {
-      // 1. 제목·설명 수정
-      await updateGalleryGroup(deptCode, image.id, { title: title.trim(), description: desc.trim() })
-
-      // 2. 새 이미지 추가
-      if (newFiles.length > 0) {
-        const fd = new FormData()
-        fd.append('title', title.trim())
-        fd.append('description', desc.trim())
-        fd.append('groupId', image.groupId ?? '')
-        newFiles.forEach((f) => fd.append('imageFiles', f))
-        await addImagesToGalleryGroup(deptCode, fd)
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['gallery-list', deptCode] })
-      onSaved()
-    } catch {
-      setError('저장에 실패했습니다.')
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl">
-
-        {/* 헤더 */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
-          <h2 className="text-lg font-medium text-slate-900">갤러리 수정</h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-900 transition">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* 본문 (스크롤) */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-
-          {/* 제목 */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-700">
-              제목 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all text-sm"
-              placeholder="예: 2024 여름수련회"
-            />
-          </div>
-
-          {/* 설명 */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-slate-700">설명</label>
-            <textarea
-              value={desc} onChange={(e) => setDesc(e.target.value)} rows={2}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all text-sm resize-none"
-              placeholder="이미지에 대한 설명을 입력하세요"
-            />
-          </div>
-
-          {/* 현재 이미지 목록 */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-700">
-              현재 이미지 ({loadingGroup ? '...' : groupImages.length}장)
-              <span className="text-xs text-slate-400 font-normal ml-2">X를 눌러 개별 삭제</span>
-            </p>
-            {loadingGroup ? (
-              <div className="h-24 flex items-center justify-center text-slate-400 text-sm">불러오는 중...</div>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {groupImages.map((img) => (
-                  <div key={img.id} className="relative group aspect-square bg-slate-100 overflow-hidden rounded">
-                    <img
-                      src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
-                      alt={img.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.src = '/images/no-image.png' }}
-                    />
-                    {groupImages.length > 1 && (
-                      <button
-                        onClick={() => {
-                          if (window.confirm('이 이미지를 삭제하시겠습니까?'))
-                            singleDeleteMutation.mutate(img.id)
-                        }}
-                        disabled={singleDeleteMutation.isPending}
-                        className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 이미지 추가 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">이미지 추가</label>
-            <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition">
-              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="text-sm text-slate-600">
-                {newFiles.length > 0 ? `${newFiles.length}장 선택됨` : '파일 선택 (여러 장 가능)'}
-              </span>
-              <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
-            </label>
-            {previews.length > 0 && (
-              <div className="grid grid-cols-4 gap-2">
-                {previews.map((src, i) => (
-                  <div key={i} className="aspect-square bg-slate-100 overflow-hidden rounded">
-                    <img src={src} alt="" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
-
-        {error && (
-          <div className="px-6 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
-            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
-          </div>
-        )}
-
-        {/* 푸터 */}
-        <div className="flex justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100 flex-shrink-0">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition">취소</button>
-          <button onClick={handleSave} disabled={saving}
-            className="px-5 py-2 text-sm bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition">
-            {saving ? '저장 중...' : '저장'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const GalleryTab = ({ dept, isAdmin, canWrite, userId }) => {
-  const navigate     = useNavigate()
-  const queryClient  = useQueryClient()
-  const [page,       setPage]       = useState(0)
-  const [uploadOpen, setUploadOpen] = useState(false)
-  const [editImage,  setEditImage]  = useState(null)  // 수정 모달용
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['gallery-list', dept.code, page],
-    queryFn:  () => getGalleryImageList(dept.code, page),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: (imageId) => deleteGalleryImage(dept.code, imageId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['gallery-list', dept.code] }),
-    onError: () => toast.error('삭제에 실패했습니다.'),
-  })
-
-  const handleDelete = (image) => {
-    if (!window.confirm(`"${image.title}" 이미지를 삭제하시겠습니까?\n같은 그룹의 모든 이미지가 삭제됩니다.`)) return
-    deleteMutation.mutate(image.id)
-  }
-
-  // PageResponse 구조: { content, pageInfo: { page, size, totalElements, totalPages } }
-  const images      = data?.content   ?? []
-  const pageInfo    = data?.pageInfo  ?? {}
-  const totalPages  = pageInfo.totalPages ?? 0
-  const currentPage = pageInfo.page       ?? 0
-
-  return (
-    <section className="py-16 bg-white px-6">
-      <div className="max-w-6xl mx-auto">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-light text-slate-900 mb-2">갤러리</h2>
-            <p className="text-slate-600">{dept.name}의 활동 모습을 담았습니다</p>
-          </div>
-          {canWrite && (
-            <Button variant="primary" size="sm" onClick={() => setUploadOpen(true)}>
-              + 이미지 업로드
-            </Button>
-          )}
-        </div>
-
-        {/* 목록 없음 */}
-        {!isLoading && images.length === 0 && (
-          <div className="text-center py-20">
-            <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p className="text-slate-500 font-light">등록된 이미지가 없습니다.</p>
-          </div>
-        )}
-
-        {/* 로딩 */}
-        {isLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-square skeleton-shimmer" />
-            ))}
-          </div>
-        )}
-
-        {/* 포토 그리드 */}
-        {!isLoading && images.length > 0 && (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {images.map((image) => {
-                const count = image.imageCount ?? 1
-                return (
-                  <article
-                    key={image.id}
-                    className="group cursor-pointer bg-white border border-slate-100 overflow-hidden
-                               hover:border-slate-300 hover:shadow-md transition-all duration-200"
-                  >
-                    {/* 썸네일 */}
-                    <div
-                      className="relative aspect-[4/3] overflow-hidden bg-slate-100"
-                      onClick={() => navigate(`/department/${dept.code}/gallery/${image.id}`)}
-                    >
-                      <img
-                        src={`/uploads/gallery/${image.thumbnailFilename || image.storedFilename}`}
-                        alt={image.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => { e.target.src = '/images/no-image.png' }}
-                      />
-                      {/* 장수 배지 */}
-                      {count > 1 && (
-                        <span className="absolute top-2 left-2 flex items-center gap-1
-                                         bg-slate-900/80 text-white text-xs font-medium px-2 py-0.5">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                          </svg>
-                          {count}
-                        </span>
-                      )}
-                      {/* 수정/삭제 버튼 — canWrite 시 hover에 표시 */}
-                      {canWrite && (
-                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setEditImage(image) }}
-                            className="px-2 py-1 text-xs font-medium bg-white/90 text-slate-700 hover:bg-white rounded shadow transition"
-                          >
-                            수정
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDelete(image) }}
-                            disabled={deleteMutation.isPending}
-                            className="px-2 py-1 text-xs font-medium bg-red-600/90 text-white hover:bg-red-600 rounded shadow transition disabled:opacity-50"
-                          >
-                            삭제
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 텍스트 */}
-                    <div className="p-3">
-                      <h3 className="text-sm font-medium text-slate-800 leading-snug line-clamp-1
-                                     group-hover:text-slate-600 transition-colors">
-                        {image.title}
-                      </h3>
-                      <div className="flex items-center justify-between mt-1.5 text-xs text-slate-400">
-                        <span className="tabular-nums">{fmtDate(image.createdAt)}</span>
-                        <span className="flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7
-                                 -1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          {image.viewCount ?? 0}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-
-            {/* 페이지네이션 */}
-            {totalPages > 1 && (
-              <div className="mt-12 flex justify-center items-center gap-1">
-                <button
-                  onClick={() => setPage(currentPage - 1)}
-                  disabled={currentPage === 0}
-                  className="w-9 h-9 flex items-center justify-center border border-slate-200
-                             text-slate-500 hover:bg-slate-50 disabled:opacity-30
-                             disabled:cursor-not-allowed transition"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
-                  </svg>
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i)}
-                    className={`w-9 h-9 text-sm font-light transition border
-                      ${i === currentPage
-                        ? 'bg-slate-900 text-white border-slate-900'
-                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage(currentPage + 1)}
-                  disabled={currentPage >= totalPages - 1}
-                  className="w-9 h-9 flex items-center justify-center border border-slate-200
-                             text-slate-500 hover:bg-slate-50 disabled:opacity-30
-                             disabled:cursor-not-allowed transition"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-
-      {uploadOpen && (
-        <GalleryUploadModal
-          deptCode={dept.code}
-          onClose={() => setUploadOpen(false)}
-          onSaved={() => {
-            setUploadOpen(false)
-            queryClient.invalidateQueries({ queryKey: ['gallery-list', dept.code] })
-          }}
-        />
-      )}
-
-      {editImage && (
-        <GalleryEditModal
-          image={editImage}
-          deptCode={dept.code}
-          onClose={() => setEditImage(null)}
-          onSaved={() => {
-            setEditImage(null)
-            queryClient.invalidateQueries({ queryKey: ['gallery-list', dept.code] })
-          }}
-        />
-      )}
-    </section>
-  )
-}
-
-// ────────────────────────────────────────────────────────────────────────────
 // 메인 페이지
 // ────────────────────────────────────────────────────────────────────────────
 const TABS = [
-  { key: 'about',   label: '소개' },
-  { key: 'board',   label: '예배 및 훈련' },
-  { key: 'gallery', label: '갤러리' },
+  { key: 'about', label: '소개' },
+  { key: 'board', label: '예배 및 훈련' },
 ]
 
 // ── 부서별 배너 이미지 매핑 ───────────────────────────────────────────────
@@ -1049,52 +494,52 @@ const DepartmentPage = () => {
 
   return (
     <main>
-      {/* Hero — 배너 이미지 배경 */}
-      <section
-        className="pt-page pb-[240px] text-white px-6 relative overflow-hidden"
-        style={{
-          background: deptBgSrc
-            ? undefined
-            : '#0f172a',
-        }}
-      >
-        {/* 배경 이미지 */}
-        {deptBgSrc && (
-          <>
-            <div
-              className="absolute inset-0 bg-cover"
-              style={{ backgroundImage: `url(${deptBgSrc})`, backgroundPosition: deptBgPosition }}
-            />
-            {/* 어두운 오버레이 */}
-            <div className="absolute inset-0" style={{ background: 'rgba(15,23,42,0.62)' }} />
-          </>
-        )}
-
-        <div className="max-w-6xl mx-auto relative z-10 mt-12">
-          <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            {dept.nameEn || 'Ministry'}
-          </p>
-          <h1 className="text-4xl md:text-5xl font-light tracking-tight">{dept.name}</h1>
+      {/* Hero */}
+      <section className="pt-20 border-b border-[#E5E5E5] bg-[#FAF9F6] overflow-hidden">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 border-x border-[#E5E5E5] min-h-[500px] lg:min-h-[700px] relative">
+          <div className="lg:col-span-5 bg-[#171717] flex flex-col justify-center p-12 md:p-16 lg:p-24 relative z-10 lg:-mr-16 lg:my-16 lg:shadow-[20px_20px_0_0_#FAF9F6]">
+            <div className="flex items-center gap-4 mb-8">
+              <span className="w-12 h-px bg-white/20" />
+              <span className="text-sm uppercase tracking-[0.3em] font-semibold text-white/60 font-mono">
+                {dept.nameEn || 'Ministry'}
+              </span>
+            </div>
+            <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-[1.05] text-[#FAF9F6] break-keep">
+              {dept.name}
+            </h1>
+          </div>
+          <div className="lg:col-span-7 relative z-0 min-h-[300px] lg:min-h-full overflow-hidden">
+            {deptBgSrc ? (
+              <div className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${deptBgSrc})`, backgroundPosition: deptBgPosition }} />
+            ) : (
+              <div className="absolute inset-0 bg-[#F4F2EA]" />
+            )}
+          </div>
         </div>
       </section>
 
       {/* 탭 네비게이션 */}
-      <section className="bg-white border-b border-slate-200 px-6 ">
-        <div className="max-w-6xl mx-auto">
-          <nav className="flex gap-8">
+      <section className="border-b border-[#E5E5E5] bg-[#FAF9F6] relative z-20 sticky top-20">
+        <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5]">
+          <nav className="flex gap-0 px-8 md:px-16 lg:px-24">
             {TABS.map((t) => (
-              <TabBtn key={t.key} active={tab === t.key} onClick={() => setTab(t.key)}>
+              <button key={t.key} onClick={() => setTab(t.key)}
+                className={`py-5 pr-8 text-[15px] transition-colors border-b-2 ${
+                  tab === t.key
+                    ? 'font-bold text-[#2C2C2C] border-[#171717]'
+                    : 'font-medium text-[#737373] border-transparent hover:text-[#2C2C2C]'
+                }`}>
                 {t.label}
-              </TabBtn>
+              </button>
             ))}
           </nav>
         </div>
       </section>
 
       {/* 탭 컨텐츠 */}
-      {tab === 'about'   && <AboutTab   dept={dept} />}
-      {tab === 'board'   && <BoardTab   dept={dept} isAdmin={isAdmin} canWrite={canWrite} userId={userId} />}
-      {tab === 'gallery' && <GalleryTab dept={dept} isAdmin={isAdmin} canWrite={canWrite} userId={userId} />}
+      {tab === 'about' && <AboutTab dept={dept} />}
+      {tab === 'board' && <BoardTab dept={dept} isAdmin={isAdmin} canWrite={canWrite} userId={userId} />}
     </main>
   )
 }

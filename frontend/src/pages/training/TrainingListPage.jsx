@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getTrainingList } from '@/api/training'
 import useAuthStore from '@/stores/authStore'
-import Button from '@/components/ui/Button'
-import PageHero from '@/components/ui/PageHero'
+import { CalendarBlank, Clock, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import TrainingFormModal from './TrainingFormModal'
+
+const PAGE_WINDOW = 5
 
 const fmtDate = (val) => {
   if (!val) return ''
@@ -19,90 +20,27 @@ const fmtDateTime = (val) => {
   return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+const getPageRange = (current, total) => {
+  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
+  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
+  const end = Math.min(total, start + PAGE_WINDOW)
+  start = Math.max(0, end - PAGE_WINDOW)
+  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
+}
+
 // ── 상태 배지 ────────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) =>
   status === 'OPEN' ? (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 flex-shrink-0 border border-emerald-300 text-emerald-600">
+    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 flex-shrink-0 border border-[#16A34A]/40 text-[#16A34A]">
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       신청가능
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 border border-slate-200 text-slate-400 flex-shrink-0">
+    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 border border-[#E5E5E5] text-[#A3A3A3] flex-shrink-0">
       <span className="w-1.5 h-1.5 rounded-full bg-current" />
       마감
     </span>
   )
-
-// ── 훈련 카드 ────────────────────────────────────────────────────────────────
-const TrainingCard = ({ training, onClick }) => (
-  <article
-    onClick={onClick}
-    className="group cursor-pointer bg-white border border-slate-200 hover:border-slate-400
-               transition-all duration-200 hover:shadow-md"
-  >
-    <div className="p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-      {/* 왼쪽: 상태 + 제목 */}
-      <div className="flex-1 min-w-0">
-        <div className="mb-2.5">
-          <StatusBadge status={training.status} />
-        </div>
-        <h3 className="text-base md:text-lg font-medium text-slate-900 group-hover:text-slate-700
-                       transition-colors leading-snug">
-          {training.title}
-        </h3>
-        {training.description && (
-          <p className="text-sm text-slate-500 mt-1 font-light line-clamp-1">
-            {training.description}
-          </p>
-        )}
-      </div>
-
-      {/* 오른쪽: 메타 정보 */}
-      <div className="flex sm:flex-col items-start sm:items-end gap-4 sm:gap-1.5 flex-shrink-0">
-        <div className="flex items-center gap-1.5 text-sm text-slate-500">
-          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor"
-               strokeWidth="2" viewBox="0 0 24 24">
-            <rect x="3" y="4" width="18" height="18" rx="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-          <span className="font-light tabular-nums">
-            {fmtDate(training.startDate)} – {fmtDate(training.endDate)}
-          </span>
-        </div>
-        {training.applicationDeadline && (
-          <div className="flex items-center gap-1.5 text-sm text-slate-400">
-            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor"
-                 strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-            <span className="font-light tabular-nums">
-              마감 {fmtDateTime(training.applicationDeadline)}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* 화살표 */}
-      <svg className="w-5 h-5 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1
-                      transition-all duration-200 flex-shrink-0 hidden sm:block"
-           fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 18l6-6-6-6"/>
-      </svg>
-    </div>
-  </article>
-)
-
-// ── 스켈레톤 ─────────────────────────────────────────────────────────────────
-const TrainingCardSkeleton = () => (
-  <div className="bg-white border border-slate-100 p-6 animate-pulse">
-    <div className="h-5 w-14 bg-slate-100 rounded mb-3" />
-    <div className="h-5 w-2/3 bg-slate-100 rounded mb-2" />
-    <div className="h-4 w-1/3 bg-slate-100 rounded" />
-  </div>
-)
 
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 const TrainingListPage = () => {
@@ -121,120 +59,125 @@ const TrainingListPage = () => {
   const items       = data?.content       ?? []
   const pageInfo    = data?.pageInfo       ?? {}
   const totalPages  = pageInfo.totalPages  ?? 0
+  const totalElem   = pageInfo.totalElements ?? 0
   const currentPage = pageInfo.page        ?? 0
+  const pageSize    = pageInfo.size        ?? items.length
+
+  const goPage = (p) => {
+    setPage(p)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
-    <>
-      <main>
-        {/* Hero */}
-        <PageHero
-          eyebrow="Training"
-          title="훈련신청"
-          subtitle="교회 훈련 프로그램에 신청하세요"
-        >
+    <div className="min-h-screen bg-[#FAF9F6]">
+      {/* Hero */}
+      <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C]">
+        <div className="max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
+          <div>
+            <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Training</span>
+            <h1 className="text-5xl font-bold tracking-tight break-keep">훈련신청</h1>
+          </div>
           <div className="flex items-center gap-3">
             {user && (
-              <Button
-                variant="secondary"
-                size="sm"
+              <button
                 onClick={() => navigate('/training/my')}
-                className="border-white text-white hover:bg-white hover:text-slate-900"
+                className="text-xs font-bold tracking-[0.1em] uppercase border border-[#737373] text-[#FAF9F6] px-6 py-2.5 hover:border-[#FAF9F6] transition-colors"
               >
                 내 신청내역
-              </Button>
+              </button>
             )}
             {canWrite && (
-              <Button variant="primary" size="sm" onClick={() => setCreateOpen(true)}>
+              <button
+                onClick={() => setCreateOpen(true)}
+                className="text-xs font-bold tracking-[0.1em] uppercase bg-[#FAF9F6] text-[#171717] px-6 py-2.5 hover:bg-white transition-colors"
+              >
                 + 새 훈련 등록
-              </Button>
+              </button>
             )}
           </div>
-        </PageHero>
+        </div>
+      </section>
 
-        {/* 목록 */}
-        <section className="py-16 bg-white px-6">
-          <div className="max-w-4xl mx-auto">
+      {/* Table */}
+      <main className="max-w-[1200px] mx-auto px-6 pt-14 md:pt-20 pb-32">
+        <div className="h-px w-full bg-[#171717]" />
+        <div className="grid grid-cols-[60px_1fr_auto_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">
+          <div>No.</div>
+          <div>Title</div>
+          <div className="text-right w-44">Period</div>
+          <div className="text-right w-24">Status</div>
+        </div>
 
-            {isLoading && (
-              <div className="flex flex-col gap-3">
-                {[...Array(4)].map((_, i) => <TrainingCardSkeleton key={i} />)}
-              </div>
-            )}
+        {isLoading && (
+          <div className="py-32 text-center font-mono text-sm text-[#737373] tracking-wider">불러오는 중...</div>
+        )}
 
-            {!isLoading && items.length === 0 && (
-              <div className="text-center py-24">
-                <svg className="w-14 h-14 mx-auto text-slate-200 mb-4" fill="none"
-                     stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
-                       M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <p className="text-slate-400 font-light">등록된 훈련이 없습니다.</p>
-              </div>
-            )}
+        {!isLoading && items.length === 0 && (
+          <div className="py-32 text-center text-sm text-[#737373]">등록된 훈련이 없습니다.</div>
+        )}
 
-            {!isLoading && items.length > 0 && (
-              <>
-                <div className="flex flex-col gap-3">
-                  {items.map((t) => (
-                    <TrainingCard
-                      key={t.id}
-                      training={t}
-                      onClick={() => navigate(`/training/${t.id}`)}
-                    />
-                  ))}
+        {!isLoading && items.map((t, idx) => (
+          <div
+            key={t.id}
+            onClick={() => navigate(`/training/${t.id}`)}
+            className="grid grid-cols-[60px_1fr_auto_auto] gap-4 px-4 py-5 border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors items-center cursor-pointer group"
+          >
+            <div className="font-mono text-sm text-[#737373]">
+              {totalElem - currentPage * pageSize - idx}
+            </div>
+            <div className="min-w-0">
+              <p className="text-base font-medium text-[#2C2C2C] truncate group-hover:text-[#171717] transition-colors break-keep">
+                {t.title}
+              </p>
+              {t.description && (
+                <p className="text-sm text-[#737373] mt-1 truncate break-keep">{t.description}</p>
+              )}
+              {t.applicationDeadline && (
+                <div className="flex items-center gap-1.5 text-xs text-[#A3A3A3] mt-1.5">
+                  <Clock size={12} />
+                  <span className="font-mono tabular-nums">마감 {fmtDateTime(t.applicationDeadline)}</span>
                 </div>
-
-                {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center items-center gap-1">
-                    <button
-                      onClick={() => setPage(currentPage - 1)}
-                      disabled={currentPage === 0}
-                      className="w-9 h-9 flex items-center justify-center border border-slate-200
-                                 text-slate-500 hover:bg-slate-50 disabled:opacity-30
-                                 disabled:cursor-not-allowed transition"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
-                      </svg>
-                    </button>
-
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setPage(i)}
-                        className={`w-9 h-9 text-sm font-light transition border
-                          ${i === currentPage
-                            ? 'bg-slate-900 text-white border-slate-900'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() => setPage(currentPage + 1)}
-                      disabled={currentPage >= totalPages - 1}
-                      className="w-9 h-9 flex items-center justify-center border border-slate-200
-                                 text-slate-500 hover:bg-slate-50 disabled:opacity-30
-                                 disabled:cursor-not-allowed transition"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"/>
-                      </svg>
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 text-sm text-[#737373] text-right w-44 justify-end">
+              <CalendarBlank size={14} className="flex-shrink-0" />
+              <span className="font-mono tabular-nums">{fmtDate(t.startDate)} – {fmtDate(t.endDate)}</span>
+            </div>
+            <div className="w-24 flex justify-end">
+              <StatusBadge status={t.status} />
+            </div>
           </div>
-        </section>
+        ))}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-16 flex justify-center">
+            <nav className="inline-flex border border-[#E5E5E5]">
+              <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 0}
+                className="w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <CaretLeft size={14} weight="bold" />
+              </button>
+              {getPageRange(currentPage, totalPages).map((p) => (
+                <button key={p} onClick={() => goPage(p)}
+                  className={`w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
+                    p === currentPage ? 'bg-[#171717] text-white' : 'text-[#737373] hover:bg-[#F4F2EA] hover:text-[#171717]'
+                  }`}>
+                  {p + 1}
+                </button>
+              ))}
+              <button onClick={() => goPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}
+                className="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <CaretRight size={14} weight="bold" />
+              </button>
+            </nav>
+          </div>
+        )}
       </main>
 
       {createOpen && (
         <TrainingFormModal onClose={() => setCreateOpen(false)} />
       )}
-    </>
+    </div>
   )
 }
 

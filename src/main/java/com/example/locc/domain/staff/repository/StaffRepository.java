@@ -2,6 +2,7 @@ package com.example.locc.domain.staff.repository;
 
 import com.example.locc.domain.staff.entity.Staff;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -37,6 +38,15 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
      */
     @Query("SELECT s FROM Staff s WHERE s.isSeniorPastor = true")
     List<Staff> findSeniorPastors();
+
+    /**
+     * 모든 담임목사 플래그 일괄 해제 (벌크 업데이트)
+     * - 엔티티 로드 없이 DB에서 직접 UPDATE 수행
+     * - clearAutomatically = true: 영속성 컨텍스트와 DB 상태 불일치 방지
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Staff s SET s.isSeniorPastor = false WHERE s.isSeniorPastor = true")
+    void unsetAllSeniorPastors();
 
     /**
      * 설교자 목록 조회 (담임목사, 목사, 전도사만)

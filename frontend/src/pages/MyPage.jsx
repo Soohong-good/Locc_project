@@ -1,43 +1,228 @@
-import { useState, useEffect } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowRight, Eye, EyeSlash, CheckCircle, Clock, WarningCircle,
+} from '@phosphor-icons/react'
 import { getMyInfo, updateProfile, changePassword } from '@/api/mypage'
-import useAuthStore from '@/stores/authStore'
-import { getErrorMessage } from '@/lib/apiError'
+import { getMyApplications, cancelApplication } from '@/api/training'
 import useDaumPostcode from '@/hooks/useDaumPostcode'
+import { getErrorMessage } from '@/lib/apiError'
 import { DateInput } from '@/components/ui/DateInput'
+import { SkeletonRow } from '@/components/ui/SkeletonCard'
 import toast from '@/utils/toast'
+
+// ─── 인풋 공통 스타일 ────────────────────────────────
+const INPUT_CLS = 'w-full px-4 py-3 border border-[#E5E5E5] bg-white text-[#2C2C2C] focus:border-[#171717] outline-none transition'
+const LABEL_CLS = 'block text-xs font-mono uppercase tracking-widest text-[#737373] mb-2'
+const BTN_PRIMARY = 'text-xs font-bold tracking-[0.1em] uppercase bg-[#171717] text-[#FAF9F6] px-6 py-3 hover:opacity-80 transition disabled:opacity-40'
+const BTN_GHOST = 'text-xs font-bold tracking-[0.1em] uppercase border border-[#E5E5E5] text-[#737373] px-6 py-3 hover:border-[#171717] hover:text-[#171717] transition-colors'
 
 // ─── 승인 상태 ──────────────────────────────────────
 const APPROVAL = {
-  APPROVED: { text: '승인 완료', cls: 'bg-green-500/20 text-green-300' },
-  PENDING:  { text: '승인 대기', cls: 'bg-yellow-500/20 text-yellow-300' },
-  REJECTED: { text: '반려',     cls: 'bg-red-500/20 text-red-300' },
+  APPROVED: { text: '승인 완료', icon: CheckCircle, cls: 'border-emerald-400/50 text-emerald-300' },
+  PENDING:  { text: '승인 대기', icon: Clock,       cls: 'border-amber-400/50 text-amber-300' },
+  REJECTED: { text: '반려',     icon: WarningCircle, cls: 'border-red-400/50 text-red-300' },
 }
 
-// ─── 탭 버튼 ────────────────────────────────────────
-const TabBtn = ({ id, label, active, onClick }) => (
+// ─── 사이드바 탭 네비게이션 ──────────────────────────
+const NAV_ITEMS = [
+  { id: 'info',         label: '내 정보' },
+  { id: 'password',     label: '비밀번호 변경' },
+  { id: 'applications', label: '내 신청내역' },
+]
+
+// ─── 표시값 매핑 ─────────────────────────────────────
+const GENDER_OPTIONS = [
+  { value: 'MALE',   label: '남자' },
+  { value: 'FEMALE', label: '여자' },
+]
+const GENDER_LABEL = { MALE: '남자', FEMALE: '여자' }
+const USER_TYPE_LABEL = { REGISTERED: '등록교인', UNREGISTERED: '미등록교인' }
+
+// ─── 소셜 로그인 배지 ────────────────────────────────
+const PROVIDER_BADGE = {
+  KAKAO: {
+    label: '카카오',
+    cls: 'border-[#FEE500]/60 text-[#FEE500]',
+    path: 'M12 3C6.48 3 2 6.58 2 11c0 2.78 1.83 5.23 4.58 6.81-.2.73-.75 2.81-.86 3.26-.14.57.21.56.44.41.18-.13 2.96-2.02 3.43-2.34.47.07.95.11 1.44.11 5.52 0 10-3.58 10-8S17.52 3 12 3z',
+  },
+  NAVER: {
+    label: '네이버',
+    cls: 'border-[#03C75A]/60 text-[#03C75A]',
+    path: 'M16.273 12.845L7.376 0H0v24h7.726V11.156L16.624 24H24V0h-7.727v12.845z',
+  },
+}
+
+const ProviderBadge = ({ provider }) => {
+  const badge = PROVIDER_BADGE[provider]
+  if (!badge) return null
+  return (
+    <span className={`inline-flex items-center gap-1.5 border px-3 py-1 text-xs font-mono uppercase tracking-widest ${badge.cls}`}>
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d={badge.path} /></svg>
+      {badge.label}
+    </span>
+  )
+}
+
+const SideNavItem = ({ id, label, active, onClick }) => (
   <button
     onClick={() => onClick(id)}
-    className={`px-6 py-4 font-medium transition-colors border-b-2 ${
-      active
-        ? 'border-slate-900 text-slate-900'
-        : 'border-transparent text-slate-500 hover:text-slate-700'
+    className={`w-full py-5 md:py-6 border-b border-white/20 flex justify-between items-center group text-left transition-colors ${
+      active ? 'text-[#FAF9F6] font-bold' : 'text-[#737373] font-medium hover:text-[#FAF9F6]'
     }`}
   >
-    {label}
+    <span className="text-base md:text-lg">{label}</span>
+    <ArrowRight
+      size={18}
+      weight="bold"
+      className={`shrink-0 transition-all ${
+        active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-1'
+      }`}
+    />
   </button>
 )
 
-// ─── 내 정보 탭 ─────────────────────────────────────
-const InfoTab = ({ user, onEdit }) => {
+// ─── 내 정보 탭 (인라인 수정) ─────────────────────────
+const InfoRow = ({
+  label, field, value, displayValue, type, editable, editing,
+  draft, setDraft, onStartEdit, onSave, onCancel, saving, openPostcode,
+}) => {
+  const empty = !value
+
+  return (
+    <div className="py-6 first:pt-0 hover:bg-[#F4F2EA] transition-colors -mx-4 px-4 sm:-mx-8 sm:px-8 group">
+      <span className="block text-xs font-mono text-[#737373] uppercase tracking-widest mb-2 group-hover:text-[#171717] transition-colors">
+        {label}
+      </span>
+
+      {editing ? (
+        <div className="space-y-3 max-w-md">
+          {type === 'select' && (
+            <select
+              value={draft[field] ?? ''}
+              onChange={(e) => setDraft((d) => ({ ...d, [field]: e.target.value }))}
+              className={INPUT_CLS}
+              autoFocus
+            >
+              <option value="">선택하세요</option>
+              {GENDER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          )}
+          {type === 'text' && (
+            <input
+              type={field === 'phoneNumber' ? 'tel' : 'text'}
+              value={draft[field] ?? ''}
+              onChange={(e) => setDraft((d) => ({ ...d, [field]: e.target.value }))}
+              placeholder={field === 'phoneNumber' ? '010-1234-5678' : ''}
+              className={INPUT_CLS}
+              autoFocus
+            />
+          )}
+          {type === 'date' && (
+            <DateInput
+              value={draft.birth ?? ''}
+              onChange={(v) => setDraft((d) => ({ ...d, birth: v }))}
+              placeholder="생년월일 선택"
+              maxDate={new Date()}
+              className={INPUT_CLS}
+            />
+          )}
+          {type === 'address' && (
+            <>
+              <div className="flex gap-2">
+                <input
+                  type="text" value={draft.roadAddress ?? ''} readOnly placeholder="도로명 주소 검색"
+                  className={`${INPUT_CLS} flex-1 bg-[#F4F2EA] cursor-default`}
+                />
+                <button type="button" onClick={openPostcode} className={`${BTN_GHOST} whitespace-nowrap shrink-0 !px-4 !py-2`}>
+                  주소 검색
+                </button>
+              </div>
+              <input
+                type="text" value={draft.detailAddress ?? ''}
+                onChange={(e) => setDraft((d) => ({ ...d, detailAddress: e.target.value }))}
+                placeholder="상세주소 (동/호수 등)"
+                className={INPUT_CLS}
+              />
+            </>
+          )}
+          <div className="flex gap-2 pt-1">
+            <button onClick={onSave} disabled={saving} className={`${BTN_PRIMARY} !px-4 !py-2`}>
+              {saving ? '저장 중...' : '저장'}
+            </button>
+            <button onClick={onCancel} className={`${BTN_GHOST} !px-4 !py-2`}>
+              취소
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-4">
+          {empty ? (
+            <span className="text-lg sm:text-xl italic text-[#737373]">미입력</span>
+          ) : (
+            <span className="block text-lg sm:text-2xl text-[#2C2C2C] break-keep">{displayValue ?? value}</span>
+          )}
+          {editable && (
+            <button onClick={onStartEdit} className={`${BTN_GHOST} shrink-0 !px-4 !py-2`}>
+              {empty ? '입력하기' : '수정하기'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const InfoTab = ({ user }) => {
+  const queryClient = useQueryClient()
+  const [editingField, setEditingField] = useState(null)
+  const [draft, setDraft] = useState({})
+
+  const { open: openPostcode } = useDaumPostcode((roadAddress) => {
+    setDraft((d) => ({ ...d, roadAddress, detailAddress: '' }))
+  })
+
+  const mutation = useMutation({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mypage', 'info'] })
+      setEditingField(null)
+      setDraft({})
+    },
+    onError: (e) => toast.error(getErrorMessage(e, '저장 중 오류가 발생했습니다.')),
+  })
+
+  const startEdit = (field) => {
+    if (field === 'address') {
+      setDraft({ roadAddress: user.address ?? '', detailAddress: '' })
+    } else {
+      setDraft({ [field]: user[field] ?? '' })
+    }
+    setEditingField(field)
+  }
+
+  const cancelEdit = () => { setEditingField(null); setDraft({}) }
+
+  const saveEdit = (field) => {
+    if (field === 'name' && !draft.name?.trim()) { toast.error('이름은 필수입니다.'); return }
+    const payload = { name: field === 'name' ? draft.name : user.name }
+    if (field === 'address') {
+      payload.address = [draft.roadAddress, draft.detailAddress].filter(Boolean).join(' ')
+    } else {
+      payload[field] = draft[field]
+    }
+    mutation.mutate(payload)
+  }
+
   const rows = [
-    { label: '이메일',    value: user.email },
-    { label: '이름',      value: user.name },
-    { label: '성별',      value: user.gender ?? '미입력' },
-    { label: '전화번호',  value: user.phoneNumber ?? '미입력' },
-    { label: '생년월일',  value: user.birth ?? '미입력' },
-    { label: '주소',      value: user.address ?? '미입력' },
-    { label: '교인 구분', value: user.userType ?? '-' },
+    { label: 'Email', value: user.email },
+    { label: '이름',     field: 'name',        value: user.name,        type: 'text',    editable: true },
+    { label: '성별',     field: 'gender',      value: user.gender,      displayValue: GENDER_LABEL[user.gender] ?? user.gender, type: 'select', editable: true },
+    { label: '전화번호', field: 'phoneNumber', value: user.phoneNumber, type: 'text',    editable: true },
+    { label: '생년월일', field: 'birth',       value: user.birth,       type: 'date',    editable: true },
+    { label: '주소',     field: 'address',     value: user.address,     type: 'address', editable: true },
+    { label: '교인 구분', value: USER_TYPE_LABEL[user.userType] ?? user.userType ?? '-' },
     {
       label: '가입일',
       value: user.createdAt
@@ -48,158 +233,126 @@ const InfoTab = ({ user, onEdit }) => {
   ]
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-8">
-      <h2 className="text-2xl font-medium text-slate-900 mb-6">내 정보</h2>
-      <div className="space-y-0">
-        {rows.map(({ label, value }) => (
-          <div key={label} className="grid grid-cols-3 gap-4 py-4 border-b border-slate-100 last:border-0">
-            <dt className="text-sm font-medium text-slate-500">{label}</dt>
-            <dd className="col-span-2 text-sm text-slate-900">{value}</dd>
-          </div>
+    <div>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-10 sm:mb-16 pb-6 sm:pb-8 border-b border-[#E5E5E5] text-[#171717] break-keep">
+        내 정보
+      </h2>
+      <div className="flex flex-col divide-y divide-[#E5E5E5]">
+        {rows.map((row) => (
+          <InfoRow
+            key={row.label}
+            label={row.label}
+            field={row.field}
+            value={row.value}
+            displayValue={row.displayValue}
+            type={row.type}
+            editable={row.editable}
+            editing={editingField === row.field}
+            draft={draft}
+            setDraft={setDraft}
+            onStartEdit={() => startEdit(row.field)}
+            onSave={() => saveEdit(row.field)}
+            onCancel={cancelEdit}
+            saving={mutation.isPending}
+            openPostcode={openPostcode}
+          />
         ))}
-      </div>
-      <div className="mt-8 pt-6 border-t border-slate-200">
-        <button
-          onClick={onEdit}
-          className="px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition font-medium"
-        >
-          정보 수정하기
-        </button>
       </div>
     </div>
   )
 }
 
-// ─── 정보 수정 탭 ────────────────────────────────────
-const EditTab = ({ user, onCancel }) => {
-  const [fields, setFields] = useState({
-    name: '', phoneNumber: '', roadAddress: '', detailAddress: '', gender: '', birth: '',
-  })
-  const [success, setSuccess] = useState(false)
-  const set = (k) => (e) => setFields((p) => ({ ...p, [k]: e.target.value }))
+// ─── 내 신청내역 탭 ──────────────────────────────────
+const fmtDateTime = (val) => {
+  if (!val) return ''
+  const d = new Date(val)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
 
-  const { open: openPostcode } = useDaumPostcode((roadAddress) => {
-    setFields((p) => ({ ...p, roadAddress, detailAddress: '' }))
-  })
+const ApplicationsTab = () => {
+  const navigate    = useNavigate()
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    if (user) setFields({
-      name:          user.name        ?? '',
-      phoneNumber:   user.phoneNumber ?? '',
-      roadAddress:   user.address     ?? '',
-      detailAddress: '',
-      gender:        user.gender      ?? '',
-      birth:         user.birth       ?? '',
-    })
-  }, [user])
-
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: () => {
-      window.location.reload()
-    },
+  const { data: applications = [], isLoading } = useQuery({
+    queryKey: ['my-applications'],
+    queryFn:  getMyApplications,
   })
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!fields.name.trim()) { toast.error('이름은 필수입니다.'); return }
-    const address = [fields.roadAddress, fields.detailAddress].filter(Boolean).join(' ')
-    mutate({ ...fields, address })
+  const cancelMutation = useMutation({
+    mutationFn: (id) => cancelApplication(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-applications'] }),
+    onError:   () => toast.error('취소에 실패했습니다.'),
+  })
+
+  const handleCancel = (appId) => {
+    if (!window.confirm('정말 신청을 취소하시겠습니까?')) return
+    cancelMutation.mutate(appId)
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-8">
-      <h2 className="text-2xl font-medium text-slate-900 mb-6">정보 수정</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">이메일 (변경 불가)</label>
-          <input
-            type="email" value={user.email} disabled
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">이름 *</label>
-          <input
-            type="text" value={fields.name} onChange={set('name')} required
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">성별</label>
-          <select
-            value={fields.gender} onChange={set('gender')}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none bg-white"
-          >
-            <option value="">선택하세요</option>
-            <option value="남">남</option>
-            <option value="여">여</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">전화번호</label>
-          <input
-            type="tel" value={fields.phoneNumber} onChange={set('phoneNumber')}
-            placeholder="010-1234-5678"
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">생년월일</label>
-          <DateInput
-            value={fields.birth}
-            onChange={(v) => setFields((p) => ({ ...p, birth: v }))}
-            placeholder="생년월일 선택"
-            maxDate={new Date()}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">주소</label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text" value={fields.roadAddress} readOnly placeholder="도로명 주소 검색"
-              className="flex-1 px-4 py-3 border border-slate-300 rounded-lg bg-slate-50 text-slate-900 outline-none cursor-default"
-            />
-            <button
-              type="button" onClick={openPostcode}
-              className="px-4 py-3 border-2 border-slate-300 rounded-lg hover:border-slate-900 transition font-medium whitespace-nowrap"
-            >
-              주소 검색
-            </button>
-          </div>
-          <input
-            type="text" value={fields.detailAddress} onChange={set('detailAddress')}
-            placeholder="상세주소 (동/호수 등)"
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none transition"
-          />
-        </div>
+    <div>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-10 sm:mb-16 pb-6 sm:pb-8 border-b border-[#E5E5E5] text-[#171717] break-keep">
+        내 신청내역
+      </h2>
 
-        {success && (
-          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-2">
-            저장되었습니다.
-          </p>
-        )}
-        {error && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-4 py-2">
-            {getErrorMessage(error, '저장 중 오류가 발생했습니다.')}
-          </p>
-        )}
+      {isLoading && (
+        <div className="space-y-2">
+          {[...Array(4)].map((_, i) => <SkeletonRow key={i} />)}
+        </div>
+      )}
 
-        <div className="flex gap-3 pt-2">
-          <button
-            type="submit" disabled={isPending}
-            className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:bg-slate-400 transition font-medium"
-          >
-            {isPending ? '저장 중...' : '저장하기'}
-          </button>
-          <button
-            type="button" onClick={onCancel}
-            className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium"
-          >
-            취소
+      {!isLoading && applications.length === 0 && (
+        <div className="text-center py-16 border border-[#E5E5E5]">
+          <p className="text-[#737373] mb-6 break-keep">신청한 훈련이 없습니다.</p>
+          <button onClick={() => navigate('/training')} className={BTN_PRIMARY}>
+            훈련 목록 보기
           </button>
         </div>
-      </form>
+      )}
+
+      {!isLoading && applications.length > 0 && (
+        <div className="flex flex-col divide-y divide-[#E5E5E5]">
+          {applications.map((app) => (
+            <div key={app.id} className="py-8 first:pt-0">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+                <div>
+                  <h3
+                    className="text-lg font-bold text-[#171717] mb-2 hover:opacity-70 cursor-pointer transition break-keep"
+                    onClick={() => navigate(`/training/${app.trainingId}`)}
+                  >
+                    {app.trainingTitle}
+                  </h3>
+                  <p className="text-sm text-[#737373] font-mono">신청일: {fmtDateTime(app.appliedAt)}</p>
+                </div>
+                <button
+                  onClick={() => handleCancel(app.id)}
+                  disabled={cancelMutation.isPending}
+                  className="text-xs font-bold tracking-[0.1em] uppercase border border-red-300 text-red-500 px-4 py-2.5 hover:border-red-500 transition-colors disabled:opacity-50 shrink-0"
+                >
+                  신청 취소
+                </button>
+              </div>
+              <div className="pt-4 border-t border-[#E5E5E5] text-sm text-[#737373] space-y-1">
+                <p>연락처: {app.phone}</p>
+                <p>
+                  훈련비:{' '}
+                  {app.trainingFee > 0
+                    ? <span className="font-medium text-[#2C2C2C]">{app.trainingFee.toLocaleString('ko-KR')}원</span>
+                    : <span className="text-emerald-600 font-medium">무료</span>
+                  }
+                </p>
+                {app.paymentMethod === 'BANK' && (
+                  <div className="mt-2 border border-[#E5E5E5] bg-[#F4F2EA] px-4 py-3">
+                    <p className="text-xs font-mono uppercase tracking-widest text-[#737373] mb-1">입금 계좌 안내</p>
+                    <p className="text-sm text-[#2C2C2C] font-medium">농협 301-0273-8865-01</p>
+                    <p className="text-xs text-[#737373] mt-0.5">예금주: 그리스도 사랑교회</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -207,20 +360,8 @@ const EditTab = ({ user, onCancel }) => {
 // ─── 비밀번호 강도 정규식 (ResetPasswordPage와 동일 기준) ──────────
 const PW_REGEX = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s]).{8,}$/
 
-const EyeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-  </svg>
-)
-const EyeOffIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 4.411m0 0L21 21" />
-  </svg>
-)
-
 // ─── 비밀번호 변경 탭 ────────────────────────────────
-const PasswordTab = ({ onCancel }) => {
+const PasswordTab = ({ onCancel, isOAuth }) => {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', newPasswordConfirm: '' })
   const [success, setSuccess] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
@@ -264,55 +405,58 @@ const PasswordTab = ({ onCancel }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-8">
-      <h2 className="text-2xl font-medium text-slate-900 mb-6">비밀번호 변경</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-10 sm:mb-16 pb-6 sm:pb-8 border-b border-[#E5E5E5] text-[#171717] break-keep">
+        비밀번호 변경
+      </h2>
+
+      {isOAuth && (
+        <p className="mb-6 text-sm text-[#737373] border border-[#E5E5E5] bg-[#F4F2EA] px-4 py-3 break-keep">
+          소셜 로그인 전용 계정은 비밀번호를 변경할 수 없습니다.
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
         {[
           { id: 'currentPassword', label: '현재 비밀번호', hint: '' },
           { id: 'newPassword',     label: '새 비밀번호',   hint: '8자 이상의 영문, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다' },
           { id: 'newPasswordConfirm', label: '새 비밀번호 확인', hint: '' },
         ].map(({ id, label, hint }) => (
           <div key={id}>
-            <label className="block text-sm font-medium text-slate-700 mb-2">{label} *</label>
+            <label className={LABEL_CLS}>{label} *</label>
             <div className="relative">
               <input
                 type={showPws[id] ? 'text' : 'password'} value={form[id]} onChange={set(id)}
                 onBlur={handleBlur(id)}
-                required autoComplete={id === 'currentPassword' ? 'current-password' : 'new-password'}
-                className="w-full px-4 py-3 pr-11 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none"
+                required disabled={isOAuth} autoComplete={id === 'currentPassword' ? 'current-password' : 'new-password'}
+                className={`${INPUT_CLS} pr-11 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[#F4F2EA]`}
               />
-              <button type="button" tabIndex={-1} onClick={() => toggleShow(id)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                {showPws[id] ? <EyeOffIcon /> : <EyeIcon />}
+              <button type="button" tabIndex={-1} disabled={isOAuth} onClick={() => toggleShow(id)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#737373] hover:text-[#171717] disabled:opacity-50 disabled:cursor-not-allowed">
+                {showPws[id] ? <EyeSlash size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
-            {fieldErrors[id] && <p className="mt-1 text-xs text-red-500">{fieldErrors[id]}</p>}
+            {hint && <p className="mt-1 text-xs text-[#737373] break-keep">{hint}</p>}
+            {fieldErrors[id] && <p className="mt-1 text-xs text-red-500 break-keep">{fieldErrors[id]}</p>}
           </div>
         ))}
 
         {success && (
-          <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded px-4 py-2">
+          <p className="text-sm text-emerald-700 border border-emerald-300 bg-emerald-50 px-4 py-3">
             비밀번호가 변경되었습니다.
           </p>
         )}
         {error && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-4 py-2">
+          <p className="text-sm text-red-600 border border-red-300 bg-red-50 px-4 py-3">
             {getErrorMessage(error, '비밀번호 변경 중 오류가 발생했습니다.')}
           </p>
         )}
 
         <div className="flex gap-3 pt-2">
-          <button
-            type="submit" disabled={isPending}
-            className="flex-1 px-6 py-3 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:bg-slate-400 transition font-medium"
-          >
+          <button type="submit" disabled={isPending || isOAuth} className={`${BTN_PRIMARY} flex-1`}>
             {isPending ? '변경 중...' : '비밀번호 변경'}
           </button>
-          <button
-            type="button" onClick={onCancel}
-            className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition font-medium"
-          >
+          <button type="button" onClick={onCancel} className={BTN_GHOST}>
             취소
           </button>
         </div>
@@ -331,83 +475,77 @@ const MyPage = () => {
   })
 
   if (isLoading) return (
-    <div className="pt-page px-6">
+    <div className="pt-page px-6 bg-[#FAF9F6] min-h-screen">
       <div className="max-w-4xl mx-auto space-y-4 py-16">
-        <div className="skeleton-shimmer h-16 w-full rounded-lg" />
-        <div className="skeleton-shimmer h-64 w-full rounded-lg" />
+        <div className="skeleton-shimmer h-16 w-full" />
+        <div className="skeleton-shimmer h-64 w-full" />
       </div>
     </div>
   )
   if (error) return (
-    <div className="max-w-2xl mx-auto px-4 py-16">
-      <p className="text-sm text-red-600">내 정보를 불러올 수 없습니다.</p>
+    <div className="pt-page px-6 bg-[#FAF9F6] min-h-screen">
+      <div className="max-w-2xl mx-auto py-16">
+        <p className="text-sm text-red-600">내 정보를 불러올 수 없습니다.</p>
+      </div>
     </div>
   )
 
-  const approval = APPROVAL[user?.approvalStatus] ?? { text: user?.approvalStatus, cls: 'bg-gray-500/20 text-gray-300' }
+  const approval = APPROVAL[user?.approvalStatus] ?? { text: user?.approvalStatus, icon: WarningCircle, cls: 'border-[#737373]/50 text-[#737373]' }
+  const ApprovalIcon = approval.icon
   const isOAuth = user?.isOAuthUser === true
 
   return (
-    <>
-      {/* Hero */}
-      <section className="pt-page pb-16 text-white px-6 relative bg-slate-900">
-        <div className="absolute inset-0 pointer-events-none" />
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-light tracking-tight">
-                안녕하세요, {user?.name}님
+    <div className="relative min-h-screen flex flex-col bg-[#FAF9F6] pt-page">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full grid grid-cols-1 md:grid-cols-12 md:divide-x md:divide-[#E5E5E5]">
+
+        {/* 왼쪽 사이드바 */}
+        <div className="md:col-span-4 bg-[#171717] text-[#FAF9F6] flex flex-col">
+          <div className="p-8 sm:p-12 xl:p-16 flex-1 flex flex-col">
+            <div className="mb-10 md:mb-20">
+              <div className="flex flex-wrap items-center gap-2 mb-6 md:mb-8">
+                <span className={`inline-flex items-center gap-1.5 border px-3 py-1 text-xs font-mono uppercase tracking-widest ${approval.cls}`}>
+                  <ApprovalIcon size={14} weight="bold" />
+                  {approval.text}
+                </span>
+                {user?.connectedProviders?.map((provider) => (
+                  <ProviderBadge key={provider} provider={provider} />
+                ))}
+              </div>
+              <h1 className="text-3xl sm:text-4xl xl:text-5xl font-bold tracking-tight mb-4 leading-tight break-keep">
+                안녕하세요,<br />{user?.name}님
               </h1>
-              <p className="text-slate-300 mt-2">회원님의 정보를 관리할 수 있습니다</p>
+              <p className="text-[#737373] font-light break-keep">회원님의 정보를 관리할 수 있습니다</p>
+
+              {user?.approvalStatus === 'REJECTED' && user?.rejectionReason && (
+                <div className="mt-6 border border-red-400/50 bg-red-500/10 px-4 py-3">
+                  <p className="text-xs font-mono uppercase tracking-widest text-red-300 mb-1">가입 반려 안내</p>
+                  <p className="text-sm text-red-200 break-keep">{user.rejectionReason}</p>
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${approval.cls}`}>
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm font-medium">{approval.text}</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 반려 사유 */}
-      {user?.approvalStatus === 'REJECTED' && user?.rejectionReason && (
-        <div className="bg-red-50 border-b border-red-200 px-6 py-4">
-          <div className="max-w-6xl mx-auto">
-            <p className="text-sm font-medium text-red-700 mb-1">가입 반려 안내</p>
-            <p className="text-sm text-red-600">{user.rejectionReason}</p>
+            <nav className="flex flex-col border-t border-white/20">
+              {NAV_ITEMS.map((item) => (
+                <SideNavItem
+                  key={item.id}
+                  id={item.id}
+                  label={item.label}
+                  active={tab === item.id}
+                  onClick={setTab}
+                />
+              ))}
+            </nav>
           </div>
         </div>
-      )}
 
-      {/* 탭 네비게이션 */}
-      <section className="bg-white border-b border-slate-200 px-6">
-        <div className="max-w-6xl mx-auto">
-          <nav className="flex gap-1">
-            <TabBtn id="info"     label="내 정보"       active={tab === 'info'}     onClick={setTab} />
-            <TabBtn id="edit"     label="정보 수정"     active={tab === 'edit'}     onClick={setTab} />
-            {!isOAuth && (
-              <TabBtn id="password" label="비밀번호 변경" active={tab === 'password'} onClick={setTab} />
-            )}
-          </nav>
+        {/* 오른쪽 콘텐츠 */}
+        <div className="md:col-span-8 bg-[#FAF9F6] p-8 sm:p-12 xl:p-24 flex flex-col">
+          {tab === 'info'         && <InfoTab user={user} />}
+          {tab === 'password'     && <PasswordTab isOAuth={isOAuth} onCancel={() => setTab('info')} />}
+          {tab === 'applications' && <ApplicationsTab />}
         </div>
-      </section>
-
-      {/* 탭 컨텐츠 */}
-      <section className="py-16 bg-slate-50 px-6 min-h-screen">
-        <div className="max-w-4xl mx-auto">
-          {tab === 'info'     && <InfoTab     user={user} onEdit={() => setTab('edit')} />}
-          {tab === 'edit'     && <EditTab     user={user} onCancel={() => setTab('info')} />}
-          {tab === 'password' && !isOAuth && <PasswordTab onCancel={() => setTab('info')} />}
-        </div>
-      </section>
-    </>
+      </main>
+    </div>
   )
 }
 

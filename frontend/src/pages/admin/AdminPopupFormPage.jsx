@@ -196,7 +196,7 @@ const AdminPopupFormPage = () => {
 
   const [form,        setForm]        = useState(INITIAL_FORM)
   const [errors,      setErrors]      = useState({})
-  const [previewHtml, setPreviewHtml] = useState('')  // 미리보기용 HTML (폴링)
+  const [previewHtml, setPreviewHtml] = useState('')  // 미리보기용 HTML (Quill onChange로 즉시 갱신)
 
   // Quill 준비 전에 detail이 먼저 도착한 경우를 위한 대기 content
   const pendingContentRef = useRef(null)
@@ -228,15 +228,8 @@ const AdminPopupFormPage = () => {
   const { containerRef, getHTML, setHTML, LinkTooltip } = useQuillEditor({
     onImageUpload: handleUpload,
     onReady: handleReady,
+    onChange: setPreviewHtml,  // 내용 변경 시 즉시 미리보기 갱신 (폴링 제거)
   })
-
-  // Quill 내용 → 미리보기 폴링 (500ms)
-  useEffect(() => {
-    const id = setInterval(() => {
-      setPreviewHtml(getHTML())
-    }, 500)
-    return () => clearInterval(id)
-  }, [getHTML])
 
   // 수정 모드: 데이터 로드 후 폼 + 에디터 초기값 세팅
   useEffect(() => {
@@ -330,7 +323,7 @@ const AdminPopupFormPage = () => {
   }
 
   return (
-    <div className="p-4 sm:p-8">
+    <div className="h-full overflow-y-auto p-4 sm:p-8">
       <LinkTooltip />
 
       <div className="mb-6">

@@ -113,9 +113,10 @@ public class SermonApiController {
     public ResponseEntity<ApiResponse<SermonPageResponse>> getSundayMorningData(
             @PathVariable Integer serviceNumber,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "9") int size) {
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(ApiResponse.ok(
-                sermonQueryService.getSundayMorningPage(serviceNumber, page, size)));
+                sermonQueryService.getSundayMorningPage(serviceNumber, page, size, keyword)));
     }
 
     @GetMapping("/sunday-afternoon")

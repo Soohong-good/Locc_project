@@ -97,13 +97,26 @@ public class StaffImageService {
             Files.createDirectories(uploadPath);
         }
 
+        // 경로 구분자 제거 — 디렉토리 컴포넌트를 모두 떼어내고 파일명만 남김 (Path Traversal 방지)
         String originalFilename = file.getOriginalFilename();
-        String extension = (originalFilename != null && originalFilename.contains("."))
-                ? originalFilename.substring(originalFilename.lastIndexOf("."))
+        String safeFilename = originalFilename != null
+                ? Paths.get(originalFilename).getFileName().toString()
                 : "";
+
+        // 확장자 추출 후 영숫자만 허용
+        String extension = safeFilename.contains(".")
+                ? safeFilename.substring(safeFilename.lastIndexOf("."))
+                : "";
+        if (!extension.isEmpty() && !extension.matches("\\.[a-zA-Z0-9]{1,10}")) {
+            extension = "";
+        }
         String storedFilename = UUID.randomUUID().toString() + extension;
 
-        Path filePath = uploadPath.resolve(storedFilename);
+        // filePath가 uploadPath 하위에 있는지 최종 검증
+        Path filePath = uploadPath.resolve(storedFilename).normalize();
+        if (!filePath.startsWith(uploadPath.normalize())) {
+            throw new IllegalArgumentException("잘못된 파일 경로입니다.");
+        }
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         return "/uploads/staff/" + storedFilename;

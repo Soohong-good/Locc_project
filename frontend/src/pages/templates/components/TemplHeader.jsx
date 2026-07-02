@@ -32,10 +32,8 @@ const NAV_MENUS = [
     label: '공지 및 자료실',
     minWidth: '210px',
     children: [
-      { href: '/notices',       label: '공지' },
-      { href: '/bulletin',      label: '주보' },
-      { href: '/praise-sheets', label: '찬양악보' },
-      { href: '/applications',  label: '신청양식' },
+      { href: '/notices',  label: '공지' },
+      { href: '/bulletin', label: '주보' },
     ],
   },
   {
@@ -51,7 +49,14 @@ const NAV_MENUS = [
       { href: '/department/healing',      label: '치유부' },
     ],
   },
-  { label: '훈련 신청', href: '/training' },
+  { label: '찬양', href: '/praise-sheets' },
+  {
+    label: '신청',
+    children: [
+      { href: '/training',     label: '훈련신청' },
+      { href: '/applications', label: '기타신청' },
+    ],
+  },
 ]
 
 // ── 데스크탑 드롭다운 ─────────────────────────────────

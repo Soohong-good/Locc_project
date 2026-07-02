@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
     id 'org.springframework.boot' version '3.5.7'
     id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -76,6 +77,16 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport   // 테스트 후 커버리지 리포트 자동 생성
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true        // CI 배지 생성용
+        html.required = true       // 사람이 보는 리포트
+        csv.required = false
+    }
 }
 
 // plain JAR 생성 비활성화 (Docker 빌드 시 *.jar 중복 방지)

@@ -221,7 +221,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/check-email").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/email/send-code").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/email/verify").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/email/verify-code").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/password/reset-request").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/password/reset").permitAll()
@@ -238,6 +237,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/notices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/praise-sheets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/sermons/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/choir/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/bible/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/staff/**").permitAll()
                         // 부서 조회 — 단수(/api/department)·복수(/api/departments) 모두 허용
                         // DepartmentApiController → @RequestMapping("/api/department") (단수)

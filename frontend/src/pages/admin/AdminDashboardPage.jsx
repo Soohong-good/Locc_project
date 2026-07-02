@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
+import { YoutubeLogo, Images, Plus } from '@phosphor-icons/react'
 import useAuthStore from '@/stores/authStore'
 import { getDashboard } from '@/api/dashboard'
 import { getNotices } from '@/api/notices'
 import { getSundayMorningGroupedData, getWeekdayData, getTrainingMessageData } from '@/api/sermons'
 import { getBulletins } from '@/api/bulletins'
 import { getRecentGallery } from '@/api/departments'
+import { getAdminApplications } from '@/api/applications'
 
 // ── 유틸 ──────────────────────────────────────────────────────────────────
 
@@ -93,7 +95,7 @@ const LineChart = ({ data }) => {
       <polygon
         points={`${PAD.left},${PAD.top + innerH} ${points} ${W - PAD.right},${PAD.top + innerH}`}
         fill="#3b82f6"
-        fillOpacity="0.08"
+        fillOpacity="0.12"
       />
 
       {/* 라인 */}
@@ -171,12 +173,15 @@ const Skeleton = ({ className = '' }) => (
 
 // ── 통계 카드 ─────────────────────────────────────────────────────────────
 
-const StatCard = ({ label, value, sub, color = 'text-gray-900', to }) => {
+const StatCard = ({ label, value, sub, color = 'text-gray-900', pulse = false, to }) => {
   const inner = (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition-shadow h-full">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`text-3xl font-bold ${color}`}>{fmt(value)}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+    <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow h-full">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs text-gray-500">{label}</p>
+        {pulse && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shrink-0" />}
+      </div>
+      <p className={`text-3xl font-extrabold ${color}`}>{fmt(value)}</p>
+      {sub && <p className="text-xs text-gray-400 mt-1 truncate">{sub}</p>}
     </div>
   )
   return to ? <Link to={to} className="block">{inner}</Link> : inner
@@ -300,7 +305,7 @@ const PostTable = ({ hasTag = false, viewAllTo, viewAllLabel = '전체 보기 �
 const SERMON_MAIN_TABS = [
   { key: 'sunday_morning', label: '주일 오전' },
   {
-    key: 'weekday', label: '기타예배',
+    key: 'weekday', label: '수요·금요예배',
     subs: [
       { key: 'weekday_wednesday', label: '수요예배' },
       { key: 'weekday_friday',    label: '금요기도회' },
@@ -489,7 +494,7 @@ const GallerySubPanel = ({ onLoad }) => {
                 tag={item.departmentName}
                 title={item.title ?? '(제목 없음)'}
                 date={formatDateShort(item.createdAt)}
-                to={`/department/${item.departmentCode}/gallery/${item.id}`}
+                to={`/department/gallery/${item.id}`}
               />
             ))
       }
@@ -549,6 +554,157 @@ const RecentPostsPanel = () => {
         {activeTab === 'gallery'  && <GallerySubPanel  onLoad={updateCount('gallery')} />}
       </div>
     </div>
+  )
+}
+
+// ── 한눈에 보기 위젯 (설교/공지/갤러리/신청현황 동시 표시) ────────────────
+
+const WidgetCard = ({ title, icon, viewAllTo, children }) => (
+  <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col">
+    <div className="flex items-center justify-between mb-3">
+      <h5 className="text-sm font-bold text-gray-900">{title}</h5>
+      {viewAllTo
+        ? <Link to={viewAllTo} className="text-[11px] text-blue-600 hover:underline shrink-0">전체보기</Link>
+        : icon}
+    </div>
+    <div className="flex-1">{children}</div>
+  </div>
+)
+
+const WidgetEmpty = ({ children = '등록된 항목이 없습니다' }) => (
+  <p className="text-xs text-gray-400 text-center py-8">{children}</p>
+)
+
+const WidgetSkeleton = ({ rows = 3, className = 'h-10' }) => (
+  <div className="space-y-2">
+    {[...Array(rows)].map((_, i) => <div key={i} className={`bg-gray-100 rounded-lg animate-pulse ${className}`} />)}
+  </div>
+)
+
+const RecentSermonWidget = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['dash', 'widget', 'sermon'],
+    queryFn: () => getSundayMorningGroupedData({ page: 0, size: 3 }),
+    staleTime: 60 * 1000,
+  })
+  const items = (data?.groups ?? []).slice(0, 3)
+
+  return (
+    <WidgetCard title="최근 설교" icon={<YoutubeLogo size={18} className="text-gray-300" />}>
+      {isLoading ? <WidgetSkeleton /> : items.length === 0 ? <WidgetEmpty /> : (
+        <div className="space-y-1">
+          {items.map((g) => (
+            <Link key={g.sermonDate} to={`/worship/sermon/sunday-morning/${g.sermonDate}`}
+              className="block p-2 -mx-2 rounded-lg hover:bg-gray-50 transition-colors">
+              <p className="text-[13px] font-medium text-gray-800 truncate">
+                {g.representativeTitle ?? g.part1?.title ?? g.part2?.title ?? '(제목 없음)'}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">주일오전 · {formatDateShort(g.sermonDate)}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+    </WidgetCard>
+  )
+}
+
+const RecentNoticeWidget = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['dash', 'widget', 'notice'],
+    queryFn: () => getNotices({ page: 0, size: 3 }),
+    staleTime: 60 * 1000,
+  })
+  const items = (data?.content ?? []).slice(0, 3)
+
+  return (
+    <WidgetCard title="공지사항" viewAllTo="/admin/notices">
+      {isLoading ? <WidgetSkeleton /> : items.length === 0 ? <WidgetEmpty /> : (
+        <div className="space-y-3">
+          {items.map((n) => {
+            const d = new Date(n.createdAt)
+            return (
+              <Link key={n.id} to={`/notices/${n.id}`} className="flex items-center gap-3 group">
+                <div className="flex flex-col items-center justify-center w-10 h-10 shrink-0 bg-blue-50 text-blue-700 rounded-lg">
+                  <span className="text-[9px] leading-none">{String(d.getMonth() + 1).padStart(2, '0')}월</span>
+                  <span className="text-sm font-bold leading-none mt-0.5">{d.getDate()}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-gray-800 truncate group-hover:text-blue-600 transition-colors">{n.title}</p>
+                  {n.isPinned && <span className="text-[10px] text-amber-600 font-medium">고정 공지</span>}
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </WidgetCard>
+  )
+}
+
+const RecentGalleryWidget = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['dash', 'widget', 'gallery'],
+    queryFn: () => getRecentGallery({ page: 0, size: 3 }),
+    staleTime: 60 * 1000,
+  })
+  const items = (data?.content ?? []).slice(0, 3)
+
+  return (
+    <WidgetCard title="갤러리 업데이트" icon={<Images size={18} className="text-gray-300" />}>
+      {isLoading ? (
+        <div className="grid grid-cols-2 gap-2">
+          {[...Array(4)].map((_, i) => <div key={i} className="aspect-square bg-gray-100 rounded-lg animate-pulse" />)}
+        </div>
+      ) : items.length === 0 ? <WidgetEmpty /> : (
+        <div className="grid grid-cols-2 gap-2">
+          {items.map((img) => (
+            <Link key={img.id} to={`/department/gallery/${img.id}`}
+              className="aspect-square rounded-lg overflow-hidden relative group bg-gray-100">
+              <img
+                src={`/uploads/gallery/${img.thumbnailFilename || img.storedFilename}`}
+                alt={img.title ?? '갤러리 이미지'}
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                onError={(e) => { e.currentTarget.src = '/images/no-image.png' }}
+              />
+            </Link>
+          ))}
+          <Link to="/admin/gallery"
+            className="aspect-square rounded-lg bg-gray-50 flex flex-col items-center justify-center text-gray-400 hover:bg-gray-100 transition-colors">
+            <Plus size={18} />
+            <span className="text-[9px] mt-0.5">더보기</span>
+          </Link>
+        </div>
+      )}
+    </WidgetCard>
+  )
+}
+
+const APPLICATION_BORDER = { PENDING: 'border-red-400', COMPLETED: 'border-gray-200', CANCELLED: 'border-gray-200' }
+const APPLICATION_TEXT   = { PENDING: 'text-red-600',   COMPLETED: 'text-gray-500',   CANCELLED: 'text-gray-400' }
+
+const RecentApplicationWidget = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['dash', 'widget', 'application'],
+    queryFn: () => getAdminApplications({ page: 0, size: 3 }),
+    staleTime: 60 * 1000,
+  })
+  const items = (data?.content ?? []).slice(0, 3)
+
+  return (
+    <WidgetCard title="신청 현황 (공간/차량)" viewAllTo="/admin/applications">
+      {isLoading ? <WidgetSkeleton /> : items.length === 0 ? <WidgetEmpty /> : (
+        <div className="space-y-2">
+          {items.map((a) => (
+            <Link key={a.id} to={`/admin/applications/${a.id}`}
+              className={`block p-2.5 pl-3 border-l-4 ${APPLICATION_BORDER[a.status] ?? 'border-gray-200'} bg-gray-50 hover:bg-gray-100 rounded-r-lg transition-colors`}>
+              <p className="text-[13px] font-semibold text-gray-800 truncate">{a.categoryName}</p>
+              <p className="text-[11px] text-gray-400 truncate">{a.useDate} {a.useStartTime?.slice(0, 5)}~{a.useEndTime?.slice(0, 5)}</p>
+              <p className={`text-[10px] mt-0.5 font-medium ${APPLICATION_TEXT[a.status] ?? 'text-gray-400'}`}>{a.statusLabel}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+    </WidgetCard>
   )
 }
 
@@ -628,7 +784,7 @@ const AdminDashboardPage = () => {
   const timeStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="h-full overflow-y-auto p-8 space-y-8">
 
       {/* 헤더 */}
       <div className="flex items-center justify-between">
@@ -717,17 +873,18 @@ const AdminDashboardPage = () => {
       <section>
         <h2 className="text-sm font-semibold text-gray-700 mb-3">주요 현황</h2>
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
-            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard label="전체 회원" value={data?.totalUsers} sub={`승인 완료 ${fmt(data?.approvedUsers)}명`} to="/admin/users" />
             <StatCard
               label="승인 대기"
               value={data?.pendingUsers}
               sub="승인이 필요한 회원"
               color={data?.pendingUsers > 0 ? 'text-red-500' : 'text-gray-900'}
+              pulse={data?.pendingUsers > 0}
               to="/admin/users"
             />
             <StatCard label="도움문의 전체" value={data?.totalHelpRequests} to="/admin/help-requests" />
@@ -736,18 +893,29 @@ const AdminDashboardPage = () => {
               value={data?.pendingHelpRequests}
               sub={`처리중 ${fmt(data?.inProgressHelpRequests)}건 포함`}
               color={data?.pendingHelpRequests > 0 ? 'text-amber-500' : 'text-gray-900'}
+              pulse={data?.pendingHelpRequests > 0}
               to="/admin/help-requests"
             />
           </div>
         )}
       </section>
 
-      {/* ── 최근 게시물 ── */}
+      {/* ── 한눈에 보기 (설교/공지/갤러리/신청현황 동시 표시) ── */}
+      <section>
+        <h2 className="text-sm font-semibold text-gray-700 mb-3">한눈에 보기</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <RecentSermonWidget />
+          <RecentNoticeWidget />
+          <RecentGalleryWidget />
+          <RecentApplicationWidget />
+        </div>
+      </section>
+
+      {/* ── 최근 게시물 (상세 탐색용) ── */}
       <section>
         <h2 className="text-sm font-semibold text-gray-700 mb-3">최근 게시물</h2>
         <RecentPostsPanel />
       </section>
-
 
     </div>
   )

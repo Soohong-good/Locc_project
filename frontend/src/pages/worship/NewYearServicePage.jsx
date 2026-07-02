@@ -1,12 +1,14 @@
-﻿import DOMPurify from 'dompurify'
+import DOMPurify from 'dompurify'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { PlayCircle, DownloadSimple } from '@phosphor-icons/react'
 import { fetchNewYear, updateNewYearLatestVideo, updateNewYearTranscript, uploadNewYearPdf } from '@/api/newYearApi'
 import { downloadByPath } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
 import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
+import { formatTranscript } from '@/utils/formatTranscript'
 
 function isEmptyTranscript(html) {
   if (!html) return true
@@ -14,7 +16,7 @@ function isEmptyTranscript(html) {
   return trimmed === '' || trimmed === '<p><br></p>'
 }
 
-// ─── 녹취록 편집 모달 ──────────────────────────────────────────────
+// ─── 녹취록 편집 모달 ───────────────────────────────────────────
 const TranscriptEditModal = ({ transcript, onSave, onClose, isSaving }) => {
   const [ready, setReady] = useState(false)
 
@@ -74,154 +76,6 @@ const TranscriptEditModal = ({ transcript, onSave, onClose, isSaving }) => {
   )
 }
 
-// ─── 녹취록 텍스트 전처리 ──────────────────────────────────────────
-/**
- * 설교 녹취록 HTML을 구조화된 HTML로 변환합니다.
- *
- * [에디터로 저장된 경우] p태그가 여러 개 → 그대로 반환
- * [텍스트로 저장된 경우] 아래 규칙으로 구조화:
- *
- *   빈 줄          → 단락 구분
- *   서론/본론       → <h2> 섹션 헤더
- *   결론-...        → <h2> 섹션 헤더
- *   1. 2. 3.        → <h3> 대항목 (굵게)
- *   1) 2) 3) 4)     → <p class="sermon-sub"> 소항목
- *   책명장:절 "..." → <p class="sermon-ref"> + <blockquote class="sermon-quote">
- *   "..."           → <blockquote class="sermon-quote">
- *   -설명문         → <p class="sermon-desc"> 들여쓰기 설명
- *   그 외           → <p class="sermon-p"> 일반 단락
- */
-/** XSS 방지: 텍스트 노드를 HTML에 삽입하기 전 이스케이프 */
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-}
-
-function formatTranscript(html) {
-  if (!html) return html
-
-  // 에디터로 저장된 구조화 데이터 → 그대로 반환
-  // 단, Quill이 생성한 <p><span style=...> 패턴은 재처리 필요
-  const pCount = (html.match(/<p[\s>]/gi) || []).length
-  const isQuillHtml = html.includes('<span style=') || html.includes('<span class=')
-  if (pCount > 1 && !isQuillHtml) return html
-
-  // Quill HTML인 경우 — 태그 제거 후 텍스트만 추출하여 재처리
-  let rawText = html
-  if (isQuillHtml) {
-    rawText = html
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<p[^>]*>/gi, '')
-      .replace(/<\/p>/gi, '\n')
-      .replace(/<[^>]+>/g, '')   // 나머지 태그 제거
-      .replace(/&nbsp;/g, ' ')
-      .trim()
-    // Quill HTML 경로는 rawText를 단락으로 감싸서 재처리
-    const lines2 = rawText.split('\n').map(l => l.trim())
-    const result2 = []
-    for (const line of lines2) {
-      if (!line) continue
-      result2.push(`<p class="sermon-p">${escapeHtml(line)}</p>`)
-    }
-    return result2.join('\n')
-  }
-
-  // 내부 텍스트 추출
-  const inner = html
-    .replace(/^<p[^>]*>/i, '')
-    .replace(/<\/p>$/i, '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .trim()
-
-  // 리터럴 \n 문자열(DB 저장 아티팩트)을 실제 줄바꿈으로 변환
-  const normalized = inner.replace(/\\n/g, '\n')
-
-  // 줄 단위로 분리
-  const lines = normalized.split('\n').map((l) => l.trim())
-
-  const result = []
-  let titleDone = false  // 첫 타이틀 블록 처리 여부
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
-    // 빈 줄 → 스킵
-    if (line === '') continue
-
-    // ── 첫 번째 타이틀 블록 ──────────────────────────────────────
-    // 날짜+예배명 (예: "12.31, 2025. 송구영신예배") → sermon-title
-    // 주제 성구 (예: "하나님의 거룩한 이름을 위함이라(겔36:22-31)") → sermon-verse
-    // 두 줄이 연속으로 나오는 구조 → 서론이 나오기 전까지 타이틀 블록으로 처리
-    if (!titleDone) {
-      // 날짜 패턴으로 시작하면 타이틀
-      if (/^\d+\.\d+/.test(line)) {
-        result.push(`<p class="sermon-title-date">${escapeHtml(line)}</p>`)
-        continue
-      }
-      // 서론/본론/결론/숫자항목이 아니고 타이틀 아직 안 끝났으면 주제 성구
-      if (!/^(서론|본론|결론)/.test(line) && !/^[1-9]/.test(line) && !/^[-"]/.test(line)) {
-        result.push(`<p class="sermon-title-verse">${escapeHtml(line)}</p>`)
-        continue
-      }
-      titleDone = true
-    }
-
-    // 서론 / 본론
-    if (/^(서론|본론)\s*$/.test(line)) {
-      result.push(`<h2 class="sermon-section">${escapeHtml(line)}</h2>`)
-      continue
-    }
-
-    // 결론-... (결론 뒤에 설명이 붙는 형태)
-    if (/^결론/.test(line)) {
-      result.push(`<h2 class="sermon-section">${escapeHtml(line)}</h2>`)
-      continue
-    }
-
-    // 1. 2. 3. 대항목
-    if (/^[1-9]\d*\.[가-힣]/.test(line)) {
-      result.push(`<h3 class="sermon-h3">${escapeHtml(line)}</h3>`)
-      continue
-    }
-
-    // 1) 2) 3) 소항목
-    if (/^[1-9]\d*\)[가-힣]/.test(line)) {
-      result.push(`<p class="sermon-sub">${escapeHtml(line)}</p>`)
-      continue
-    }
-
-    // 책명+장절 "인용" — 예: 딤후3:1-2 "...", 시145:1 "..."
-    const refQuoteMatch = line.match(/^([가-힣]{1,4}\d+:\d+[\d\-,b]*)\s+([""\u201c].+)$/)
-    if (refQuoteMatch) {
-      result.push(`<p class="sermon-ref">${escapeHtml(refQuoteMatch[1])}</p>`)
-      result.push(`<blockquote class="sermon-quote">${escapeHtml(refQuoteMatch[2])}</blockquote>`)
-      continue
-    }
-
-    // 큰따옴표로 시작하는 인용 (책명 없이)
-    if (/^[""\u201c]/.test(line)) {
-      result.push(`<blockquote class="sermon-quote">${escapeHtml(line)}</blockquote>`)
-      continue
-    }
-
-    // - 설명문
-    if (/^-[가-힣]/.test(line)) {
-      result.push(`<p class="sermon-desc">${escapeHtml(line)}</p>`)
-      continue
-    }
-
-    // 일반 단락
-    result.push(`<p class="sermon-p">${escapeHtml(line)}</p>`)
-  }
-
-  return result.join('\n')
-}
-
-// ─── PDF 다운로드 핸들러 ───────────────────────────────────────────
 async function handlePdfDownload(apiPath, filename = '설교원고.pdf') {
   try {
     await downloadByPath(apiPath, filename)
@@ -230,7 +84,41 @@ async function handlePdfDownload(apiPath, filename = '설교원고.pdf') {
   }
 }
 
-// ─── 메인 페이지 ───────────────────────────────────────────────────
+const navItems = [
+  { href: '#sermon-video', section: '00', title: '예배 영상' },
+  { href: '#sermon-material', section: '01', title: '설교 자료 & 녹취록' },
+]
+
+const Sidebar = () => (
+  <aside className="lg:col-span-3 bg-[#FAF9F6] hidden lg:block border-r border-[#E5E5E5]">
+    <div
+      className="sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto flex flex-col"
+      style={{ scrollbarWidth: 'none' }}
+    >
+      <div className="p-8 lg:p-12 border-b border-[#E5E5E5]">
+        <span className="text-xs uppercase tracking-[0.2em] font-bold text-[#2C2C2C] font-mono block mb-2">Index</span>
+        <span className="text-sm text-[#737373]">목차</span>
+      </div>
+      <nav className="flex-1 flex flex-col divide-y divide-[#E5E5E5]">
+        {navItems.map(({ href, section, title }, i) => (
+          <a
+            key={href}
+            href={href}
+            className={`p-8 lg:px-12 py-6 hover:bg-[#F4F2EA] transition-colors group ${
+              i === navItems.length - 1 ? 'border-b border-[#E5E5E5]' : ''
+            }`}
+          >
+            <span className="text-[10px] font-mono text-[#737373] mb-2 block uppercase tracking-widest group-hover:text-[#2C2C2C] transition-colors">
+              Section {section}
+            </span>
+            <h4 className="font-bold text-[#2C2C2C] break-keep text-sm">{title}</h4>
+          </a>
+        ))}
+      </nav>
+    </div>
+  </aside>
+)
+
 export default function NewYearServicePage() {
   const queryClient = useQueryClient()
   const { isAdminOrOperator: isAdminOrOperatorFn } = useAuthStore()
@@ -281,7 +169,7 @@ export default function NewYearServicePage() {
 
   if (isLoading) return <LoadingSpinner />
   if (isError) return (
-    <main className="pt-page pb-16 px-6">
+    <main className="pt-20 pb-16 px-6">
       <div className="max-w-6xl mx-auto">
         <p className="text-red-600 font-medium mb-2">데이터 로딩 실패</p>
         <p className="text-slate-600">{error?.message ?? '알 수 없는 오류'}</p>
@@ -290,31 +178,34 @@ export default function NewYearServicePage() {
   )
 
   return (
-    <main>
-      {/* ── Hero ───────────────────────────────────────────────── */}
-      <section
-        className="pt-page pb-20 text-white px-6 relative"
-        style={{
-          backgroundImage: 'url(/newYearPage.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-900/65 pointer-events-none" />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <p className="text-xs tracking-[0.4em] text-eyebrow uppercase mb-4">
-            New Year Worship Service
-          </p>
-          <h1 className="text-4xl md:text-5xl font-light tracking-tight mb-5">{title}</h1>
-          <div className="w-12 h-px bg-slate-400 mx-auto mb-5" />
-          <p className="text-lg text-slate-300 font-light">{description}</p>
+    <main className="min-h-screen bg-[#FAF9F6] text-[#2C2C2C]">
+      {/* ── Hero ─────────────────────────────────────────────────── */}
+      <section className="bg-[#171717] border-b border-[#E5E5E5]">
+        <div className="max-w-[1600px] mx-auto border-x border-[#171717]">
+          <div className="p-8 md:p-16 lg:p-24 xl:p-32 pt-28 md:pt-32 lg:pt-40 flex flex-col justify-center min-h-[60vh] bg-[#171717] relative overflow-hidden">
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{ backgroundImage: 'radial-gradient(#FAF9F6 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+            />
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#FAF9F6]/60 font-mono mb-8 block border border-[#FAF9F6]/20 px-4 py-2">
+                New Year Worship Service
+              </span>
+              <h1 className="text-5xl md:text-7xl lg:text-[6rem] font-bold tracking-tighter leading-[1.1] text-[#FAF9F6] mb-6 break-keep">
+                {title}
+              </h1>
+              <p className="text-xl md:text-2xl lg:text-3xl font-light text-[#FAF9F6]/90 mb-12 break-keep">
+                {description}
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── 관리자 컨트롤 ──────────────────────────────────────── */}
+      {/* ── 관리자 컨트롤 ────────────────────────────────────────── */}
       {isAdmin && (
-        <section className="py-3 bg-amber-50 border-b border-amber-200 px-6">
-          <div className="max-w-5xl mx-auto flex justify-end gap-3">
+        <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
+          <div className="max-w-[1600px] mx-auto flex justify-end gap-3">
             <label className={`px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer ${
               uploadPdfMutation.isPending
                 ? 'bg-slate-400 text-white cursor-not-allowed'
@@ -342,113 +233,113 @@ export default function NewYearServicePage() {
             </button>
             <button
               type="button"
-              onClick={() => { if (window.confirm('YouTube에서 최신 영상을 불러오시겠습니까?')) updateVideoMutation.mutate() }}
+              onClick={() => {
+                if (window.confirm('YouTube에서 최신 영상을 불러오시겠습니까?')) updateVideoMutation.mutate()
+              }}
               disabled={updateVideoMutation.isPending}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm font-medium disabled:opacity-60"
             >
               {updateVideoMutation.isPending ? '불러오는 중...' : '최신 영상 불러오기'}
             </button>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* ── 예배 영상 ───────────────────────────────────────────── */}
-      <section className="py-20 bg-white px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-3">Worship Video</p>
-            <h2 className="text-3xl font-light text-slate-900">예배 영상</h2>
-            {latestVideoTitle && <p className="mt-3 text-base text-slate-500">{latestVideoTitle}</p>}
-          </div>
-          {latestVideoId ? (
-            <div className="relative pb-[56.25%] h-0 rounded-xl overflow-hidden shadow-xl">
-              <iframe
-                src={`https://www.youtube.com/embed/${latestVideoId}`}
-                className="absolute top-0 left-0 w-full h-full"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen title={latestVideoTitle || '예배 영상'}
-              />
+      {/* ── Sidebar + Article ──────────────────────────────────── */}
+      <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+          <Sidebar />
+
+          <article className="lg:col-span-9 bg-[#FAF9F6] flex flex-col divide-y divide-[#E5E5E5]">
+            {/* 영상 섹션 */}
+            <div id="sermon-video" className="bg-[#171717] border-b border-[#E5E5E5] scroll-mt-20">
+              <div className="p-8 md:p-16 lg:p-24 xl:px-32 xl:py-20 flex flex-col items-center">
+                <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#FAF9F6]/60 font-mono mb-6 block">Worship Video</span>
+                <h2 className="text-2xl md:text-3xl font-bold text-[#FAF9F6] mb-8 break-keep">
+                  {latestVideoTitle || `${title} 영상`}
+                </h2>
+                {latestVideoId ? (
+                  <div className="w-full max-w-4xl aspect-video">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${latestVideoId}`}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={latestVideoTitle || title}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full max-w-4xl aspect-video bg-[#FAF9F6]/10 border border-[#FAF9F6]/20 flex items-center justify-center">
+                    <div className="text-center">
+                      <PlayCircle size={48} className="text-[#FAF9F6]/40 mb-4 mx-auto" />
+                      <p className="text-sm font-mono text-[#FAF9F6]/50 tracking-widest uppercase">등록된 영상이 없습니다</p>
+                      {isAdmin && (
+                        <p className="text-xs text-[#FAF9F6]/30 mt-2">최신 영상 불러오기 버튼을 사용하세요</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <p className="text-sm text-[#FAF9F6]/40 mt-6 font-light">본 영상은 유튜브 임베드 형식으로 제공됩니다</p>
+              </div>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 rounded-xl border border-slate-200">
-              <svg className="w-14 h-14 mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-slate-500 text-sm">아직 등록된 영상이 없습니다</p>
-              {isAdmin && <p className="text-xs text-slate-400 mt-2">관리자 페이지에서 YouTube 재생목록을 설정하고 영상을 불러오세요</p>}
+
+            {/* 설교 자료 & 녹취록 */}
+            <div id="sermon-material" className="scroll-mt-20 flex flex-col divide-y divide-[#E5E5E5]">
+              <div className="p-8 md:p-16 lg:p-24 xl:px-32 xl:py-16">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="w-8 h-px bg-[#2C2C2C]" />
+                  <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#2C2C2C] font-mono">Sermon Material</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#2C2C2C]">설교 자료</h2>
+              </div>
+
+              {pdfUrl && (
+                <div className="bg-[#F4F2EA] border-b border-[#E5E5E5] p-8 md:p-16 lg:p-24 xl:px-32 xl:py-20">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+                    <div className="flex-1">
+                      <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#2C2C2C] font-mono mb-4 block">PDF Document</span>
+                      <h3 className="text-2xl md:text-3xl font-bold text-[#2C2C2C] mb-2 break-keep">설교 녹취록 PDF</h3>
+                      <p className="text-[#737373] font-light">{title} 설교 녹취록 파일</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handlePdfDownload(pdfUrl, `${title}_설교원고.pdf`)}
+                      className="inline-flex items-center gap-3 bg-[#171717] text-[#FAF9F6] px-8 py-4 text-sm font-bold tracking-widest uppercase hover:bg-[#2C2C2C] transition-colors"
+                    >
+                      <DownloadSimple size={18} />
+                      PDF 다운로드
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!isEmptyTranscript(transcript) ? (
+                <div className="p-8 md:p-16 lg:p-24 xl:px-32 xl:py-24 pb-32">
+                  <div
+                    className="ql-editor ql-output sermon-body"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatTranscript(transcript)) }}
+                  />
+                </div>
+              ) : (
+                !pdfUrl && (
+                  <div className="p-8 md:p-16 lg:p-24 xl:px-32 xl:py-24 flex flex-col items-center justify-center">
+                    <svg className="w-14 h-14 mb-4 text-[#E5E5E5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-[#737373] font-light">아직 등록된 설교 자료가 없습니다</p>
+                    {isAdmin && (
+                      <p className="text-xs text-[#A3A3A3] mt-2">PDF 업로드 또는 녹취록 수정 버튼으로 자료를 등록할 수 있습니다</p>
+                    )}
+                  </div>
+                )
+              )}
             </div>
-          )}
+          </article>
         </div>
       </section>
 
-      {/* ── 설교 자료 ─────────────────────────────────────────── */}
-      <section className="py-20 px-6" style={{ backgroundColor: '#faf9f7' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-3">Sermon Material</p>
-            <h2 className="text-3xl font-light text-slate-900">설교 자료</h2>
-          </div>
-
-          {/* PDF 다운로드 카드 (있을 때만 표시) */}
-          {pdfUrl && (
-            <div className="mb-8 flex items-center justify-between bg-white border border-slate-200 rounded-xl px-6 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900">설교 원고 PDF</p>
-                  <p className="text-xs text-slate-400 mt-0.5">클릭하여 다운로드</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => handlePdfDownload(pdfUrl, `${title}_설교원고.pdf`)}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm rounded-lg hover:bg-slate-700 transition font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                다운로드
-              </button>
-            </div>
-          )}
-
-          {/* 녹취록 본문 */}
-          {!isEmptyTranscript(transcript) ? (
-            <article className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-slate-700 via-slate-500 to-slate-300" />
-              <div className="px-8 md:px-10 py-10">
-                <svg className="w-10 h-10 text-slate-200 mb-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-                <div
-                  className="ql-editor ql-output sermon-body"
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formatTranscript(transcript)) }}
-                />
-              </div>
-            </article>
-          ) : (
-            !pdfUrl && (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-100">
-                <svg className="w-14 h-14 mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-slate-500 text-sm">아직 등록된 설교 자료가 없습니다</p>
-                {isAdmin && <p className="text-xs text-slate-400 mt-2">PDF 업로드 또는 녹취록 수정 버튼으로 자료를 등록할 수 있습니다</p>}
-              </div>
-            )
-          )}
-        </div>
-      </section>
-
-      {/* ── 녹취록 편집 모달 ────────────────────────────────────── */}
       {isModalOpen && (
         <TranscriptEditModal
           transcript={transcript}

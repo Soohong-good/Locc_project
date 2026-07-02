@@ -114,6 +114,13 @@ public class UserQueryService {
     }
 
     /**
+     * 특정 기간 가입자 수 조회 (증감률 계산용)
+     */
+    public long countUsersCreatedBetween(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        return userRepository.countByCreatedAtBetween(start, end);
+    }
+
+    /**
      * ID로 사용자 조회 (내부용)
      */
     User findById(UUID id) {

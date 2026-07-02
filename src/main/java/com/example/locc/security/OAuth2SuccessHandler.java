@@ -1,7 +1,6 @@
 package com.example.locc.security;
 
 import com.example.locc.config.AppProperties;
-import com.example.locc.config.JwtProperties;
 import com.example.locc.domain.user.entity.RefreshToken;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.RefreshTokenRepository;
@@ -42,7 +41,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtTokenProvider       jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final JwtProperties          jwtProperties;
     private final AppProperties          appProperties;
     private final CookieUtil             cookieUtil;
 
@@ -143,7 +141,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private void saveOrUpdateRefreshToken(User user, String token) {
         LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtProperties.getRefreshExpiration() / 1000);
+                .plusSeconds(jwtTokenProvider.getRefreshTokenValidity(user) / 1000);
 
         refreshTokenRepository.findByUser(user)
                 .ifPresentOrElse(

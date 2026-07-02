@@ -107,6 +107,12 @@ public class SermonQueryService {
                 .map(SermonResponse::from);
     }
 
+    public Page<SermonResponse> searchByCategoryAndServiceNumber(String category, Integer serviceNumber, String keyword, int page, int size) {
+        return sermonRepository.searchByCategoryAndServiceNumber(
+                        category, serviceNumber, keyword, PageRequest.of(page, size))
+                .map(SermonResponse::from);
+    }
+
     public Page<SermonResponse> findByCategoryAndServiceNumberExact(String category, Integer serviceNumber, int page, int size) {
         return sermonRepository.findByCategoryAndServiceNumberExact(
                         category, serviceNumber, PageRequest.of(page, size))
@@ -146,13 +152,16 @@ public class SermonQueryService {
     /**
      * 주일오전 통합 조회 (1부 / 2부)
      */
-    public SermonPageResponse getSundayMorningPage(int serviceNumber, int page, int size) {
+    public SermonPageResponse getSundayMorningPage(int serviceNumber, int page, int size, String keyword) {
         if (serviceNumber != 1 && serviceNumber != 2) {
             throw new InvalidInputException("지원하지 않는 예배 서비스 번호입니다. (허용: 1, 2)");
         }
         String playlistKey = "sunday-morning-" + serviceNumber;
         List<Map<String, String>> youtubeVideos = fetchYoutubeVideos(playlistKey);
-        Page<SermonResponse> sermons = findByCategoryAndServiceNumber("주일오전", serviceNumber, page, size);
+        String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        Page<SermonResponse> sermons = normalizedKeyword == null
+                ? findByCategoryAndServiceNumber("주일오전", serviceNumber, page, size)
+                : searchByCategoryAndServiceNumber("주일오전", serviceNumber, normalizedKeyword, page, size);
         List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("주일오전", serviceNumber, 1);
 
         return SermonPageResponse.builder()
@@ -187,20 +196,19 @@ public class SermonQueryService {
     }
 
     /**
-     * 기타예배 통합 조회 (수요 / 금요)
+     * 수요예배 / 금요기도회 통합 조회
      */
     public SermonPageResponse getWeekdayPage(String type, int page, int size, String keyword) {
         if (!"wednesday".equals(type) && !"friday".equals(type)) {
             throw new InvalidInputException("지원하지 않는 예배 타입입니다. (허용: wednesday, friday)");
         }
-        int serviceNumber = "wednesday".equals(type) ? 1 : 2;
+        String category = "wednesday".equals(type) ? "수요예배" : "금요기도회";
         List<Map<String, String>> youtubeVideos = fetchYoutubeVideos(type);
         String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
-        Page<SermonResponse> sermons = (normalizedKeyword == null)
-                ? findByCategoryAndServiceNumber("기타예배", serviceNumber, page, size)
-                : sermonRepository.searchByCategoryAndServiceNumber("기타예배", serviceNumber, normalizedKeyword, PageRequest.of(page, size))
-                        .map(SermonResponse::from);
-        List<SermonResponse> latestList = findLatestByCategoryAndServiceNumber("기타예배", serviceNumber, 1);
+        SermonSearchCondition condition = SermonSearchCondition.builder()
+                .category(category).keyword(normalizedKeyword).page(page).size(size).build();
+        Page<SermonResponse> sermons = findList(condition);
+        List<SermonResponse> latestList = findLatestByCategory(category, 1);
 
         return SermonPageResponse.builder()
                 .sermons(sermons.getContent())
@@ -303,7 +311,12 @@ public class SermonQueryService {
                 ? SermonDetailResponse.from(part2Sermon, fileQueryService.getSermonAttachments(part2Sermon.getId()))
                 : null;
 
-        return SundayMorningGroupDetailResponse.of(date, part1, part2);
+        List<LocalDate> prevDates = sermonRepository.findPrevDates("주일오전", date, PageRequest.of(0, 1));
+        List<LocalDate> nextDates = sermonRepository.findNextDates("주일오전", date, PageRequest.of(0, 1));
+        LocalDate prevDate = prevDates.isEmpty() ? null : prevDates.get(0);
+        LocalDate nextDate = nextDates.isEmpty() ? null : nextDates.get(0);
+
+        return SundayMorningGroupDetailResponse.of(date, part1, part2, prevDate, nextDate);
     }
 
     // ─────────────────────────────────────────────

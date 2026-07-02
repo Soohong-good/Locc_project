@@ -17,6 +17,9 @@ const AuthInitializer = () => {
     enabled: true,
     retry: false,
     staleTime: 5 * 60 * 1000,
+    // 관리자 access/refresh 토큰이 짧아(5분/30분) 탭을 방치했다 돌아오면 세션이 끊겨있는 경우가 흔함.
+    // 전역 refetchOnWindowFocus는 꺼져있으므로(main.jsx), 인증 확인만 예외적으로 탭 복귀 시 재검증한다.
+    refetchOnWindowFocus: 'always',
   })
 
   const { data: permissionsData, isFetched: isPermissionsFetched } = useQuery({

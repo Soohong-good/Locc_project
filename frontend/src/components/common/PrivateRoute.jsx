@@ -4,7 +4,7 @@ import useAuthStore from '@/stores/authStore'
 import toast from '@/utils/toast'
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
-  const { user, isInitialized } = useAuthStore()
+  const { user, isInitialized, isAdminOrOperator } = useAuthStore()
   const location = useLocation()
   const alerted = useRef(false)
 
@@ -18,13 +18,7 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (
-    adminOnly &&
-    user.role !== 'ADMIN' &&
-    user.role !== 'ROLE_ADMIN' &&
-    user.role !== 'OPERATOR' &&
-    user.role !== 'ROLE_OPERATOR'
-  ) {
+  if (adminOnly && !isAdminOrOperator()) {
     return <Navigate to="/" replace />
   }
 

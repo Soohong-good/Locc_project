@@ -7,7 +7,7 @@ import { DateInput } from '@/components/ui/DateInput'
 import { getErrorMessage } from '@/lib/apiError'
 import toast from '@/utils/toast'
 
-const CATEGORIES = ['주일오전', '주일오후', '기타예배']
+const CATEGORIES = ['주일오전', '주일오후', '수요예배', '금요기도회', '훈련용메시지']
 
 /**
  * 관리자 설교 생성·수정 폼 (통합)
@@ -110,7 +110,7 @@ const AdminSermonFormPage = () => {
   )
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="h-full overflow-y-auto p-8 max-w-3xl">
       <h1 className="text-xl font-bold text-gray-900 mb-8">
         {isEdit ? '설교 수정' : '설교 등록'}
       </h1>

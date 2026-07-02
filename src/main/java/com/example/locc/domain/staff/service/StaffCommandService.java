@@ -42,9 +42,9 @@ public class StaffCommandService {
         User user = findUserByEmail(command.getCreatedByEmail());
         validateAdminPermission(user);
 
-        // 담임목사 설정 시 기존 담임목사 해제
+        // 담임목사 설정 시 기존 담임목사 해제 (벌크 업데이트, clearAutomatically=true로 영속성 컨텍스트 초기화)
         if (Boolean.TRUE.equals(command.getIsSeniorPastor())) {
-            unsetAllSeniorPastors();
+            staffRepository.unsetAllSeniorPastors();
         }
 
         // Entity 생성 (팩토리 메서드 사용)
@@ -68,12 +68,19 @@ public class StaffCommandService {
         User user = findUserByEmail(command.getUpdatedByEmail());
         validateModifyPermission(staff, user);
 
-        // 담임목사 설정 시 기존 담임목사 해제
-        if (Boolean.TRUE.equals(command.getIsSeniorPastor()) && !staff.getIsSeniorPastor()) {
-            unsetAllSeniorPastors();
+        boolean promotingToSeniorPastor = Boolean.TRUE.equals(command.getIsSeniorPastor())
+                && !staff.getIsSeniorPastor();
+
+        // 담임목사로 승격되는 경우, 기존 담임목사 플래그를 먼저 모두 해제한다.
+        // 주의: staff.update()로 isSeniorPastor=true를 먼저 반영한 뒤 벌크 해제를 실행하면,
+        // JPQL 벌크 쿼리 실행 전 Hibernate가 dirty한 staff를 auto-flush하면서 DB에 true가 먼저 반영되고,
+        // 곧바로 "WHERE isSeniorPastor = true" 벌크 RESET이 그 row까지 포함해 false로 되돌려버리는 버그가 생긴다.
+        // 따라서 벌크 해제를 먼저 실행(영속성 컨텍스트 초기화)한 뒤 staff를 재조회해 update를 적용해야 한다.
+        if (promotingToSeniorPastor) {
+            staffRepository.unsetAllSeniorPastors();
+            staff = staffQueryService.findEntityById(command.getStaffId());
         }
 
-        // 수정 (Entity 메서드 사용)
         staff.update(command);
 
         return StaffResponse.from(staff);
@@ -116,14 +123,6 @@ public class StaffCommandService {
     }
 
     // ===== Private Helper Methods =====
-
-    /**
-     * 모든 담임목사 해제
-     */
-    private void unsetAllSeniorPastors() {
-        staffRepository.findSeniorPastors()
-                .forEach(Staff::unsetSeniorPastor);
-    }
 
     /**
      * 사용자 조회

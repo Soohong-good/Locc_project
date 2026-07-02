@@ -91,7 +91,12 @@ public class FileCommandService {
 
             // 파일 저장 경로 생성
             Path uploadPath = createUploadPath(entityType);
-            Path filePath = uploadPath.resolve(storedFilename);
+            Path filePath = uploadPath.resolve(storedFilename).normalize();
+
+            // 저장 경로가 업로드 디렉토리 하위인지 검증 (Path Traversal 방지)
+            if (!filePath.startsWith(uploadPath.normalize())) {
+                throw new IllegalArgumentException("잘못된 파일 경로입니다.");
+            }
 
             // 물리적 파일 저장
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -381,7 +386,7 @@ public class FileCommandService {
      * 이미지 파일 검증 (본문 이미지용)
      */
     private void validateImageFile(MultipartFile file) {
-        // 이미지 파일 여부 검증
+        // 이미지 파일 여부 검증 (클라이언트 제공 Content-Type — 1차 필터)
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             throw new IllegalArgumentException("이미지 파일만 업로드 가능합니다.");
@@ -390,6 +395,16 @@ public class FileCommandService {
         // 파일 크기 검증
         if (file.getSize() > MAX_FILE_SIZE) {
             throw new IllegalArgumentException("파일 크기는 10MB를 초과할 수 없습니다.");
+        }
+
+        // 실제 바이트 파싱으로 Magic Bytes 검증 (MIME 타입 위조 방지)
+        try {
+            java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(file.getInputStream());
+            if (image == null) {
+                throw new IllegalArgumentException("유효한 이미지 파일이 아닙니다. (MIME 타입 위조 의심)");
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("이미지 파일을 읽을 수 없습니다.");
         }
     }
 

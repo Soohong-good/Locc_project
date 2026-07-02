@@ -94,7 +94,7 @@ const AdminNoticeFormPage = () => {
   )
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="h-full overflow-y-auto p-8 max-w-3xl">
       <h1 className="text-xl font-bold text-gray-900 mb-8">
         {isEdit ? '공지사항 수정' : '공지사항 등록'}
       </h1>

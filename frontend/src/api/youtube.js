@@ -56,7 +56,21 @@ export const updateBibleSchoolVideo = async () => {
   return data
 }
 
-// ── 주일예배 / 기타예배 재생목록 ─────────────────────────────────────────
+// ── 채널 ID / 재생목록 ID 설정 ───────────────────────────────────────────
+
+/** 부서 YouTube 채널 ID 수정 */
+export const updateDepartmentChannelId = async (code, channelId) => {
+  const { data } = await client.patch(`/api/admin/youtube/departments/${code}/channel`, { channelId })
+  return data
+}
+
+/** 예배 재생목록 ID 수정 (DB override) */
+export const updateSermonPlaylistId = async (playlistKey, playlistId) => {
+  const { data } = await client.patch(`/api/admin/youtube/sermon-playlists/${playlistKey}/playlist-id`, { playlistId })
+  return data
+}
+
+// ── 주일예배 / 수요·금요예배 재생목록 ────────────────────────────────────
 
 /** 예배 재생목록 현황 조회 (주일오전1부/2부, 주일오후, 수요, 금요) */
 export const getSermonPlaylistStatus = async () => {
@@ -64,19 +78,23 @@ export const getSermonPlaylistStatus = async () => {
   return data.data
 }
 
-/** 모든 예배 재생목록 최신 영상 일괄 갱신 (순차 호출) */
+/** 모든 예배 재생목록 최신 영상 일괄 갱신 (순차 호출)
+ *  개별 실패가 있어도 끝까지 진행하되, 성공/실패 키를 분리해 반환한다.
+ *  @returns {Promise<{ succeeded: string[], failed: string[] }>}
+ */
 export const refreshAllSermonPlaylists = async () => {
   const keys = ['sunday-morning-1', 'sunday-morning-2', 'sunday-afternoon', 'wednesday', 'friday']
-  const results = []
+  const succeeded = []
+  const failed = []
   for (const key of keys) {
     try {
-      const result = await refreshSermonPlaylist(key)
-      results.push(result)
+      await refreshSermonPlaylist(key)
+      succeeded.push(key)
     } catch {
-      // 개별 실패는 무시하고 계속 진행
+      failed.push(key)
     }
   }
-  return results
+  return { succeeded, failed }
 }
 
 /** 특정 예배 재생목록 최신 영상 수동 갱신

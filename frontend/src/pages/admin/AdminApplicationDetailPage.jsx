@@ -71,7 +71,7 @@ const AdminApplicationDetailPage = () => {
         }
       `}</style>
 
-      <div className="p-8 max-w-3xl">
+      <div className="h-full overflow-y-auto p-8 max-w-3xl">
 
         {/* 헤더 — 인쇄 시 숨김 */}
         <div className="flex items-center justify-between mb-6 print:hidden">

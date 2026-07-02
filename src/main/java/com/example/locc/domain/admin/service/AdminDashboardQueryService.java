@@ -45,11 +45,32 @@ public class AdminDashboardQueryService {
                 .totalUsers(userQueryService.countAllUsers())
                 .approvedUsers(userQueryService.countApprovedUsers())
                 .pendingUsers(userQueryService.countPendingUsers())
+                .memberGrowthRate(calcMemberGrowthRate())
                 .totalHelpRequests(helpRequestQueryService.countAll())
                 .pendingHelpRequests(helpRequestQueryService.countPending())
                 .inProgressHelpRequests(helpRequestQueryService.countInProgress())
                 .generatedAt(java.time.LocalDateTime.now())
                 .build();
+    }
+
+    /**
+     * 전월 대비 신규 가입자 증감률(%) 계산
+     * - 이번 달 가입자와 지난달 가입자를 비교
+     * - 지난달 0명이면 이번 달 가입자 유무로 0% / 100% 처리
+     */
+    private Double calcMemberGrowthRate() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        java.time.LocalDateTime thisMonthStart = now.toLocalDate().withDayOfMonth(1).atStartOfDay();
+        java.time.LocalDateTime lastMonthStart = thisMonthStart.minusMonths(1);
+
+        long thisMonth = userQueryService.countUsersCreatedBetween(thisMonthStart, now);
+        long lastMonth = userQueryService.countUsersCreatedBetween(lastMonthStart, thisMonthStart);
+
+        if (lastMonth == 0) {
+            return thisMonth > 0 ? 100.0 : 0.0;
+        }
+        double rate = ((double) (thisMonth - lastMonth) / lastMonth) * 100.0;
+        return Math.round(rate * 10.0) / 10.0; // 소수 첫째자리
     }
 
     /**

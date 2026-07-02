@@ -25,7 +25,7 @@
   --church-border:     #ddd8ce;
 
   /* 헤더 높이 — 이 값 하나만 바꾸면 모든 페이지 상단 여백이 자동 조정 */
-  --header-h: 95px;
+  --header-h: 80px;
 }
 
 /* pt-page: 고정 헤더 높이 + 여백 + iOS 노치 높이 */

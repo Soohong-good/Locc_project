@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
+import { ArrowLeft, WarningCircle } from '@phosphor-icons/react'
 import { getTrainingDetail, applyTraining } from '@/api/training'
 import { getMyInfo } from '@/api/mypage'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
@@ -81,163 +82,169 @@ const TrainingApplyPage = () => {
   if (tLoading) return <LoadingSpinner />
 
   if (!training?.canApply) return (
-    <main className="pt-page px-6 text-center">
-      <p className="text-slate-500 mb-4">신청이 마감된 훈련입니다.</p>
+    <main className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] min-h-screen pt-20 bg-[#FAF9F6] px-6 text-center">
+      <p className="text-[#737373] mb-4 pt-16">신청이 마감된 훈련입니다.</p>
       <button onClick={() => navigate(`/training/${id}`)}
-        className="px-6 py-3 bg-slate-900 text-white hover:bg-slate-800 transition">
+        className="px-6 py-3 bg-[#171717] text-[#FAF9F6] hover:bg-[#2C2C2C] transition text-xs font-bold tracking-[0.1em] uppercase">
         돌아가기
       </button>
     </main>
   )
 
   return (
-    <main>
-      {/* Hero */}
-      <section className="pt-page pb-12 bg-slate-900 px-6">
-        <div className="max-w-3xl mx-auto">
-          <button
-            onClick={() => navigate(`/training/${id}`)}
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="font-light tracking-wide">뒤로가기</span>
-          </button>
-          <p className="text-xs tracking-[0.3em] text-eyebrow uppercase mb-4">Apply</p>
-          <h1 className="text-4xl md:text-5xl font-light text-white leading-tight tracking-tight mb-3">훈련 신청</h1>
-          <p className="text-lg text-slate-400 font-light">{training.title}</p>
-        </div>
-      </section>
+    <main className="pt-20 bg-[#FAF9F6] min-h-screen">
+      <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] flex flex-col min-h-[calc(100vh-5rem)]">
 
-      {/* 신청 폼 */}
-      <section className="py-12 bg-white px-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-
-          {/* 훈련 정보 요약 */}
-          <div className="bg-blue-50 border border-blue-200 p-6">
-            <h2 className="text-lg font-medium text-slate-900 mb-3">신청하실 훈련</h2>
-            <div className="space-y-2 text-sm text-slate-700">
-              <p><strong>훈련명:</strong> {training.title}</p>
-              <p><strong>기간:</strong> {fmtDate(training.startDate)} ~ {fmtDate(training.endDate)}</p>
-              <p><strong>훈련비:</strong>{' '}
-                {training.trainingFee > 0
-                  ? `${fmtNumber(training.trainingFee)}원`
-                  : <span className="text-green-600 font-medium">무료</span>
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* 이름 (자동) */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              이름 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              readOnly
-              value={myInfo?.name ?? ''}
-              className="w-full px-4 py-3 border border-slate-300 bg-slate-50 text-slate-700"
-            />
-          </div>
-
-          {/* 연락처 */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              연락처 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={handlePhoneChange}
-              placeholder="010-1234-5678"
-              maxLength={13}
-              className={`w-full px-4 py-3 border focus:outline-none transition ${
-                phoneError ? 'border-red-400 focus:border-red-500' : 'border-slate-300 focus:border-blue-500'
-              }`}
-            />
-            {phoneError
-              ? <p className="mt-1 text-xs text-red-500">{phoneError}</p>
-              : <p className="mt-1 text-xs text-slate-400">숫자만 입력해도 자동으로 형식이 맞춰집니다.</p>
-            }
-          </div>
-
-          {/* 납부방법 (유료만) */}
-          {training.trainingFee > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                납부방법 <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 focus:border-blue-500 focus:outline-none transition bg-white"
-              >
-                <option value="">선택하세요</option>
-                <option value="BANK">계좌이체</option>
-                <option value="CASH">현금납부</option>
-              </select>
-              {paymentMethod === 'BANK' && (
-                <div className="mt-3 bg-blue-50 border border-blue-200 px-4 py-3 rounded">
-                  <p className="text-xs font-semibold text-blue-700 mb-1">입금 계좌 안내</p>
-                  <p className="text-sm text-slate-800 font-medium">농협 301-0273-8865-01</p>
-                  <p className="text-xs text-slate-500 mt-0.5">예금주: 그리스도 사랑교회</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 주의사항 */}
-          <div className="bg-amber-50 border border-amber-200 p-6">
-            <h3 className="font-medium text-slate-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              신청 전 반드시 확인하세요
-            </h3>
-            <ul className="space-y-2 text-sm text-slate-700">
-              <li className="flex items-start gap-2">
-                <span className="text-amber-600 mt-0.5">•</span>
-                <span>현금 제출은 사무실로 해주시기 바랍니다.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* 동의 */}
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="agree"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-1 w-4 h-4 border-slate-300"
-            />
-            <label htmlFor="agree" className="text-sm text-slate-700 cursor-pointer">
-              위 내용을 모두 확인했으며, 훈련 규정을 준수할 것을 동의합니다. <span className="text-red-500">*</span>
-            </label>
-          </div>
-
-          {/* 버튼 */}
-          <div className="flex gap-3 pt-6">
+        {/* 헤더 */}
+        <div className="p-8 md:p-16 lg:p-24 bg-[#FAF9F6]">
+          <div className="mb-12 md:mb-16">
             <button
               onClick={() => navigate(`/training/${id}`)}
-              className="flex-1 px-6 py-3 border border-slate-300 hover:border-slate-900 transition text-slate-700 hover:text-slate-900"
+              className="inline-flex items-center gap-2 text-[#737373] hover:text-[#171717] transition-colors group"
             >
-              취소
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={applyMutation.isPending}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 transition font-medium disabled:opacity-60"
-            >
-              {applyMutation.isPending ? '신청 중...' : '신청하기'}
+              <ArrowLeft size={20} weight="bold" className="group-hover:-translate-x-1 transition-transform" />
+              <span className="text-sm font-bold tracking-[0.1em]">돌아가기</span>
             </button>
           </div>
 
+          <div className="max-w-4xl">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <span className="w-8 h-px bg-[#E5E5E5] hidden md:block" />
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono">APPLY</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#171717] leading-[1.1] break-keep mb-3">
+              훈련 신청
+            </h1>
+            <p className="text-lg text-[#737373] font-light break-keep">{training.title}</p>
+          </div>
         </div>
-      </section>
+
+        {/* 신청 폼 */}
+        <div className="p-8 md:p-16 lg:p-24 border-t border-[#E5E5E5] bg-[#FAF9F6] flex-grow">
+          <div className="max-w-3xl mx-auto space-y-6">
+
+            {/* 훈련 정보 요약 */}
+            <div className="border border-[#E5E5E5] bg-[#F4F2EA] p-6">
+              <h2 className="text-lg font-bold text-[#171717] mb-3">신청하실 훈련</h2>
+              <div className="space-y-2 text-sm text-[#2C2C2C]">
+                <p className="break-keep"><strong className="text-[#171717]">훈련명:</strong> {training.title}</p>
+                <p><strong className="text-[#171717]">기간:</strong> {fmtDate(training.startDate)} ~ {fmtDate(training.endDate)}</p>
+                <p><strong className="text-[#171717]">훈련비:</strong>{' '}
+                  {training.trainingFee > 0
+                    ? `${fmtNumber(training.trainingFee)}원`
+                    : <span className="text-[#171717] font-bold">무료</span>
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* 이름 (자동) */}
+            <div>
+              <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={myInfo?.name ?? ''}
+                className="w-full px-4 py-3 border border-[#E5E5E5] bg-[#F4F2EA] text-[#2C2C2C]"
+              />
+            </div>
+
+            {/* 연락처 */}
+            <div>
+              <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                연락처 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={handlePhoneChange}
+                placeholder="010-1234-5678"
+                maxLength={13}
+                className={`w-full px-4 py-3 border bg-[#FAF9F6] focus:outline-none transition ${
+                  phoneError ? 'border-red-400 focus:border-red-500' : 'border-[#E5E5E5] focus:border-[#171717]'
+                }`}
+              />
+              {phoneError
+                ? <p className="mt-1 text-xs text-red-500">{phoneError}</p>
+                : <p className="mt-1 text-xs text-[#737373]">숫자만 입력해도 자동으로 형식이 맞춰집니다.</p>
+              }
+            </div>
+
+            {/* 납부방법 (유료만) */}
+            {training.trainingFee > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
+                  납부방법 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full px-4 py-3 border border-[#E5E5E5] focus:border-[#171717] focus:outline-none transition bg-[#FAF9F6]"
+                >
+                  <option value="">선택하세요</option>
+                  <option value="BANK">계좌이체</option>
+                  <option value="CASH">현금납부</option>
+                </select>
+                {paymentMethod === 'BANK' && (
+                  <div className="mt-3 border border-[#E5E5E5] bg-[#F4F2EA] px-4 py-3">
+                    <p className="text-xs font-bold text-[#171717] mb-1 tracking-[0.05em] uppercase">입금 계좌 안내</p>
+                    <p className="text-sm text-[#171717] font-medium">농협 301-0273-8865-01</p>
+                    <p className="text-xs text-[#737373] mt-0.5">예금주: 그리스도 사랑교회</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 주의사항 */}
+            <div className="border border-[#E5E5E5] bg-[#F4F2EA] p-6">
+              <h3 className="font-bold text-[#171717] mb-3 flex items-center gap-2">
+                <WarningCircle size={20} className="text-[#171717]" />
+                신청 전 반드시 확인하세요
+              </h3>
+              <ul className="space-y-2 text-sm text-[#2C2C2C]">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#171717] mt-0.5">•</span>
+                  <span className="break-keep">현금 제출은 사무실로 해주시기 바랍니다.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* 동의 */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="agree"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-1 w-4 h-4 border-[#E5E5E5]"
+              />
+              <label htmlFor="agree" className="text-sm text-[#2C2C2C] cursor-pointer break-keep">
+                위 내용을 모두 확인했으며, 훈련 규정을 준수할 것을 동의합니다. <span className="text-red-500">*</span>
+              </label>
+            </div>
+
+            {/* 버튼 */}
+            <div className="flex gap-3 pt-6">
+              <button
+                onClick={() => navigate(`/training/${id}`)}
+                className="flex-1 border border-[#E5E5E5] bg-[#FAF9F6] px-6 py-3 text-xs font-bold tracking-[0.1em] uppercase text-[#737373] hover:text-[#171717] hover:border-[#171717] transition-all"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={applyMutation.isPending}
+                className="flex-1 bg-[#171717] text-[#FAF9F6] px-6 py-3 text-xs font-bold tracking-[0.1em] uppercase hover:bg-[#2C2C2C] transition-colors disabled:opacity-60"
+              >
+                {applyMutation.isPending ? '신청 중...' : '신청하기'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </main>
   )
 }

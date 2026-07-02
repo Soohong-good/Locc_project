@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -52,4 +53,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      * 승인 상태별 사용자 수 조회 (삭제되지 않은 회원만)
      */
     Long countByApprovalStatusAndDeletedFalse(User.ApprovalStatus approvalStatus);
+
+    /**
+     * 특정 기간에 가입한 사용자 수 (증감률 계산용, 삭제 회원 제외)
+     */
+    @Query("SELECT COUNT(u) FROM User u WHERE u.deleted = false AND u.createdAt >= :start AND u.createdAt < :end")
+    long countByCreatedAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

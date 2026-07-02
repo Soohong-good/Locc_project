@@ -80,7 +80,7 @@ export default function KakaoMap({ className = '' }) {
   }, [])
 
   return (
-    <div className={`relative ${className}`} style={{ position:'absolute', inset:0 }}>
+    <div className={`relative w-full h-full ${className}`}>
       <div ref={mapRef} style={{ width:'100%', height:'100%' }} />
       {!KAKAO_MAP_API_KEY && (
         <div className="absolute inset-0 flex items-center justify-center bg-slate-100">

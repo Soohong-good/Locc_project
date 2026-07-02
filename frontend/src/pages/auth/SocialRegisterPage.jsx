@@ -3,7 +3,10 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { completeSocialRegistration } from '@/api/auth'
 import { DateInput } from '@/components/ui/DateInput'
+import StepIndicator from '@/components/auth/StepIndicator'
 import toast from '@/utils/toast'
+
+const SOCIAL_REGISTER_STEPS = ['교인구분', '약관동의', '정보입력']
 
 // 전화번호 자동 하이픈
 const formatPhone = (val) => {
@@ -16,6 +19,7 @@ const formatPhone = (val) => {
 // ── Step 1: 교인 구분 ──────────────────────────────────────────────────────
 const Step1 = ({ onSelect }) => (
   <div>
+    <StepIndicator current={1} steps={SOCIAL_REGISTER_STEPS} />
     <div className="text-center mb-10">
       <h1 className="text-4xl font-light text-slate-900 mb-4">소셜 회원가입</h1>
       <p className="text-slate-600 font-light">교인 구분을 선택해주세요</p>
@@ -45,6 +49,9 @@ const Step1 = ({ onSelect }) => (
         </Link>
       </div>
     </div>
+    <p className="text-center text-xs text-slate-400 mt-6 leading-relaxed">
+      가입 신청 후 관리자 승인이 필요하며, 영업일 기준 1~2일이 소요됩니다.
+    </p>
     <div className="text-center mt-8">
       <Link to="/" className="text-sm text-slate-600 hover:text-slate-900">← 홈으로 돌아가기</Link>
     </div>
@@ -70,6 +77,7 @@ const Step2 = ({ userType, onBack, onNext }) => {
 
   return (
     <div>
+      <StepIndicator current={2} steps={SOCIAL_REGISTER_STEPS} />
       <div className="text-center mb-10">
         <h1 className="text-4xl font-light text-slate-900 mb-4">개인정보 수집·이용 동의</h1>
         <p className="text-slate-600 font-light">
@@ -190,7 +198,7 @@ const Step3 = ({ userType, consent, tempToken, onBack }) => {
     mutationFn: (payload) => completeSocialRegistration(tempToken, payload),
     onSuccess: (data) => {
       if (data.success) {
-        navigate('/social/pending')
+        navigate(`/social/pending?appliedAt=${encodeURIComponent(new Date().toISOString())}`)
       } else {
         setError(data.message || '오류가 발생했습니다.')
       }
@@ -249,6 +257,7 @@ const Step3 = ({ userType, consent, tempToken, onBack }) => {
 
   return (
     <div>
+      <StepIndicator current={3} steps={SOCIAL_REGISTER_STEPS} />
       <div className="text-center mb-10">
         <h1 className="text-4xl font-light text-slate-900 mb-4">추가 정보 입력</h1>
         <p className="text-slate-600 font-light">
@@ -401,20 +410,13 @@ const SocialRegisterPage = () => {
   const [userType, setUserType] = useState(null)
   const [consent,  setConsent]  = useState(null)
 
-  // 마운트 시 1회 실행 — tempToken 유효성 확인, 사전 선택된 교인구분 적용, Daum 스크립트 로드
+  // 마운트 시 1회 실행 — tempToken 유효성 확인, Daum 스크립트 로드
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!tempToken) {
       toast.error('잘못된 접근입니다.')
       navigate('/login')
       return
-    }
-    // 회원가입 페이지에서 미리 선택한 교인구분이 있으면 Step1 스킵
-    const preSelected = sessionStorage.getItem('social_register_user_type')
-    if (preSelected === 'REGISTERED' || preSelected === 'UNREGISTERED') {
-      sessionStorage.removeItem('social_register_user_type')
-      setUserType(preSelected)
-      setStep(2)
     }
     if (!document.querySelector('script[src*="postcode.v2"]')) {
       const script = document.createElement('script')

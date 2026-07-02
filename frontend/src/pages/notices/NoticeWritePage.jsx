@@ -77,13 +77,15 @@ const NoticeWritePage = () => {
     const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
     const ALLOWED_EXTS  = ['.pdf', '.jpg', '.jpeg', '.png', '.hwp']
     const newFiles = Array.from(e.target.files)
+    const valid = []
     for (const file of newFiles) {
       const ext = '.' + file.name.split('.').pop().toLowerCase()
       const typeOk = ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTS.includes(ext)
-      if (!typeOk) { toast.error(`허용되지 않는 파일 형식입니다: ${file.name}`); e.target.value = ''; return }
-      if (file.size > 20 * 1024 * 1024) { toast.error(`파일 크기는 20MB 이하여야 합니다: ${file.name}`); e.target.value = ''; return }
+      if (!typeOk) { toast.error(`허용되지 않는 파일 형식입니다: ${file.name}`); continue }
+      if (file.size > 20 * 1024 * 1024) { toast.error(`파일 크기는 20MB 이하여야 합니다: ${file.name}`); continue }
+      valid.push(file)
     }
-    setFiles((prev) => [...prev, ...newFiles])
+    setFiles((prev) => [...prev, ...valid])
     e.target.value = ''
   }
 

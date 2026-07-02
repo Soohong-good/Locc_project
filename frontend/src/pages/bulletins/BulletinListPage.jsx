@@ -4,39 +4,39 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getBulletins, createBulletin, updateBulletin, deleteBulletin } from '@/api/bulletins'
 import { deleteFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
-import { SkeletonRow } from '@/components/ui/SkeletonCard'
-import Button from '@/components/ui/Button'
-import PageHero from '@/components/ui/PageHero'
 import toast from '@/utils/toast'
+import { MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react'
 
-const formatDate = (val) => {
+const PAGE_SIZE = 10
+const PAGE_WINDOW = 5
+
+const fmtDot = (val) => {
   if (!val) return ''
   const d = new Date(val)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  if (Number.isNaN(d.getTime())) return String(val)
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
+
+const getPageRange = (current, total) => {
+  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
+  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
+  const end = Math.min(total, start + PAGE_WINDOW)
+  start = Math.max(0, end - PAGE_WINDOW)
+  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
 }
 
 const PdfFileInput = ({ file, onChange, onClear }) => (
   <div className="space-y-1.5">
-    <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition group">
-      <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition">
-        <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-            d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-        </svg>
-      </div>
-      <div>
-        <p className="text-sm font-medium text-slate-700">새 파일 추가</p>
-        <p className="text-xs text-slate-400">PDF · 최대 10MB</p>
-      </div>
+    <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[#E5E5E5] hover:border-[#171717] cursor-pointer transition group">
+      <span className="text-sm text-[#737373]">
+        {file ? `✓ ${file.name}` : '파일 선택 (PDF · 최대 10MB)'}
+      </span>
+      {file && (
+        <button type="button" onClick={(e) => { e.preventDefault(); onClear() }}
+          className="ml-auto text-[#737373] hover:text-red-500 shrink-0">✕</button>
+      )}
       <input type="file" accept=".pdf,application/pdf" onChange={onChange} className="hidden" />
     </label>
-    {file && (
-      <div className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5">
-        <span className="truncate">✓ {file.name}</span>
-        <button type="button" onClick={onClear} className="ml-2 text-slate-400 hover:text-red-500 shrink-0">✕</button>
-      </div>
-    )}
-    <p className="text-xs text-slate-500">※ PDF 파일 업로드 시 자동으로 첫 페이지가 썸네일로 표시됩니다</p>
   </div>
 )
 
@@ -75,14 +75,11 @@ const WriteModal = ({ onClose, onSaved }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
-          <div>
-            <h2 className="text-2xl font-light text-slate-900 tracking-tight">새 주보 등록</h2>
-            <p className="text-sm text-slate-500 mt-1 font-light">주보 정보를 입력해주세요</p>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors p-2 hover:bg-slate-50 rounded-full">
+      <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[#FAF9F6] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E5E5E5]">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-[#E5E5E5]">
+          <h2 className="text-xl font-bold text-[#2C2C2C]">새 주보 등록</h2>
+          <button onClick={onClose} className="text-[#737373] hover:text-[#171717] transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -90,34 +87,27 @@ const WriteModal = ({ onClose, onSaved }) => {
         </div>
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 tracking-wide">제목 <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium text-[#2C2C2C]">제목 <span className="text-red-500">*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="주보 제목을 입력하세요"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all font-light" />
+              className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all" />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 tracking-wide">주보 파일 <span className="text-xs text-slate-500">(PDF만 가능 / 최대 10MB)</span></label>
+            <label className="text-sm font-medium text-[#2C2C2C]">주보 파일 <span className="text-xs text-[#737373]">(PDF만 가능 / 최대 10MB)</span></label>
             <PdfFileInput file={file} onChange={handleFileChange} onClear={() => setFile(null)} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 tracking-wide">내용</label>
+            <label className="text-sm font-medium text-[#2C2C2C]">내용</label>
             <textarea value={content} onChange={(e) => setContent(e.target.value)}
-              rows={6} placeholder="주보 내용을 입력하세요 (선택)"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all font-light resize-none" />
+              rows={5} placeholder="주보 내용을 입력하세요 (선택)"
+              className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all resize-none" />
           </div>
         </div>
-        {error && (
-          <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
-            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
-          </div>
-        )}
-        <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
-          <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium transition-colors">취소</button>
+        {error && <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm">{error}</div>}
+        <div className="flex items-center justify-end gap-3 px-8 py-5 bg-[#F4F2EA] border-t border-[#E5E5E5]">
+          <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-[#737373] hover:text-[#171717] transition-colors">취소</button>
           <button onClick={handleSave} disabled={saving}
-            className="px-8 py-2.5 bg-slate-900 text-white hover:bg-slate-800 font-medium transition-all disabled:opacity-60">
+            className="px-8 py-2 text-sm font-medium bg-[#171717] text-[#FAF9F6] hover:bg-[#2C2C2C] transition-colors disabled:opacity-50">
             {saving ? '등록 중...' : '등록'}
           </button>
         </div>
@@ -176,74 +166,52 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100">
-          <div>
-            <h2 className="text-2xl font-light text-slate-900 tracking-tight">주보 수정</h2>
-            <p className="text-sm text-slate-500 mt-1 font-light">주보 정보를 수정해주세요</p>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-900 transition-colors p-2 hover:bg-slate-50 rounded-full">
+      <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[#FAF9F6] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E5E5E5]">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-[#E5E5E5]">
+          <h2 className="text-xl font-bold text-[#2C2C2C]">주보 수정</h2>
+          <button onClick={onClose} className="text-[#737373] hover:text-[#171717] transition-colors">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
-          {/* 제목 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 tracking-wide">제목 <span className="text-red-500">*</span></label>
+            <label className="text-sm font-medium text-[#2C2C2C]">제목 <span className="text-red-500">*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all font-light" />
+              className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all" />
           </div>
-          {/* 기존 파일 */}
           {hasExistingFile && (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700 tracking-wide">현재 파일</label>
-              <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-200">
-                <div className="flex items-center gap-2 text-sm text-slate-600 font-light">
-                  <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                  <span className="truncate">{bulletin.title}.pdf</span>
-                </div>
+              <label className="text-sm font-medium text-[#2C2C2C]">현재 파일</label>
+              <div className="flex items-center justify-between px-4 py-3 bg-[#F4F2EA] border border-[#E5E5E5]">
+                <span className="text-sm text-[#737373] truncate">{bulletin.title}.pdf</span>
                 <button onClick={handleDeleteExistingFile} disabled={deletingFile}
-                  className="ml-3 text-xs text-red-500 hover:text-red-700 font-medium transition-colors disabled:opacity-40 shrink-0">
+                  className="ml-3 text-xs text-red-500 hover:text-red-700 disabled:opacity-40 shrink-0">
                   {deletingFile ? '삭제 중...' : '삭제'}
                 </button>
               </div>
-              <p className="text-xs text-slate-400">새 파일을 업로드하면 기존 파일이 교체됩니다</p>
             </div>
           )}
-          {/* 새 파일 업로드 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 tracking-wide">
-              {hasExistingFile ? '새 파일로 교체 (선택)' : '주보 파일'}
-              <span className="text-xs text-slate-500 ml-2">PDF · 최대 10MB</span>
+            <label className="text-sm font-medium text-[#2C2C2C]">
+              {hasExistingFile ? '새 파일로 교체 (선택)' : '주보 파일'} <span className="text-xs text-[#737373]">PDF · 최대 10MB</span>
             </label>
             <PdfFileInput file={file} onChange={handleFileChange} onClear={() => setFile(null)} />
           </div>
-          {/* 내용 */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 tracking-wide">내용</label>
+            <label className="text-sm font-medium text-[#2C2C2C]">내용</label>
             <textarea value={content} onChange={(e) => setContent(e.target.value)}
-              rows={6} placeholder="주보 내용을 입력하세요 (선택)"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-900 outline-none transition-all font-light resize-none" />
+              rows={5} placeholder="주보 내용을 입력하세요 (선택)"
+              className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all resize-none" />
           </div>
         </div>
-        {error && (
-          <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm font-light flex items-center gap-2">
-            <svg className="w-4 h-4 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
-          </div>
-        )}
-        <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
-          <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium transition-colors">취소</button>
+        {error && <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm">{error}</div>}
+        <div className="flex items-center justify-end gap-3 px-8 py-5 bg-[#F4F2EA] border-t border-[#E5E5E5]">
+          <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-[#737373] hover:text-[#171717] transition-colors">취소</button>
           <button onClick={handleSave} disabled={saving}
-            className="px-8 py-2.5 bg-slate-900 text-white hover:bg-slate-800 font-medium transition-all disabled:opacity-60">
+            className="px-8 py-2 text-sm font-medium bg-[#171717] text-[#FAF9F6] hover:bg-[#2C2C2C] transition-colors disabled:opacity-50">
             {saving ? '저장 중...' : '저장'}
           </button>
         </div>
@@ -254,28 +222,17 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
 
 const DeleteModal = ({ title, onClose, onConfirm, deleting }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-    <div className="relative bg-white max-w-md w-full shadow-2xl">
+    <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative bg-[#FAF9F6] max-w-md w-full border border-[#E5E5E5]">
       <div className="p-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-xl font-medium text-slate-900">주보 삭제</h3>
-            <p className="text-sm text-slate-500 mt-0.5 font-light">이 작업은 되돌릴 수 없습니다</p>
-          </div>
-        </div>
-        <p className="text-slate-600 font-light mb-2">다음 주보를 삭제하시겠습니까?</p>
-        <p className="font-medium text-slate-900 bg-slate-50 px-4 py-3">{title}</p>
+        <h3 className="text-xl font-bold text-[#2C2C2C] mb-2">주보 삭제</h3>
+        <p className="text-[#737373] mb-1">다음 주보를 삭제하시겠습니까?</p>
+        <p className="text-[#2C2C2C] font-medium bg-[#F4F2EA] px-4 py-3">{title}</p>
       </div>
-      <div className="flex items-center justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-200">
-        <button onClick={onClose} className="px-6 py-2.5 text-slate-700 hover:text-slate-900 font-medium transition-colors">취소</button>
+      <div className="flex items-center justify-end gap-3 px-8 py-5 bg-[#F4F2EA] border-t border-[#E5E5E5]">
+        <button onClick={onClose} className="px-6 py-2 text-sm font-medium text-[#737373] hover:text-[#171717] transition-colors">취소</button>
         <button onClick={onConfirm} disabled={deleting}
-          className="px-8 py-2.5 bg-red-600 text-white hover:bg-red-700 font-medium transition-all disabled:opacity-60">
+          className="px-8 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50">
           {deleting ? '삭제 중...' : '삭제하기'}
         </button>
       </div>
@@ -284,15 +241,13 @@ const DeleteModal = ({ title, onClose, onConfirm, deleting }) => (
 )
 
 const Thumbnail = ({ url }) => {
-  if (url) {
-    return (
-      <div className="w-16 h-20 bg-cover bg-center border border-slate-200 flex-shrink-0"
-        style={{ backgroundImage: `url(${url})` }} />
-    )
-  }
+  if (url) return (
+    <div className="w-12 h-16 bg-cover bg-center border border-[#E5E5E5] flex-shrink-0"
+      style={{ backgroundImage: `url(${url})` }} />
+  )
   return (
-    <div className="w-16 h-20 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border border-slate-200 flex-shrink-0">
-      <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="w-12 h-16 bg-[#F4F2EA] flex items-center justify-center border border-[#E5E5E5] flex-shrink-0">
+      <svg className="w-6 h-6 text-[#A3A3A3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
@@ -304,9 +259,9 @@ const BulletinListPage = () => {
   const navigate    = useNavigate()
   const queryClient = useQueryClient()
   const { canWrite: canWriteFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
-  const isAdmin = isAdminFn()
+  const isAdmin  = isAdminFn()
   const canWrite = canWriteFn('BULLETIN')
-  const userId = getUserId()
+  const userId   = getUserId()
 
   const [page,         setPage]         = useState(0)
   const [keyword,      setKeyword]      = useState('')
@@ -317,7 +272,7 @@ const BulletinListPage = () => {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['bulletins', page, keyword],
-    queryFn:  () => getBulletins({ page, size: 10, keyword }),
+    queryFn:  () => getBulletins({ page, size: PAGE_SIZE, keyword }),
   })
 
   const deleteMutation = useMutation({
@@ -347,130 +302,131 @@ const BulletinListPage = () => {
   const totalPages    = pageInfo.totalPages ?? 0
   const totalElements = pageInfo.totalElements ?? 0
   const currentPage   = pageInfo.page ?? 0
+  const pageSize      = pageInfo.size ?? PAGE_SIZE
 
   return (
-    <main>
-      <PageHero
-        eyebrow="Weekly Bulletin"
-        title="주보"
-        subtitle="주간 예배 및 교회 소식을 확인하세요"
-        bgImage="/images/bg-library.jpg"
-      >
-        {canWrite && (
-          <Button variant="primary" size="sm" onClick={() => setWriteOpen(true)}>
-            + 새 주보 등록
-          </Button>
-        )}
-      </PageHero>
-
-      <section className="py-8 bg-white px-6 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <form onSubmit={handleSearch} className="flex gap-3">
-            <input type="text" value={inputVal} onChange={(e) => setInputVal(e.target.value)}
-              placeholder="검색어를 입력하세요"
-              className="flex-1 px-4 py-3 border border-slate-300 focus:border-slate-900 focus:outline-none transition text-base" />
-            <button type="submit"
-              className="px-8 py-3 bg-slate-900 text-white hover:bg-slate-800 transition font-medium">검색</button>
-          </form>
+    <div className="min-h-screen bg-[#FAF9F6]">
+      {/* Hero */}
+      <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C]">
+        <div className="max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
+          <div>
+            <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Weekly Bulletin</span>
+            <h1 className="text-5xl font-bold tracking-tight">주보 게시판</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            {canWrite && (
+              <button onClick={() => setWriteOpen(true)}
+                className="text-xs font-bold tracking-[0.1em] uppercase bg-[#FAF9F6] text-[#171717] px-6 py-2.5 hover:bg-white transition-colors whitespace-nowrap">
+                + 새 주보
+              </button>
+            )}
+            <form onSubmit={handleSearch} className="relative w-full md:w-72">
+              <input type="text" value={inputVal} onChange={(e) => setInputVal(e.target.value)}
+                placeholder="검색어를 입력하세요"
+                className="w-full h-10 pl-4 pr-10 bg-transparent border border-[#737373] text-[#FAF9F6] text-sm focus:outline-none focus:border-[#FAF9F6] transition-colors placeholder:text-[#737373]" />
+              <button type="submit" className="absolute right-0 top-0 w-10 h-10 flex items-center justify-center text-[#737373] hover:text-[#FAF9F6] transition-colors">
+                <MagnifyingGlass size={16} weight="bold" />
+              </button>
+            </form>
+          </div>
         </div>
       </section>
 
-      <section className="py-16 bg-white px-6">
-        <div className="max-w-6xl mx-auto">
-          {isLoading && (
-            <div className="space-y-0 border-t border-slate-200">
-              {Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)}
-            </div>
-          )}
-          {isError && <div className="text-center py-20 text-red-500">주보 목록을 불러올 수 없습니다.</div>}
-          {!isLoading && !isError && bulletins.length === 0 && (
-            <div className="text-center py-20">
-              <svg className="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-slate-500 font-light">등록된 주보가 없습니다.</p>
-            </div>
-          )}
-          {!isLoading && !isError && bulletins.length > 0 && (
-            <>
-              <div className="hidden md:grid grid-cols-12 gap-4 py-4 px-4 border-b-2 border-slate-900 text-base font-medium text-slate-700">
-                <div className="col-span-1 text-center">썸네일</div>
-                <div className={canWrite ? 'col-span-6' : 'col-span-7'}>제목</div>
-                <div className="col-span-2 text-center">작성일</div>
-                <div className="col-span-1 text-center">조회수</div>
-                {canWrite && <div className="col-span-2 text-center">관리</div>}
-              </div>
+      {/* Table */}
+      <main className="max-w-[1200px] mx-auto px-6 pt-14 md:pt-20 pb-32">
+        <div className="h-px w-full bg-[#171717]" />
+        <div className="grid grid-cols-[60px_64px_1fr_auto_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest items-center">
+          <div>No.</div>
+          <div>Thumb</div>
+          <div>Title</div>
+          <div className="text-center w-14">File</div>
+          <div className="text-right w-24">Date</div>
+        </div>
 
-              {bulletins.map((bulletin) => (
-                <div key={bulletin.id}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 py-5 px-4 border-b border-slate-200 hover:bg-slate-50 transition-all duration-200 items-center">
-                  <div className="col-span-1 flex items-center justify-center">
-                    <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}>
-                      <Thumbnail url={bulletin.thumbnailUrl} />
-                    </button>
-                  </div>
-                  <div className={`col-span-1 ${canWrite ? 'md:col-span-6' : 'md:col-span-7'}`}>
-                    <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
-                      className="text-base md:text-lg hover:underline hover:text-blue-600 transition-colors text-slate-700 font-light text-left">
-                      {bulletin.title}
-                    </button>
-                  </div>
-                  <div className="col-span-1 md:col-span-2 flex items-center md:justify-center">
-                    <span className="text-sm md:text-base text-slate-400">{formatDate(bulletin.createdAt)}</span>
-                  </div>
-                  <div className="col-span-1 md:col-span-1 flex items-center md:justify-center">
-                    <span className="text-sm md:text-base text-slate-400 font-light">{bulletin.viewCount}</span>
-                  </div>
-                  {canWrite && (isAdmin || bulletin.authorId === userId) && (
-                    <div className="col-span-1 md:col-span-2 flex items-center justify-end md:justify-center gap-2">
-                      <button onClick={() => setEditTarget(bulletin)}
-                        className="p-2 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all duration-200" title="수정">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button onClick={() => setDeleteTarget({ id: bulletin.id, title: bulletin.title })}
-                        className="p-2 bg-slate-100 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-all duration-200" title="삭제">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+        {isLoading && (
+          <div className="py-32 text-center font-mono text-sm text-[#737373] tracking-wider">불러오는 중...</div>
+        )}
+        {isError && (
+          <div className="py-32 text-center text-sm text-red-600">주보 목록을 불러올 수 없습니다.</div>
+        )}
+        {!isLoading && !isError && bulletins.length === 0 && (
+          <div className="py-32 text-center text-sm text-[#737373]">
+            {keyword ? `"${keyword}"에 해당하는 주보가 없습니다.` : '등록된 주보가 없습니다.'}
+          </div>
+        )}
 
-              {totalElements > 10 && (
-                <div className="flex justify-center mt-12">
-                  <nav className="flex items-center gap-2">
-                    <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 0}
-                      className="px-3 py-2 text-slate-600 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <button key={i} onClick={() => goPage(i)}
-                        className={`px-4 py-2 transition font-light ${i === currentPage ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-                        {i + 1}
-                      </button>
-                    ))}
-                    <button onClick={() => goPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}
-                      className="px-3 py-2 text-slate-600 hover:bg-slate-100 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </nav>
+        {!isLoading && !isError && bulletins.map((bulletin, idx) => (
+          <div key={bulletin.id}
+            className="grid grid-cols-[60px_64px_1fr_auto_auto] gap-4 px-4 py-5 border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors items-center group">
+            <div className="font-mono text-sm text-[#737373]">
+              {totalElements - currentPage * pageSize - idx}
+            </div>
+            <div className="flex items-center">
+              <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}>
+                <Thumbnail url={bulletin.thumbnailUrl} />
+              </button>
+            </div>
+            <div className="flex items-center gap-3 min-w-0">
+              <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
+                className="font-medium text-base text-[#2C2C2C] group-hover:text-[#171717] transition-colors text-left truncate">
+                {bulletin.title}
+              </button>
+              <span className="font-mono text-xs text-[#A3A3A3] flex-shrink-0">{bulletin.viewCount}</span>
+              {canWrite && (isAdmin || bulletin.authorId === userId) && (
+                <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEditTarget(bulletin)}
+                    className="p-1.5 border border-[#E5E5E5] text-[#737373] hover:border-[#171717] hover:text-[#171717] transition-colors">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button onClick={() => setDeleteTarget({ id: bulletin.id, title: bulletin.title })}
+                    className="p-1.5 border border-[#E5E5E5] text-red-500 hover:border-red-500 transition-colors">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               )}
-            </>
-          )}
-        </div>
-      </section>
+            </div>
+            <div className="flex justify-center w-14">
+              <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
+                className="inline-flex px-2 py-1 border border-[#E5E5E5] text-[10px] font-mono tracking-widest text-[#737373] hover:text-[#171717] hover:border-[#171717] transition-colors">
+                PDF
+              </button>
+            </div>
+            <div className="font-mono text-sm text-[#737373] text-right w-24">
+              {fmtDot(bulletin.createdAt)}
+            </div>
+          </div>
+        ))}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-16 flex justify-center">
+            <nav className="inline-flex border border-[#E5E5E5]">
+              <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 0}
+                className="w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <CaretLeft size={14} weight="bold" />
+              </button>
+              {getPageRange(currentPage, totalPages).map((p) => (
+                <button key={p} onClick={() => goPage(p)}
+                  className={`w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
+                    p === currentPage ? 'bg-[#171717] text-white' : 'text-[#737373] hover:bg-[#F4F2EA] hover:text-[#171717]'
+                  }`}>
+                  {p + 1}
+                </button>
+              ))}
+              <button onClick={() => goPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}
+                className="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <CaretRight size={14} weight="bold" />
+              </button>
+            </nav>
+          </div>
+        )}
+      </main>
 
       {writeOpen && (
         <WriteModal
@@ -494,7 +450,7 @@ const BulletinListPage = () => {
           deleting={deleteMutation.isPending}
         />
       )}
-    </main>
+    </div>
   )
 }
 

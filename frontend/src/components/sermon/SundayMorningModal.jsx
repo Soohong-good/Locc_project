@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSundayMorningByDate, createSermon, updateSermon, uploadSermonImage } from '@/api/sermons'
+import { downloadFile, deleteFile } from '@/api/files'
 import { staffApi } from '@/api/staff'
 import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import { DateInput } from '@/components/ui/DateInput'
 import { getErrorMessage } from '@/lib/apiError'
+import toast from '@/utils/toast'
 
 const extractVideoId = (url = '') => {
   const m = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{6,})/)
@@ -19,7 +21,7 @@ const selectStyle = {
 }
 
 // ── 내부 컴포넌트 (key 재마운트 대상) ─────────────────────────────────────
-const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
+const SundayMorningModalInner = ({ onClose, onSaved, editGroup, ministers }) => {
   const isEdit = !!editGroup
   const queryClient = useQueryClient()
 
@@ -31,6 +33,23 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
   const [files, setFiles] = useState([])
   const [error, setError] = useState('')
   const [preacherReadOnly, setPreacherReadOnly] = useState(false)
+
+  // 기존 첨부파일 (수정 모드 — 1부·2부 통합 표시)
+  const [existingAttachments, setExistingAttachments] = useState([])
+  const [deletingFileId, setDeletingFileId] = useState(null)
+
+  const handleDeleteAttachment = async (fileId) => {
+    if (!confirm('이 첨부파일을 삭제하시겠습니까?')) return
+    setDeletingFileId(fileId)
+    try {
+      await deleteFile(fileId)
+      setExistingAttachments((prev) => prev.filter((a) => a.id !== fileId))
+    } catch {
+      toast.error('파일 삭제에 실패했습니다.')
+    } finally {
+      setDeletingFileId(null)
+    }
+  }
 
   const set = (key) => (e) => setFields((p) => ({ ...p, [key]: e.target.value }))
 
@@ -58,6 +77,12 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
       video2Url:  detail.part2?.videoUrl ?? '',
     })
     if (base?.content) setTimeout(() => setHTML(base.content), 150)
+
+    // 기존 첨부파일 로드 (1부·2부 통합)
+    setExistingAttachments([
+      ...(detail.part1?.attachments ?? []),
+      ...(detail.part2?.attachments ?? []),
+    ])
 
     // 수정 모드에서 기존 설교자가 교역자 목록에 있으면 readOnly
     if (base?.preacher && ministers.some((m) => `${m.name} ${m.displayPosition}` === base.preacher)) {
@@ -103,6 +128,7 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sermons', 'sunday-morning', 'grouped'] })
       queryClient.invalidateQueries({ queryKey: ['sermons'] })
+      onSaved?.()
       onClose()
     },
   })
@@ -226,6 +252,33 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
             <label className="text-sm font-medium text-slate-700 tracking-wide">
               첨부파일 <span className="text-xs text-slate-500 font-normal ml-1">(PDF, HWP, JPG, PNG · 최대 20MB)</span>
             </label>
+
+            {/* 기존 첨부파일 (수정 모드) */}
+            {existingAttachments.length > 0 && (
+              <div className="space-y-1.5 mb-2">
+                <p className="text-xs text-slate-500">기존 첨부파일</p>
+                {existingAttachments.map((att) => (
+                  <div key={att.id} className="flex items-center justify-between px-3 py-2 bg-blue-50 border border-blue-200 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => downloadFile(att.id, att.originalFileName)}
+                      className="truncate text-blue-700 hover:underline text-left min-w-0"
+                    >
+                      {att.originalFileName}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAttachment(att.id)}
+                      disabled={deletingFileId === att.id}
+                      className="ml-2 text-red-400 hover:text-red-600 transition flex-shrink-0 disabled:opacity-40"
+                    >
+                      {deletingFileId === att.id ? <span className="text-xs">삭제 중...</span> : '✕'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <label className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-slate-200 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition group">
               <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-slate-200 flex items-center justify-center flex-shrink-0 transition">
                 <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +331,7 @@ const SundayMorningModalInner = ({ onClose, editGroup, ministers }) => {
 }
 
 // ── 외부 래퍼 ─────────────────────────────────────────────────────────────
-const SundayMorningModal = ({ isOpen, onClose, editGroup }) => {
+const SundayMorningModal = ({ isOpen, onClose, onSaved, editGroup }) => {
   const { data: ministers = [] } = useQuery({
     queryKey: ['staff', 'preachers'],
     queryFn: () => staffApi.getPreachers(),
@@ -294,6 +347,7 @@ const SundayMorningModal = ({ isOpen, onClose, editGroup }) => {
     <SundayMorningModalInner
       key={mountKey}
       onClose={onClose}
+      onSaved={onSaved}
       editGroup={editGroup}
       ministers={ministers}
     />

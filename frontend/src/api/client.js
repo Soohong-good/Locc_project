@@ -72,6 +72,12 @@ client.interceptors.response.use(
       // window.location.href 강제 이동 제거
       // → 라우트 이동은 React Router(PrivateRoute)가 담당
       //   clearAuth()는 AuthInitializer의 isError 핸들러에서 처리됨
+      //
+      // 단, 관리자 페이지(/admin/**)는 세션 만료 시 화면이 어중간하게 멈춰있지 않도록
+      // 새로고침해서 PrivateRoute(adminOnly)가 즉시 로그인/홈으로 보내게 한다.
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.reload()
+      }
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false

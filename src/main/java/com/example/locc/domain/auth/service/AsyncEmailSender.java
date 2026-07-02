@@ -84,6 +84,39 @@ public class AsyncEmailSender {
     }
 
     /**
+     * 비동기 이메일 발송 - 회원가입 승인 완료 안내
+     */
+    @Async
+    public void sendApprovalEmail(String to, String name) {
+        long startTime = System.currentTimeMillis();
+        log.debug("[비동기 이메일] 승인 완료 안내 발송 시작 (스레드: {})", Thread.currentThread().getName());
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("그리스도사랑교회 <smtpcode1@gmail.com>");
+            helper.setTo(to);
+            helper.setSubject("[그리스도 사랑교회] 회원가입이 승인되었습니다");
+
+            String baseUrl = appProperties.getFrontendUrl().isBlank()
+                    ? appProperties.getUrl()
+                    : appProperties.getFrontendUrl();
+            String loginUrl = baseUrl + "/login";
+
+            helper.setText(buildApprovalHtml(name, loginUrl), true);
+
+            mailSender.send(message);
+
+            long totalTime = System.currentTimeMillis() - startTime;
+            log.info("[비동기 이메일] 승인 완료 안내 발송 완료 ({}ms)", totalTime);
+
+        } catch (MessagingException e) {
+            log.error("[비동기 이메일] 승인 완료 안내 발송 실패", e);
+        }
+    }
+
+    /**
      * 비동기 이메일 발송 - 서버/프론트 에러 알림
      * adminEmail이 비어 있으면 발송하지 않음
      */
@@ -225,6 +258,62 @@ public class AsyncEmailSender {
                 </body>
                 </html>
                 """.formatted(code);
+    }
+
+    private String buildApprovalHtml(String name, String loginUrl) {
+        return """
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+                </head>
+                <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:'Noto Sans KR','Malgun Gothic',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+                  <table width="100%%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:32px 16px;">
+                    <tr>
+                      <td align="center">
+                        <table width="600" cellpadding="0" cellspacing="0"
+                               style="background-color:#ffffff;border:1px solid #e4e4e7;box-shadow:0 2px 8px -4px rgba(0,0,0,0.05);max-width:600px;width:100%%;">
+                          <!-- 본문 -->
+                          <tr>
+                            <td style="padding:48px 56px 40px;">
+                              <!-- 헤더: 로고 -->
+                              <div style="margin-bottom:48px;">
+                                <img src="https://locc.kr/logo.png" alt="그리스도 사랑교회" height="36"
+                                     style="height:36px;width:auto;display:block;">
+                              </div>
+                              <!-- 제목 -->
+                              <h1 style="margin:0 0 24px;font-size:30px;font-weight:500;letter-spacing:-0.5px;color:#18181b;line-height:1.2;">
+                                회원가입이 승인되었습니다
+                              </h1>
+                              <!-- 설명 -->
+                              <p style="margin:0 0 36px;font-size:15px;color:#52525b;line-height:2;">
+                                안녕하세요, <strong style="font-weight:500;color:#27272a;">%s</strong>님.<br>
+                                그리스도 사랑교회 웹사이트 회원가입 신청이 관리자 승인을 완료했습니다.<br>
+                                이제 로그인하여 서비스를 이용하실 수 있습니다.
+                              </p>
+                              <!-- 버튼 -->
+                              <div style="margin:0 0 36px;padding:28px 0;border-top:1px solid #e4e4e7;border-bottom:1px solid #e4e4e7;text-align:center;">
+                                <a href="%s"
+                                   style="display:inline-block;padding:14px 36px;background-color:#18181b;color:#ffffff;text-decoration:none;font-size:15px;font-weight:500;">
+                                  로그인하러 가기
+                                </a>
+                              </div>
+                              <!-- 푸터 -->
+                              <div style="padding-top:24px;border-top:1px solid #f4f4f5;">
+                                <p style="margin:0 0 4px;font-size:11px;color:#a1a1aa;line-height:1.8;">본 메일은 발신 전용입니다. 관련된 문의사항은 교회 사무실로 연락해 주시기 바랍니다.</p>
+                                <p style="margin:0;font-size:11px;color:#a1a1aa;">© 그리스도 사랑교회. All rights reserved.</p>
+                              </div>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """.formatted(name, loginUrl);
     }
 
     private String buildPasswordResetHtml(String name, String resetUrl) {

@@ -1,14 +1,26 @@
 import DOMPurify from 'dompurify'
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import {
+  House, CaretRight, User, CalendarBlank, BookOpen,
+  Play, DownloadSimple, YoutubeLogo, Rows, ArrowLeft, ArrowRight,
+} from '@phosphor-icons/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSundayMorningByDate, updateSermon, deleteSermon, getSermon } from '@/api/sermons'
+import { getSundayMorningByDate, deleteSermon } from '@/api/sermons'
 import { downloadFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
-import SermonModal from '@/components/sermon/SermonModal'
+import SundayMorningModal from '@/components/sermon/SundayMorningModal'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ErrorMessage from '@/components/common/ErrorMessage'
 import toast from '@/utils/toast'
+import { formatTranscript } from '@/utils/formatTranscript'
+import BiblePassageSection from '@/components/sermon/BiblePassageSection'
+
+/** 설교 본문 렌더 — 평문(PDF 자동 추출)만 구조화, HTML(수동 작성)은 그대로 */
+function renderSermonContent(content) {
+  if (!content) return ''
+  return content.includes('<') ? content : formatTranscript(content)
+}
 
 function extractYouTubeId(url) {
   if (!url) return null
@@ -24,32 +36,24 @@ function extractYouTubeId(url) {
   return null
 }
 
-const SERVICE_NUMBER_OPTIONS = [
-  { value: 1, label: '1부 예배' },
-  { value: 2, label: '2부 예배' },
-]
-
-const BackIcon = () => (
-  <svg className="w-4 h-4 mr-2 group-hover:-translate-x-0.5 transition-transform duration-200"
-    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-  </svg>
-)
-
 const SundayMorningDetailPage = () => {
-  const { date }     = useParams()   // "2026-06-08"
-  const navigate     = useNavigate()
+  const { date }    = useParams()
+  const navigate    = useNavigate()
   const { isAdminOrOperator: isAdminOrOperatorFn, isAdmin: isAdminFn, getUserId } = useAuthStore()
-  const canWrite     = isAdminOrOperatorFn()
-  const isAdmin      = isAdminFn()
-  const userId       = getUserId()
-  const queryClient  = useQueryClient()
+  const canWrite    = isAdminOrOperatorFn()
+  const isAdmin     = isAdminFn()
+  const userId      = getUserId()
+  const queryClient = useQueryClient()
 
-  // 활성 부 (1 또는 2) — 기본 1부
-  const [activePart,        setActivePart]        = useState(1)
-  const [editTarget,        setEditTarget]        = useState(null)
-  const [isSaving,          setIsSaving]          = useState(false)
-  const [isLoadingDetail,   setIsLoadingDetail]   = useState(false)
+  const [activePart,   setActivePart]   = useState(1)
+  const [videoPlaying, setVideoPlaying] = useState(false)
+  const [editing,      setEditing]      = useState(false)
+
+  // 이전/다음 설교 버튼으로 날짜만 바뀌는 경우 컴포넌트가 리마운트되지 않으므로 직접 리셋
+  useEffect(() => {
+    setActivePart(1)
+    setVideoPlaying(false)
+  }, [date])
 
   const queryKey = ['sermon', 'sunday-morning', 'date', date]
 
@@ -58,23 +62,6 @@ const SundayMorningDetailPage = () => {
     queryFn: () => getSundayMorningByDate(date),
   })
 
-  // 수정
-  const updateMutation = useMutation({
-    mutationFn: ({ id, formData }) => updateSermon({ id, formData }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey })
-      queryClient.invalidateQueries({ queryKey: ['sermons', 'sunday-morning'] })
-      setEditTarget(null)
-      setIsSaving(false)
-      toast.success('설교가 수정되었습니다.')
-    },
-    onError: () => {
-      toast.error('저장에 실패했습니다.')
-      setIsSaving(false)
-    },
-  })
-
-  // 삭제
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteSermon(id),
     onSuccess: () => {
@@ -90,210 +77,292 @@ const SundayMorningDetailPage = () => {
     deleteMutation.mutate(sermon.id)
   }
 
-  // ── 로딩 / 에러 ────────────────────────────────────────────────────
   if (isLoading) return <LoadingSpinner />
   if (error) return (
     <div className="max-w-4xl mx-auto px-6 py-16">
       <ErrorMessage error={error} fallback="설교를 불러올 수 없습니다." />
-      <button onClick={() => navigate(-1)}
-        className="mt-4 inline-flex items-center text-sm text-slate-600 hover:text-slate-900 transition group">
-        <BackIcon /> 목록으로
+      <button onClick={() => navigate(-1)} className="mt-4 inline-flex items-center text-sm text-slate-600 hover:text-slate-900 transition">
+        목록으로
       </button>
     </div>
   )
 
-  const hasBoth = !!group.part1 && !!group.part2
+  const hasBoth       = !!group.part1 && !!group.part2
+  const sermon        = activePart === 1 ? (group.part1 ?? group.part2) : (group.part2 ?? group.part1)
+  const effectivePart = activePart === 1 ? (group.part1 ? 1 : 2) : (group.part2 ? 2 : 1)
 
-  // 선택한 part가 없으면 존재하는 쪽으로 fallback
-  const sermon = activePart === 1
-    ? (group.part1 ?? group.part2)
-    : (group.part2 ?? group.part1)
-
-  const effectivePart = activePart === 1
-    ? (group.part1 ? 1 : 2)
-    : (group.part2 ? 2 : 1)
-
-  const videoId = extractYouTubeId(sermon?.videoUrl)
+  const videoId      = extractYouTubeId(sermon?.videoUrl)
+  const thumbnailUrl = videoId
+    ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+    : sermon?.thumbnailUrl
   const dateStr = date ? date.replace(/-/g, '. ') : ''
 
   return (
-    <>
-      {/* ── Hero ── */}
-      <section className="pt-page pb-14 bg-slate-900 text-white px-6">
-        <div className="max-w-4xl mx-auto">
+    <div className="max-w-[1600px] mx-auto min-h-screen border-x border-[#e6e0d6] bg-white">
 
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center text-xs font-medium text-slate-400 hover:text-white
-              mb-10 group transition-colors duration-200 tracking-[0.1em] uppercase"
-          >
-            <BackIcon /> 목록으로
-          </button>
-
-          <div className="animate-fade-in-up">
-            <p className="text-xs font-medium tracking-[0.3em] text-eyebrow uppercase mb-4">
-              주일오전예배
-            </p>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-white leading-snug tracking-tight mb-4">
-              {dateStr} 주일오전예배
-            </h1>
-            <div className="h-px w-12 bg-slate-700 mb-6" />
-          </div>
-
-          {/* 메타 */}
-          <div className="flex flex-wrap items-center gap-5 text-slate-300 font-light">
-            {sermon?.preacher && (
-              <>
-                <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span>{sermon.preacher}</span>
-                </div>
-                <span className="text-slate-600">•</span>
-              </>
-            )}
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{dateStr}</span>
-            </div>
-          </div>
+      {/* ── 헤더 ── */}
+      <div className="p-8 md:p-12 lg:p-16 border-b border-[#e6e0d6]">
+        <div className="flex items-center gap-3 text-sm text-[#7a766e] font-mono mb-8">
+          <Link to="/" className="hover:text-[#1a1710] transition-colors flex items-center gap-1">
+            <House size={14} /> Home
+          </Link>
+          <CaretRight size={12} />
+          <Link to="/worship/sermon/sunday-morning" className="hover:text-[#1a1710] transition-colors">
+            복음말씀
+          </Link>
+          <CaretRight size={12} />
+          <span className="text-[#1a1710] font-bold">주일오전</span>
         </div>
-      </section>
 
-      {/* ── 1부/2부 토글 + 영상 ── */}
-      <section className="py-16 bg-white px-6">
-        <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[#1a1710] mb-6">
+          {sermon?.title || `${dateStr} 주일오전예배`}
+        </h1>
 
-          {/* 토글 버튼 (둘 다 있을 때만) */}
-          {hasBoth && (
-            <div className="flex gap-3 mb-8">
+        <div className="flex flex-wrap gap-x-8 gap-y-4 text-sm font-mono text-[#7a766e]">
+          {sermon?.preacher && (
+            <div className="flex items-center gap-2">
+              <User size={15} />
+              <span className="font-medium text-[#1a1710]">{sermon.preacher}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <CalendarBlank size={15} />
+            <span>{dateStr}</span>
+          </div>
+          {sermon?.scripture && (
+            <div className="flex items-center gap-2">
+              <BookOpen size={15} />
+              <span>{sermon.scripture}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── 1부/2부 토글 + 관리자 버튼 ── */}
+      {(hasBoth || (canWrite && (isAdmin || sermon?.authorId === userId))) && (
+        <div className="px-8 md:px-12 lg:px-16 py-4 border-b border-[#e6e0d6] flex flex-wrap items-center justify-between gap-4 bg-[#faf8f5]">
+          {hasBoth ? (
+            <div className="flex gap-2">
               {[1, 2].map((part) => (
                 <button
                   key={part}
-                  onClick={() => setActivePart(part)}
-                  className={`px-6 py-2.5 text-sm font-medium transition-colors duration-200
-                    ${effectivePart === part
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  onClick={() => { setActivePart(part); setVideoPlaying(false) }}
+                  className={`px-5 py-2 text-sm font-medium transition-colors ${
+                    effectivePart === part
+                      ? 'bg-[#1a1710] text-white'
+                      : 'bg-white text-[#7a766e] border border-[#e6e0d6] hover:bg-[#e6e0d6]'
+                  }`}
                 >
                   {part}부 예배
                 </button>
               ))}
             </div>
-          )}
+          ) : <div />}
 
-          {/* 설교 정보 + 관리자 버튼 */}
-          {sermon && (
-            <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-light text-slate-900 mb-2">
-                  {sermon.title}
-                </h2>
-                {sermon.scripture && (
-                  <p className="text-slate-500 text-sm">{sermon.scripture}</p>
-                )}
-              </div>
-              {canWrite && (isAdmin || sermon.authorId === userId) && (
-                <div className="flex gap-3 flex-shrink-0">
-                  <button
-                    disabled={isLoadingDetail}
-                    onClick={async () => {
-                      setIsLoadingDetail(true)
-                      try {
-                        const detail = await getSermon(sermon.id)
-                        setEditTarget(detail)
-                      } catch {
-                        setEditTarget(sermon)
-                      } finally {
-                        setIsLoadingDetail(false)
-                      }
-                    }}
-                    className="px-4 py-2 border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white disabled:opacity-50 transition font-medium text-sm"
-                  >
-                    {isLoadingDetail ? '불러오는 중...' : '수정'}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(sermon)}
-                    disabled={deleteMutation.isPending}
-                    className="px-4 py-2 border-2 border-red-400 text-red-500 hover:bg-red-600 hover:text-white hover:border-red-600 disabled:opacity-50 transition font-medium text-sm"
-                  >
-                    {deleteMutation.isPending ? '삭제 중...' : '삭제'}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 영상 */}
-          {videoId ? (
-            <div className="aspect-video bg-slate-900 overflow-hidden shadow-xl">
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}`}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          ) : (
-            <div className="aspect-video bg-slate-100 flex items-center justify-center">
-              <p className="text-slate-400 text-sm">등록된 영상이 없습니다.</p>
+          {canWrite && (isAdmin || sermon?.authorId === userId) && (
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditing(true)}
+                className="px-4 py-2 border border-[#e6e0d6] text-[#3d3a35] hover:bg-[#1a1710] hover:text-white hover:border-[#1a1710] transition-colors text-sm font-medium"
+              >
+                수정
+              </button>
+              <button
+                onClick={() => handleDeleteClick(sermon)}
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 border border-red-200 text-red-500 hover:bg-red-600 hover:text-white hover:border-red-600 disabled:opacity-50 transition-colors text-sm font-medium"
+              >
+                {deleteMutation.isPending ? '삭제 중...' : '삭제'}
+              </button>
             </div>
           )}
         </div>
-      </section>
+      )}
 
-      {/* ── 설교 내용 (1·2부 공통 — 탭 전환에 무관하게 1부 우선 표시) ── */}
-      {(group.part1?.content ?? group.part2?.content) && (
-        <section className="py-24 bg-white px-6">
-          <article className="max-w-4xl mx-auto">
-            <div className="prose prose-lg prose-slate max-w-none">
-              <div
-                className="ql-editor ql-output text-slate-700 leading-[1.9] font-light text-lg"
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(group.part1?.content ?? group.part2?.content) }}
-              />
+      {/* ── 영상 + 상세 그리드 ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#e6e0d6]">
+
+        {/* 영상 */}
+        <div className="lg:col-span-8 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+          <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#7a766e] font-mono mb-6 block">
+            Sermon Video
+          </span>
+
+          <div className="relative w-full aspect-video bg-[#faf8f5] border border-[#e6e0d6] overflow-hidden group">
+            {videoId ? (
+              videoPlaying ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                />
+              ) : (
+                <>
+                  <button
+                    onClick={() => setVideoPlaying(true)}
+                    className="absolute inset-0 w-full h-full"
+                    aria-label="영상 재생"
+                  >
+                    {thumbnailUrl && (
+                      <img
+                        src={thumbnailUrl}
+                        alt="Video Thumbnail"
+                        className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-[1.02]"
+                        onError={(e) => {
+                          if (e.target.src.includes('maxresdefault')) {
+                            e.target.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+                          }
+                        }}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-[#1a1710]/20 group-hover:bg-[#1a1710]/10 transition-colors duration-300" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="w-20 h-20 bg-[#1a1710] text-white flex items-center justify-center rounded-full shadow-lg group-hover:scale-110 group-hover:bg-[#FF0000] transition-all duration-300">
+                        <Play size={32} weight="fill" className="ml-1" />
+                      </span>
+                    </div>
+                  </button>
+                  {sermon?.videoUrl && (
+                    <a
+                      href={sermon.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute bottom-4 right-4 z-10 px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-sm font-medium hover:bg-white/40 transition-colors flex items-center gap-2"
+                    >
+                      YouTube에서 보기 <YoutubeLogo size={18} weight="fill" />
+                    </a>
+                  )}
+                </>
+              )
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-[#7a766e] text-sm">등록된 영상이 없습니다.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 상세 사이드바 */}
+        <div className="lg:col-span-4 bg-white flex flex-col">
+          <div className="p-8 md:p-12 lg:p-16 flex-1 flex flex-col justify-center">
+            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#7a766e] font-mono mb-8 block">
+              Sermon Details
+            </span>
+
+            <div className="flex flex-col border-t border-[#e6e0d6]">
+              {sermon?.preacher && (
+                <div className="flex justify-between items-center py-4 border-b border-[#e6e0d6]">
+                  <span className="text-sm font-mono text-[#7a766e]">설교자</span>
+                  <span className="font-bold text-[#1a1710]">{sermon.preacher}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center py-4 border-b border-[#e6e0d6]">
+                <span className="text-sm font-mono text-[#7a766e]">날짜</span>
+                <span className="font-bold font-mono text-[#1a1710]">{dateStr}</span>
+              </div>
+              {sermon?.scripture && (
+                <div className="flex justify-between items-center py-4 border-b border-[#e6e0d6]">
+                  <span className="text-sm font-mono text-[#7a766e]">본문</span>
+                  <span className="font-bold text-[#1a1710] text-right">{sermon.scripture}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center py-4 border-b border-[#e6e0d6]">
+                <span className="text-sm font-mono text-[#7a766e]">예배</span>
+                <span className="font-bold text-[#1a1710]">
+                  주일오전{hasBoth ? ` ${effectivePart}부` : ''}예배
+                </span>
+              </div>
             </div>
-          </article>
+
+            <div className="mt-12 space-y-4">
+              {group.prevDate && (
+                <button
+                  onClick={() => navigate(`/worship/sermon/sunday-morning/${group.prevDate}`)}
+                  className="w-full flex justify-between items-center py-4 px-6 bg-[#faf8f5] border border-[#e6e0d6] hover:bg-[#1a1710] hover:text-white hover:border-[#1a1710] transition-colors group/nav"
+                >
+                  <span className="text-sm font-bold tracking-wider">이전 설교 보기</span>
+                  <ArrowLeft size={18} className="group-hover/nav:-translate-x-1 transition-transform" />
+                </button>
+              )}
+              {group.nextDate && (
+                <button
+                  onClick={() => navigate(`/worship/sermon/sunday-morning/${group.nextDate}`)}
+                  className="w-full flex justify-between items-center py-4 px-6 bg-[#faf8f5] border border-[#e6e0d6] hover:bg-[#1a1710] hover:text-white hover:border-[#1a1710] transition-colors group/nav"
+                >
+                  <span className="text-sm font-bold tracking-wider">다음 설교 보기</span>
+                  <ArrowRight size={18} className="group-hover/nav:translate-x-1 transition-transform" />
+                </button>
+              )}
+              <button
+                onClick={() => navigate(-1)}
+                className="w-full flex justify-between items-center py-4 px-6 bg-[#faf8f5] border border-[#e6e0d6] hover:bg-[#1a1710] hover:text-white hover:border-[#1a1710] transition-colors"
+              >
+                <span className="text-sm font-bold tracking-wider">목록으로 돌아가기</span>
+                <Rows size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 성경 본문 ── */}
+      <BiblePassageSection
+        scripture={sermon?.scripture ?? group.part1?.scripture ?? group.part2?.scripture}
+      />
+
+      {/* ── 설교 내용 ── */}
+      {(group.part1?.content ?? group.part2?.content) && (
+        <section className="py-24 bg-white px-6 border-t border-[#e6e0d6]">
+          <div className="max-w-[960px] mx-auto">
+            <div className="text-center mb-16">
+              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#7a766e] font-mono mb-4 block">
+                Transcript
+              </span>
+              <h3 className="text-2xl md:text-3xl font-bold text-[#1a1710] tracking-tight">설교 녹취록</h3>
+            </div>
+            <article className="prose prose-lg prose-slate max-w-none">
+              <div
+                className="ql-editor ql-output sermon-body text-[#3d3a35] leading-[1.9] font-light text-lg"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(
+                    renderSermonContent(group.part1?.content ?? group.part2?.content)
+                  )
+                }}
+              />
+            </article>
+          </div>
         </section>
       )}
 
       {/* ── 첨부파일 ── */}
       {sermon?.attachments && sermon.attachments.length > 0 && (
-        <section className="py-12 bg-slate-50 px-6 border-t border-slate-100">
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-sm tracking-[0.2em] text-eyebrow uppercase mb-6">Attachments</h3>
+        <section className="py-12 bg-[#faf8f5] px-6 border-t border-[#e6e0d6]">
+          <div className="max-w-[960px] mx-auto">
+            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#7a766e] font-mono mb-6 block">
+              Attachments
+            </span>
             <div className="space-y-3">
               {sermon.attachments.map((attachment) => (
-                <div key={attachment.id}
-                  className="flex items-center gap-4 p-5 bg-white hover:bg-slate-100 transition-all duration-300 group border border-slate-200">
-                  <div className="w-10 h-10 flex items-center justify-center bg-slate-100 group-hover:bg-slate-900 transition-all duration-300 flex-shrink-0">
-                    <svg className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors duration-300"
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                  </div>
+                <div
+                  key={attachment.id}
+                  className="flex items-center gap-4 p-5 bg-white border border-[#e6e0d6] hover:border-[#1a1710] transition-colors"
+                >
                   <div className="flex-1 min-w-0">
-                    <p className="font-light text-slate-900 truncate">{attachment.originalFileName}</p>
+                    <p className="font-medium text-[#1a1710] truncate">{attachment.originalFileName}</p>
                     {attachment.fileSize && (
-                      <p className="text-sm text-slate-500 font-light">
+                      <p className="text-sm text-[#7a766e]">
                         {(attachment.fileSize / 1024).toFixed(1)} KB
                       </p>
                     )}
                   </div>
                   <button
                     onClick={() => downloadFile(attachment.id, attachment.originalFileName)}
-                    className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-700 transition-all duration-300 flex items-center gap-2 text-sm flex-shrink-0"
+                    className="px-4 py-2 bg-[#1a1710] text-white hover:bg-[#3d3a35] transition-colors flex items-center gap-2 text-sm flex-shrink-0"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
+                    <DownloadSimple size={16} />
                     다운로드
                   </button>
                 </div>
@@ -304,38 +373,30 @@ const SundayMorningDetailPage = () => {
       )}
 
       {/* ── 목록 버튼 ── */}
-      <section className="py-12 bg-slate-50 px-6">
-        <div className="max-w-4xl mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="group inline-flex items-center px-8 py-4 border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all duration-300 font-light tracking-wide"
-          >
-            <svg className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            목록으로 돌아가기
-          </button>
-        </div>
-      </section>
+      <div className="p-8 md:p-12 lg:p-16 bg-[#faf8f5] border-t border-[#e6e0d6] flex justify-start">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-3 px-8 py-4 bg-white border border-[#e6e0d6] text-sm font-bold tracking-wider hover:bg-[#1a1710] hover:text-white hover:border-[#1a1710] transition-colors"
+        >
+          <Rows size={18} />
+          목록으로 돌아가기
+        </button>
+      </div>
 
       {/* ── 수정 모달 ── */}
-      {editTarget && (
-        <SermonModal
+      {editing && (
+        <SundayMorningModal
           isOpen
-          onClose={() => setEditTarget(null)}
-          onSave={(formData) => {
-            setIsSaving(true)
-            updateMutation.mutate({ id: editTarget.id, formData })
+          onClose={() => setEditing(false)}
+          editGroup={{ ...group, sermonDate: date }}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey })
+            queryClient.invalidateQueries({ queryKey: ['sermons', 'sunday-morning'] })
+            toast.success('설교가 수정되었습니다.')
           }}
-          isSaving={isSaving}
-          editTarget={editTarget}
-          fixedCategory="주일오전"
-          serviceNumberOptions={SERVICE_NUMBER_OPTIONS}
-          defaultServiceNumber={editTarget.serviceNumber ?? 1}
         />
       )}
-    </>
+    </div>
   )
 }
 

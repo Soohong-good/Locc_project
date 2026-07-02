@@ -21,6 +21,9 @@ public class DashboardResponse {
     private Long approvedUsers;
     private Long pendingUsers;
 
+    /** 전월 대비 신규 가입자 증감률 (%) — 양수 증가, 음수 감소 */
+    private Double memberGrowthRate;
+
     // 도움문의 통계
     private Long totalHelpRequests;
     private Long pendingHelpRequests;

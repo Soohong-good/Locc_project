@@ -37,6 +37,12 @@ public class SermonCommandService {
     private final UserRepository userRepository;
     private final FileCommandService fileCommandService;
     private final FileQueryService fileQueryService;
+    private final PdfTextExtractorService pdfTextExtractorService;
+
+    /** content가 비어있을 때만 true (PDF 자동 추출 대상) */
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
 
     /**
      * Sermon 생성
@@ -50,6 +56,12 @@ public class SermonCommandService {
         // Entity 생성 (팩토리 메서드 사용)
         Sermon sermon = Sermon.create(command, author);
         Sermon savedSermon = sermonRepository.save(sermon);
+
+        // content 미입력 + PDF 첨부 시 자동 추출 (파일 업로드 전, 스트림 소비 방지)
+        if (isBlank(command.getContent())) {
+            savedSermon.applyExtractedContent(
+                    pdfTextExtractorService.extractFromFirstPdf(command.getFiles()));
+        }
 
         // 파일 업로드
         List<AttachmentInfo> files = uploadFiles(savedSermon.getId(), command);
@@ -72,6 +84,12 @@ public class SermonCommandService {
 
         // 수정 (Entity 메서드 사용)
         sermon.update(command);
+
+        // content 미입력 + PDF 첨부 시 자동 추출 (파일 업로드 전, 스트림 소비 방지)
+        if (isBlank(command.getContent())) {
+            sermon.applyExtractedContent(
+                    pdfTextExtractorService.extractFromFirstPdf(command.getFiles()));
+        }
 
         // 파일 업로드
         List<AttachmentInfo> files = uploadFiles(sermon.getId(), command);

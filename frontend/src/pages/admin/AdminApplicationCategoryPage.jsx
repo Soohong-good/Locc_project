@@ -73,7 +73,7 @@ const AdminApplicationCategoryPage = () => {
   const isPending = createMutation.isPending || updateMutation.isPending
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="h-full overflow-y-auto p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/admin/applications')} className="text-gray-400 hover:text-gray-600 transition">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

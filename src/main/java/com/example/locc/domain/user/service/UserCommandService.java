@@ -1,7 +1,7 @@
 package com.example.locc.domain.user.service;
 
 import com.example.locc.common.ErrorCode;
-import com.example.locc.config.JwtProperties;
+import com.example.locc.domain.auth.service.AsyncEmailSender;
 import com.example.locc.domain.auth.service.EmailVerificationService;
 import com.example.locc.domain.user.dto.command.UserLoginCommand;
 import com.example.locc.domain.user.dto.command.UserRegisterCommand;
@@ -43,10 +43,10 @@ public class UserCommandService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserQueryService userQueryService;
     private final EmailVerificationService emailVerificationService;
+    private final AsyncEmailSender asyncEmailSender;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
-    private final JwtProperties jwtProperties;
     private final TotpService totpService;
 
     /**
@@ -130,7 +130,7 @@ public class UserCommandService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(jwtProperties.getExpiration())
+                .expiresIn(jwtTokenProvider.getAccessTokenValidity(user))
                 .username(user.getName())
                 .role(user.getRole().name())
                 .message("로그인에 성공했습니다.")
@@ -186,9 +186,9 @@ public class UserCommandService {
         String newAccessToken  = jwtTokenProvider.generateAccessToken(user);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(user);
 
-        // DB의 RefreshToken 교체
+        // DB의 RefreshToken 교체 (역할별 만료 — 관리자/운영자 30분)
         LocalDateTime newExpiresAt = LocalDateTime.now()
-                .plusSeconds(jwtProperties.getRefreshExpiration() / 1000);
+                .plusSeconds(jwtTokenProvider.getRefreshTokenValidity(user) / 1000);
         refreshToken.refresh(newRefreshToken, newExpiresAt);
 
         log.debug("Token rotated successfully");
@@ -197,7 +197,7 @@ public class UserCommandService {
                 .accessToken(newAccessToken)
                 .refreshToken(newRefreshToken)  // 새 RefreshToken 반환
                 .tokenType("Bearer")
-                .expiresIn(jwtProperties.getExpiration())
+                .expiresIn(jwtTokenProvider.getAccessTokenValidity(user))
                 .username(user.getName())
                 .role(user.getRole().name())
                 .build();
@@ -242,6 +242,7 @@ public class UserCommandService {
         }
 
         user.approve();
+        asyncEmailSender.sendApprovalEmail(user.getEmail(), user.getName());
         log.info("User approved: {}", userId);
     }
 
@@ -410,7 +411,7 @@ public class UserCommandService {
      */
     private void saveOrUpdateRefreshToken(User user, String token) {
         LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(jwtProperties.getRefreshExpiration() / 1000);
+                .plusSeconds(jwtTokenProvider.getRefreshTokenValidity(user) / 1000);
 
         refreshTokenRepository.findByUser(user)
                 .ifPresentOrElse(

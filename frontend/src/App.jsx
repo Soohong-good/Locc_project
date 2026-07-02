@@ -21,17 +21,14 @@ const RegisterCompletePage   = lazy(() => import('@/pages/auth/RegisterCompleteP
 const ForgotPasswordPage     = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage      = lazy(() => import('@/pages/auth/ResetPasswordPage'))
 const SocialRegisterPage     = lazy(() => import('@/pages/auth/SocialRegisterPage'))
-const SocialRegisterTypePage = lazy(() => import('@/pages/auth/SocialRegisterTypePage'))
 const SocialPendingPage      = lazy(() => import('@/pages/auth/SocialPendingPage'))
+const SocialEmailConflictPage = lazy(() => import('@/pages/auth/SocialEmailConflictPage'))
 
 const MainPage               = lazy(() => import('@/pages/MainPage'))
-// ── 디자인 템플릿 (리디자인 작업 중 — 로컬 전용, git 제외) ──────────────
-const MainTempl              = lazy(() => import('@/pages/templates/MainTempl'))
-const SalvationTempl         = lazy(() => import('@/pages/templates/SalvationTempl'))
-const AboutTempl             = lazy(() => import('@/pages/templates/AboutTempl'))
 
 const TestDashboard          = lazy(() => import('@/pages/TestDashboard'))
 const SalvationPage          = lazy(() => import('@/pages/SalvationPage'))
+const HelpRequestPage        = lazy(() => import('@/pages/HelpRequestPage'))
 const NotFoundPage           = lazy(() => import('@/pages/NotFoundPage'))
 const MyPage                 = lazy(() => import('@/pages/MyPage'))
 
@@ -67,8 +64,10 @@ const BulletinDetailPage     = lazy(() => import('@/pages/bulletins/BulletinDeta
 
 const PraiseSheetListPage    = lazy(() => import('@/pages/praise-sheets/PraiseSheetListPage'))
 const PraiseSheetDetailPage  = lazy(() => import('@/pages/praise-sheets/PraiseSheetDetailPage'))
+const ChoirPage              = lazy(() => import('@/pages/praise/ChoirPage'))
 
 const DepartmentPage         = lazy(() => import('@/pages/departments/DepartmentPage'))
+const GalleryListPage        = lazy(() => import('@/pages/departments/GalleryListPage'))
 const GalleryDetailPage      = lazy(() => import('@/pages/departments/GalleryDetailPage'))
 
 const ApplicationListPage    = lazy(() => import('@/pages/applications/ApplicationListPage'))
@@ -110,17 +109,13 @@ const AppRoutes = () => {
         {/* 구 메인 (비활성 — 삭제 전 보관) */}
         {/* <Route path="/main-legacy" element={<Layout><MainPage /></Layout>} /> */}
 
-        {/* 디자인 템플릿 영역 — 리디자인 작업 중 (로컬 전용) */}
-        <Route path="/template/main"       element={<MainTempl />} />
-        <Route path="/template/salvation"  element={<SalvationTempl />} />
-        <Route path="/template/about"      element={<AboutTempl />} />
-
         {/* 기능 테스트 대시보드 — 관리자 전용 */}
         <Route path="/test" element={<PrivateRoute adminOnly><TestDashboard /></PrivateRoute>} />
 
         {/* 공통 레이아웃 (Header + Footer) */}
         <Route element={<Layout />}>
           <Route path="/salvation" element={<SalvationPage />} />
+          <Route path="/help" element={<HelpRequestPage />} />
 
           {/* 교회 페이지 */}
           <Route path="/church/about"         element={<AboutPage />} />
@@ -156,15 +151,16 @@ const AppRoutes = () => {
           <Route path="/reset-password"    element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
           <Route path="/social/register"          element={<GuestRoute><SocialRegisterPage /></GuestRoute>} />
           <Route path="/social/pending"           element={<GuestRoute><SocialPendingPage /></GuestRoute>} />
-          <Route path="/register/social/:provider" element={<GuestRoute><SocialRegisterTypePage /></GuestRoute>} />
+          <Route path="/social/email-conflict"    element={<GuestRoute><SocialEmailConflictPage /></GuestRoute>} />
 
           {/* 주보 — 로그인 필수 */}
           <Route path="/bulletin"     element={<PrivateRoute><BulletinListPage /></PrivateRoute>} />
           <Route path="/bulletin/:id" element={<PrivateRoute><BulletinDetailPage /></PrivateRoute>} />
 
           {/* 부서 — 공개 */}
-          <Route path="/department/:code"                  element={<DepartmentPage />} />
-          <Route path="/department/:code/gallery/:imageId" element={<GalleryDetailPage />} />
+          <Route path="/department/gallery"           element={<GalleryListPage />} />
+          <Route path="/department/gallery/:imageId"  element={<GalleryDetailPage />} />
+          <Route path="/department/:code"             element={<DepartmentPage />} />
 
           {/* 공지사항 */}
           <Route path="/notices"         element={<NoticeListPage />} />
@@ -174,6 +170,9 @@ const AppRoutes = () => {
           {/* 찬양악보 */}
           <Route path="/praise-sheets"     element={<PraiseSheetListPage />} />
           <Route path="/praise-sheets/:id" element={<PraiseSheetDetailPage />} />
+
+          {/* 찬양대 */}
+          <Route path="/praise/choir" element={<ChoirPage />} />
 
           {/* 시설·차량 신청 — 로그인 필수 */}
           <Route path="/applications"      element={<PrivateRoute><ApplicationListPage /></PrivateRoute>} />
@@ -249,11 +248,11 @@ const App = () => {
       )
     }
 
-    // 미처리 Promise 거부 (API 에러 제외 — 네트워크 오류는 제외)
+    // 미처리 Promise 거부 (401/403 같은 정상 흐름의 인증 에러는 알림 제외)
     const handleUnhandledRejection = (event) => {
       const reason = event.reason
-      // fetch 실패(네트워크), 401/403 같은 API 에러는 알림 제외
-      if (!reason || reason?.status) return
+      const status = reason?.response?.status ?? reason?.status
+      if (!reason || status === 401 || status === 403) return
       sendErrorReport(
         'Unhandled Promise Rejection',
         reason?.message ?? String(reason),

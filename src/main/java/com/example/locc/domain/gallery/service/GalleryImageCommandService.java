@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -72,6 +73,7 @@ public class GalleryImageCommandService {
 
         // 3. 파일 I/O (검증·저장·리사이즈·썸네일) — 성공한 엔티티만 수집
         List<GalleryImage> entities = new ArrayList<>();
+        List<String> failedFilenames = new ArrayList<>();
         // 썸네일은 그룹 첫 번째 이미지(대표 이미지)에만 생성
         boolean thumbnailGenerated = false;
 
@@ -104,7 +106,16 @@ public class GalleryImageCommandService {
                 ));
             } catch (Exception e) {
                 log.error("이미지 업로드 실패: {}", command.imageFile().getOriginalFilename(), e);
+                failedFilenames.add(command.imageFile().getOriginalFilename());
             }
+        }
+
+        // 전체 실패 시 빈 성공 응답을 주지 않고 명시적으로 에러 처리
+        if (entities.isEmpty()) {
+            throw new IllegalStateException("이미지 업로드에 모두 실패했습니다: " + failedFilenames);
+        }
+        if (!failedFilenames.isEmpty()) {
+            log.warn("일부 이미지 업로드 실패 ({}/{}건): {}", failedFilenames.size(), commands.size(), failedFilenames);
         }
 
         // 4. DB 저장 — saveAll()로 배치 insert
@@ -225,11 +236,17 @@ public class GalleryImageCommandService {
                 throw new IllegalArgumentException("파일명이 없습니다.");
             }
 
-            // 확장자 추출 (. 없으면 .jpg 기본값)
-            int lastDotIndex = originalFilename.lastIndexOf(".");
-            String extension = (lastDotIndex > 0 && lastDotIndex < originalFilename.length() - 1)
-                    ? originalFilename.substring(lastDotIndex)
+            // 경로 구분자 제거 — 디렉토리 컴포넌트를 모두 떼어내고 파일명만 남김 (Path Traversal 방지)
+            String safeFilename = Paths.get(originalFilename).getFileName().toString();
+
+            // 확장자 추출 후 영숫자만 허용 (. 없거나 비정상 패턴이면 .jpg 기본값)
+            int lastDotIndex = safeFilename.lastIndexOf(".");
+            String extension = (lastDotIndex > 0 && lastDotIndex < safeFilename.length() - 1)
+                    ? safeFilename.substring(lastDotIndex)
                     : ".jpg";
+            if (!extension.matches("\\.[a-zA-Z0-9]{1,10}")) {
+                extension = ".jpg";
+            }
 
             String storedFilename = UUID.randomUUID() + extension;
 
@@ -240,8 +257,11 @@ public class GalleryImageCommandService {
             }
             Files.createDirectories(galleryDir);
 
-            // 파일 저장
+            // 파일 저장 — target이 galleryDir 하위에 있는지 최종 검증
             Path target = galleryDir.resolve(storedFilename).normalize();
+            if (!target.startsWith(galleryDir.normalize())) {
+                throw new IllegalArgumentException("잘못된 파일 경로입니다.");
+            }
             file.transferTo(target.toFile());
 
             log.debug("이미지 파일 저장 완료: {} (path={})", storedFilename, target);
