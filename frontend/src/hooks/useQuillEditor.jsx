@@ -88,7 +88,8 @@ const useQuillEditor = ({ onImageUpload, onReady, onChange, initialValue } = {})
       // 내용 변경 시 즉시 알림 (폴링 대체) — 미리보기 등에서 사용
       quill.on('text-change', () => {
         const html = quill.root.innerHTML
-        onChangeRef.current?.(html === '<p><br></p>' ? '' : html)
+        const isEmpty = quill.root.textContent.trim() === '' && !quill.root.querySelector('img')
+        onChangeRef.current?.(isEmpty ? '' : html)
       })
 
       // initialValue가 있으면 초기 내용 주입
@@ -347,8 +348,9 @@ const useQuillEditor = ({ onImageUpload, onReady, onChange, initialValue } = {})
   // quillRef(ref)에만 의존 → [] 의존성 안전
   const getHTML = useCallback(() => {
     if (!quillRef.current) return ''
-    const h = quillRef.current.root.innerHTML
-    return h === '<p><br></p>' ? '' : h
+    const root = quillRef.current.root
+    const isEmpty = root.textContent.trim() === '' && !root.querySelector('img')
+    return isEmpty ? '' : root.innerHTML
   }, [])
 
   // quillRef(ref)에만 의존 → [] 의존성 안전

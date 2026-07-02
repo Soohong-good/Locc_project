@@ -39,9 +39,15 @@ public class SermonCommandService {
     private final FileQueryService fileQueryService;
     private final PdfTextExtractorService pdfTextExtractorService;
 
-    /** content가 비어있을 때만 true (PDF 자동 추출 대상) */
+    /**
+     * content가 비어있을 때만 true (PDF 자동 추출 대상)
+     * Quill 에디터가 빈 상태에서도 {@code <p> </p>} 같은 HTML 태그+공백 문자를 만들어내는 경우가 있어
+     * 단순 isBlank()로는 걸러지지 않음 — 태그를 제거한 순수 텍스트 기준으로 판단한다.
+     */
     private boolean isBlank(String s) {
-        return s == null || s.isBlank();
+        if (s == null) return true;
+        if (s.contains("<img")) return false;
+        return s.replaceAll("<[^>]*>", "").replace("&nbsp;", " ").isBlank();
     }
 
     /**
