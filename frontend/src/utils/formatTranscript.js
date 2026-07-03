@@ -68,25 +68,35 @@ export function formatTranscript(html) {
   // 줄 단위로 분리
   const lines = normalized.split('\n').map((l) => l.trim())
 
-  const result = []
+  // blocks: 렌더 직전까지 원문 텍스트를 들고 있다가 마지막에 escape+태그를 씌운다.
+  // appendable=true인 블록은, 새 패턴으로 시작하지 않는 다음 줄(=PDF 컬럼폭 줄바꿈으로
+  // 끊긴 같은 문장의 나머지)을 계속 이어붙일 수 있다. 빈 줄을 만나면 이어붙이기를 멈춘다.
+  const blocks = []
+  let lastAppendable = null
   let titleDone = false // 첫 타이틀 블록 처리 여부
+
+  const pushBlock = (tag, className, text, appendable) => {
+    const block = { tag, className, text }
+    blocks.push(block)
+    lastAppendable = appendable ? block : null
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    // 빈 줄 → 스킵
-    if (line === '') continue
+    // 빈 줄 → 단락 구분(이어붙이기 중단), 스킵
+    if (line === '') { lastAppendable = null; continue }
 
     // ── 첫 번째 타이틀 블록 ──────────────────────────────────────
     if (!titleDone) {
       // 날짜 패턴으로 시작하면 타이틀 (예: "12.31, 2025. 송구영신예배")
       if (/^\d+\.\d+/.test(line)) {
-        result.push(`<p class="sermon-title-date">${escapeHtml(line)}</p>`)
+        pushBlock('p', 'sermon-title-date', line, false)
         continue
       }
       // 서론/본론/결론/숫자/인용이 아니면 주제 성구
       if (!/^(서론|본론|결론)/.test(line) && !/^[1-9]/.test(line) && !/^[-"]/.test(line)) {
-        result.push(`<p class="sermon-title-verse">${escapeHtml(line)}</p>`)
+        pushBlock('p', 'sermon-title-verse', line, false)
         continue
       }
       titleDone = true
@@ -94,51 +104,59 @@ export function formatTranscript(html) {
 
     // 서론 / 본론
     if (/^(서론|본론)\s*$/.test(line)) {
-      result.push(`<h2 class="sermon-section">${escapeHtml(line)}</h2>`)
+      pushBlock('h2', 'sermon-section', line, false)
       continue
     }
 
     // 결론-... (결론 뒤에 설명이 붙는 형태)
     if (/^결론/.test(line)) {
-      result.push(`<h2 class="sermon-section">${escapeHtml(line)}</h2>`)
+      pushBlock('h2', 'sermon-section', line, false)
       continue
     }
 
     // 1. 2. 3. 대항목
     if (/^[1-9]\d*\.[가-힣]/.test(line)) {
-      result.push(`<h3 class="sermon-h3">${escapeHtml(line)}</h3>`)
+      pushBlock('h3', 'sermon-h3', line, false)
       continue
     }
 
     // 1) 2) 3) 소항목
     if (/^[1-9]\d*\)[가-힣]/.test(line)) {
-      result.push(`<p class="sermon-sub">${escapeHtml(line)}</p>`)
+      pushBlock('p', 'sermon-sub', line, true)
       continue
     }
 
     // 책명+장절 "인용" — 예: 딤후3:1-2 "...", 시145:1 "..."
     const refQuoteMatch = line.match(/^([가-힣]{1,4}\d+:\d+[\d\-,b]*)\s+([“”"].+)$/)
     if (refQuoteMatch) {
-      result.push(`<p class="sermon-ref">${escapeHtml(refQuoteMatch[1])}</p>`)
-      result.push(`<blockquote class="sermon-quote">${escapeHtml(refQuoteMatch[2])}</blockquote>`)
+      pushBlock('p', 'sermon-ref', refQuoteMatch[1], false)
+      pushBlock('blockquote', 'sermon-quote', refQuoteMatch[2], true)
       continue
     }
 
     // 큰따옴표로 시작하는 인용 (책명 없이)
     if (/^[“”"]/.test(line)) {
-      result.push(`<blockquote class="sermon-quote">${escapeHtml(line)}</blockquote>`)
+      pushBlock('blockquote', 'sermon-quote', line, true)
       continue
     }
 
     // - 설명문
     if (/^-[가-힣]/.test(line)) {
-      result.push(`<p class="sermon-desc">${escapeHtml(line)}</p>`)
+      pushBlock('p', 'sermon-desc', line, true)
       continue
     }
 
-    // 일반 단락
-    result.push(`<p class="sermon-p">${escapeHtml(line)}</p>`)
+    // 새 패턴으로 시작하지 않는 줄 — PDF 컬럼폭 줄바꿈으로 끊긴 이전 문장의
+    // 나머지일 가능성이 높으므로, 이어붙일 블록이 있으면 그대로 붙인다
+    // (컬럼 줄바꿈은 대부분 단어 중간에서 끊기므로 공백 없이 이어붙임).
+    if (lastAppendable) {
+      lastAppendable.text += line
+    } else {
+      pushBlock('p', 'sermon-p', line, true)
+    }
   }
 
-  return result.join('\n')
+  return blocks
+    .map(({ tag, className, text }) => `<${tag} class="${className}">${escapeHtml(text)}</${tag}>`)
+    .join('\n')
 }

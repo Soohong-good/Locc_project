@@ -45,8 +45,10 @@ public class PdfTextExtractorService {
 
     private String extractText(MultipartFile pdf) {
         try (PDDocument document = PDDocument.load(pdf.getInputStream())) {
+            // setSortByPosition(true)는 다단 컬럼 레이아웃에서 같은 Y좌표의 좌/우 컬럼 텍스트를
+            // 한 줄로 섞어버리는 부작용이 있어 오히려 순서가 깨졌다(실제 설교 PDF로 검증 완료).
+            // PDF 내부 스트림 순서(기본값 false)가 컬럼 단위 작성 순서를 그대로 보존한다.
             PDFTextStripper stripper = new PDFTextStripper();
-            stripper.setSortByPosition(true); // 3단 컬럼 순서 보정
             String text = stripper.getText(document);
             return text == null ? "" : text.strip();
         } catch (Exception e) {
