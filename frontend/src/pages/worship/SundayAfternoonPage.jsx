@@ -200,7 +200,9 @@ const FeaturedSermon = ({ sermon, onOpen }) => {
 /* ── 히어로 ─────────────────────────────────────────────────── */
 const HeroSection = ({ searchInput, onSearchChange, onSearchSubmit }) => (
   <section className="mt-20 bg-[#171717] relative overflow-hidden border-b border-[#E5E5E5]">
-    <div className="relative max-w-[1600px] mx-auto border-x border-[#333333] flex flex-col pt-24 md:pt-32">
+    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/bg-worship.jpg')" }} />
+    <div className="absolute inset-0" style={{ background: 'rgba(23,23,23,0.75)' }} />
+    <div className="relative z-10 max-w-[1600px] mx-auto border-x border-[#333333] flex flex-col pt-24 md:pt-32">
       <div className="px-6 md:px-12 mb-16 md:mb-24">
         <span className="text-xs uppercase tracking-[0.2em] font-mono text-[#A3A3A3] mb-4 block">Sunday Afternoon Service</span>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">주일오후 예배</h1>

@@ -71,8 +71,10 @@ const TrainingListPage = () => {
   return (
     <div className="min-h-screen bg-[#FAF9F6]">
       {/* Hero */}
-      <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C]">
-        <div className="max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
+      <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C] relative overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/bg-training.jpg')" }} />
+        <div className="absolute inset-0" style={{ background: 'rgba(23,23,23,0.75)' }} />
+        <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
           <div>
             <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Training</span>
             <h1 className="text-5xl font-bold tracking-tight break-keep">훈련신청</h1>

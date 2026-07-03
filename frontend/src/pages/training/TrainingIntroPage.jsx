@@ -62,8 +62,10 @@ const specialLectures = [
 ]
 
 const HeroSection = () => (
-  <section className="pt-20 border-b border-[#171717] bg-[#171717] text-[#FAF9F6] overflow-hidden">
-    <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 border-x border-white/10 min-h-[600px] lg:min-h-[700px]">
+  <section className="pt-20 border-b border-[#171717] bg-[#171717] text-[#FAF9F6] overflow-hidden relative">
+    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/bg-training.jpg')" }} />
+    <div className="absolute inset-0" style={{ background: 'rgba(23,23,23,0.75)' }} />
+    <div className="relative z-10 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 border-x border-white/10 min-h-[600px] lg:min-h-[700px]">
       <div className="lg:col-span-8 p-8 md:p-16 lg:p-24 flex flex-col justify-end">
         <span className="text-xs uppercase tracking-[0.2em] font-semibold text-white/60 font-mono mb-8 block">Training</span>
         <h1 className="text-6xl md:text-8xl lg:text-[8rem] font-bold tracking-tighter leading-none text-[#FAF9F6] mb-6 break-keep">훈련소개</h1>
