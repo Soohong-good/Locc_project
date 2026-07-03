@@ -347,6 +347,11 @@ select {
   border-radius: 0 4px 4px 0;
 }
 
+/* 송구영신예배 페이지 전용: 인용구 배경 제거, 페이지 배경과 통일 (다른 설교 상세 페이지는 기본 배경 유지) */
+.newyear-sermon-body blockquote.sermon-quote {
+  background-color: transparent !important;
+}
+
 /* - 설명문 */
 .sermon-body p.sermon-desc {
   margin-top: 0.4rem;
