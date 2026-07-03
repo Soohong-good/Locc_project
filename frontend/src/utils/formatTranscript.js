@@ -147,10 +147,13 @@ export function formatTranscript(html) {
     }
 
     // 새 패턴으로 시작하지 않는 줄 — PDF 컬럼폭 줄바꿈으로 끊긴 이전 문장의
-    // 나머지일 가능성이 높으므로, 이어붙일 블록이 있으면 그대로 붙인다
-    // (컬럼 줄바꿈은 대부분 단어 중간에서 끊기므로 공백 없이 이어붙임).
+    // 나머지일 가능성이 높으므로, 이어붙일 블록이 있으면 그대로 붙인다.
+    // 컬럼 줄바꿈은 대부분 단어 중간에서 끊기므로 기본은 공백 없이 이어붙이되,
+    // 직전 텍스트가 문장부호(.?!”")로 끝났다면 새 문장이 시작되는 지점이므로
+    // 공백을 넣어준다(그렇지 않으면 "...습니다.바울은..."처럼 붙어버림).
     if (lastAppendable) {
-      lastAppendable.text += line
+      const needsSpace = /[.!?”"]$/.test(lastAppendable.text)
+      lastAppendable.text += (needsSpace ? ' ' : '') + line
     } else {
       pushBlock('p', 'sermon-p', line, true)
     }
