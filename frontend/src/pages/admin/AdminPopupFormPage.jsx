@@ -1,7 +1,7 @@
 import DOMPurify from 'dompurify'
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { X } from '@phosphor-icons/react'
 import { getPopupDetail, createPopup, updatePopup, uploadPopupImage } from '@/api/popups'
 import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 
@@ -62,7 +62,7 @@ const PopupPreview = ({ form, contentHtml }) => {
   const hasImage   = form.imageUrl && form.imageUrl.trim()
 
   return (
-    <div className="sticky top-6">
+    <div>
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
         미리보기 <span className="font-normal text-gray-400">(1280×720 기준)</span>
       </p>
@@ -187,11 +187,10 @@ const PopupPreview = ({ form, contentHtml }) => {
   )
 }
 
-// ── 메인 페이지 ─────────────────────────────────────────────────────────────
-const AdminPopupFormPage = () => {
-  const { id }      = useParams()
-  const isEdit      = Boolean(id)
-  const navigate    = useNavigate()
+// ── 폼 모달 (팝업 등록/수정) ────────────────────────────────────────────────
+// AdminPopupPage에서 등록/수정 버튼 클릭 시 오버레이로 렌더된다 (라우트 아님)
+const AdminPopupFormPage = ({ popupId, onClose }) => {
+  const isEdit      = Boolean(popupId)
   const queryClient = useQueryClient()
 
   const [form,        setForm]        = useState(INITIAL_FORM)
@@ -201,10 +200,21 @@ const AdminPopupFormPage = () => {
   // Quill 준비 전에 detail이 먼저 도착한 경우를 위한 대기 content
   const pendingContentRef = useRef(null)
 
+  // ESC 키 닫기 + 배경 스크롤 잠금
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
   // ── 수정 모드: 기존 데이터 로드 ──
   const { data: detail, isLoading: isDetailLoading } = useQuery({
-    queryKey: ['admin', 'popups', id],
-    queryFn:  () => getPopupDetail(id),
+    queryKey: ['admin', 'popups', popupId],
+    queryFn:  () => getPopupDetail(popupId),
     enabled:  isEdit,
   })
 
@@ -225,7 +235,7 @@ const AdminPopupFormPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const { containerRef, getHTML, setHTML, LinkTooltip } = useQuillEditor({
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({
     onImageUpload: handleUpload,
     onReady: handleReady,
     onChange: setPreviewHtml,  // 내용 변경 시 즉시 미리보기 갱신 (폴링 제거)
@@ -264,10 +274,10 @@ const AdminPopupFormPage = () => {
   // ── 뮤테이션 ──
   const mutation = useMutation({
     mutationFn: (params) =>
-      isEdit ? updatePopup({ id, formData: params }) : createPopup(params),
+      isEdit ? updatePopup({ id: popupId, formData: params }) : createPopup(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'popups'] })
-      navigate('/admin/popups')
+      onClose()
     },
   })
 
@@ -301,125 +311,132 @@ const AdminPopupFormPage = () => {
   }
 
   const field = (label, name, type = 'text', extra = {}) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <div className="space-y-1">
+      <label className="block text-xs font-medium text-[#45474c]">{label}</label>
       <input
         type={type}
         value={form[name]}
         onChange={(e) =>
           setForm((f) => ({ ...f, [name]: type === 'number' ? Number(e.target.value) : e.target.value }))
         }
-        className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          errors[name] ? 'border-red-400' : 'border-gray-300'
+        className={`w-full h-11 px-3 bg-[#eff4ff] border rounded-lg text-sm text-[#0b1c30] focus:outline-none focus:ring-2 focus:ring-[#091426] focus:border-transparent transition-all ${
+          errors[name] ? 'border-[#ba1a1a]' : 'border-[#c5c6cd]'
         }`}
         {...extra}
       />
-      {errors[name] && <p className="mt-1 text-xs text-red-500">{errors[name]}</p>}
+      {errors[name] && <p className="text-xs text-[#ba1a1a]">{errors[name]}</p>}
     </div>
   )
 
-  if (isEdit && isDetailLoading) {
-    return <div className="p-8 text-sm text-gray-400">불러오는 중...</div>
-  }
-
   return (
-    <div className="h-full overflow-y-auto p-4 sm:p-8">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
       <LinkTooltip />
 
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">{isEdit ? '팝업 수정' : '팝업 등록'}</h1>
-      </div>
+      <div className="bg-white w-full max-w-[1200px] max-h-[90vh] rounded-xl shadow-xl overflow-hidden flex flex-col border border-[#c5c6cd]">
 
-      {/* ── 2컬럼 레이아웃: 폼 + 미리보기 ── */}
-      <div className="flex gap-8 items-start">
+        {/* 헤더 */}
+        <header className="flex justify-between items-center px-6 py-4 border-b border-[#c5c6cd] shrink-0">
+          <h1 className="text-lg font-semibold text-[#0b1c30]">{isEdit ? '팝업 수정' : '팝업 등록'}</h1>
+          <button onClick={onClose} className="p-1.5 text-[#45474c] hover:bg-[#eff4ff] rounded-full transition-colors">
+            <X size={20} />
+          </button>
+        </header>
 
-        {/* 좌측: 폼 */}
-        <div className="flex-1 min-w-0 max-w-xl">
-          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+        {isEdit && isDetailLoading ? (
+          <div className="p-16 text-sm text-[#45474c] text-center">불러오는 중...</div>
+        ) : (
+          <>
+            {/* 본문: 폼 + 미리보기 (각각 독립 스크롤 — 미리보기가 폼 스크롤에 밀려 사라지지 않도록) */}
+            <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
 
-            {/* 제목 */}
-            {field('제목', 'title')}
+              {/* 좌측: 폼 */}
+              <section className="flex-1 min-h-0 overflow-y-auto p-6 pb-12 space-y-5 border-r border-[#c5c6cd]">
 
-            {/* 내용 — Quill 에디터 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                내용 <span className="text-red-500">*</span>
-              </label>
-              <div className={`border rounded-lg overflow-hidden ${errors.content ? 'border-red-400' : 'border-gray-300'}`}>
-                <div ref={containerRef} style={{ minHeight: '200px' }} className="text-sm" />
-              </div>
-              {errors.content && <p className="mt-1 text-xs text-red-500">{errors.content}</p>}
+                {field('제목', 'title')}
+
+                {/* 내용 — Quill 에디터 */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-[#45474c]">
+                    내용 <span className="text-[#ba1a1a]">*</span>
+                  </label>
+                  <div className={`border rounded-lg overflow-hidden bg-white ${errors.content ? 'border-[#ba1a1a]' : 'border-[#c5c6cd]'}`}>
+                    <div ref={containerRef} style={{ minHeight: '200px' }} className="text-sm" />
+                  </div>
+                  {errors.content && <p className="text-xs text-[#ba1a1a]">{errors.content}</p>}
+                </div>
+
+                {/* 노출 기간 */}
+                <div className="grid grid-cols-2 gap-4">
+                  {field('노출 시작일', 'displayStartDate', 'datetime-local')}
+                  {field('노출 종료일', 'displayEndDate', 'datetime-local')}
+                </div>
+
+                {/* 노출 대상 / 우선순위 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-[#45474c]">노출 대상</label>
+                    <select
+                      value={form.targetType}
+                      onChange={(e) => setForm((f) => ({ ...f, targetType: e.target.value }))}
+                      className="w-full h-11 px-3 bg-[#eff4ff] border border-[#c5c6cd] rounded-lg text-sm text-[#0b1c30] focus:outline-none focus:ring-2 focus:ring-[#091426] focus:border-transparent transition-all"
+                    >
+                      {TARGET_TYPES.map(({ value, label }) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {field('우선순위 (숫자가 클수록 우선)', 'priority', 'number', { min: 0 })}
+                </div>
+
+                {/* 팝업 크기 / 위치 */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-[#45474c]">팝업 크기 / 위치 (px)</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {field('너비', 'popupWidth',  'number', { min: 100 })}
+                    {field('높이', 'popupHeight', 'number', { min: 100 })}
+                    {field('X 위치', 'positionX', 'number', { min: 0 })}
+                    {field('Y 위치', 'positionY', 'number', { min: 0 })}
+                  </div>
+                </div>
+
+                {/* 이미지 URL / 링크 URL */}
+                {field('이미지 URL (선택)', 'imageUrl')}
+                {field('링크 URL (선택)',   'linkUrl')}
+
+                {mutation.error && (
+                  <p className="text-sm text-[#ba1a1a] bg-[#ffdad6] rounded-lg px-4 py-3">
+                    저장 중 오류가 발생했습니다.
+                  </p>
+                )}
+              </section>
+
+              {/* 우측: 미리보기 — 폼과 별도 스크롤 컨테이너라 항상 그대로 보임 */}
+              <aside className="w-full lg:w-[400px] min-h-0 overflow-y-auto p-6 bg-[#eff4ff] flex flex-col gap-6">
+                <PopupPreview form={form} contentHtml={previewHtml} />
+              </aside>
             </div>
 
-            {/* 노출 기간 */}
-            <div className="grid grid-cols-2 gap-4">
-              {field('노출 시작일', 'displayStartDate', 'datetime-local')}
-              {field('노출 종료일', 'displayEndDate', 'datetime-local')}
-            </div>
-
-            {/* 노출 대상 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">노출 대상</label>
-              <select
-                value={form.targetType}
-                onChange={(e) => setForm((f) => ({ ...f, targetType: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            {/* 푸터 */}
+            <footer className="px-6 py-4 bg-white border-t border-[#c5c6cd] flex justify-end gap-3 shrink-0">
+              <button
+                onClick={onClose}
+                className="px-6 h-11 text-sm font-semibold text-[#0b1c30] border border-[#c5c6cd] rounded-lg hover:bg-[#eff4ff] transition-colors"
               >
-                {TARGET_TYPES.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* 우선순위 */}
-            {field('우선순위 (숫자가 클수록 위에 노출)', 'priority', 'number', { min: 0 })}
-
-            {/* 팝업 크기 / 위치 */}
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">팝업 크기 / 위치 (px)</p>
-              <div className="grid grid-cols-2 gap-4">
-                {field('너비', 'popupWidth',  'number', { min: 100 })}
-                {field('높이', 'popupHeight', 'number', { min: 100 })}
-                {field('X 위치', 'positionX', 'number', { min: 0 })}
-                {field('Y 위치', 'positionY', 'number', { min: 0 })}
-              </div>
-            </div>
-
-            {/* 이미지 URL / 링크 URL */}
-            {field('이미지 URL (선택)', 'imageUrl')}
-            {field('링크 URL (선택)',   'linkUrl')}
-          </div>
-
-          {/* 에러 */}
-          {mutation.error && (
-            <p className="mt-4 text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
-              저장 중 오류가 발생했습니다.
-            </p>
-          )}
-
-          {/* 버튼 */}
-          <div className="flex items-center gap-3 mt-6">
-            <button
-              onClick={handleSubmit}
-              disabled={mutation.isPending}
-              className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {mutation.isPending ? '저장 중...' : isEdit ? '수정 완료' : '등록'}
-            </button>
-            <button
-              onClick={() => navigate('/admin/popups')}
-              className="px-6 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              취소
-            </button>
-          </div>
-        </div>
-
-        {/* 우측: 미리보기 */}
-        <div className="w-[520px] shrink-0">
-          <PopupPreview form={form} contentHtml={previewHtml} />
-        </div>
-
+                취소
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={mutation.isPending}
+                className="px-6 h-11 text-sm font-semibold rounded-lg bg-[#091426] text-white hover:opacity-90 disabled:opacity-50 transition-all active:scale-95"
+              >
+                {mutation.isPending ? '저장 중...' : isEdit ? '수정 완료' : '등록'}
+              </button>
+            </footer>
+          </>
+        )}
       </div>
     </div>
   )

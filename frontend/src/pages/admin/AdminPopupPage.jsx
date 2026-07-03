@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getAllPopups, deletePopup, togglePopupActive } from '@/api/popups'
 import useAuthStore from '@/stores/authStore'
@@ -7,6 +6,7 @@ import {
   AppWindow, PlusCircle, Bell, Question,
   NotePencil, Trash, CaretRight,
 } from '@phosphor-icons/react'
+import AdminPopupFormPage from './AdminPopupFormPage'
 
 const TARGET_LABEL = { ALL: '전체', MEMBER_ONLY: '회원', GUEST_ONLY: '비회원' }
 
@@ -19,6 +19,7 @@ export default function AdminPopupPage() {
   const queryClient = useQueryClient()
   const { user } = useAuthStore()
   const [filterActive, setFilterActive] = useState(null)
+  const [formModal, setFormModal] = useState(null) // null | 'new' | popupId
 
   const { data: popups = [], isLoading } = useQuery({
     queryKey: ['admin', 'popups', filterActive],
@@ -79,10 +80,10 @@ export default function AdminPopupPage() {
               <h2 className="text-[32px] font-semibold text-[#0b1c30] tracking-tight leading-10">팝업 관리</h2>
               <p className="text-[14px] text-[#45474c] mt-1">메인 팝업 노출 설정을 관리합니다.</p>
             </div>
-            <Link to="/admin/popups/new"
+            <button onClick={() => setFormModal('new')}
               className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-[#091426] text-white text-[12px] font-semibold hover:opacity-90 transition-all shadow-sm">
               <PlusCircle size={16} /> 팝업 등록
-            </Link>
+            </button>
           </section>
 
           {/* 통계 카드 */}
@@ -162,10 +163,10 @@ export default function AdminPopupPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-1">
-                            <Link to={`/admin/popups/${popup.id}/edit`}
+                            <button onClick={() => setFormModal(popup.id)}
                               className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
                               <NotePencil size={18} />
-                            </Link>
+                            </button>
                             <button onClick={() => handleDelete(popup.id, popup.title)} disabled={deleteMutation.isPending}
                               className="p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40">
                               <Trash size={18} />
@@ -187,6 +188,13 @@ export default function AdminPopupPage() {
       <footer className="h-12 shrink-0 flex items-center justify-between px-6 border-t border-[#c5c6cd] bg-white text-[11px] text-[#45474c] font-medium">
         <div>© 2026 그리스도사랑교회 관리자 시스템</div>
       </footer>
+
+      {formModal && (
+        <AdminPopupFormPage
+          popupId={formModal === 'new' ? null : formModal}
+          onClose={() => setFormModal(null)}
+        />
+      )}
     </div>
   )
 }

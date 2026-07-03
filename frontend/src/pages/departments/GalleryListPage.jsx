@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  CaretRight, CaretLeft, MagnifyingGlassPlus, Eye, Images, Stack,
+  CaretRight, CaretLeft, Eye, Images, Stack,
 } from '@phosphor-icons/react'
 import toast from '@/utils/toast'
 import { getGalleryList } from '@/api/gallery'
@@ -417,67 +417,19 @@ const GalleryListPage = () => {
 
   return (
     <main className="pt-20 bg-[#FAF9F6]">
-      <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] min-h-screen grid grid-cols-1 lg:grid-cols-12 divide-x divide-[#E5E5E5] bg-[#FAF9F6]">
-
-        {/* 사이드바 — 부서 필터 */}
-        <aside className="lg:col-span-3 p-8 md:p-12 lg:p-16 flex flex-col gap-12 lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-5rem)] lg:overflow-y-auto">
-          <div>
-            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Departments</span>
-            <h2 className="text-3xl font-bold tracking-tight text-[#171717]">부서 갤러리</h2>
+      {/* ── 헤더 + 부서 필터 탭 ──────────────────────────────────── */}
+      <section className="pt-12 pb-16 border-b border-[#E5E5E5]">
+        <div className="max-w-[1600px] mx-auto px-8 md:px-16 lg:px-24 border-x border-[#E5E5E5]">
+          <div className="flex items-center gap-4 mb-6">
+            <span className="w-8 h-px bg-[#171717]" />
+            <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono">Archive &amp; Record</span>
           </div>
 
-          <nav className="flex flex-col gap-1">
-            <button
-              onClick={() => handleSelectTab(null)}
-              className={`group py-3 border-b flex items-center justify-between transition-all text-left ${
-                selectedCode === null ? 'border-[#171717]' : 'border-[#E5E5E5]'
-              }`}
-            >
-              <span className={selectedCode === null ? 'font-bold text-[#171717]' : 'font-medium text-[#737373] group-hover:text-[#171717]'}>
-                전체보기
-              </span>
-              <CaretRight
-                size={16}
-                className={`text-[#171717] transition-opacity ${selectedCode === null ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-              />
-            </button>
-            {DEPARTMENTS.map((d) => (
-              <button
-                key={d.code}
-                onClick={() => handleSelectTab(d.code)}
-                className={`group py-3 border-b flex items-center justify-between transition-all text-left ${
-                  selectedCode === d.code ? 'border-[#171717]' : 'border-[#E5E5E5]'
-                }`}
-              >
-                <span className={selectedCode === d.code ? 'font-bold text-[#171717]' : 'font-medium text-[#737373] group-hover:text-[#171717]'}>
-                  {d.label}
-                </span>
-                <CaretRight
-                  size={16}
-                  className={`text-[#171717] transition-opacity ${selectedCode === d.code ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                />
-              </button>
-            ))}
-          </nav>
-
-          <div className="mt-auto bg-[#F4F2EA] p-6 border border-[#E5E5E5]">
-            <p className="text-xs text-[#737373] leading-relaxed font-light break-keep">
-              부서 활동의 사진이나 영상 자료에 대한 문의는 사무실(<a href="tel:053-962-8948" className="underline hover:text-[#171717]">053-962-8948</a>)로 연락 바랍니다.
-            </p>
-          </div>
-        </aside>
-
-        {/* 본문 */}
-        <div className="lg:col-span-9 bg-[#FAF9F6]">
-
-          {/* 헤더 */}
-          <div className="p-8 md:p-12 lg:p-16 border-b border-[#E5E5E5] flex flex-col md:flex-row justify-between items-end gap-6">
-            <div className="max-w-xl">
-              <h3 className="text-2xl font-bold mb-4 text-[#171717] break-keep">
-                {selectedLabel ? `${selectedLabel} 활동 사진` : '전체 활동 사진'}
-              </h3>
-              <p className="text-[#737373] font-light text-[15px] leading-relaxed break-keep">
-                그리스도사랑교회의 각 부서가 말씀 안에서 교제하며 하나님께 영광 돌리는 현장을 공유합니다.
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
+            <div>
+              <h1 className="text-5xl font-bold tracking-tight text-[#171717]">부서 갤러리</h1>
+              <p className="text-[#737373] font-light text-sm mt-3">
+                {selectedLabel ? `${selectedLabel} 활동 사진` : '전체 부서 활동 사진'}
               </p>
             </div>
             {canWrite && selectedCode && (
@@ -487,11 +439,45 @@ const GalleryListPage = () => {
             )}
           </div>
 
+          <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-[#E5E5E5] pt-8">
+            <button
+              onClick={() => handleSelectTab(null)}
+              className={`text-sm pb-2 border-b-2 transition-colors ${
+                selectedCode === null
+                  ? 'font-bold text-[#171717] border-[#171717]'
+                  : 'font-medium text-[#737373] border-transparent hover:text-[#171717]'
+              }`}
+            >
+              전체
+            </button>
+            {DEPARTMENTS.map((d) => (
+              <button
+                key={d.code}
+                onClick={() => handleSelectTab(d.code)}
+                className={`text-sm pb-2 border-b-2 transition-colors ${
+                  selectedCode === d.code
+                    ? 'font-bold text-[#171717] border-[#171717]'
+                    : 'font-medium text-[#737373] border-transparent hover:text-[#171717]'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 매소너리 포토 그리드 ─────────────────────────────────── */}
+      <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+        <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] py-12 px-6">
+
           {/* 로딩 */}
           {isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 divide-x divide-y divide-[#E5E5E5] border-b border-[#E5E5E5]">
+            <div className="columns-1 md:columns-2 xl:columns-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="aspect-[4/5] skeleton-shimmer" />
+                <div key={i} className="break-inside-avoid p-3">
+                  <div className="aspect-[4/5] skeleton-shimmer" />
+                </div>
               ))}
             </div>
           )}
@@ -507,25 +493,37 @@ const GalleryListPage = () => {
           {/* 포토 그리드 */}
           {!isLoading && images.length > 0 && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 divide-x divide-y divide-[#E5E5E5] border-b border-[#E5E5E5]">
+              <div className="columns-1 md:columns-2 xl:columns-3">
                 {images.map((image) => {
                   const count = image.imageCount ?? 1
                   return (
-                    <article key={image.id} className="group cursor-pointer">
-                      {/* 썸네일 */}
+                    <div key={image.id} className="break-inside-avoid p-3">
                       <div
-                        className="aspect-[4/5] bg-[#F4F2EA] overflow-hidden relative"
+                        className="relative overflow-hidden bg-[#F4F2EA] group cursor-pointer"
                         onClick={() => navigate(`/department/gallery/${image.id}`)}
                       >
                         <img
                           src={`/uploads/gallery/${image.thumbnailFilename || image.storedFilename}`}
                           alt={image.title}
-                          className="absolute inset-0 w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                          className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                           onError={(e) => { e.target.src = '/images/no-image.png' }}
                         />
-                        <div className="absolute inset-0 bg-[#171717]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <MagnifyingGlassPlus size={32} className="text-white" />
+
+                        {/* 호버 시 정보 오버레이 */}
+                        <div className="absolute inset-0 bg-[#171717]/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                          <span className="text-[10px] font-mono text-[#FAF9F6]/80 uppercase tracking-widest mb-1">
+                            {image.departmentName} · {fmtDate(image.createdAt)}
+                          </span>
+                          <h3 className="text-[#FAF9F6] font-bold text-lg break-keep">{image.title}</h3>
+                          {image.description ? (
+                            <p className="text-[#FAF9F6]/70 text-xs font-light mt-1 line-clamp-2 break-keep">{image.description}</p>
+                          ) : (
+                            <p className="text-[#FAF9F6]/70 text-xs font-light mt-1 flex items-center gap-1">
+                              <Eye size={12} /> {image.viewCount ?? 0}
+                            </p>
+                          )}
                         </div>
+
                         {/* 장수 배지 */}
                         {count > 1 && (
                           <span className="absolute top-3 left-3 flex items-center gap-1 bg-[#171717]/80 text-white text-xs font-medium px-2 py-0.5">
@@ -533,6 +531,7 @@ const GalleryListPage = () => {
                             {count}
                           </span>
                         )}
+
                         {/* 수정/삭제 버튼 — canWrite 시 hover에 표시 */}
                         {canWrite && (
                           <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -552,29 +551,14 @@ const GalleryListPage = () => {
                           </div>
                         )}
                       </div>
-
-                      {/* 텍스트 */}
-                      <div className="p-6 bg-[#FAF9F6] group-hover:bg-[#F4F2EA] transition-colors">
-                        <span className="text-[10px] font-mono text-[#737373] tracking-widest uppercase mb-2 block">
-                          {image.departmentName} · {fmtDate(image.createdAt)}
-                        </span>
-                        <h4 className="font-bold text-[#171717] mb-2 line-clamp-1 break-keep">{image.title}</h4>
-                        {image.description ? (
-                          <p className="text-sm text-[#737373] font-light line-clamp-2 break-keep">{image.description}</p>
-                        ) : (
-                          <p className="text-sm text-[#A3A3A3] font-light flex items-center gap-1">
-                            <Eye size={13} /> {image.viewCount ?? 0}
-                          </p>
-                        )}
-                      </div>
-                    </article>
+                    </div>
                   )
                 })}
               </div>
 
               {/* 페이지네이션 */}
               {totalPages > 1 && (
-                <div className="p-12 flex justify-center">
+                <div className="mt-8 flex justify-center">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => goPage(currentPage - 1)}
@@ -608,8 +592,15 @@ const GalleryListPage = () => {
               )}
             </>
           )}
+
+          {/* 문의 안내 */}
+          <div className="mt-16 max-w-xl mx-auto text-center">
+            <p className="text-xs text-[#737373] leading-relaxed font-light break-keep">
+              부서 활동의 사진이나 영상 자료에 대한 문의는 사무실(<a href="tel:053-962-8948" className="underline hover:text-[#171717]">053-962-8948</a>)로 연락 바랍니다.
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
 
       {uploadOpen && selectedCode && (
         <GalleryUploadModal

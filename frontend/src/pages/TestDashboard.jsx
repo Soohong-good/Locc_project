@@ -201,8 +201,7 @@ const CRUD_GROUPS = [
     group: '팝업',
     color: 'bg-violet-600',
     actions: [
-      { label: '등록',        path: '/admin/popups/new',         method: 'POST' },
-      { label: '관리 (수정/삭제/토글)', path: '/admin/popups',  method: 'PUT/DELETE/PATCH' },
+      { label: '관리 (등록/수정/삭제/토글, 모달)', path: '/admin/popups',  method: 'POST/PUT/DELETE/PATCH' },
     ],
   },
   {

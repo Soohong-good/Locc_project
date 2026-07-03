@@ -82,7 +82,6 @@ const AdminSermonFormPage        = lazy(() => import('@/pages/admin/AdminSermonF
 const AdminSundayMorningFormPage = lazy(() => import('@/pages/admin/AdminSundayMorningFormPage'))
 const AdminUserPage              = lazy(() => import('@/pages/admin/AdminUserPage'))
 const AdminPopupPage             = lazy(() => import('@/pages/admin/AdminPopupPage'))
-const AdminPopupFormPage         = lazy(() => import('@/pages/admin/AdminPopupFormPage'))
 const AdminYouTubePage           = lazy(() => import('@/pages/admin/AdminYouTubePage'))
 const AdminHelpRequestPage       = lazy(() => import('@/pages/admin/AdminHelpRequestPage'))
 const AdminBulletinPage          = lazy(() => import('@/pages/admin/AdminBulletinPage'))
@@ -199,8 +198,6 @@ const AppRoutes = () => {
           <Route path="sermons/sunday-morning/:date/edit"  element={<AdminSundayMorningFormPage />} />
           <Route path="users"            element={<AdminUserPage />} />
           <Route path="popups"           element={<AdminPopupPage />} />
-          <Route path="popups/new"       element={<AdminPopupFormPage />} />
-          <Route path="popups/:id/edit"  element={<AdminPopupFormPage />} />
           <Route path="youtube"          element={<AdminYouTubePage />} />
           <Route path="help-requests"    element={<AdminHelpRequestPage />} />
           <Route path="bulletins"        element={<AdminBulletinPage />} />
