@@ -1,6 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
 import { getBiblePassage } from '@/api/bible'
 
+const VerseList = ({ items }) => (
+  <div className="space-y-6 text-[#3d3a35] leading-[2.2] text-[15px] break-keep text-justify">
+    {items.map((v) => (
+      <p key={v.verse}>
+        <span className="text-[10px] text-[#7a766e] font-mono font-bold mr-2 align-super">{v.verse}</span>
+        {v.text}
+      </p>
+    ))}
+  </div>
+)
+
 /**
  * 설교 성경 본문 섹션
  * - sermon.scripture(예: "고린도후서9:1~15")로 해당 구간을 조회해 절번호+본문 표시
@@ -23,17 +34,6 @@ export default function BiblePassageSection({ scripture }) {
   const mid    = Math.ceil(verses.length / 2)
   const page1  = verses.slice(0, mid)
   const page2  = verses.slice(mid)
-
-  const VerseList = ({ items }) => (
-    <div className="space-y-6 text-[#3d3a35] leading-[2.2] text-[15px] break-keep text-justify">
-      {items.map((v) => (
-        <p key={v.verse}>
-          <span className="text-[10px] text-[#7a766e] font-mono font-bold mr-2 align-super">{v.verse}</span>
-          {v.text}
-        </p>
-      ))}
-    </div>
-  )
 
   return (
     <section className="py-24 bg-[#faf8f5] px-6 border-t border-[#e6e0d6]">

@@ -1,0 +1,112 @@
+name: CI
+
+# 푸시 / PR 시 백엔드 테스트·빌드와 프론트엔드 빌드를 자동 검증한다.
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  # ── 백엔드: Spring Boot 테스트 + JAR 빌드 ─────────────────────────
+  backend:
+    name: Backend (test & build)
+    runs-on: ubuntu-latest
+
+    # contextLoads 테스트가 전체 컨텍스트를 띄우므로 DB·캐시를 함께 기동
+    services:
+      mariadb:
+        image: mariadb:11.2
+        env:
+          MARIADB_ROOT_PASSWORD: ci_root_pw
+          MARIADB_DATABASE: locc_test
+          MARIADB_USER: locc_ci
+          MARIADB_PASSWORD: ci_pw
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Run tests
+        # 더미 값 — CI에서 컨텍스트 로딩에만 사용되며 실제 외부 호출은 없음
+        env:
+          DB_URL: jdbc:mariadb://127.0.0.1:3306/locc_test
+          DB_USERNAME: locc_ci
+          DB_PASSWORD: ci_pw
+          JWT_SECRET: "yjmHYbxdQaneQ4viBlxj40x/1/HHsM8NjDP/j3o0oL4R/cEPZpQGqL4Ss8crg5s/"
+          MAIL_USERNAME: ci@example.com
+          MAIL_PASSWORD: ci-dummy-password
+          KAKAO_MAP_API_KEY: ci-dummy
+          YOUTUBE_API_KEY: ci-dummy
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: "6379"
+          REDIS_PASSWORD: ""
+        run: ./gradlew test --no-daemon
+
+      - name: Build bootable JAR
+        run: ./gradlew bootJar -x test --no-daemon
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: build/reports/tests/test
+          if-no-files-found: ignore
+
+  # ── 프론트엔드: React(Vite) 빌드 ─────────────────────────────────
+  frontend:
+    name: Frontend (build)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

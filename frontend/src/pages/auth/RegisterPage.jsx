@@ -67,7 +67,7 @@ const TermsModal = ({ onClose }) => (
 // ─── 이메일 인증 컴포넌트 ──────────────────────────────────────────
 const VERIFY_TIMEOUT = 5 * 60 // 5분
 
-const EmailVerifyField = ({ suffix, email, setEmail, verified, setVerified, onVerified }) => {
+const EmailVerifyField = ({ email, setEmail, verified, setVerified, onVerified }) => {
   const [codeSent, setCodeSent]         = useState(false)
   const [code, setCode]                 = useState('')
   const [timeLeft, setTimeLeft]         = useState(0)

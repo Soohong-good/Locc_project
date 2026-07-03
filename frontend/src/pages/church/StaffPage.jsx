@@ -9,12 +9,6 @@ const POSITION_LABEL = { PASTOR: '목사', EVANGELIST: '전도사', OTHER: '기�
 const POSITION_EN    = { PASTOR: 'Pastor', EVANGELIST: 'Evangelist', OTHER: 'Other' }
 const CATEGORY_LABEL = { MINISTER: '교역자', EMPLOYEE: '교회 직원', ELDER: '장로' }
 
-const getDisplayPosition = (s) => {
-  if (s.customPosition) return s.customPosition
-  if (s.isSeniorPastor) return '담임목사'
-  return POSITION_LABEL[s.position] ?? s.position
-}
-
 const splitLines = (text) =>
   text
     ? text
@@ -23,7 +17,7 @@ const splitLines = (text) =>
         .filter(Boolean)
     : []
 
-const StaffImg = ({ imagePath, size = 'full', className = '' }) => {
+const StaffImg = ({ imagePath, className = '' }) => {
   const src = imagePath || null
   if (src) {
     return (

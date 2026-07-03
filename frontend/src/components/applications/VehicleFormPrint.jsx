@@ -20,7 +20,7 @@ export const parseVehicleMemo = (memo) => {
   try {
     const obj = JSON.parse(memo)
     if (obj.__type === '차량신청') return obj
-  } catch {}
+  } catch { /* JSON 파싱 실패 시 null 반환 */ }
   return null
 }
 

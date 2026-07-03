@@ -473,7 +473,7 @@ const DepartmentsSection = () => (
 )
 
 // ── 공지 & 갤러리 섹션 ──────────────────────────────────────────
-const NoticeGallerySection = ({ notices, user, galleryImages, onNavigate }) => (
+const NoticeGallerySection = ({ notices, user, galleryImages }) => (
   <section className="border-b border-neutral-200 bg-white">
     <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 bg-neutral-200 gap-px border-x border-neutral-200">
       {/* 공지 */}
