@@ -85,7 +85,7 @@ jacocoTestReport {
     reports {
         xml.required = true        // CI 배지 생성용
         html.required = true       // 사람이 보는 리포트
-        csv.required = false
+        csv.required = true        // jacoco-badge-generator 입력용
     }
     // entity/dto/config 등 로직이 없는 계층을 커버리지 분모에서 제외해 "로직 커버리지"로 측정
     afterEvaluate {
@@ -99,7 +99,7 @@ jacocoTestReport {
                     '**/controller/**',
                     '**/security/**',
                     '**/common/**',
-                    '**/*Application*',
+                    '**/*Application.class', // 메인 클래스(LoccApplication) 등 "Application"으로 끝나는 것만 — *Application*(양쪽 와일드카드)로 쓰면 ApplicationExcelService처럼 이름에 포함만 된 실제 서비스까지 잘못 제외됨
                 ])
             })
         )

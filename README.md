@@ -3,6 +3,7 @@
 > **Love Of Christ Church** 공식 홈페이지 풀스택 프로젝트
 
 [![CI](https://github.com/Soohong-good/Locc_project/actions/workflows/ci.yml/badge.svg)](https://github.com/Soohong-good/Locc_project/actions/workflows/ci.yml)
+![coverage](.github/badges/jacoco.svg)
 
 ---
 
