@@ -20,6 +20,7 @@ const useAuthStore = create((set) => ({
   user: null,
   isInitialized: false,
   permissions: [], // 영역별 작성 권한 목록 ex) ['NOTICE', 'BULLETIN']
+  sessionExpiresAt: null, // refreshToken 만료 시각(ms epoch) — 관리자 세션 남은시간 표시용
 
   // 로그인 성공 후 호출
   setUser: (user) => set({ user }),
@@ -30,9 +31,15 @@ const useAuthStore = create((set) => ({
   // 권한 목록 설정
   setPermissions: (permissions) => set({ permissions }),
 
+  // 로그인/갱신 성공 시 refreshToken 만료 시각 갱신 (rotation마다 다시 호출됨)
+  setSessionExpiresAt: (refreshExpiresIn) => {
+    if (!refreshExpiresIn) return
+    set({ sessionExpiresAt: Date.now() + refreshExpiresIn })
+  },
+
   // 로그아웃 — 서버가 쿠키 삭제, 클라이언트는 상태만 초기화
   clearAuth: () => {
-    set({ user: null, permissions: [] })
+    set({ user: null, permissions: [], sessionExpiresAt: null })
   },
 
   // 현재 로그인 유저 ID 조회

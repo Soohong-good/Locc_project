@@ -8,6 +8,7 @@ import com.example.locc.domain.user.dto.request.UserRegisterRequest;
 import com.example.locc.domain.user.dto.response.UserAuthResponse;
 import com.example.locc.domain.user.dto.response.UserDetailResponse;
 import com.example.locc.domain.user.dto.response.UserResponse;
+import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.service.UserCommandService;
 import com.example.locc.domain.user.service.UserPermissionService;
 import com.example.locc.domain.user.service.UserQueryService;
@@ -142,8 +143,9 @@ public class UserApiController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.ok(ApiResponse.ok(null));
         }
-        return ResponseEntity.ok(ApiResponse.ok(
-                UserDetailResponse.from(userQueryService.findByEmailWithSocialAccounts(authentication.getName()))));
+        User user = userQueryService.findByEmailWithSocialAccounts(authentication.getName());
+        Long sessionExpiresIn = userQueryService.getSessionExpiresIn(user);
+        return ResponseEntity.ok(ApiResponse.ok(UserDetailResponse.from(user, sessionExpiresIn)));
     }
 
     // ===== 관리자 사용자 관리 API =====

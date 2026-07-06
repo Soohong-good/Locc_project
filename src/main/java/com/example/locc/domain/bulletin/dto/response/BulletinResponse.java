@@ -20,6 +20,7 @@ public class BulletinResponse {
     private Long fileId;              // 기존 PDF 파일 ID — 수정 모달 현재 파일 표시용
     private String authorName;
     private String authorId;          // 작성자 UUID — 프론트 본인 여부 판단용
+    private String authorRole;        // ADMIN/OPERATOR/USER — 프론트에서 "관리자" 표기 판단용
     private Integer viewCount;
     private LocalDateTime createdAt;
 
@@ -31,6 +32,7 @@ public class BulletinResponse {
                 .fileId(bulletin.getFileId())
                 .authorName(bulletin.getAuthor() != null ? bulletin.getAuthor().getName() : "알 수 없음")
                 .authorId(bulletin.getAuthor() != null ? bulletin.getAuthor().getId().toString() : null)
+                .authorRole(bulletin.getAuthor() != null ? bulletin.getAuthor().getRole().name() : null)
                 .viewCount(bulletin.getViewCount())
                 .createdAt(bulletin.getCreatedAt())
                 .build();

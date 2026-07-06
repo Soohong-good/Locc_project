@@ -1,4 +1,5 @@
 import axios from 'axios'
+import useAuthStore from '@/stores/authStore'
 
 /**
  * Axios 인스턴스
@@ -63,7 +64,8 @@ client.interceptors.response.use(
 
     try {
       // refreshToken 쿠키는 브라우저가 자동 전송 — body 불필요
-      await client.post('/api/auth/refresh', null)
+      const refreshRes = await client.post('/api/auth/refresh', null)
+      useAuthStore.getState().setSessionExpiresAt(refreshRes.data?.data?.refreshExpiresIn)
 
       processQueue(null)
       return client(originalRequest)

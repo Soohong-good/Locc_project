@@ -1,7 +1,6 @@
 package com.example.locc.domain.user.controller;
 
 import com.example.locc.common.ApiResponse;
-import com.example.locc.config.JwtProperties;
 import com.example.locc.domain.user.dto.response.UserAuthResponse;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.service.UserCommandService;
@@ -25,7 +24,6 @@ public class TotpApiController {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserCommandService userCommandService;
     private final CookieUtil cookieUtil;
-    private final JwtProperties jwtProperties;
 
     /**
      * QR 코드 발급 (로그인 흐름 중, preAuthToken 기반)
@@ -84,7 +82,8 @@ public class TotpApiController {
         return ResponseEntity.ok(ApiResponse.ok(
                 UserAuthResponse.builder()
                         .tokenType("Bearer")
-                        .expiresIn(jwtProperties.getExpiration())
+                        .expiresIn(jwtTokenProvider.getAccessTokenValidity(user))
+                        .refreshExpiresIn(jwtTokenProvider.getRefreshTokenValidity(user))
                         .username(user.getName())
                         .role(user.getRole().name())
                         .message(message)

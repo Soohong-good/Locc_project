@@ -143,13 +143,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         LocalDateTime expiresAt = LocalDateTime.now()
                 .plusSeconds(jwtTokenProvider.getRefreshTokenValidity(user) / 1000);
 
+        // 이 클래스는 @Transactional이 아니라서(Security 필터 체인에서 직접 호출),
+        // findByUser()가 반환한 엔티티는 그 즉시 detach됨 — setter만 호출하면 dirty checking이
+        // 동작하지 않아 DB에 반영되지 않는다(과거 실제 발생: 로그인해도 만료시각이 안 갱신됨).
+        // save()를 명시 호출해 merge를 강제한다.
         refreshTokenRepository.findByUser(user)
                 .ifPresentOrElse(
-                        existingToken -> existingToken.refresh(token, expiresAt),
-                        () -> {
-                            RefreshToken newToken = RefreshToken.create(user, token, expiresAt);
-                            refreshTokenRepository.save(newToken);
-                        }
+                        existingToken -> {
+                            existingToken.refresh(token, expiresAt);
+                            refreshTokenRepository.save(existingToken);
+                        },
+                        () -> refreshTokenRepository.save(RefreshToken.create(user, token, expiresAt))
                 );
     }
 }

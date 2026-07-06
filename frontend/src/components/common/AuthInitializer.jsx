@@ -8,7 +8,7 @@ import useAuthStore from '@/stores/authStore'
  * 앱 최초 마운트 시 인증 상태 복원 컴포넌트
  */
 const AuthInitializer = () => {
-  const { setUser, setInitialized, clearAuth, setPermissions } = useAuthStore()
+  const { setUser, setInitialized, clearAuth, setPermissions, setSessionExpiresAt } = useAuthStore()
   const user = useAuthStore((state) => state.user)
 
   const { data, isError, isSuccess, isFetched } = useQuery({
@@ -38,6 +38,7 @@ const AuthInitializer = () => {
     if (isSuccess) {
       if (data) {
         setUser(data)
+        setSessionExpiresAt(data.sessionExpiresIn)
       } else {
         clearAuth()
         setInitialized()
@@ -47,7 +48,7 @@ const AuthInitializer = () => {
       clearAuth()
       setInitialized()
     }
-  }, [isSuccess, isError, isFetched, data, setUser, setInitialized, clearAuth])
+  }, [isSuccess, isError, isFetched, data, setUser, setInitialized, clearAuth, setSessionExpiresAt])
 
   // 2단계: 권한 로드 완료 → 권한 저장 + initialized
   //   - 성공/실패 모두 isFetched=true → 스피너 해제

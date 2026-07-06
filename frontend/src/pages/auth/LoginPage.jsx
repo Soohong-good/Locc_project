@@ -31,6 +31,7 @@ const LoginPage = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const setUser = useAuthStore((s) => s.setUser)
+  const setSessionExpiresAt = useAuthStore((s) => s.setSessionExpiresAt)
 
   // TOTP 단계: 'login' | 'verify' | 'setup' | 'setup-verify'
   const [totpStep, setTotpStep]           = useState('login')
@@ -83,7 +84,8 @@ const LoginPage = () => {
     setTotpPending(true)
     try {
       const endpoint = totpStep === 'setup' ? '/api/auth/totp/enable' : '/api/auth/totp/verify'
-      await client.post(endpoint, { preAuthToken, code: totpCode })
+      const res = await client.post(endpoint, { preAuthToken, code: totpCode })
+      setSessionExpiresAt(res.data?.data?.refreshExpiresIn)
       const user = await getMe()
       setUser(user)
       navigate('/')

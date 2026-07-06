@@ -131,6 +131,7 @@ public class UserCommandService {
                 .refreshToken(refreshToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenValidity(user))
+                .refreshExpiresIn(jwtTokenProvider.getRefreshTokenValidity(user))
                 .username(user.getName())
                 .role(user.getRole().name())
                 .message("로그인에 성공했습니다.")
@@ -198,6 +199,7 @@ public class UserCommandService {
                 .refreshToken(newRefreshToken)  // 새 RefreshToken 반환
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenValidity(user))
+                .refreshExpiresIn(jwtTokenProvider.getRefreshTokenValidity(user))
                 .username(user.getName())
                 .role(user.getRole().name())
                 .build();
@@ -415,11 +417,11 @@ public class UserCommandService {
 
         refreshTokenRepository.findByUser(user)
                 .ifPresentOrElse(
-                        existingToken -> existingToken.refresh(token, expiresAt),
-                        () -> {
-                            RefreshToken newToken = RefreshToken.create(user, token, expiresAt);
-                            refreshTokenRepository.save(newToken);
-                        }
+                        existingToken -> {
+                            existingToken.refresh(token, expiresAt);
+                            refreshTokenRepository.save(existingToken);
+                        },
+                        () -> refreshTokenRepository.save(RefreshToken.create(user, token, expiresAt))
                 );
     }
 }

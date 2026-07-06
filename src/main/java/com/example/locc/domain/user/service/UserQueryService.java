@@ -3,6 +3,7 @@ package com.example.locc.domain.user.service;
 import com.example.locc.domain.user.dto.response.UserDetailResponse;
 import com.example.locc.domain.user.dto.response.UserResponse;
 import com.example.locc.domain.user.entity.User;
+import com.example.locc.domain.user.repository.RefreshTokenRepository;
 import com.example.locc.domain.user.repository.UserRepository;
 import com.example.locc.exception.InvalidInputException;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -27,6 +30,18 @@ import java.util.UUID;
 public class UserQueryService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    /**
+     * 본인 refreshToken 남은시간(ms) 조회 — /api/auth/me 에서 세션 카운트다운 표시용
+     * 토큰이 없거나 이미 만료됐으면 null
+     */
+    public Long getSessionExpiresIn(User user) {
+        return refreshTokenRepository.findByUser(user)
+                .map(rt -> Duration.between(LocalDateTime.now(), rt.getExpiresAt()).toMillis())
+                .filter(ms -> ms > 0)
+                .orElse(null);
+    }
 
     /**
      * 승인 대기 중인 회원 목록 조회

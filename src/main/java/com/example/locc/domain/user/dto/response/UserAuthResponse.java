@@ -11,6 +11,7 @@ public class UserAuthResponse {
     private final String refreshToken;
     private final String tokenType;
     private final Long expiresIn;
+    private final Long refreshExpiresIn;
     private final String username;
     private final String role;
     private final String message;
@@ -22,6 +23,7 @@ public class UserAuthResponse {
         return UserAuthResponse.builder()
                 .tokenType(this.tokenType)
                 .expiresIn(this.expiresIn)
+                .refreshExpiresIn(this.refreshExpiresIn)
                 .username(this.username)
                 .role(this.role)
                 .message(this.message)

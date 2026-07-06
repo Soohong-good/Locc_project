@@ -87,6 +87,23 @@ jacocoTestReport {
         html.required = true       // 사람이 보는 리포트
         csv.required = false
     }
+    // entity/dto/config 등 로직이 없는 계층을 커버리지 분모에서 제외해 "로직 커버리지"로 측정
+    afterEvaluate {
+        classDirectories.setFrom(
+            files(classDirectories.files.collect {
+                fileTree(dir: it, exclude: [
+                    '**/entity/**',
+                    '**/dto/**',
+                    '**/config/**',
+                    '**/exception/**',
+                    '**/controller/**',
+                    '**/security/**',
+                    '**/common/**',
+                    '**/*Application*',
+                ])
+            })
+        )
+    }
 }
 
 // plain JAR 생성 비활성화 (Docker 빌드 시 *.jar 중복 방지)

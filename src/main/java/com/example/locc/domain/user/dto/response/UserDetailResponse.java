@@ -37,10 +37,20 @@ public class UserDetailResponse {
     private final Boolean isOAuthUser;           // 소셜 전용 계정 여부 (password=null)
     private final List<String> connectedProviders; // 연결된 소셜 제공자 목록 (예: ["KAKAO", "NAVER"])
 
+    // 본인 refreshToken 남은시간(ms) — /api/auth/me 전용, 타인 조회(getUserDetail) 시엔 null
+    private final Long sessionExpiresIn;
+
     /**
      * Entity → DTO 변환
      */
     public static UserDetailResponse from(User user) {
+        return from(user, null);
+    }
+
+    /**
+     * Entity → DTO 변환 (본인 세션 남은시간 포함)
+     */
+    public static UserDetailResponse from(User user, Long sessionExpiresIn) {
         List<String> providers = user.getSocialAccounts().stream()
                 .map(sa -> sa.getProvider().name())
                 .toList();
@@ -64,6 +74,7 @@ public class UserDetailResponse {
                 .updatedAt(user.getUpdatedAt())
                 .isOAuthUser(user.isOAuthUser())
                 .connectedProviders(providers)
+                .sessionExpiresIn(sessionExpiresIn)
                 .build();
     }
 }

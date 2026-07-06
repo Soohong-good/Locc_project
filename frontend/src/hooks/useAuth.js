@@ -15,7 +15,7 @@ import useAuthStore from '@/stores/authStore'
  *   3. 이전 페이지 또는 / 로 이동
  */
 export const useLogin = () => {
-  const { setUser } = useAuthStore()
+  const { setUser, setSessionExpiresAt } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -24,6 +24,8 @@ export const useLogin = () => {
     onSuccess: async (data) => {
       // TOTP 관련 — JWT 쿠키 미발급, 페이지 이동 없음
       if (data?.totpRequired || data?.totpSetupRequired) return
+
+      setSessionExpiresAt(data?.refreshExpiresIn)
 
       // 토큰은 이미 HttpOnly 쿠키로 설정됨 — localStorage 저장 없음
       try {
