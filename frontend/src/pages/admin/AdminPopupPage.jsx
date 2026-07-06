@@ -48,8 +48,8 @@ export default function AdminPopupPage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <h2 className="text-[20px] font-extrabold text-[#0b1c30]">팝업 관리</h2>
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <h2 className="text-[16px] md:text-[20px] font-extrabold text-[#0b1c30] whitespace-nowrap">팝업 관리</h2>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 text-[#45474c]">
             <button className="hover:text-[#091426] transition-colors"><Bell size={22} /></button>
@@ -120,7 +120,8 @@ export default function AdminPopupPage() {
                 ))}
               </div>
             </div>
-            <div className="overflow-x-auto">
+            {/* 데스크탑: 테이블형 */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
@@ -178,6 +179,45 @@ export default function AdminPopupPage() {
                   }
                 </tbody>
               </table>
+            </div>
+
+            {/* 모바일: 카드형 */}
+            <div className="md:hidden divide-y divide-[#c5c6cd]/50">
+              {isLoading
+                ? [...Array(3)].map((_, i) => (
+                    <div key={i} className="px-4 py-4"><div className="h-4 bg-[#e5eeff] rounded animate-pulse w-2/3" /></div>
+                  ))
+                : popups.length === 0
+                ? <div className="px-6 py-16 text-center text-[14px] text-[#45474c]">등록된 팝업이 없습니다.</div>
+                : popups.map((popup) => (
+                  <div key={popup.id} className="px-4 py-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[14px] font-medium text-[#0b1c30] truncate">{popup.title}</p>
+                      <button onClick={() => toggleMutation.mutate(popup.id)} disabled={toggleMutation.isPending}
+                        className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap transition-colors disabled:opacity-40 ${
+                          popup.isActive
+                            ? 'bg-[#e5eeff] text-[#091426] hover:bg-[#dce9ff]'
+                            : 'bg-[#e5eeff]/40 text-[#75777d] hover:bg-[#e5eeff]'
+                        }`}>
+                        {popup.isActive ? '활성' : '비활성'}
+                      </button>
+                    </div>
+                    <p className="text-[12px] text-[#45474c] truncate">
+                      {TARGET_LABEL[popup.targetType] ?? popup.targetType} · 우선순위 {popup.priority} · {fmtDate(popup.displayStartDate)} ~ {fmtDate(popup.displayEndDate)}
+                    </p>
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => setFormModal(popup.id)}
+                        className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
+                        <NotePencil size={18} />
+                      </button>
+                      <button onClick={() => handleDelete(popup.id, popup.title)} disabled={deleteMutation.isPending}
+                        className="p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40">
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              }
             </div>
           </section>
 

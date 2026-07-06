@@ -7,6 +7,7 @@ import useAuthStore from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuth'
 import { getPendingCount } from '@/api/users'
 import { DEPARTMENTS } from '@/constants/departments'
+import SessionCountdown from '@/components/common/SessionCountdown'
 
 const NAV_MENUS = [
   { label: '복음 말씀', href: '/salvation' },
@@ -163,18 +164,20 @@ const MobileAccordion = ({ label, children, onClose }) => {
         <span>{label}</span>
         <CaretDown size={16} weight="bold" className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
-      <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-96' : 'max-h-0'}`}>
-        <div className="flex flex-col gap-1 pb-4 pl-4">
-          {children.map(({ href, label: l }) => (
-            <Link
-              key={l}
-              to={href}
-              onClick={onClose}
-              className="py-2 text-lg text-[#737373] hover:text-[#171717] transition-colors"
-            >
-              {l}
-            </Link>
-          ))}
+      <div className={`grid transition-[grid-template-rows] duration-200 ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+        <div className="overflow-hidden">
+          <div className="flex flex-col gap-1 pb-4 pl-4">
+            {children.map(({ href, label: l }) => (
+              <Link
+                key={l}
+                to={href}
+                onClick={onClose}
+                className="py-2 text-lg text-[#737373] hover:text-[#171717] transition-colors"
+              >
+                {l}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -185,9 +188,10 @@ const MobileAccordion = ({ label, children, onClose }) => {
 export default function Header() {
   const [open, setOpen] = useState(false)
   const { pathname } = useLocation()
-  const { user, isAdmin: isAdminFn } = useAuthStore()
+  const { user, isAdmin: isAdminFn, isAdminOrOperator: isAdminOrOperatorFn, sessionExpiresAt } = useAuthStore()
   const { mutate: logout, isPending: isLoggingOut } = useLogout()
   const isAdmin = isAdminFn()
+  const isAdminOrOperator = isAdminOrOperatorFn()
 
   const { data: pendingCount = 0 } = useQuery({
     queryKey: ['admin', 'users', 'pending', 'count'],
@@ -259,13 +263,18 @@ export default function Header() {
 
           {/* 인증 */}
           {user ? (
-            <UserDropdown
-              user={user}
-              isAdmin={isAdmin}
-              pendingCount={pendingCount}
-              onLogout={() => logout()}
-              isLoggingOut={isLoggingOut}
-            />
+            <div className="flex items-center gap-4">
+              {isAdminOrOperator && (
+                <SessionCountdown expiresAt={sessionExpiresAt} className="text-xs text-[#A3A3A3]" />
+              )}
+              <UserDropdown
+                user={user}
+                isAdmin={isAdmin}
+                pendingCount={pendingCount}
+                onLogout={() => logout()}
+                isLoggingOut={isLoggingOut}
+              />
+            </div>
           ) : (
             <div className="flex items-center gap-6">
               <Link
@@ -340,6 +349,9 @@ export default function Header() {
                     {isAdmin && <p className="text-xs text-[#737373]">관리자</p>}
                   </div>
                 </div>
+                {isAdminOrOperator && (
+                  <SessionCountdown expiresAt={sessionExpiresAt} className="text-xs text-[#737373] pb-2" />
+                )}
                 {[
                   { to: '/mypage', label: '마이페이지' },
                   ...(isAdmin ? [{ to: '/admin', label: '관리자 대시보드' }] : []),

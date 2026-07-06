@@ -238,8 +238,8 @@ export default function AdminBulletinPage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <form onSubmit={handleSearch} className="relative w-full max-w-md">
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <form onSubmit={handleSearch} className="relative w-full md:max-w-md">
           <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#45474c] pointer-events-none" />
           <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
             placeholder="주보 검색..."
@@ -314,7 +314,8 @@ export default function AdminBulletinPage() {
                 {keyword && <span className="ml-1 text-[#091426] font-medium">· 검색: "{keyword}"</span>}
               </span>
             </div>
-            <div className="overflow-x-auto">
+            {/* 데스크탑: 테이블형 */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
@@ -390,6 +391,53 @@ export default function AdminBulletinPage() {
                   }
                 </tbody>
               </table>
+            </div>
+
+            {/* 모바일: 카드형 */}
+            <div className="md:hidden divide-y divide-[#c5c6cd]/50">
+              {isLoading
+                ? [...Array(4)].map((_, i) => (
+                    <div key={i} className="px-4 py-4"><div className="h-4 bg-[#e5eeff] rounded animate-pulse w-2/3" /></div>
+                  ))
+                : bulletins.length === 0
+                ? (
+                  <div className="px-6 py-16 text-center text-[14px] text-[#45474c]">
+                    {keyword ? `"${keyword}"에 해당하는 주보가 없습니다.` : '등록된 주보가 없습니다.'}
+                  </div>
+                )
+                : bulletins.map((b) => (
+                  <div key={b.id} className="px-4 py-4 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => navigate(`/bulletin/${b.id}`)}
+                        className="w-10 h-14 bg-[#e5eeff] rounded border border-[#c5c6cd] overflow-hidden flex-shrink-0">
+                        {b.thumbnailUrl
+                          ? <img src={b.thumbnailUrl} alt={b.title} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={18} className="text-[#75777d]" /></div>
+                        }
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <button onClick={() => navigate(`/bulletin/${b.id}`)}
+                          className="text-[15px] font-bold text-[#0b1c30] hover:underline text-left block truncate">
+                          {b.title}
+                        </button>
+                        <p className="text-[12px] text-[#45474c] truncate">{b.authorName ?? '-'} · {fmt(b.createdAt)} · 조회 {(b.viewCount ?? 0).toLocaleString()}</p>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => setEditTarget(b)}
+                          className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all" title="수정">
+                          <NotePencil size={18} />
+                        </button>
+                        <button onClick={() => handleDelete(b.id, b.title)} disabled={deleteMutation.isPending}
+                          className="p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40" title="삭제">
+                          <Trash size={18} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              }
             </div>
 
             {/* 페이지네이션 */}

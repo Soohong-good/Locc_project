@@ -70,8 +70,8 @@ export default function AdminNoticePage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <form onSubmit={handleSearch} className="relative w-full max-w-md">
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <form onSubmit={handleSearch} className="relative w-full md:max-w-md">
           <MagnifyingGlass size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#45474c] pointer-events-none" />
           <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
             placeholder="공지사항 검색..."
@@ -147,7 +147,8 @@ export default function AdminNoticePage() {
                 {keyword && <span className="ml-1 text-[#091426] font-medium">· 검색: "{keyword}"</span>}
               </span>
             </div>
-            <div className="overflow-x-auto">
+            {/* 데스크탑: 테이블형 */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
@@ -217,6 +218,59 @@ export default function AdminNoticePage() {
                   }
                 </tbody>
               </table>
+            </div>
+
+            {/* 모바일: 카드형 */}
+            <div className="md:hidden divide-y divide-[#c5c6cd]/50">
+              {isLoading
+                ? [...Array(4)].map((_, i) => (
+                    <div key={i} className="px-4 py-4"><div className="h-4 bg-[#e5eeff] rounded animate-pulse w-2/3" /></div>
+                  ))
+                : notices.length === 0
+                ? (
+                  <div className="px-6 py-16 text-center text-[14px] text-[#45474c]">
+                    {keyword ? `"${keyword}"에 해당하는 공지사항이 없습니다.` : '등록된 공지사항이 없습니다.'}
+                  </div>
+                )
+                : notices.map((notice) => (
+                  <div key={notice.id} className="px-4 py-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      {notice.isPinned && <PushPin size={14} className="text-[#855300] shrink-0" weight="fill" />}
+                      <Link to={`/notices/${notice.id}`}
+                        className="text-[14px] font-medium text-[#0b1c30] hover:underline truncate min-w-0">
+                        {notice.title}
+                      </Link>
+                      {notice.isNew && (
+                        <span className="shrink-0 text-[10px] bg-[#e5eeff] text-[#091426] px-1.5 py-0.5 rounded font-bold">NEW</span>
+                      )}
+                      {notice.hasAttachments && (
+                        <Paperclip size={13} className="text-[#45474c] shrink-0" />
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[12px] text-[#45474c] truncate">{notice.authorName ?? '-'} · {fmt(notice.createdAt)}</p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button onClick={() => pinMutation.mutate(notice.id)} disabled={pinMutation.isPending}
+                          className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-colors disabled:opacity-40 ${
+                            notice.isPinned
+                              ? 'bg-[#fea619]/20 text-[#684000] hover:bg-[#fea619]/30'
+                              : 'bg-[#e5eeff] text-[#45474c] hover:bg-[#dce9ff]'
+                          }`}>
+                          {notice.isPinned ? '고정중' : '고정'}
+                        </button>
+                        <Link to={`/admin/notices/${notice.id}/edit`}
+                          className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
+                          <NotePencil size={18} />
+                        </Link>
+                        <button onClick={() => handleDelete(notice.id, notice.title)} disabled={deleteMutation.isPending}
+                          className="p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40">
+                          <Trash size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
             </div>
 
             {/* 페이지네이션 */}

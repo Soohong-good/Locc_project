@@ -90,9 +90,9 @@ const HeroSection = () => (
 
 const ProgramInfoSection = () => (
   <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
-    <div className="max-w-[1600px] mx-auto grid grid-cols-2 lg:grid-cols-4 divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
       {programInfoItems.map(({ label, value }) => (
-        <div key={label} className="p-8 md:p-12 flex flex-col">
+        <div key={label} className="p-6 sm:p-8 md:p-12 flex flex-col">
           <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-3">{label}</span>
           <span className="text-xl font-bold text-[#2C2C2C]">{value}</span>
         </div>

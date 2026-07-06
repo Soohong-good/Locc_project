@@ -2,10 +2,8 @@ import { Link } from 'react-router-dom'
 import { CaretRight } from '@phosphor-icons/react'
 
 const HeroSection = () => (
-  <section className="relative bg-[#171717] h-[400px] lg:h-[500px] flex items-center overflow-hidden border-b border-[#E5E5E5]">
-    {/* 배경 고정(parallax) — ValuesSection과 같은 이미지를 같은 위치로 공유해 두 섹션이 하나로 이어진 것처럼 보임 */}
-    <div className="absolute inset-0 bg-cover bg-center lg:bg-fixed"
-      style={{ backgroundImage: "url('/aboutPage.jpg')" }} />
+  <section className="relative h-[400px] lg:h-[500px] flex items-center overflow-hidden border-b border-[#E5E5E5]">
+    {/* 배경 이미지는 AboutPage 최상단의 고정(position:fixed) 레이어가 담당 — ValuesSection과 이어져 보임 */}
     <div className="absolute inset-0 bg-gradient-to-r from-[#2a303c]/80 via-[#2a303c]/30 to-transparent" />
     <div className="relative z-10 w-full max-w-[1600px] mx-auto px-8 md:px-16 lg:px-24">
       <div className="max-w-3xl">
@@ -28,7 +26,7 @@ const VISION_ITEMS = [
 ]
 
 const VisionSection = () => (
-  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
+  <section className="relative z-10 bg-[#FAF9F6] border-b border-[#E5E5E5]">
     <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
       <div className="lg:col-span-4 p-8 md:p-16 lg:p-24 bg-[#FAF9F6]">
         <div className="sticky top-32">
@@ -58,10 +56,8 @@ const CORE_VALUES = [
 ]
 
 const ValuesSection = () => (
-  <section className="bg-[#171717] relative border-b border-[#E5E5E5]">
-    {/* 배경 고정(parallax) — HeroSection과 같은 이미지를 같은 위치로 공유해 두 섹션이 하나로 이어진 것처럼 보임 */}
-    <div className="absolute inset-0 bg-cover bg-center lg:bg-fixed"
-      style={{ backgroundImage: "url('/aboutPage.jpg')" }} />
+  <section className="relative border-b border-[#E5E5E5]">
+    {/* 배경 이미지는 AboutPage 최상단의 고정(position:fixed) 레이어가 담당 — HeroSection과 이어져 보임 */}
     <div className="absolute inset-0 bg-[#171717]/40" />
     <div className="relative z-10 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-white/10 border-x border-white/10">
       <div className="lg:col-span-4 p-8 md:p-16 lg:p-24">
@@ -94,7 +90,7 @@ const CONFESSION_ITEMS = [
 ]
 
 const ConfessionSection = () => (
-  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5] relative overflow-hidden">
+  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5] relative z-10 overflow-hidden">
     <div className="absolute inset-0 bg-cover bg-center" />
     <div className="absolute inset-0 bg-[#FAF9F6]/70" />
     <div className="relative z-10 max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
@@ -140,7 +136,7 @@ const ConfessionSection = () => (
 )
 
 const CTASection = () => (
-  <section className="bg-[#171717] border-b border-[#E5E5E5] py-28 px-8 text-center relative overflow-hidden">
+  <section className="bg-[#171717] border-b border-[#E5E5E5] py-28 px-8 text-center relative z-10 overflow-hidden">
     <div className="absolute inset-0 bg-white/5 pointer-events-none" />
     <div className="max-w-2xl mx-auto relative z-10">
       <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-6">여러분을 초대합니다</h2>
@@ -161,7 +157,15 @@ const CTASection = () => (
 
 export default function AboutPage() {
   return (
-    <div className="bg-[#FAF9F6] text-[#2C2C2C] pt-20">
+    <div className="text-[#2C2C2C] pt-20">
+      {/* HeroSection·ValuesSection이 공유하는 고정 배경.
+          background-attachment:fixed(bg-fixed)는 모바일 브라우저에서 잘 안 먹혀서(각 섹션이 이미지를
+          따로 잘라 보여주는 것처럼 보임) position:fixed 레이어 하나로 교체 — 모바일에서도 동일하게 동작.
+          이 레이어는 z-0으로 깔고, 이걸 가려야 하는 VisionSection·ConfessionSection·CTASection에는
+          각각 relative z-10을 줘서 명시적으로 위에 쌓이게 함. (주의: 이 div에 음수 z-index를 쓰면 안 됨 —
+          Layout.jsx 루트 div가 bg-white라서, 일반 흐름 배경이 음수 z-index fixed 레이어보다 항상 위에
+          그려지는 stacking 규칙 때문에 이미지 전체가 그 흰 배경에 가려져버림 — 실제로 이 문제로 한 번 삽질함) */}
+      <div aria-hidden="true" className="fixed inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: "url('/aboutPage.jpg')" }} />
       <HeroSection />
       <VisionSection />
       <ValuesSection />

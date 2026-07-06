@@ -58,6 +58,38 @@ const ActivitiesSection = () => (
   </section>
 )
 
+// ── 국가별 배경 국기 (CSS로만 그림 — 실제 이미지 에셋 없이 흐리게 깔리는 장식용) ──
+const FlagUS = () => (
+  <div className="absolute inset-0" style={{
+    backgroundImage: 'repeating-linear-gradient(180deg, #B22234 0, #B22234 7.7%, #FFFFFF 7.7%, #FFFFFF 15.4%)',
+  }}>
+    <div className="absolute top-0 left-0" style={{ width: '40%', height: '53.8%', background: '#3C3B6E' }} />
+  </div>
+)
+
+const FlagPH = () => (
+  <div className="absolute inset-0">
+    <div className="absolute inset-x-0 top-0 h-1/2" style={{ background: '#0038A8' }} />
+    <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: '#CE1126' }} />
+    <div className="absolute inset-y-0 left-0" style={{ width: '45%', background: '#FFFFFF', clipPath: 'polygon(0 0, 100% 50%, 0 100%)' }} />
+  </div>
+)
+
+const COUNTRY_FLAGS = { US: FlagUS, PH: FlagPH }
+const COUNTRY_CODE  = { USA: 'US', Philippines: 'PH' }
+
+const WavingFlag = ({ code }) => {
+  const Flag = COUNTRY_FLAGS[code]
+  if (!Flag) return null
+  return (
+    <div aria-hidden="true" className="absolute inset-0 md:inset-y-0 md:left-auto md:right-0 md:w-72 overflow-hidden pointer-events-none opacity-[0.12] blur-[3px]">
+      <div className="w-full h-full animate-flag-wave">
+        <Flag />
+      </div>
+    </div>
+  )
+}
+
 const missionFields = [
   { name: 'GLL센터 (TCK문화센터)', en: 'TCK Culture Kids',    sub: 'Third Culture Kids',    missionary: null,       desc: '제3문화권 아이들을 위한 문화센터로서, 다문화 가정과 해외 거주 경험이 있는 아이들의 정체성 확립과 문화적응을 돕는 사역을 지원하고 있습니다.' },
   { name: '미국',                   en: 'USA',                 sub: null,                   missionary: '이원규 선교사', desc: '미국 내 한인 디아스포라와 현지인을 대상으로 복음 전파와 교회 개척 사역을 감당하고 있습니다.' },
@@ -81,8 +113,9 @@ const MissionFieldSection = () => (
     <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5]">
       <ul className="flex flex-col divide-y divide-[#E5E5E5]">
         {missionFields.map(({ name, en, sub, missionary, desc }) => (
-          <li key={name} className="group hover:bg-[#F4F2EA] transition-colors">
-            <div className="grid grid-cols-1 lg:grid-cols-12 p-8 md:px-16 lg:px-24 py-12 lg:py-16 gap-6 lg:gap-0">
+          <li key={name} className="group relative overflow-hidden hover:bg-[#F4F2EA] transition-colors">
+            <WavingFlag code={COUNTRY_CODE[en]} />
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 p-8 md:px-16 lg:px-24 py-12 lg:py-16 gap-6 lg:gap-0">
               <div className="lg:col-span-5 flex flex-col justify-center pr-8">
                 <h4 className="text-2xl font-bold text-[#2C2C2C] mb-2">{name}</h4>
                 <span className="text-sm font-mono text-[#737373] uppercase tracking-wider block">{en}</span>

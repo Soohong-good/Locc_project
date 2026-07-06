@@ -293,7 +293,7 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
             {loadingGroup ? (
               <div className="h-24 flex items-center justify-center text-slate-400 text-sm">불러오는 중...</div>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {groupImages.map((img) => (
                   <div key={img.id} className="relative group aspect-square bg-slate-100 overflow-hidden rounded">
                     <img
@@ -309,7 +309,7 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
                             singleDeleteMutation.mutate(img.id)
                         }}
                         disabled={singleDeleteMutation.isPending}
-                        className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                        className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition hover:bg-red-700"
                       >
                         ✕
                       </button>
@@ -334,7 +334,7 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
               <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
             </label>
             {previews.length > 0 && (
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {previews.map((src, i) => (
                   <div key={i} className="aspect-square bg-slate-100 overflow-hidden rounded">
                     <img src={src} alt="" className="w-full h-full object-cover" />
@@ -509,8 +509,13 @@ const GalleryListPage = () => {
                           onError={(e) => { e.target.src = '/images/no-image.png' }}
                         />
 
-                        {/* 호버 시 정보 오버레이 */}
-                        <div className="absolute inset-0 bg-[#171717]/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        {/* 모바일: 하단 그라디언트에 제목만 항상 표시 (호버가 없어 하단 정보 오버레이를 못 보므로) */}
+                        <div className="md:hidden absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#171717]/80 to-transparent p-4 pt-10">
+                          <h3 className="text-[#FAF9F6] font-bold text-base break-keep truncate">{image.title}</h3>
+                        </div>
+
+                        {/* 데스크탑: 호버 시 상세 정보 오버레이 */}
+                        <div className="hidden md:flex absolute inset-0 bg-[#171717]/40 opacity-0 group-hover:opacity-100 transition-opacity flex-col justify-end p-6">
                           <span className="text-[10px] font-mono text-[#FAF9F6]/80 uppercase tracking-widest mb-1">
                             {image.departmentName} · {fmtDate(image.createdAt)}
                           </span>
@@ -532,9 +537,9 @@ const GalleryListPage = () => {
                           </span>
                         )}
 
-                        {/* 수정/삭제 버튼 — canWrite 시 hover에 표시 */}
+                        {/* 수정/삭제 버튼 — 모바일은 항상 표시, 데스크탑은 호버 시 표시 */}
                         {canWrite && (
-                          <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute top-3 right-3 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={(e) => { e.stopPropagation(); setEditImage(image) }}
                               className="px-2 py-1 text-xs font-medium bg-white/90 text-[#2C2C2C] hover:bg-white transition"

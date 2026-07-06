@@ -31,7 +31,7 @@ const StaffImg = ({ imagePath, className = '' }) => {
 /* ── 관리자 오버레이 버튼 ── */
 function AdminActions({ onEdit, onDelete, light = false }) {
   return (
-    <div className={`absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10`}>
+    <div className={`absolute top-3 right-3 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10`}>
       <button onClick={(e) => { e.stopPropagation(); onEdit() }}
         className={`p-1.5 rounded ${light ? 'bg-white/90 text-[#2C2C2C] hover:bg-white' : 'bg-black/70 text-white hover:bg-black'} transition-colors`}
         title="수정">

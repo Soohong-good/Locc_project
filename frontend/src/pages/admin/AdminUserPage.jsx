@@ -218,8 +218,8 @@ export default function AdminUserPage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <h2 className="text-[20px] font-extrabold text-[#0b1c30]">계정 및 가입 관리</h2>
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <h2 className="text-[16px] md:text-[20px] font-extrabold text-[#0b1c30] whitespace-nowrap">계정 및 가입 관리</h2>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 text-[#45474c]">
             <button className="hover:text-[#091426] transition-colors"><Bell size={22} /></button>
@@ -285,7 +285,8 @@ export default function AdminUserPage() {
               <span className="text-[14px] text-[#45474c]">총 {totalElements}명</span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* 데스크탑: 테이블형 */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
@@ -324,7 +325,7 @@ export default function AdminUserPage() {
                             </td>
                             <td className="px-6 py-4 text-[13px] text-[#45474c] hidden sm:table-cell">{u.email}</td>
                             <td className="px-6 py-4">
-                              <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold ${status.cls}`}>{status.label}</span>
+                              <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap ${status.cls}`}>{status.label}</span>
                             </td>
                             <td className="px-6 py-4 text-[13px] text-[#45474c] hidden md:table-cell whitespace-nowrap">
                               {u.createdAt ? new Date(u.createdAt).toLocaleDateString('ko-KR') : '-'}
@@ -336,6 +337,40 @@ export default function AdminUserPage() {
                   }
                 </tbody>
               </table>
+            </div>
+
+            {/* 모바일: 카드형 — 테이블 컬럼이 375px에서 눌려 "승인"이 세로로 쪼개지던 문제 수정 */}
+            <div className="md:hidden divide-y divide-[#c5c6cd]/50">
+              {isLoading
+                ? [...Array(4)].map((_, i) => (
+                    <div key={i} className="px-4 py-4"><div className="h-4 bg-[#e5eeff] rounded animate-pulse w-2/3" /></div>
+                  ))
+                : users.length === 0
+                ? <div className="px-6 py-16 text-center text-[14px] text-[#45474c]">
+                    {tab === 'pending' ? '승인 대기 회원이 없습니다.' : '회원이 없습니다.'}
+                  </div>
+                : users.map((u) => {
+                    const status       = STATUS_LABEL[u.approvalStatus] ?? { label: u.approvalStatus, cls: 'bg-[#e5eeff] text-[#45474c]' }
+                    const roleLabel    = ROLE_LABEL[u.role] ?? null
+                    const userTypeLabel = USER_TYPE_LABEL[u.userType] ?? null
+                    return (
+                      <div key={u.id} className={`px-4 py-4 space-y-2 ${u.deleted ? 'opacity-50' : ''}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                            <span className="text-[14px] font-medium text-[#0b1c30]">{u.name}</span>
+                            {roleLabel && <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded font-bold ${roleLabel.cls}`}>{roleLabel.label}</span>}
+                            {!u.enabled && !u.deleted && <span className="shrink-0 text-[10px] bg-[#ffdad6]/50 text-[#ba1a1a] px-1.5 py-0.5 rounded font-bold">차단</span>}
+                            {u.deleted && <span className="shrink-0 text-[10px] bg-[#e5eeff] text-[#45474c] px-1.5 py-0.5 rounded">삭제됨</span>}
+                          </div>
+                          <span className={`shrink-0 text-[11px] px-2.5 py-1 rounded-full font-bold whitespace-nowrap ${status.cls}`}>{status.label}</span>
+                        </div>
+                        {userTypeLabel && <span className={`block text-[11px] ${userTypeLabel.cls}`}>{userTypeLabel.label}</span>}
+                        <p className="text-[12px] text-[#45474c] truncate">{u.email}</p>
+                        <ActionButtons u={u} />
+                      </div>
+                    )
+                  })
+              }
             </div>
 
             {/* 페이지네이션 */}

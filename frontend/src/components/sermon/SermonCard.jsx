@@ -45,7 +45,7 @@ const SermonCard = ({ sermon, isAdmin, canWrite, userId, onEdit, onDelete, detai
       {/* 관리자 버튼 */}
       {canEdit && (
         <div
-          className="absolute top-3 right-3 flex gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          className="absolute top-3 right-3 flex gap-1.5 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -74,7 +74,7 @@ const SermonCard = ({ sermon, isAdmin, canWrite, userId, onEdit, onDelete, detai
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-250" />
           {/* 재생 힌트 아이콘 */}
-          <div className="absolute bottom-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute bottom-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
             <svg className="w-4 h-4 text-slate-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>

@@ -74,12 +74,12 @@ const TrainingListPage = () => {
       <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C] relative overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/bg-training.jpg')" }} />
         <div className="absolute inset-0" style={{ background: 'rgba(23,23,23,0.75)' }} />
-        <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
+        <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-8 md:py-16 flex flex-col md:flex-row md:justify-between items-start md:items-end gap-5 md:gap-8">
           <div>
-            <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Training</span>
-            <h1 className="text-5xl font-bold tracking-tight break-keep">훈련신청</h1>
+            <span className="font-mono text-[10px] md:text-xs tracking-[0.15em] md:tracking-[0.25em] uppercase text-[#737373] mb-2 md:mb-4 block">Training</span>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight break-keep">훈련신청</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-3">
             {user && (
               <button
                 onClick={() => navigate('/training/my')}
@@ -103,7 +103,11 @@ const TrainingListPage = () => {
       {/* Table */}
       <main className="max-w-[1200px] mx-auto px-6 pt-14 md:pt-20 pb-32">
         <div className="h-px w-full bg-[#171717]" />
-        <div className="grid grid-cols-[60px_1fr_auto_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">
+        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[#E5E5E5]">
+          <span className="text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">훈련 목록</span>
+          <span className="text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">총 {totalElem}건</span>
+        </div>
+        <div className="hidden md:grid grid-cols-[60px_1fr_auto_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">
           <div>No.</div>
           <div>Title</div>
           <div className="text-right w-44">Period</div>
@@ -122,9 +126,9 @@ const TrainingListPage = () => {
           <div
             key={t.id}
             onClick={() => navigate(`/training/${t.id}`)}
-            className="grid grid-cols-[60px_1fr_auto_auto] gap-4 px-4 py-5 border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors items-center cursor-pointer group"
+            className="flex flex-col gap-1.5 md:grid md:grid-cols-[60px_1fr_auto_auto] md:gap-4 px-4 py-4 md:py-5 border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors md:items-center cursor-pointer group"
           >
-            <div className="font-mono text-sm text-[#737373]">
+            <div className="hidden md:block font-mono text-sm text-[#737373]">
               {totalElem - currentPage * pageSize - idx}
             </div>
             <div className="min-w-0">
@@ -141,12 +145,14 @@ const TrainingListPage = () => {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-[#737373] text-right w-44 justify-end">
-              <CalendarBlank size={14} className="flex-shrink-0" />
-              <span className="font-mono tabular-nums">{fmtDate(t.startDate)} – {fmtDate(t.endDate)}</span>
-            </div>
-            <div className="w-24 flex justify-end">
-              <StatusBadge status={t.status} />
+            <div className="flex items-center gap-3 md:contents">
+              <div className="flex items-center gap-1.5 text-sm text-[#737373] md:w-44 md:justify-end md:text-right">
+                <CalendarBlank size={14} className="flex-shrink-0" />
+                <span className="font-mono tabular-nums">{fmtDate(t.startDate)} – {fmtDate(t.endDate)}</span>
+              </div>
+              <div className="md:w-24 flex md:justify-end">
+                <StatusBadge status={t.status} />
+              </div>
             </div>
           </div>
         ))}
@@ -156,19 +162,19 @@ const TrainingListPage = () => {
           <div className="mt-16 flex justify-center">
             <nav className="inline-flex border border-[#E5E5E5]">
               <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 0}
-                className="w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                className="w-11 h-11 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                 <CaretLeft size={14} weight="bold" />
               </button>
               {getPageRange(currentPage, totalPages).map((p) => (
                 <button key={p} onClick={() => goPage(p)}
-                  className={`w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
+                  className={`w-11 h-11 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
                     p === currentPage ? 'bg-[#171717] text-white' : 'text-[#737373] hover:bg-[#F4F2EA] hover:text-[#171717]'
                   }`}>
                   {p + 1}
                 </button>
               ))}
               <button onClick={() => goPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}
-                className="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                className="w-11 h-11 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                 <CaretRight size={14} weight="bold" />
               </button>
             </nav>

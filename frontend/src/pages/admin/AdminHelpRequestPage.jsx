@@ -164,8 +164,8 @@ export default function AdminHelpRequestPage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <h2 className="text-[20px] font-extrabold text-[#0b1c30]">도움문의 관리</h2>
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <h2 className="text-[16px] md:text-[20px] font-extrabold text-[#0b1c30] whitespace-nowrap">도움문의 관리</h2>
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 text-[#45474c]">
             <button className="hover:text-[#091426] transition-colors"><Bell size={22} /></button>
@@ -229,7 +229,8 @@ export default function AdminHelpRequestPage() {
               <span className="text-[14px] text-[#45474c]">총 {totalElements}건</span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* 데스크탑: 테이블형 */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
@@ -273,6 +274,35 @@ export default function AdminHelpRequestPage() {
                   }
                 </tbody>
               </table>
+            </div>
+
+            {/* 모바일: 카드형 */}
+            <div className="md:hidden divide-y divide-[#c5c6cd]/50">
+              {isLoading
+                ? [...Array(4)].map((_, i) => (
+                    <div key={i} className="px-4 py-4"><div className="h-4 bg-[#e5eeff] rounded animate-pulse w-2/3" /></div>
+                  ))
+                : items.length === 0
+                ? <div className="px-6 py-16 text-center text-[14px] text-[#45474c]">문의 내역이 없습니다.</div>
+                : items.map((item) => (
+                  <div key={item.id} className="px-4 py-4 space-y-2 cursor-pointer" onClick={() => setSelectedItem(item)}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[14px] font-medium text-[#0b1c30]">{item.name} <span className="text-[#45474c] font-normal">· {item.phone}</span></p>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id, item.name) }} disabled={deleteMutation.isPending}
+                        className="shrink-0 p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40">
+                        <Trash size={18} />
+                      </button>
+                    </div>
+                    <p className="text-[13px] text-[#45474c] line-clamp-2">{item.content}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[12px] text-[#45474c]">{item.createdAt}</p>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect item={item} />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              }
             </div>
 
             {/* 페이지네이션 */}

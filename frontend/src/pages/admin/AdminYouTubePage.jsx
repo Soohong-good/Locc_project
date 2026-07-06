@@ -500,16 +500,16 @@ export default function AdminYouTubePage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <h2 className="text-[20px] font-extrabold text-[#0b1c30]">YouTube 관리</h2>
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <h2 className="text-[16px] md:text-[20px] font-extrabold text-[#0b1c30] whitespace-nowrap">YouTube 관리</h2>
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap justify-end">
           <button onClick={handleSyncAll} disabled={syncingAll}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#091426] text-white text-[12px] font-semibold rounded-lg hover:opacity-90 disabled:opacity-60 transition-all shadow-md">
+            className="flex items-center gap-2 px-3 md:px-5 py-2 md:py-2.5 bg-[#091426] text-white text-[11px] md:text-[12px] font-semibold rounded-lg hover:opacity-90 disabled:opacity-60 transition-all shadow-md whitespace-nowrap">
             <ArrowClockwise size={16} className={syncingAll ? 'animate-spin' : ''} />
             {syncingAll ? '갱신 중...' : '전체 갱신'}
           </button>
           <button onClick={() => setShowApiSettings(true)}
-            className="flex items-center gap-2 px-4 py-2.5 border border-[#c5c6cd] bg-white text-[#0b1c30] text-[12px] font-semibold rounded-lg hover:bg-[#e5eeff] transition-all">
+            className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 border border-[#c5c6cd] bg-white text-[#0b1c30] text-[11px] md:text-[12px] font-semibold rounded-lg hover:bg-[#e5eeff] transition-all whitespace-nowrap">
             <Gear size={16} /> API 설정
           </button>
           <div className="border-l border-[#c5c6cd] pl-3 flex items-center gap-3">
@@ -574,9 +574,9 @@ export default function AdminYouTubePage() {
           </div>
 
           {/* 콘텐츠 영역 */}
-          <section className="grid grid-cols-12 gap-6">
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* 섹션 탭 */}
-            <div className="col-span-3 bg-white border border-[#c5c6cd] rounded-xl overflow-hidden flex flex-col shadow-sm">
+            <div className="lg:col-span-3 bg-white border border-[#c5c6cd] rounded-xl overflow-hidden flex flex-col shadow-sm">
               <div className="p-4 border-b border-[#c5c6cd] bg-[#eff4ff]">
                 <h5 className="font-bold text-[14px] text-[#0b1c30]">{isSearching ? '검색 모드' : '섹션'}</h5>
               </div>
@@ -599,7 +599,7 @@ export default function AdminYouTubePage() {
             </div>
 
             {/* 콘텐츠 */}
-            <div className="col-span-9 space-y-6 pb-8 pr-1">
+            <div className="lg:col-span-9 space-y-6 pb-8 pr-1">
               {isSearching && (
                 <SearchResults keyword={searchKeyword} departments={departments} playlists={playlists} worshipStatus={worshipStatus}
                   onRefreshDept={(code) => syncDept.mutate(code)} onRefreshPlaylist={(key) => refreshPlaylist.mutate(key)}

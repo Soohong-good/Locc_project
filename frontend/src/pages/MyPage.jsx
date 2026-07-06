@@ -77,7 +77,7 @@ const SideNavItem = ({ id, label, active, onClick }) => (
       size={18}
       weight="bold"
       className={`shrink-0 transition-all ${
-        active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-hover:translate-x-1'
+        active ? 'opacity-100' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-hover:translate-x-1'
       }`}
     />
   </button>

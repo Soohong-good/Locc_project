@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useLogout } from '@/hooks/useAuth'
 import useAuthStore from '@/stores/authStore'
+import SessionCountdown from '@/components/common/SessionCountdown'
 import {
   Newspaper, AppWindow, YoutubeLogo, Microphone, Megaphone, Images, UsersThree,
-  ClipboardText, ChatCircleDots, Gauge, House, SignOut,
+  ClipboardText, ChatCircleDots, Gauge, House, SignOut, List, X,
 } from '@phosphor-icons/react'
 
 const NAV_ITEMS = [
@@ -22,8 +24,9 @@ const NAV_ITEMS = [
 const AdminLayout = () => {
   const navigate  = useNavigate()
   const location  = useLocation()
-  const { user }  = useAuthStore()
+  const { user, sessionExpiresAt } = useAuthStore()
   const { mutate: logout } = useLogout()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const initials = (user?.name ?? 'A')[0].toUpperCase()
 
@@ -32,14 +35,42 @@ const AdminLayout = () => {
       ? location.pathname === item.path
       : location.pathname.startsWith(item.path)
 
+  // 라우트 변경 시 모바일 사이드바 닫기
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
+
+  const goTo = (path) => {
+    navigate(path)
+    setSidebarOpen(false)
+  }
+
   return (
     <div className="h-screen bg-[#f8f9ff] text-[#0b1c30] flex overflow-hidden">
 
+      {/* 모바일 백드롭 */}
+      {sidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/40 z-40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ── 사이드바 ── */}
-      <aside className="h-screen w-72 fixed left-0 top-0 border-r border-[#c5c6cd] bg-white flex flex-col py-1 shadow-sm z-50">
+      <aside
+        className={`h-screen w-72 fixed left-0 top-0 border-r border-[#c5c6cd] bg-white flex flex-col py-1 shadow-sm z-50 transform transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
 
         {/* 로고 */}
-        <div className="px-6 py-8 flex flex-col items-center gap-3">
+        <div className="px-6 py-8 flex flex-col items-center gap-3 relative">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden absolute top-3 right-3 p-1 text-[#45474c] hover:text-[#0b1c30]"
+          >
+            <X size={20} />
+          </button>
           <div className="w-14 h-14 rounded-full bg-[#1e293b] flex items-center justify-center border-2 border-[#d8e3fb]">
             <span className="text-white text-xl font-bold select-none">G</span>
           </div>
@@ -56,7 +87,7 @@ const AdminLayout = () => {
             return (
               <button
                 key={path}
-                onClick={() => navigate(path)}
+                onClick={() => goTo(path)}
                 className={`w-[calc(100%-16px)] mx-2 text-left rounded-lg px-4 py-3 flex items-center gap-3 transition-colors text-[12px] font-medium tracking-wide ${
                   active
                     ? 'bg-[#fea619] text-[#684000] scale-[0.98]'
@@ -73,7 +104,7 @@ const AdminLayout = () => {
         {/* 하단 */}
         <div className="px-4 py-4 border-t border-[#c5c6cd] space-y-2">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => goTo('/')}
             className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-medium text-[#45474c] hover:bg-[#e5eeff] transition-colors"
           >
             <House size={18} />
@@ -97,12 +128,32 @@ const AdminLayout = () => {
               <SignOut size={17} />
             </button>
           </div>
+          {sessionExpiresAt && (
+            <div className="flex items-center gap-1.5 px-1 text-[11px] text-[#45474c]">
+              <span>세션 만료까지</span>
+              <SessionCountdown expiresAt={sessionExpiresAt} />
+            </div>
+          )}
         </div>
       </aside>
 
       {/* ── 콘텐츠 영역 ── */}
-      <div className="ml-72 flex-1 flex flex-col h-screen overflow-hidden">
-        <Outlet />
+      <div className="flex-1 flex flex-col h-screen overflow-hidden lg:ml-72">
+
+        {/* 모바일 상단바 */}
+        <div className="lg:hidden flex items-center gap-3 px-4 h-14 border-b border-[#c5c6cd] bg-white shrink-0">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 text-[#0b1c30] hover:bg-[#e5eeff] rounded-lg transition-colors"
+          >
+            <List size={22} />
+          </button>
+          <span className="text-[13px] font-bold text-[#0b1c30]">그리스도사랑교회 관리자</span>
+        </div>
+
+        <div className="flex-1 overflow-hidden">
+          <Outlet />
+        </div>
       </div>
 
     </div>

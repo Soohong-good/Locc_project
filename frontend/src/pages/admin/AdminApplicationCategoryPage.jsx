@@ -140,48 +140,72 @@ const AdminApplicationCategoryPage = () => {
         ) : categories.length === 0 ? (
           <div className="p-6 text-center text-sm text-gray-400">등록된 카테고리가 없습니다.</div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs">
-                <th className="px-4 py-3 text-left font-medium">순서</th>
-                <th className="px-4 py-3 text-left font-medium">이름</th>
-                <th className="px-4 py-3 text-left font-medium">설명</th>
-                <th className="px-4 py-3 text-left font-medium">상태</th>
-                <th className="px-4 py-3 text-left font-medium">관리</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+          <>
+            {/* 데스크탑: 테이블형 */}
+            <table className="hidden md:table w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 text-xs">
+                  <th className="px-4 py-3 text-left font-medium">순서</th>
+                  <th className="px-4 py-3 text-left font-medium">이름</th>
+                  <th className="px-4 py-3 text-left font-medium">설명</th>
+                  <th className="px-4 py-3 text-left font-medium">상태</th>
+                  <th className="px-4 py-3 text-left font-medium">관리</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {categories.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-3 text-gray-500">{c.sortOrder}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{c.name}</td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">{c.description ?? '-'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {c.isActive ? '활성' : '비활성'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(c)}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => toggleMutation.mutate(c.id)}
+                          disabled={toggleMutation.isPending}
+                          className="text-xs text-gray-500 hover:underline"
+                        >
+                          {c.isActive ? '비활성화' : '활성화'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* 모바일: 카드형 */}
+            <div className="md:hidden divide-y divide-gray-100">
               {categories.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-3 text-gray-500">{c.sortOrder}</td>
-                  <td className="px-4 py-3 font-medium text-gray-800">{c.name}</td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{c.description ?? '-'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                <div key={c.id} className="px-4 py-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-gray-800 truncate">{c.sortOrder}. {c.name}</p>
+                    <span className={`shrink-0 inline-block px-2 py-0.5 rounded-full text-xs font-medium ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {c.isActive ? '활성' : '비활성'}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(c)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        수정
-                      </button>
-                      <button
-                        onClick={() => toggleMutation.mutate(c.id)}
-                        disabled={toggleMutation.isPending}
-                        className="text-xs text-gray-500 hover:underline"
-                      >
-                        {c.isActive ? '비활성화' : '활성화'}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  </div>
+                  {c.description && <p className="text-gray-500 text-xs truncate">{c.description}</p>}
+                  <div className="flex gap-3">
+                    <button onClick={() => handleEdit(c)} className="text-xs text-blue-600 hover:underline">수정</button>
+                    <button onClick={() => toggleMutation.mutate(c.id)} disabled={toggleMutation.isPending} className="text-xs text-gray-500 hover:underline">
+                      {c.isActive ? '비활성화' : '활성화'}
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
     </div>

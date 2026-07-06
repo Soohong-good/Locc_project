@@ -84,7 +84,7 @@ const HeroSection = () => (
             2026 Church Motto
           </span>
         </div>
-        <h1 className="text-6xl md:text-8xl lg:text-[6.5rem] font-bold tracking-tighter leading-[1.1] text-white lg:text-neutral-900 mb-10 break-keep">
+        <h1 className="text-4xl md:text-8xl lg:text-[6.5rem] font-bold tracking-tighter leading-[1.1] text-white lg:text-neutral-900 mb-6 md:mb-10 break-keep">
           "여호와의 거룩한<br />
           이름을 위함이라"
         </h1>
@@ -269,7 +269,7 @@ const SermonSection = ({ newYearData, categorySermons, onPlayVideo }) => {
                     <span className={`text-xl group-hover:translate-x-2 transition-transform ${activeTab === i ? 'font-bold' : 'font-medium'}`}>
                       {tab.label}
                     </span>
-                    <ArrowRight size={20} className={activeTab !== i ? 'opacity-0 group-hover:opacity-100 transition-opacity' : ''} />
+                    <ArrowRight size={20} className={activeTab !== i ? 'opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity' : ''} />
                   </button>
                 ))}
               </div>
@@ -340,7 +340,7 @@ const SermonSection = ({ newYearData, categorySermons, onPlayVideo }) => {
                             alt={item.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <div className="w-10 h-10 bg-white flex items-center justify-center">
                               <Play size={16} weight="fill" className="text-neutral-900" />
                             </div>

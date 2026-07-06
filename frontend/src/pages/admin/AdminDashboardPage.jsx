@@ -784,7 +784,7 @@ const AdminDashboardPage = () => {
   const timeStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   return (
-    <div className="h-full overflow-y-auto p-8 space-y-8">
+    <div className="h-full overflow-y-auto p-4 md:p-8 space-y-8">
 
       {/* 헤더 */}
       <div className="flex items-center justify-between">
@@ -813,7 +813,7 @@ const AdminDashboardPage = () => {
           <Skeleton className="h-56" />
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex gap-8">
+            <div className="flex flex-col lg:flex-row gap-8">
 
               {/* 좌: 라인 차트 */}
               <div className="flex-1 min-w-0">
@@ -822,7 +822,7 @@ const AdminDashboardPage = () => {
               </div>
 
               {/* 우: 기간별 수치 테이블 */}
-              <div className="w-48 shrink-0 border-l border-gray-100 pl-8">
+              <div className="w-full lg:w-48 shrink-0 border-t lg:border-t-0 lg:border-l border-gray-100 pt-6 lg:pt-0 lg:pl-8">
                 <p className="text-xs font-medium text-gray-500 mb-3">기간별 현황</p>
                 <table className="w-full">
                   <thead>

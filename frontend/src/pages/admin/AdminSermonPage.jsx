@@ -41,35 +41,71 @@ function SermonTable({ sermons, onDelete, isPending }) {
   if (sermons.length === 0)
     return <p className="text-center text-[14px] text-[#45474c] py-16">등록된 설교가 없습니다.</p>
   return (
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
-          <th className="px-6 py-4">제목</th>
-          <th className="px-6 py-4 hidden md:table-cell">설교자</th>
-          <th className="px-6 py-4 hidden md:table-cell">설교일</th>
-          <th className="px-6 py-4">영상</th>
-          <th className="px-6 py-4 text-right">관리</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-[#c5c6cd]/50">
+    <>
+      {/* 데스크탑: 테이블형 */}
+      <table className="hidden md:table w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
+            <th className="px-6 py-4">제목</th>
+            <th className="px-6 py-4 hidden md:table-cell">설교자</th>
+            <th className="px-6 py-4 hidden md:table-cell">설교일</th>
+            <th className="px-6 py-4">영상</th>
+            <th className="px-6 py-4 text-right">관리</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#c5c6cd]/50">
+          {sermons.map((s) => (
+            <tr key={s.id} className="hover:bg-[#eff4ff]/50 transition-colors">
+              <td className="px-6 py-4">
+                <Link to={`/worship/sermon/${s.id}`}
+                  className="text-[14px] font-medium text-[#0b1c30] hover:text-[#091426] hover:underline block max-w-xs truncate">
+                  {s.title}
+                </Link>
+                {s.scripture && <p className="text-[12px] text-[#45474c] mt-0.5 truncate max-w-xs">{s.scripture}</p>}
+              </td>
+              <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{s.preacher ?? '-'}</td>
+              <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{s.sermonDate ?? '-'}</td>
+              <td className="px-6 py-4">
+                {s.videoUrl
+                  ? <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#ba1a1a]"><YoutubeLogo size={14} />YouTube</span>
+                  : <span className="text-[11px] text-[#c5c6cd]">없음</span>}
+              </td>
+              <td className="px-6 py-4 text-right">
+                <div className="flex justify-end gap-1">
+                  <Link to={`/admin/sermons/${s.id}/edit`}
+                    className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
+                    <NotePencil size={18} />
+                  </Link>
+                  <button onClick={() => onDelete(s.id, s.title)} disabled={isPending}
+                    className="p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40">
+                    <Trash size={18} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* 모바일: 카드형 */}
+      <div className="md:hidden divide-y divide-[#c5c6cd]/50">
         {sermons.map((s) => (
-          <tr key={s.id} className="hover:bg-[#eff4ff]/50 transition-colors">
-            <td className="px-6 py-4">
-              <Link to={`/worship/sermon/${s.id}`}
-                className="text-[14px] font-medium text-[#0b1c30] hover:text-[#091426] hover:underline block max-w-xs truncate">
-                {s.title}
-              </Link>
-              {s.scripture && <p className="text-[12px] text-[#45474c] mt-0.5 truncate max-w-xs">{s.scripture}</p>}
-            </td>
-            <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{s.preacher ?? '-'}</td>
-            <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{s.sermonDate ?? '-'}</td>
-            <td className="px-6 py-4">
+          <div key={s.id} className="px-4 py-4 space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <Link to={`/worship/sermon/${s.id}`}
+                  className="text-[14px] font-medium text-[#0b1c30] hover:underline block truncate">
+                  {s.title}
+                </Link>
+                {s.scripture && <p className="text-[12px] text-[#45474c] mt-0.5 truncate">{s.scripture}</p>}
+              </div>
               {s.videoUrl
-                ? <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#ba1a1a]"><YoutubeLogo size={14} />YouTube</span>
-                : <span className="text-[11px] text-[#c5c6cd]">없음</span>}
-            </td>
-            <td className="px-6 py-4 text-right">
-              <div className="flex justify-end gap-1">
+                ? <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-[#ba1a1a]"><YoutubeLogo size={14} />YouTube</span>
+                : <span className="shrink-0 text-[11px] text-[#c5c6cd]">없음</span>}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[12px] text-[#45474c] truncate">{s.preacher ?? '-'} · {s.sermonDate ?? '-'}</p>
+              <div className="flex gap-1 shrink-0">
                 <Link to={`/admin/sermons/${s.id}/edit`}
                   className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
                   <NotePencil size={18} />
@@ -79,11 +115,11 @@ function SermonTable({ sermons, onDelete, isPending }) {
                   <Trash size={18} />
                 </button>
               </div>
-            </td>
-          </tr>
+            </div>
+          </div>
         ))}
-      </tbody>
-    </table>
+      </div>
+    </>
   )
 }
 
@@ -92,41 +128,82 @@ function SundayMorningGroupTable({ groups, onDeleteGroup, isPending }) {
   if (groups.length === 0)
     return <p className="text-center text-[14px] text-[#45474c] py-16">등록된 설교가 없습니다.</p>
   return (
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
-          <th className="px-6 py-4">제목</th>
-          <th className="px-6 py-4 hidden md:table-cell">설교자</th>
-          <th className="px-6 py-4 hidden md:table-cell">설교일</th>
-          <th className="px-6 py-4">영상</th>
-          <th className="px-6 py-4 text-right">관리</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-[#c5c6cd]/50">
+    <>
+      {/* 데스크탑: 테이블형 */}
+      <table className="hidden md:table w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-[#eff4ff] text-[#45474c] text-[12px] font-semibold uppercase tracking-wider">
+            <th className="px-6 py-4">제목</th>
+            <th className="px-6 py-4 hidden md:table-cell">설교자</th>
+            <th className="px-6 py-4 hidden md:table-cell">설교일</th>
+            <th className="px-6 py-4">영상</th>
+            <th className="px-6 py-4 text-right">관리</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-[#c5c6cd]/50">
+          {groups.map((group) => {
+            const title    = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
+            const preacher = group.representativePreacher ?? group.part1?.preacher ?? group.part2?.preacher
+            return (
+              <tr key={group.sermonDate} className="hover:bg-[#eff4ff]/50 transition-colors">
+                <td className="px-6 py-4">
+                  <Link to={`/worship/sermon/sunday-morning/${group.sermonDate}`}
+                    className="text-[14px] font-medium text-[#0b1c30] hover:text-[#091426] hover:underline block max-w-xs truncate">
+                    {title}
+                  </Link>
+                </td>
+                <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{preacher ?? '-'}</td>
+                <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{group.sermonDate}</td>
+                <td className="px-6 py-4">
+                  <div className="flex gap-2">
+                    {[group.part1, group.part2].map((p, idx) => (
+                      <span key={idx} className={`text-[11px] font-bold ${p?.videoUrl ? 'text-[#ba1a1a]' : 'text-[#c5c6cd]'}`}>
+                        {idx + 1}부{p?.videoUrl ? '▶' : '-'}
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <div className="flex justify-end gap-1">
+                    <Link to={`/admin/sermons/sunday-morning/${group.sermonDate}/edit`}
+                      className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
+                      <NotePencil size={18} />
+                    </Link>
+                    <button onClick={() => onDeleteGroup(group)} disabled={isPending}
+                      className="p-2 text-[#45474c] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/30 rounded-lg transition-all disabled:opacity-40">
+                      <Trash size={18} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+
+      {/* 모바일: 카드형 */}
+      <div className="md:hidden divide-y divide-[#c5c6cd]/50">
         {groups.map((group) => {
           const title    = group.representativeTitle ?? group.part1?.title ?? group.part2?.title
           const preacher = group.representativePreacher ?? group.part1?.preacher ?? group.part2?.preacher
           return (
-            <tr key={group.sermonDate} className="hover:bg-[#eff4ff]/50 transition-colors">
-              <td className="px-6 py-4">
+            <div key={group.sermonDate} className="px-4 py-4 space-y-2">
+              <div className="flex items-start justify-between gap-2">
                 <Link to={`/worship/sermon/sunday-morning/${group.sermonDate}`}
-                  className="text-[14px] font-medium text-[#0b1c30] hover:text-[#091426] hover:underline block max-w-xs truncate">
+                  className="text-[14px] font-medium text-[#0b1c30] hover:underline truncate min-w-0">
                   {title}
                 </Link>
-              </td>
-              <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{preacher ?? '-'}</td>
-              <td className="px-6 py-4 text-[14px] text-[#45474c] hidden md:table-cell whitespace-nowrap">{group.sermonDate}</td>
-              <td className="px-6 py-4">
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   {[group.part1, group.part2].map((p, idx) => (
                     <span key={idx} className={`text-[11px] font-bold ${p?.videoUrl ? 'text-[#ba1a1a]' : 'text-[#c5c6cd]'}`}>
                       {idx + 1}부{p?.videoUrl ? '▶' : '-'}
                     </span>
                   ))}
                 </div>
-              </td>
-              <td className="px-6 py-4 text-right">
-                <div className="flex justify-end gap-1">
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[12px] text-[#45474c] truncate">{preacher ?? '-'} · {group.sermonDate}</p>
+                <div className="flex gap-1 shrink-0">
                   <Link to={`/admin/sermons/sunday-morning/${group.sermonDate}/edit`}
                     className="p-2 text-[#45474c] hover:text-[#091426] hover:bg-[#eff4ff] rounded-lg transition-all inline-flex">
                     <NotePencil size={18} />
@@ -136,12 +213,12 @@ function SundayMorningGroupTable({ groups, onDeleteGroup, isPending }) {
                     <Trash size={18} />
                   </button>
                 </div>
-              </td>
-            </tr>
+              </div>
+            </div>
           )
         })}
-      </tbody>
-    </table>
+      </div>
+    </>
   )
 }
 
@@ -273,8 +350,8 @@ export default function AdminSermonPage() {
     <div className="flex flex-col h-full overflow-hidden">
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-40 flex justify-between items-center h-16 px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
-        <h2 className="text-[20px] font-extrabold text-[#0b1c30]">설교 관리</h2>
+      <header className="sticky top-0 z-40 flex flex-wrap md:flex-nowrap justify-between items-center gap-y-2 md:h-16 py-3 md:py-0 px-4 md:px-6 border-b border-[#c5c6cd] bg-[#f8f9ff]/80 backdrop-blur-md shrink-0">
+        <h2 className="text-[16px] md:text-[20px] font-extrabold text-[#0b1c30] whitespace-nowrap">설교 관리</h2>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3 text-[#45474c]">
             <button className="hover:text-[#091426] transition-colors"><Bell size={22} /></button>

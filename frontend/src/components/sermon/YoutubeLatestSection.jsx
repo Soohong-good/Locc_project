@@ -105,7 +105,7 @@ const PlayableThumbnail = ({ videoId, title, onClick }) => (
 
     {/* 하단 정보 오버레이 */}
     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent
-      translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+      translate-y-0 md:translate-y-2 md:group-hover:translate-y-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300">
       <p className="text-xs text-white/70 font-medium">클릭하여 재생</p>
     </div>
   </div>

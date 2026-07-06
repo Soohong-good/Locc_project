@@ -308,12 +308,12 @@ const BulletinListPage = () => {
     <div className="min-h-screen bg-[#FAF9F6]">
       {/* Hero */}
       <section className="pt-20 bg-[#171717] text-[#FAF9F6] border-b border-[#2C2C2C]">
-        <div className="max-w-[1200px] mx-auto px-6 py-16 flex flex-col md:flex-row justify-between items-end gap-8">
+        <div className="max-w-[1200px] mx-auto px-6 py-8 md:py-16 flex flex-col md:flex-row md:justify-between items-start md:items-end gap-5 md:gap-8">
           <div>
-            <span className="font-mono text-xs tracking-[0.25em] uppercase text-[#737373] mb-4 block">Weekly Bulletin</span>
-            <h1 className="text-5xl font-bold tracking-tight">주보 게시판</h1>
+            <span className="font-mono text-[10px] md:text-xs tracking-[0.15em] md:tracking-[0.25em] uppercase text-[#737373] mb-2 md:mb-4 block">Weekly Bulletin</span>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">주보 게시판</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 w-full md:w-auto">
             {canWrite && (
               <button onClick={() => setWriteOpen(true)}
                 className="text-xs font-bold tracking-[0.1em] uppercase bg-[#FAF9F6] text-[#171717] px-6 py-2.5 hover:bg-white transition-colors whitespace-nowrap">
@@ -323,8 +323,8 @@ const BulletinListPage = () => {
             <form onSubmit={handleSearch} className="relative w-full md:w-72">
               <input type="text" value={inputVal} onChange={(e) => setInputVal(e.target.value)}
                 placeholder="검색어를 입력하세요"
-                className="w-full h-10 pl-4 pr-10 bg-transparent border border-[#737373] text-[#FAF9F6] text-sm focus:outline-none focus:border-[#FAF9F6] transition-colors placeholder:text-[#737373]" />
-              <button type="submit" className="absolute right-0 top-0 w-10 h-10 flex items-center justify-center text-[#737373] hover:text-[#FAF9F6] transition-colors">
+                className="w-full h-10 pl-4 pr-11 bg-transparent border border-[#737373] text-[#FAF9F6] text-sm focus:outline-none focus:border-[#FAF9F6] transition-colors placeholder:text-[#737373]" />
+              <button type="submit" className="absolute right-0 top-0 w-11 h-11 flex items-center justify-center text-[#737373] hover:text-[#FAF9F6] transition-colors">
                 <MagnifyingGlass size={16} weight="bold" />
               </button>
             </form>
@@ -335,7 +335,11 @@ const BulletinListPage = () => {
       {/* Table */}
       <main className="max-w-[1200px] mx-auto px-6 pt-14 md:pt-20 pb-32">
         <div className="h-px w-full bg-[#171717]" />
-        <div className="grid grid-cols-[60px_64px_1fr_auto_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest items-center">
+        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-[#E5E5E5]">
+          <span className="text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">주보 목록</span>
+          <span className="text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest">총 {totalElements}건</span>
+        </div>
+        <div className="hidden md:grid grid-cols-[60px_64px_1fr_auto_auto] gap-4 px-4 py-3 border-b border-[#E5E5E5] text-[11px] font-mono text-[#A3A3A3] uppercase tracking-widest items-center">
           <div>No.</div>
           <div>Thumb</div>
           <div>Title</div>
@@ -355,72 +359,108 @@ const BulletinListPage = () => {
           </div>
         )}
 
-        {!isLoading && !isError && bulletins.map((bulletin, idx) => (
-          <div key={bulletin.id}
-            className="grid grid-cols-[60px_64px_1fr_auto_auto] gap-4 px-4 py-5 border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors items-center group">
-            <div className="font-mono text-sm text-[#737373]">
-              {totalElements - currentPage * pageSize - idx}
-            </div>
-            <div className="flex items-center">
-              <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}>
-                <Thumbnail url={bulletin.thumbnailUrl} />
+        {!isLoading && !isError && bulletins.map((bulletin, idx) => {
+          const editDeleteButtons = canWrite && (isAdmin || bulletin.authorId === userId) && (
+            <>
+              <button onClick={() => setEditTarget(bulletin)}
+                className="p-1.5 border border-[#E5E5E5] text-[#737373] hover:border-[#171717] hover:text-[#171717] transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
               </button>
-            </div>
-            <div className="flex items-center gap-3 min-w-0">
-              <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
-                className="font-medium text-base text-[#2C2C2C] group-hover:text-[#171717] transition-colors text-left truncate">
-                {bulletin.title}
+              <button onClick={() => setDeleteTarget({ id: bulletin.id, title: bulletin.title })}
+                className="p-1.5 border border-[#E5E5E5] text-red-500 hover:border-red-500 transition-colors">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
-              <span className="font-mono text-xs text-[#A3A3A3] flex-shrink-0">{bulletin.viewCount}</span>
-              {canWrite && (isAdmin || bulletin.authorId === userId) && (
-                <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setEditTarget(bulletin)}
-                    className="p-1.5 border border-[#E5E5E5] text-[#737373] hover:border-[#171717] hover:text-[#171717] transition-colors">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+            </>
+          )
+
+          return (
+            <div key={bulletin.id} className="border-b border-[#E5E5E5] hover:bg-[#F4F2EA] transition-colors group">
+
+              {/* 모바일: 썸네일 + 제목/메타 카드형 */}
+              <div className="md:hidden flex gap-3 px-4 py-4">
+                <button onClick={() => navigate(`/bulletin/${bulletin.id}`)} className="flex-shrink-0">
+                  <Thumbnail url={bulletin.thumbnailUrl} />
+                </button>
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                  <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
+                    className="font-medium text-base text-[#2C2C2C] text-left truncate">
+                    {bulletin.title}
                   </button>
-                  <button onClick={() => setDeleteTarget({ id: bulletin.id, title: bulletin.title })}
-                    className="p-1.5 border border-[#E5E5E5] text-red-500 hover:border-red-500 transition-colors">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                  <div className="flex items-center gap-2 flex-wrap font-mono text-xs text-[#737373]">
+                    <span>{fmtDot(bulletin.createdAt)}</span>
+                    {bulletin.authorName && (
+                      <span>· {(bulletin.authorRole === 'ADMIN' || bulletin.authorRole === 'OPERATOR') ? '관리자' : bulletin.authorName}</span>
+                    )}
+                    <span>· 조회 {bulletin.viewCount}</span>
+                    <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
+                      className="inline-flex px-2 py-0.5 border border-[#E5E5E5] text-[10px] tracking-widest hover:text-[#171717] hover:border-[#171717] transition-colors">
+                      PDF
+                    </button>
+                  </div>
+                  {editDeleteButtons && <div className="flex gap-1.5 mt-0.5">{editDeleteButtons}</div>}
+                </div>
+              </div>
+
+              {/* 데스크탑: 그리드형 */}
+              <div className="hidden md:grid grid-cols-[60px_64px_1fr_auto_auto] gap-4 px-4 py-5 items-center">
+                <div className="font-mono text-sm text-[#737373]">
+                  {totalElements - currentPage * pageSize - idx}
+                </div>
+                <div className="flex items-center">
+                  <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}>
+                    <Thumbnail url={bulletin.thumbnailUrl} />
                   </button>
                 </div>
-              )}
+                <div className="flex items-center gap-3 min-w-0">
+                  <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
+                    className="font-medium text-base text-[#2C2C2C] group-hover:text-[#171717] transition-colors text-left truncate">
+                    {bulletin.title}
+                  </button>
+                  <span className="font-mono text-xs text-[#A3A3A3] flex-shrink-0">{bulletin.viewCount}</span>
+                  {editDeleteButtons && (
+                    <div className="flex gap-1.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {editDeleteButtons}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-center w-14">
+                  <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
+                    className="inline-flex px-2 py-1 border border-[#E5E5E5] text-[10px] font-mono tracking-widest text-[#737373] hover:text-[#171717] hover:border-[#171717] transition-colors">
+                    PDF
+                  </button>
+                </div>
+                <div className="font-mono text-sm text-[#737373] text-right w-24">
+                  {fmtDot(bulletin.createdAt)}
+                </div>
+              </div>
             </div>
-            <div className="flex justify-center w-14">
-              <button onClick={() => navigate(`/bulletin/${bulletin.id}`)}
-                className="inline-flex px-2 py-1 border border-[#E5E5E5] text-[10px] font-mono tracking-widest text-[#737373] hover:text-[#171717] hover:border-[#171717] transition-colors">
-                PDF
-              </button>
-            </div>
-            <div className="font-mono text-sm text-[#737373] text-right w-24">
-              {fmtDot(bulletin.createdAt)}
-            </div>
-          </div>
-        ))}
+          )
+        })}
 
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-16 flex justify-center">
             <nav className="inline-flex border border-[#E5E5E5]">
               <button onClick={() => goPage(currentPage - 1)} disabled={currentPage === 0}
-                className="w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                className="w-11 h-11 flex items-center justify-center border-r border-[#E5E5E5] text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                 <CaretLeft size={14} weight="bold" />
               </button>
               {getPageRange(currentPage, totalPages).map((p) => (
                 <button key={p} onClick={() => goPage(p)}
-                  className={`w-10 h-10 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
+                  className={`w-11 h-11 flex items-center justify-center border-r border-[#E5E5E5] font-mono text-sm transition-colors ${
                     p === currentPage ? 'bg-[#171717] text-white' : 'text-[#737373] hover:bg-[#F4F2EA] hover:text-[#171717]'
                   }`}>
                   {p + 1}
                 </button>
               ))}
               <button onClick={() => goPage(currentPage + 1)} disabled={currentPage >= totalPages - 1}
-                className="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                className="w-11 h-11 flex items-center justify-center text-[#737373] hover:bg-[#F4F2EA] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                 <CaretRight size={14} weight="bold" />
               </button>
             </nav>
