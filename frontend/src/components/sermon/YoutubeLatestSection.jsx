@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
 
 /**
  * YouTube 최신 영상 섹션
@@ -7,17 +8,6 @@ import { useState, useEffect } from 'react'
  * - latestSermon: youtubeVideos 없을 때 fallback
  */
 
-// ── 비디오 ID 추출 ──────────────────────────────────────
-const extractVideoId = (url) => {
-  if (!url) return null
-  try {
-    const u = new URL(url)
-    if (u.hostname === 'youtu.be' || u.hostname === 'www.youtu.be') return u.pathname.slice(1).split('?')[0]
-    return u.searchParams.get('v') || null
-  } catch {
-    return null
-  }
-}
 // ── 영상 재생 모달 ─────────────────────────────────────
 const VideoModal = ({ videoId, title, onClose }) => {
   useEffect(() => {

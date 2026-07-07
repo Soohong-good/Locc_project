@@ -16,25 +16,12 @@ import ErrorMessage from '@/components/common/ErrorMessage'
 import toast from '@/utils/toast'
 import { formatTranscript } from '@/utils/formatTranscript'
 import BiblePassageSection from '@/components/sermon/BiblePassageSection'
+import { extractYouTubeId } from '@/utils/youtube'
 
 /** 설교 본문 렌더 — 평문(PDF 자동 추출)만 구조화, HTML(수동 작성)은 그대로 */
 function renderSermonContent(content) {
   if (!content) return ''
   return content.includes('<') ? content : formatTranscript(content)
-}
-
-function extractYouTubeId(url) {
-  if (!url) return null
-  if (url.includes('youtube.com/watch')) {
-    return new URLSearchParams(url.split('?')[1]).get('v')
-  }
-  if (url.includes('youtu.be/')) {
-    return url.split('youtu.be/')[1].split('?')[0]
-  }
-  if (url.includes('youtube.com/embed/')) {
-    return url.split('embed/')[1].split('?')[0]
-  }
-  return null
 }
 
 const SundayMorningDetailPage = () => {

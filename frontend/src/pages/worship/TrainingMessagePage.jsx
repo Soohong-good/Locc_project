@@ -9,6 +9,9 @@ import useAuthStore from '@/stores/authStore'
 import useSermonCrud from '@/hooks/useSermonCrud'
 import SermonModal from '@/components/sermon/SermonModal'
 import SermonDeleteModal from '@/components/sermon/SermonDeleteModal'
+import { formatDateDot as fmtDot, formatDateDash as fmtDash } from '@/utils/dateFormat'
+import { getPageRange } from '@/utils/pagination'
+import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
 
 const PAGE_SIZE = 9
 
@@ -20,21 +23,6 @@ const TRAINING_TABS = [
 ]
 
 const SERVICE_NUMBER_OPTIONS = TRAINING_TABS.map((t) => ({ value: t.id, label: t.label }))
-
-const fmtDot = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  if (Number.isNaN(d.getTime())) return String(val)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-}
-
-const fmtDash = (val) => fmtDot(val).replace(/\./g, '-')
-
-const extractVideoId = (url) => {
-  if (!url) return null
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/)
-  return m ? m[1] : null
-}
 
 const thumbnailSrc = (sermon) => {
   if (!sermon) return null
@@ -253,14 +241,6 @@ const HeroSection = ({ activeTab, onTabChange, searchInput, onSearchChange, onSe
 )
 
 /* ── 페이지네이션 ─────────────────────────────────────────── */
-const PAGE_WINDOW = 5
-const getPageRange = (current, total) => {
-  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
-  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
-  const end = Math.min(total, start + PAGE_WINDOW)
-  start = Math.max(0, end - PAGE_WINDOW)
-  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
-}
 
 const PaginationSection = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null

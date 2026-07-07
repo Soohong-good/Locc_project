@@ -7,11 +7,7 @@ import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import { DateInput } from '@/components/ui/DateInput'
 import { getErrorMessage } from '@/lib/apiError'
 import toast from '@/utils/toast'
-
-const extractVideoId = (url = '') => {
-  const m = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{6,})/)
-  return m ? m[1] : null
-}
+import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
 
 const selectStyle = {
   backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",

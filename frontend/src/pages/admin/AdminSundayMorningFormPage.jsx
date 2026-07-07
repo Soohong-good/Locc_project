@@ -6,12 +6,7 @@ import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import { DateInput } from '@/components/ui/DateInput'
 import { getErrorMessage } from '@/lib/apiError'
 import toast from '@/utils/toast'
-
-// YouTube URL → 영상 ID (youtu.be / watch?v= / embed 형식 지원)
-const extractVideoId = (url = '') => {
-  const m = url.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{6,})/)
-  return m ? m[1] : null
-}
+import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
 
 /**
  * 관리자 주일오전 통합 폼 (1부 + 2부 한 페이지 관리)

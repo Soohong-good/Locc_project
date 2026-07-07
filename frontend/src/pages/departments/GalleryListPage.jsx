@@ -17,23 +17,8 @@ import {
 import { DEPARTMENTS } from '@/constants/departments'
 import useAuthStore from '@/stores/authStore'
 import Button from '@/components/ui/Button'
-
-const PAGE_WINDOW = 5
-
-// ── 날짜 포맷 (yyyy.mm.dd) ──────────────────────────────────────────────────
-const fmtDate = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-}
-
-const getPageRange = (current, total) => {
-  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
-  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
-  const end = Math.min(total, start + PAGE_WINDOW)
-  start = Math.max(0, end - PAGE_WINDOW)
-  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
-}
+import { getPageRange } from '@/utils/pagination'
+import { formatDateDot as fmtDate } from '@/utils/dateFormat'
 
 // ────────────────────────────────────────────────────────────────────────────
 // 갤러리 업로드 모달

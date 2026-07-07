@@ -22,13 +22,7 @@ import {
   CaretRight, VideoCamera, Gear, Link, ListDashes,
   YoutubeLogo, Bell, Question,
 } from '@phosphor-icons/react'
-
-/* ── 유튜브 videoId 추출 ── */
-function extractVideoId(url) {
-  if (!url) return null
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/)
-  return m ? m[1] : null
-}
+import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
 
 /* ── 토스트 ── */
 function Toast({ toast, onClose }) {

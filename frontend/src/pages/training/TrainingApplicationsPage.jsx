@@ -5,9 +5,9 @@ import { getTrainingDetail, getApplicationsByTraining, cancelApplication, downlo
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
 import toast from '@/utils/toast'
 import { ArrowLeft, DownloadSimple, CaretLeft, CaretRight, Warning } from '@phosphor-icons/react'
+import { getPageRange } from '@/utils/pagination'
 
 const PAGE_SIZE = 50
-const PAGE_WINDOW = 5
 
 const fmtDateTime = (val) => {
   if (!val) return ''
@@ -19,14 +19,6 @@ const paymentLabel = (method) => {
   if (method === 'CASH') return '현금납부'
   if (method === 'BANK') return '계좌이체'
   return '-'
-}
-
-const getPageRange = (current, total) => {
-  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
-  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
-  const end = Math.min(total, start + PAGE_WINDOW)
-  start = Math.max(0, end - PAGE_WINDOW)
-  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
 }
 
 // 삭제(취소) 확인 모달

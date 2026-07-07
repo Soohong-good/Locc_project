@@ -16,21 +16,8 @@ import Footer from '@/components/layout/Footer'
 import PopupOverlay from '@/components/common/PopupOverlay'
 import KakaoMap from '@/components/ui/KakaoMap'
 import useAuthStore from '@/stores/authStore'
-
-function extractVideoId(url) {
-  if (!url) return null
-  try {
-    const u = new URL(url)
-    if (u.hostname === 'youtu.be') return u.pathname.slice(1)
-    return u.searchParams.get('v') || null
-  } catch { return null }
-}
-
-function fmtDate(val) {
-  if (!val) return ''
-  const d = new Date(val)
-  return `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}`
-}
+import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
+import { formatDateDotSpaced as fmtDate } from '@/utils/dateFormat'
 
 // ── 비디오 모달 ──────────────────────────────────────────────────
 const VideoModal = ({ videoId, onClose }) => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import DOMPurify from 'dompurify'
 import { getActivePopups } from '@/api/popups'
+import { formatDateDot as fmtDate } from '@/utils/dateFormat'
 
 const STORAGE_KEY_TODAY = 'popup_closed_today'  // localStorage — 오늘 하루 닫기
 
@@ -14,14 +15,6 @@ const safeUrl = (url) => {
   } catch {
     return null
   }
-}
-
-/** 날짜 → YYYY.MM.DD */
-const fmtDate = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  if (Number.isNaN(d.getTime())) return ''
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
 }
 
 const getClosedToday = () => {

@@ -6,12 +6,7 @@ import { getTrainingDetail, applyTraining } from '@/api/training'
 import { getMyInfo } from '@/api/mypage'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
-
-const fmtDate = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-}
+import { formatDateDot as fmtDate } from '@/utils/dateFormat'
 
 const fmtNumber = (n) => n?.toLocaleString('ko-KR') ?? '0'
 

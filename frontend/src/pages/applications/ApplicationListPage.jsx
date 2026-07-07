@@ -4,9 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { getMyApplications } from '@/api/applications'
 import useAuthStore from '@/stores/authStore'
 import { CaretLeft, CaretRight, Plus } from '@phosphor-icons/react'
+import { getPageRange } from '@/utils/pagination'
 
 const PAGE_SIZE = 15
-const PAGE_WINDOW = 5
 
 const STATUS_LABEL = {
   PENDING:   '검토중',
@@ -18,14 +18,6 @@ const STATUS_STYLE = {
   PENDING:   'bg-amber-50 text-amber-700 border border-amber-200',
   COMPLETED: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
   CANCELLED: 'bg-[#F4F2EA] text-[#A3A3A3] border border-[#E5E5E5]',
-}
-
-const getPageRange = (current, total) => {
-  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
-  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
-  const end = Math.min(total, start + PAGE_WINDOW)
-  start = Math.max(0, end - PAGE_WINDOW)
-  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
 }
 
 const ApplicationListPage = () => {

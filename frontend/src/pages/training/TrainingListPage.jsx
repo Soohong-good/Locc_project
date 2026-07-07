@@ -5,27 +5,13 @@ import { getTrainingList } from '@/api/training'
 import useAuthStore from '@/stores/authStore'
 import { CalendarBlank, Clock, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import TrainingFormModal from './TrainingFormModal'
-
-const PAGE_WINDOW = 5
-
-const fmtDate = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-}
+import { getPageRange } from '@/utils/pagination'
+import { formatDateDot as fmtDate } from '@/utils/dateFormat'
 
 const fmtDateTime = (val) => {
   if (!val) return ''
   const d = new Date(val)
   return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
-
-const getPageRange = (current, total) => {
-  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
-  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
-  const end = Math.min(total, start + PAGE_WINDOW)
-  start = Math.max(0, end - PAGE_WINDOW)
-  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
 }
 
 // ── 상태 배지 ────────────────────────────────────────────────────────────────

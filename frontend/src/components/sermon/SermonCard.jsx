@@ -1,5 +1,6 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import Badge from '@/components/ui/Badge'
+import { extractYouTubeId } from '@/utils/youtube'
 
 /**
  * 설교 목록 카드 컴포넌트
@@ -19,18 +20,7 @@ const SermonCard = ({ sermon, isAdmin, canWrite, userId, onEdit, onDelete, detai
     return String(dateStr).replace(/-/g, '.')
   }
 
-  const extractVideoId = (url) => {
-    if (!url) return null
-    try {
-      const u = new URL(url)
-      if (u.hostname === 'youtu.be') return u.pathname.slice(1)
-      return u.searchParams.get('v') || null
-    } catch {
-      return null
-    }
-  }
-
-  const videoId = extractVideoId(sermon.videoUrl)
+  const videoId = extractYouTubeId(sermon.videoUrl)
   const thumbUrl = videoId
     ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`
     : null

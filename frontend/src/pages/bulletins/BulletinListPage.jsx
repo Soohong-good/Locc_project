@@ -6,24 +6,10 @@ import { deleteFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
 import toast from '@/utils/toast'
 import { MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react'
+import { getPageRange } from '@/utils/pagination'
+import { formatDateDot as fmtDot } from '@/utils/dateFormat'
 
 const PAGE_SIZE = 10
-const PAGE_WINDOW = 5
-
-const fmtDot = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  if (Number.isNaN(d.getTime())) return String(val)
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
-}
-
-const getPageRange = (current, total) => {
-  if (total <= PAGE_WINDOW) return Array.from({ length: total }, (_, i) => i)
-  let start = Math.max(0, current - Math.floor(PAGE_WINDOW / 2))
-  const end = Math.min(total, start + PAGE_WINDOW)
-  start = Math.max(0, end - PAGE_WINDOW)
-  return Array.from({ length: PAGE_WINDOW }, (_, i) => start + i)
-}
 
 const PdfFileInput = ({ file, onChange, onClear }) => (
   <div className="space-y-1.5">

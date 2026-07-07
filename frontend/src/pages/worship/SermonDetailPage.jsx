@@ -14,21 +14,8 @@ import useNoIndex from '@/hooks/useNoIndex'
 import SermonModal from '@/components/sermon/SermonModal'
 import { formatTranscript } from '@/utils/formatTranscript'
 import toast from '@/utils/toast'
-
-function extractYouTubeId(url) {
-  if (!url) return null
-  if (url.includes('youtube.com/watch')) return new URLSearchParams(url.split('?')[1]).get('v')
-  if (url.includes('youtu.be/')) return url.split('youtu.be/')[1].split('?')[0]
-  if (url.includes('youtube.com/embed/')) return url.split('embed/')[1].split('?')[0]
-  return null
-}
-
-function fmtDate(val) {
-  if (!val) return ''
-  const d = new Date(val)
-  if (Number.isNaN(d.getTime())) return String(val)
-  return `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}`
-}
+import { extractYouTubeId } from '@/utils/youtube'
+import { formatDateDotSpaced as fmtDate } from '@/utils/dateFormat'
 
 function renderContent(content) {
   if (!content) return ''

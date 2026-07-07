@@ -10,16 +10,7 @@ import useAuthStore from '@/stores/authStore'
 import useNoIndex from '@/hooks/useNoIndex'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
-
-/* ── 날짜 포맷: 원본 yyyy. MM. dd ───────────────────────────────── */
-const fmtDate = (val) => {
-  if (!val) return ''
-  const d = new Date(val)
-  const y  = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${y}. ${mm}. ${dd}`
-}
+import { formatDateDotSpaced as fmtDate } from '@/utils/dateFormat'
 
 const fmtFileSize = (bytes) => {
   if (!bytes) return '0 KB'
