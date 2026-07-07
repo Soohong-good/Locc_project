@@ -109,10 +109,6 @@ app:
   # 에러 알림 수신 이메일 (비워두면 비활성화)
   admin-email: ${ADMIN_ALERT_EMAIL:}
 
-kakao:
-  map:
-    api-key: ${KAKAO_MAP_API_KEY}
-
 # YouTube Data API 설정
 youtube:
   api-key: ${YOUTUBE_API_KEY}

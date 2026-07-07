@@ -7,15 +7,9 @@ import { getMyInfo } from '@/api/mypage'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
 import { formatDateDot as fmtDate } from '@/utils/dateFormat'
+import { formatPhone } from '@/utils/phone'
 
 const fmtNumber = (n) => n?.toLocaleString('ko-KR') ?? '0'
-
-const formatPhone = (val) => {
-  const digits = val.replace(/[^0-9]/g, '')
-  if (digits.length <= 3) return digits
-  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
-  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7, 11)}`
-}
 
 const TrainingApplyPage = () => {
   const { id }   = useParams()

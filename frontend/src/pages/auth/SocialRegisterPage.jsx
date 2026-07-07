@@ -5,16 +5,9 @@ import { completeSocialRegistration } from '@/api/auth'
 import { DateInput } from '@/components/ui/DateInput'
 import StepIndicator from '@/components/auth/StepIndicator'
 import toast from '@/utils/toast'
+import { formatPhone } from '@/utils/phone'
 
 const SOCIAL_REGISTER_STEPS = ['교인구분', '약관동의', '정보입력']
-
-// 전화번호 자동 하이픈
-const formatPhone = (val) => {
-  const d = val.replace(/[^0-9]/g, '')
-  if (d.length <= 3) return d
-  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
-  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7, 11)}`
-}
 
 // ── Step 1: 교인 구분 ──────────────────────────────────────────────────────
 const Step1 = ({ onSelect }) => (
