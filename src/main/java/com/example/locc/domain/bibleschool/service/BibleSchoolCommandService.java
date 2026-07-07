@@ -70,14 +70,4 @@ public class BibleSchoolCommandService {
         log.info("성경학교 YouTube 재생목록 ID 업데이트: {}", youtubePlaylistId);
     }
 
-    /**
-     * 제목 및 설명 업데이트
-     */
-    public void updateInfo(String title, String description) {
-        BibleSchool bibleSchool = getOrCreate();
-        bibleSchool.updateTitle(title);
-        bibleSchool.updateDescription(description);
-        bibleSchoolRepository.save(bibleSchool);
-        log.info("성경학교 정보 업데이트: {}", title);
-    }
 }

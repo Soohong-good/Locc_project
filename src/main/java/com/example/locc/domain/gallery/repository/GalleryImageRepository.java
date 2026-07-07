@@ -4,7 +4,6 @@ import com.example.locc.domain.gallery.dto.response.GalleryGroupDto;
 import com.example.locc.domain.gallery.entity.GalleryImage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,13 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long> {
-
-    /**
-     * 부서별 갤러리 이미지 목록 조회 (무한 스크롤용 Slice)
-     */
-    @EntityGraph(attributePaths = {"department", "uploader"})
-    @Query("SELECT gi FROM GalleryImage gi WHERE gi.department.code = :departmentCode ORDER BY gi.displayOrder DESC, gi.createdAt DESC")
-    Slice<GalleryImage> findByDepartmentCode(@Param("departmentCode") String departmentCode, Pageable pageable);
 
     /**
      * 부서별 갤러리 이미지 목록 조회 (게시판용 Page)

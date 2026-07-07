@@ -2,7 +2,6 @@ package com.example.locc.domain.user.service;
 
 import com.example.locc.domain.user.dto.command.UserUpdateCommand;
 import com.example.locc.domain.user.dto.response.UserDetailResponse;
-import com.example.locc.domain.user.dto.response.UserMyPageResponse;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.UserRepository;
 import com.example.locc.exception.NotFoundException;
@@ -23,15 +22,6 @@ public class UserMyPageService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    /**
-     * 사용자 정보 조회 (마이페이지용)
-     */
-    public UserMyPageResponse getMyInfo(String email) {
-        User user = userRepository.findByEmailWithSocialAccounts(email)
-                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
-        return UserMyPageResponse.from(user);
-    }
 
     /**
      * 사용자 정보 조회 (API 상세 응답용)

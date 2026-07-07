@@ -3,7 +3,6 @@ package com.example.locc.domain.gallery.controller;
 import com.example.locc.common.ApiResponse;
 import com.example.locc.common.PageResponse;
 import com.example.locc.domain.gallery.dto.request.GalleryImageRequest;
-import com.example.locc.domain.gallery.dto.request.GalleryImageSearchCondition;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupResponse;
 import com.example.locc.domain.gallery.dto.response.GalleryImageDetailResponse;
 import com.example.locc.domain.gallery.dto.response.GalleryImageResponse;

@@ -6,7 +6,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,28 +50,5 @@ public class PdfThumbnailGenerator {
             log.error("PDF 썸네일 생성 실패", e);
             throw new IOException("PDF 썸네일 생성에 실패했습니다: " + e.getMessage(), e);
         }
-    }
-
-    public BufferedImage renderFirstPage(InputStream pdfInputStream) throws IOException {
-        byte[] pdfBytes = pdfInputStream.readAllBytes();
-
-        try (PDDocument document = PDDocument.load(pdfBytes)) {
-            if (document.getNumberOfPages() == 0) {
-                throw new IOException("PDF 문서에 페이지가 없습니다.");
-            }
-
-            PDFRenderer renderer = new PDFRenderer(document);
-            return renderer.renderImageWithDPI(0, DEFAULT_DPI);
-
-        } catch (IOException e) {
-            log.error("PDF 첫 페이지 렌더링 실패", e);
-            throw new IOException("PDF 렌더링에 실패했습니다: " + e.getMessage(), e);
-        }
-    }
-
-    public InputStream imageToInputStream(BufferedImage image) throws IOException {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        ImageIO.write(image, "jpg", output);
-        return new ByteArrayInputStream(output.toByteArray());
     }
 }

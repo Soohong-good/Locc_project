@@ -50,16 +50,6 @@ public class BibleSchool extends BaseEntity {
         this.latestVideoTitle = videoTitle;
     }
 
-    // 제목 수정
-    public void updateTitle(String title) {
-        this.title = title;
-    }
-
-    // 설명 수정
-    public void updateDescription(String description) {
-        this.description = description;
-    }
-
     // YouTube 재생목록 변경
     public void updateYoutubePlaylist(String youtubePlaylistId) {
         this.youtubePlaylistId = youtubePlaylistId;

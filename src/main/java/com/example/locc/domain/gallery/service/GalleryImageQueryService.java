@@ -1,7 +1,6 @@
 package com.example.locc.domain.gallery.service;
 
 import com.example.locc.config.CacheConfig;
-import com.example.locc.domain.gallery.dto.request.GalleryImageSearchCondition;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupDto;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupResponse;
 import com.example.locc.domain.gallery.dto.response.GalleryImageDetailResponse;
@@ -15,7 +14,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,22 +28,6 @@ import java.util.stream.Collectors;
 public class GalleryImageQueryService {
 
     private final GalleryImageRepository galleryImageRepository;
-
-    /**
-     * 부서별 갤러리 이미지 목록 조회 (무한 스크롤)
-     * 현재는 사용하지 않음 - groups API 사용
-     */
-    public Slice<GalleryImageResponse> getImageList(GalleryImageSearchCondition condition) {
-        PageRequest pageRequest = PageRequest.of(condition.page(), condition.size());
-
-        // 전체 이미지 조회만 지원
-        Slice<GalleryImage> imagePage = galleryImageRepository.findByDepartmentCode(
-                condition.departmentCode(),
-                pageRequest
-        );
-
-        return imagePage.map(GalleryImageResponse::from);
-    }
 
     /**
      * 부서별 갤러리 이미지 목록 조회 (게시판 형태)

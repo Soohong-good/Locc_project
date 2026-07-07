@@ -37,15 +37,6 @@ class UserMyPageServiceTest {
     // ───────────── 조회 ─────────────
 
     @Test
-    @DisplayName("마이페이지 조회 - 사용자가 없으면 NotFoundException")
-    void getMyInfo_notFound() {
-        given(userRepository.findByEmailWithSocialAccounts("ghost@test.com")).willReturn(Optional.empty());
-
-        assertThatThrownBy(() -> userMyPageService.getMyInfo("ghost@test.com"))
-                .isInstanceOf(NotFoundException.class);
-    }
-
-    @Test
     @DisplayName("상세정보 조회 - 사용자가 없으면 NotFoundException")
     void getUserInfo_notFound() {
         given(userRepository.findByEmailWithSocialAccounts("ghost@test.com")).willReturn(Optional.empty());
