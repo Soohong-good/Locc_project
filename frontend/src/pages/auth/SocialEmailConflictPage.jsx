@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 /**
  * 소셜 로그인 이메일 충돌 안내 페이지
@@ -6,11 +6,16 @@ import { Link } from 'react-router-dom'
  * 발생 케이스:
  *   - 이미 일반(이메일/비밀번호)로 가입된 이메일로 소셜 로그인 시도 시
  *
- * 안내 흐름:
- *   1. 기존 일반 로그인(이메일/비밀번호)으로 로그인
- *   ※ 마이페이지에서 소셜 계정을 직접 연결하는 기능은 아직 없음 — 추가 시 이 페이지 안내 갱신 필요
+ * 안내 흐름 (linkToken 쿼리파라미터로 연결):
+ *   1. 기존 일반 로그인(이메일/비밀번호)으로 로그인 — /login?linkToken=... 로 이동
+ *   2. 로그인(TOTP 포함) 성공 직후 useLogin/LoginPage가 linkToken으로
+ *      POST /api/social/link-account 호출 → 소셜 계정 연결 완료
+ *   3. 마이페이지로 이동해 연결된 계정을 바로 확인
  */
 const SocialEmailConflictPage = () => {
+  const location = useLocation()
+  const linkToken = new URLSearchParams(location.search).get('linkToken')
+
   return (
     <section className="min-h-screen flex items-center justify-center bg-slate-50 px-4 sm:px-6 py-24 sm:py-32">
       <div className="max-w-md w-full">
@@ -29,7 +34,7 @@ const SocialEmailConflictPage = () => {
           <h1 className="text-2xl font-light text-slate-900 mb-3">이미 가입된 이메일입니다</h1>
           <p className="text-sm text-slate-500 font-light leading-relaxed mb-6">
             소셜 계정과 동일한 이메일로 이미 일반 회원가입이 되어 있습니다.<br />
-            계정 보호를 위해 자동으로 연결하지 않으니, 기존 계정으로 로그인해 주세요.
+            계정 보호를 위해 자동으로 연결하지 않으니, 기존 계정으로 로그인해 연결을 완료해 주세요.
           </p>
 
           {/* 단계 안내 */}
@@ -40,17 +45,21 @@ const SocialEmailConflictPage = () => {
             </div>
             <div className="flex items-start gap-3">
               <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-              <p className="text-sm text-slate-600 font-light">비밀번호를 잊으셨다면 로그인 페이지에서 재설정할 수 있습니다.</p>
+              <p className="text-sm text-slate-600 font-light">로그인이 완료되면 소셜 계정이 자동으로 연결됩니다.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+              <p className="text-sm text-slate-600 font-light">이후부터는 소셜 로그인으로도 이용하실 수 있습니다.</p>
             </div>
           </div>
 
           {/* 버튼 */}
           <div className="space-y-3">
             <Link
-              to="/login"
+              to={linkToken ? `/login?linkToken=${encodeURIComponent(linkToken)}` : '/login'}
               className="block w-full py-3 px-4 bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 transition-colors text-center"
             >
-              이메일로 로그인하기
+              이메일로 로그인하고 연결하기
             </Link>
             <Link
               to="/"

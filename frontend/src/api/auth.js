@@ -75,3 +75,11 @@ export const completeSocialRegistration = async (token, payload) => {
   )
   return data
 }
+
+/** 이메일 충돌 후 소셜 계정 연결 (로그인 상태에서 호출) */
+export const linkSocialAccount = async (linkToken) => {
+  const { data } = await client.post(
+    `/api/social/link-account?linkToken=${encodeURIComponent(linkToken)}`
+  )
+  return data
+}

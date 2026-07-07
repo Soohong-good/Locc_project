@@ -18,7 +18,8 @@ import java.io.IOException;
  * OAuth2 로그인 실패 핸들러
  *
  * 실패 케이스별 프론트 redirect 정책:
- *   - 소셜 이메일이 기존 일반 계정과 충돌:   /social/email-conflict
+ *   - 소셜 이메일이 기존 일반 계정과 충돌:   /social/email-conflict?linkToken=...
+ *     (linkToken: 기존 계정 로그인 후 소셜 계정 연결을 완료하는 데 쓰이는 10분 단기 토큰)
  *   - 사용자가 소셜 로그인 동의를 취소함: /login?error=access_denied
  *   - 그 외 오류:                        /login?error=oauth2_error
  */
@@ -28,6 +29,7 @@ import java.io.IOException;
 public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
     private final AppProperties appProperties;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
@@ -37,8 +39,11 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
 
         log.error("OAuth2 로그인 실패: {}", exception.getMessage());
 
-        if (exception instanceof EmailConflictException) {
-            getRedirectStrategy().sendRedirect(request, response, resolveUrl("/social/email-conflict"));
+        if (exception instanceof EmailConflictException conflictException) {
+            String linkToken = jwtTokenProvider.generateOAuthTempToken(
+                    conflictException.getEmail(), conflictException.getProvider(), conflictException.getProviderId());
+            getRedirectStrategy().sendRedirect(request, response,
+                    resolveUrl("/social/email-conflict?linkToken=" + linkToken));
             return;
         }
 

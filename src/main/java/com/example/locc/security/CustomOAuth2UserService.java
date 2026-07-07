@@ -76,7 +76,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (existingUser != null) {
                 log.warn("소셜 이메일과 일치하는 일반 계정 발견 → 자동 연결 차단: email={}, provider={}",
                         userInfo.getEmail(), provider);
-                throw new EmailConflictException(userInfo.getEmail());
+                throw new EmailConflictException(userInfo.getEmail(), provider.name(), userInfo.getProviderId());
             }
         }
 

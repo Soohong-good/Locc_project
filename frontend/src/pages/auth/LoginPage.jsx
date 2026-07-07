@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button'
 import { ERROR_CODE } from '@/lib/constants'
 import client from '@/api/client'
 import useAuthStore from '@/stores/authStore'
-import { getMe } from '@/api/auth'
+import { getMe, linkSocialAccount } from '@/api/auth'
 
 function parseLoginError(error) {
   const err = error?.response?.data
@@ -93,6 +93,19 @@ const LoginPage = () => {
       setSessionExpiresAt(res.data?.data?.refreshExpiresIn)
       const user = await getMe()
       setUser(user)
+
+      // 소셜 로그인 이메일 충돌 → 안내 페이지에서 넘어온 경우, TOTP 인증 완료 직후 연결 완료
+      const linkToken = searchParams.get('linkToken')
+      if (linkToken) {
+        try {
+          await linkSocialAccount(linkToken)
+          navigate('/mypage')
+          return
+        } catch {
+          // 연결 실패해도 로그인 자체는 성공했으므로 기본 이동으로 계속 진행
+        }
+      }
+
       navigate('/')
     } catch (err) {
       setTotpError(err?.response?.data?.message || '인증 코드가 올바르지 않습니다.')
