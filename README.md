@@ -22,6 +22,7 @@
 | Auth | 자체 로그인 + OAuth2 (Kakao · Naver) |
 | File | 로컬 파일시스템 (도메인별 디렉토리 분리) |
 | Mail | Gmail SMTP (이메일 인증 · 비밀번호 재설정) |
+| External API | YouTube Data API (설교·찬양대·성경학교·송구영신 영상 동기화) · Kakao Map API |
 
 ### Frontend
 | 분류 | 기술 |
@@ -108,15 +109,21 @@ flowchart TB
 - **부서** — 태영아·유치·아동·청소년·청년·다민족 각 부서 소개·갤러리
 - **훈련신청** — 훈련 과정 목록·상세·신청·내 신청 현황
 - **시설·차량 신청** — 신청서 작성·조회·취소
-- **마이페이지** — 개인정보 수정·소셜 계정 연결
+- **찬양악보** — 목록·상세, 조회수 · 고정(pin)
+- **찬양대** — 영상 목록 (부서별 필터)
+- **성경 본문 자동표시** — 설교·예배 화면에서 인용된 성구를 절 본문으로 자동 조회
+- **송구영신예배** — 최신 영상·재생목록·성구·PDF 자료
+- **도움요청** — 문의/요청 등록
+- **마이페이지** — 개인정보 수정 · 소셜 계정 연결 (이메일 충돌 시 비밀번호 재확인 후 연결)
 
 ### 관리자
-- 공지사항 · 설교 · 갤러리 · 팝업 · 주보 CRUD
+- 공지사항 · 설교 · 갤러리 · 팝업 · 주보 · 찬양악보 CRUD
 - 회원 승인·반려·권한 관리 (ADMIN / OPERATOR)
 - 훈련신청 현황 관리 · Excel 다운로드
 - 시설·차량 신청 관리
-- YouTube 재생목록 설정
-- 도움 요청 관리
+- YouTube 재생목록 설정 (설교 · 찬양대 · 성경학교 · 송구영신예배)
+- 도움요청 처리 현황 관리
+- 방문자 통계
 
 ---
 
@@ -126,7 +133,10 @@ flowchart TB
 locc/
 ├── src/main/java/com/example/locc/
 │   ├── domain/
-│   │   ├── user/          # 사용자 (인증 포함)
+│   │   ├── user/          # 사용자 (회원가입 · 마이페이지)
+│   │   ├── auth/          # 이메일 인증코드 · 비밀번호 재설정
+│   │   ├── social/        # 소셜 로그인 추가가입 · 이메일 충돌 계정 연결
+│   │   ├── admin/         # 관리자 공통 API · 방문자 통계
 │   │   ├── notice/        # 공지사항
 │   │   ├── sermon/        # 설교
 │   │   ├── bulletin/      # 주보
@@ -137,7 +147,14 @@ locc/
 │   │   ├── application/   # 시설·차량 신청
 │   │   ├── popup/         # 팝업
 │   │   ├── staff/         # 스태프
-│   │   └── visitor/       # 방문자 카운트
+│   │   ├── bible/         # 성경 본문 자동 조회
+│   │   ├── bibleschool/   # 성경학교 영상 관리 (관리자)
+│   │   ├── choir/         # 찬양대 영상
+│   │   ├── praisesheet/   # 찬양악보
+│   │   ├── newyear/       # 송구영신예배
+│   │   ├── helprequest/   # 도움요청
+│   │   ├── error/         # 프론트 에러 리포트 수신
+│   │   └── sitemap/       # 동적 sitemap.xml 생성
 │   ├── config/            # Security · CORS · File · Redis 설정
 │   ├── security/          # JWT 필터 · OAuth2 핸들러
 │   ├── exception/         # 전역 예외 처리
@@ -273,7 +290,8 @@ docker compose up -d --build
 ## API 구조
 
 ```
-/api/auth/**          인증 (로그인·회원가입·토큰 갱신)
+/api/auth/**          인증 (로그인·회원가입·토큰 갱신·이메일 인증·비밀번호 재설정)
+/api/social/**        소셜 로그인 추가가입 · 이메일 충돌 계정 연결
 /api/notices/**       공지사항
 /api/sermons/**       설교
 /api/bulletin/**      주보 (인증 필요)
@@ -284,8 +302,16 @@ docker compose up -d --build
 /api/files/**         파일 업로드·스트리밍·다운로드
 /api/popups/**        팝업
 /api/staff/**         스태프
+/api/bible/**         성경 본문 조회
+/api/choir/**         찬양대 영상
+/api/praise-sheets/** 찬양악보
+/api/newyear/**       송구영신예배
+/api/bibleschool/**   성경학교 영상 (관리자)
+/api/help-request     도움요청 등록
+/api/error-report     프론트 에러 리포트 수신
 /api/mypage/**        마이페이지 (인증 필요)
 /api/admin/**         관리자 전용 (ADMIN 권한)
+/sitemap.xml          동적 사이트맵 (SEO)
 ```
 
 ---
