@@ -135,7 +135,10 @@ export function formatTranscript(html) {
     }
 
     // 큰따옴표로 시작하는 인용 (책명 없이)
-    if (/^[“”"]/.test(line)) {
+    // 단, 직전 블록을 이어붙이는 중(lastAppendable)이라면 새 인용문이 아니라
+    // PDF 컬럼폭 줄바꿈이 우연히 강조 인용부호("육체" 등) 앞에서 끊긴 것일 가능성이 높으므로
+    // 새 blockquote를 만들지 않고 계속 이어붙인다.
+    if (!lastAppendable && /^[“”"]/.test(line)) {
       pushBlock('blockquote', 'sermon-quote', line, true)
       continue
     }
