@@ -41,12 +41,17 @@ const LoginPage = () => {
   const [totpPending, setTotpPending]     = useState(false)
   const [totpError, setTotpError]         = useState('')
 
-  const queryError = new URLSearchParams(location.search).get('error')
-  const oauthErrorMsg = {
-    rejected:      '반려된 계정입니다. 관리자에게 문의하세요.',
-    oauth2_error:  '소셜 로그인 중 오류가 발생했습니다.',
-    oauth2_failed: '소셜 로그인에 실패했습니다.',
-  }[queryError]
+  const searchParams = new URLSearchParams(location.search)
+  const queryError = searchParams.get('error')
+  // auth_required는 백엔드(JwtAuthenticationEntryPoint)가 상황에 맞는 메시지를 message 파라미터로 직접 전달
+  const oauthErrorMsg = queryError === 'auth_required'
+    ? (searchParams.get('message') || '로그인이 필요한 페이지입니다.')
+    : {
+        rejected:      '반려된 계정입니다. 관리자에게 문의하세요.',
+        oauth2_error:  '소셜 로그인 중 오류가 발생했습니다.',
+        oauth2_failed: '소셜 로그인에 실패했습니다.',
+        access_denied: '소셜 로그인이 취소되었습니다.',
+      }[queryError]
 
   const apiError = error ? parseLoginError(error) : null
 

@@ -23,7 +23,7 @@ import java.util.Map;
  * 리다이렉트 URL 정책:
  *   - 신규 소셜 사용자 (추가 정보 미입력): /social/register?tempToken=...
  *   - 승인 대기 중:                       /social/pending  (email 파라미터 없음 — 계정 열거 방지)
- *   - 반려됨:                             /auth/login?error=rejected
+ *   - 반려됨:                             /login?error=rejected
  *   - 정상 로그인:                        app.oauth2-redirect-url (토큰은 쿠키로 전달)
  *
  * 토큰 전달 방식:
@@ -55,7 +55,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             user = ((CustomOAuth2User) principal).getUser();
         } else {
             log.error("OAuth2 Principal이 CustomOAuth2User 타입이 아닙니다: {}", principal.getClass());
-            getRedirectStrategy().sendRedirect(request, response, resolveUrl("/auth/login?error=oauth2_error"));
+            getRedirectStrategy().sendRedirect(request, response, resolveUrl("/login?error=oauth2_error"));
             return;
         }
 
@@ -88,7 +88,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             log.warn("반려된 OAuth2 사용자 로그인 시도");
             cookieUtil.clearAuthCookies(response);
             getRedirectStrategy().sendRedirect(request, response,
-                    resolveUrl("/auth/login?error=rejected"));
+                    resolveUrl("/login?error=rejected"));
             return;
         }
 

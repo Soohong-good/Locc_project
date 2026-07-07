@@ -7,8 +7,8 @@ import { Link } from 'react-router-dom'
  *   - 이미 일반(이메일/비밀번호)로 가입된 이메일로 소셜 로그인 시도 시
  *
  * 안내 흐름:
- *   1. 기존 일반 로그인으로 로그인
- *   2. 마이페이지 → 소셜 계정 연결
+ *   1. 기존 일반 로그인(이메일/비밀번호)으로 로그인
+ *   ※ 마이페이지에서 소셜 계정을 직접 연결하는 기능은 아직 없음 — 추가 시 이 페이지 안내 갱신 필요
  */
 const SocialEmailConflictPage = () => {
   return (
@@ -29,7 +29,7 @@ const SocialEmailConflictPage = () => {
           <h1 className="text-2xl font-light text-slate-900 mb-3">이미 가입된 이메일입니다</h1>
           <p className="text-sm text-slate-500 font-light leading-relaxed mb-6">
             소셜 계정과 동일한 이메일로 이미 일반 회원가입이 되어 있습니다.<br />
-            기존 계정으로 로그인한 후 마이페이지에서 소셜 계정을 연결할 수 있습니다.
+            계정 보호를 위해 자동으로 연결하지 않으니, 기존 계정으로 로그인해 주세요.
           </p>
 
           {/* 단계 안내 */}
@@ -40,11 +40,7 @@ const SocialEmailConflictPage = () => {
             </div>
             <div className="flex items-start gap-3">
               <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-              <p className="text-sm text-slate-600 font-light">마이페이지 → <strong className="font-medium">소셜 계정 관리</strong>에서 소셜 계정을 연결합니다.</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-              <p className="text-sm text-slate-600 font-light">이후부터는 소셜 로그인으로도 이용하실 수 있습니다.</p>
+              <p className="text-sm text-slate-600 font-light">비밀번호를 잊으셨다면 로그인 페이지에서 재설정할 수 있습니다.</p>
             </div>
           </div>
 

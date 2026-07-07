@@ -1,12 +1,14 @@
 package com.example.locc.security;
 
 import com.example.locc.config.AppProperties;
+import com.example.locc.exception.EmailConflictException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +18,9 @@ import java.io.IOException;
  * OAuth2 로그인 실패 핸들러
  *
  * 실패 케이스별 프론트 redirect 정책:
- *   - 그 외 오류: /login?error=oauth2_error
+ *   - 소셜 이메일이 기존 일반 계정과 충돌:   /social/email-conflict
+ *   - 사용자가 소셜 로그인 동의를 취소함: /login?error=access_denied
+ *   - 그 외 오류:                        /login?error=oauth2_error
  */
 @Slf4j
 @Component
@@ -32,7 +36,19 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
             throws IOException, ServletException {
 
         log.error("OAuth2 로그인 실패: {}", exception.getMessage());
-        getRedirectStrategy().sendRedirect(request, response, resolveUrl("/login?error=oauth2_error"));
+
+        if (exception instanceof EmailConflictException) {
+            getRedirectStrategy().sendRedirect(request, response, resolveUrl("/social/email-conflict"));
+            return;
+        }
+
+        String errorCode = "oauth2_error";
+        if (exception instanceof OAuth2AuthenticationException oAuth2Exception
+                && "access_denied".equals(oAuth2Exception.getError().getErrorCode())) {
+            errorCode = "access_denied";
+        }
+
+        getRedirectStrategy().sendRedirect(request, response, resolveUrl("/login?error=" + errorCode));
     }
 
     private String resolveUrl(String path) {

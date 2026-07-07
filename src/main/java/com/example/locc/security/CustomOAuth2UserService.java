@@ -5,6 +5,7 @@ import com.example.locc.domain.user.entity.SocialAccount;
 import com.example.locc.domain.user.entity.User;
 import com.example.locc.domain.user.repository.SocialAccountRepository;
 import com.example.locc.domain.user.repository.UserRepository;
+import com.example.locc.exception.EmailConflictException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,7 +25,8 @@ import java.util.Map;
  *
  * 소셜 로그인 처리 정책:
  *   1. 이미 소셜 계정으로 가입된 경우 → 기존 계정으로 로그인 (소셜 정보 업데이트)
- *   2. 소셜 이메일과 동일한 이메일의 일반 계정이 존재 → 해당 계정에 소셜 연결 후 로그인 (자동 전환)
+ *   2. 소셜 이메일과 동일한 이메일의 일반 계정이 존재 → 자동 병합 금지, {@link com.example.locc.exception.EmailConflictException} 발생
+ *      (비밀번호 검증 없이 자동 연결하면 이메일만 알아도 계정을 탈취할 수 있어 차단)
  *   3. 신규 사용자 → 임시 계정 생성 후 추가 정보 입력 페이지로 이동
  */
 @Slf4j
@@ -67,19 +69,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             return createOAuth2User(socialAccount.getUser(), oAuth2User.getAttributes(), registrationId);
         }
 
-        // 케이스 2: 소셜 이메일과 동일한 일반 계정 존재 → 자동 전환 (소셜 연결)
+        // 케이스 2: 소셜 이메일과 동일한 일반 계정 존재 → 자동 병합 금지, 충돌 안내 페이지로 차단
         if (userInfo.getEmail() != null) {
             User existingUser = userRepository.findByEmail(userInfo.getEmail()).orElse(null);
 
             if (existingUser != null) {
-                log.info("소셜 이메일과 일치하는 일반 계정 발견 → 소셜 계정 자동 연결: email={}, provider={}",
+                log.warn("소셜 이메일과 일치하는 일반 계정 발견 → 자동 연결 차단: email={}, provider={}",
                         userInfo.getEmail(), provider);
-                existingUser.convertToSocialLinked();
-                SocialAccount newSocialAccount = SocialAccount.link(
-                        provider, userInfo.getProviderId(), userInfo.getEmail(),
-                        userInfo.getName(), existingUser);
-                socialAccountRepository.save(newSocialAccount);
-                return createOAuth2User(existingUser, oAuth2User.getAttributes(), registrationId);
+                throw new EmailConflictException(userInfo.getEmail());
             }
         }
 

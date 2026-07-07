@@ -45,7 +45,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         // 페이지 요청인 경우 로그인 페이지로 리다이렉트 + alert
         else {
             String message = URLEncoder.encode("로그인이 필요한 페이지입니다.", StandardCharsets.UTF_8);
-            String redirectUrl = "/auth/login?error=auth_required&message=" + message + "&returnUrl=" + URLEncoder.encode(requestURI, StandardCharsets.UTF_8);
+            String redirectUrl = "/login?error=auth_required&message=" + message + "&returnUrl=" + URLEncoder.encode(requestURI, StandardCharsets.UTF_8);
             response.sendRedirect(redirectUrl);
         }
     }
