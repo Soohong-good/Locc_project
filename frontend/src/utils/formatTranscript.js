@@ -71,21 +71,54 @@ export function formatTranscript(html) {
   // blocks: 렌더 직전까지 원문 텍스트를 들고 있다가 마지막에 escape+태그를 씌운다.
   // appendable=true인 블록은, 새 패턴으로 시작하지 않는 다음 줄(=PDF 컬럼폭 줄바꿈으로
   // 끊긴 같은 문장의 나머지)을 계속 이어붙일 수 있다. 빈 줄을 만나면 이어붙이기를 멈춘다.
+  //
+  // 단, 성경 인용문(blockquote)은 예외: PDF에서 여러 절을 인용할 때 절 사이에
+  // 빈 줄이 섞여 나오는 경우가 있어("...할 것이니라" 뒤 빈 줄, 이어서 "2. 보라...") 닫는
+  // 인용부호(”/")를 만나기 전까지는 openQuote로 추적해 빈 줄과 "1. 2." 같은 다른 패턴보다
+  // 우선해서 계속 이어붙인다. 닫는 인용부호를 만나면 그 즉시 종료해, 그 다음 줄(예: "*강단
+  // 기도문" 같은 주석)이 인용문 안으로 섞여 들어가지 않게 한다.
+  const CLOSING_QUOTE_RE = /[”"]\s*$/
+  const MAX_OPEN_QUOTE_LINES = 10 // 닫는 인용부호를 못 찾는 이상 데이터 방어용 상한
+
   const blocks = []
   let lastAppendable = null
+  let openQuote = null
+  let openQuoteLineCount = 0
   let titleDone = false // 첫 타이틀 블록 처리 여부
 
   const pushBlock = (tag, className, text, appendable) => {
     const block = { tag, className, text }
     blocks.push(block)
     lastAppendable = appendable ? block : null
+    return block
+  }
+
+  const pushQuoteBlock = (text) => {
+    const block = pushBlock('blockquote', 'sermon-quote', text, true)
+    openQuote = CLOSING_QUOTE_RE.test(text) ? null : block
+    openQuoteLineCount = 0
+    return block
   }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
-    // 빈 줄 → 단락 구분(이어붙이기 중단), 스킵
-    if (line === '') { lastAppendable = null; continue }
+    // 빈 줄 → 단락 구분(이어붙이기 중단), 스킵. 단, 열린 인용문은 유지한다.
+    if (line === '') { if (!openQuote) lastAppendable = null; continue }
+
+    // 열린 인용문이 있으면 다른 어떤 패턴보다 우선해서 계속 이어붙인다.
+    if (openQuote) {
+      const needsSpace = /[.!?”"]$/.test(openQuote.text)
+      openQuote.text += (needsSpace ? ' ' : '') + line
+      openQuoteLineCount += 1
+      if (CLOSING_QUOTE_RE.test(line) || openQuoteLineCount >= MAX_OPEN_QUOTE_LINES) {
+        openQuote = null
+        lastAppendable = null
+      } else {
+        lastAppendable = openQuote
+      }
+      continue
+    }
 
     // ── 첫 번째 타이틀 블록 ──────────────────────────────────────
     if (!titleDone) {
@@ -130,7 +163,7 @@ export function formatTranscript(html) {
     const refQuoteMatch = line.match(/^([가-힣]{1,4}\d+:\d+[\d\-,b]*)\s+([“”"].+)$/)
     if (refQuoteMatch) {
       pushBlock('p', 'sermon-ref', refQuoteMatch[1], false)
-      pushBlock('blockquote', 'sermon-quote', refQuoteMatch[2], true)
+      pushQuoteBlock(refQuoteMatch[2])
       continue
     }
 
@@ -139,7 +172,7 @@ export function formatTranscript(html) {
     // PDF 컬럼폭 줄바꿈이 우연히 강조 인용부호("육체" 등) 앞에서 끊긴 것일 가능성이 높으므로
     // 새 blockquote를 만들지 않고 계속 이어붙인다.
     if (!lastAppendable && /^[“”"]/.test(line)) {
-      pushBlock('blockquote', 'sermon-quote', line, true)
+      pushQuoteBlock(line)
       continue
     }
 
