@@ -5,12 +5,15 @@ import com.example.locc.domain.file.dto.response.FileResponse;
 import com.example.locc.domain.file.entity.File;
 import com.example.locc.domain.file.service.FileCommandService;
 import com.example.locc.domain.file.service.FileQueryService;
+import com.example.locc.exception.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.ContentDisposition;
@@ -86,15 +89,21 @@ public class FileController {
                 .body(resource);
     }
 
-    // ───── 보호 파일 다운로드 (인증 필요) ─────
+    // ───── 파일 다운로드 (주보만 로그인 필요, 그 외는 공개) ─────
 
     /**
      * 파일 다운로드 (attachment)
-     * - SecurityConfig에서 /api/files/download/** 는 authenticated 처리
+     * - SecurityConfig에서 /api/files/download/** 는 permitAll 처리
+     * - 엔티티 타입은 fileId로만 구분되므로, 주보(BULLETIN)만 여기서 로그인 여부를 직접 검증
      */
     @GetMapping("/download/{fileId}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable Long fileId) {
+    public ResponseEntity<Resource> downloadFile(@PathVariable Long fileId, Authentication authentication) {
         File file = fileQueryService.getFile(fileId);
+
+        if (file.getEntityType() == File.EntityType.BULLETIN && !isAuthenticated(authentication)) {
+            throw new AccessDeniedException("주보는 로그인 후 다운로드할 수 있습니다.");
+        }
+
         Resource resource = fileQueryService.loadFileAsResource(fileId);
 
         String contentDisposition = ContentDisposition.attachment()
@@ -135,5 +144,13 @@ public class FileController {
     public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long fileId) {
         fileCommandService.deleteFile(fileId);
         return ResponseEntity.ok(ApiResponse.ok());
+    }
+
+    // ───── 공통 유틸 ─────
+
+    private boolean isAuthenticated(Authentication authentication) {
+        return authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
     }
 }

@@ -153,8 +153,9 @@ public class SecurityConfig {
                         // 공개 이미지 — 비로그인 허용
                         .requestMatchers(HttpMethod.GET, "/api/files/image/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/files/pdf/**").permitAll()
-                        // 파일 다운로드 — 로그인 필요
-                        .requestMatchers(HttpMethod.GET, "/api/files/download/**").authenticated()
+                        // 파일 다운로드 — 주보(BULLETIN)만 로그인 필요, 그 외 엔티티는 공개
+                        // (엔티티 타입별 분기는 fileId만으로 URL에서 구분 불가 → FileController.downloadFile()에서 검증)
+                        .requestMatchers(HttpMethod.GET, "/api/files/download/**").permitAll()
                         .requestMatchers("/download/**").authenticated()
                         // 파일 메타데이터 조회 / 업로드 / 삭제 — 관리자 또는 운영자
                         .requestMatchers("/api/files/**").hasAnyRole("ADMIN", "OPERATOR")
