@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSundayMorningByDate, deleteSermon } from '@/api/sermons'
 import { downloadFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
+import useNoIndex from '@/hooks/useNoIndex'
 import SundayMorningModal from '@/components/sermon/SundayMorningModal'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ErrorMessage from '@/components/common/ErrorMessage'
@@ -61,6 +62,9 @@ const SundayMorningDetailPage = () => {
     queryKey,
     queryFn: () => getSundayMorningByDate(date),
   })
+
+  // 존재하지 않는 날짜도 SPA 특성상 200 OK가 나가므로 색인에서 제외
+  useNoIndex(!isLoading && !!error)
 
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteSermon(id),

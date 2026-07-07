@@ -10,6 +10,7 @@ import { getSermon, updateSermon, deleteSermon } from '@/api/sermons'
 import { downloadFile } from '@/api/files'
 import { getBiblePassage } from '@/api/bible'
 import useAuthStore from '@/stores/authStore'
+import useNoIndex from '@/hooks/useNoIndex'
 import SermonModal from '@/components/sermon/SermonModal'
 import { formatTranscript } from '@/utils/formatTranscript'
 import toast from '@/utils/toast'
@@ -145,6 +146,9 @@ const SermonDetailPage = () => {
     queryKey: ['sermon', id],
     queryFn:  () => getSermon(id),
   })
+
+  // 존재하지 않는 설교 id도 SPA 특성상 200 OK가 나가므로 색인에서 제외
+  useNoIndex(!isLoading && (!!error || !sermon))
 
   const { data: bibleData } = useQuery({
     queryKey: ['bible-passage', sermon?.scripture],

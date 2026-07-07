@@ -7,6 +7,7 @@ import {
 import { getGalleryDetail, getGalleryGroupImages } from '@/api/gallery'
 import { deleteGalleryImage } from '@/api/departments'
 import useAuthStore from '@/stores/authStore'
+import useNoIndex from '@/hooks/useNoIndex'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
 
@@ -81,6 +82,9 @@ const GalleryDetailPage = () => {
     queryFn:  () => getGalleryDetail(imageId),
     retry: false,
   })
+
+  // 존재하지 않는 이미지 id도 SPA 특성상 200 OK가 나가므로 색인에서 제외
+  useNoIndex(!isLoading && (isError || !image))
 
   const { data: groupImages } = useQuery({
     queryKey: ['gallery-group-images', imageId],

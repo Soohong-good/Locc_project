@@ -13,6 +13,7 @@ import {
 } from '@/api/notices'
 import { deleteFile, downloadFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
+import useNoIndex from '@/hooks/useNoIndex'
 import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import { SkeletonRow } from '@/components/ui/SkeletonCard'
 
@@ -296,6 +297,9 @@ const NoticeDetailPage = () => {
     queryKey: ['notices', id],
     queryFn:  () => getNotice(id),
   })
+
+  // 존재하지 않는 공지 id도 SPA 특성상 200 OK가 나가므로 색인에서 제외
+  useNoIndex(!isLoading && isError)
 
   /* 조회수 증가 — 최초 1회 (원본: POST /api/notices/{id}/views) */
   useEffect(() => {

@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { recordVisit } from '@/api/visitor'
+import useCanonical from '@/hooks/useCanonical'
 import useAuthStore from '@/stores/authStore'
 import AuthInitializer from '@/components/common/AuthInitializer'
 import ScrollToTop from '@/components/common/ScrollToTop'
@@ -231,6 +232,8 @@ const sendErrorReport = (type, message, stack) => {
 }
 
 const App = () => {
+  useCanonical()
+
   useEffect(() => {
     recordVisit().catch(() => {}) // 실패해도 UI에 영향 없도록 무시
 

@@ -1,6 +1,9 @@
 ﻿import { Link } from 'react-router-dom'
+import useNoIndex from '@/hooks/useNoIndex'
 
 const NotFoundPage = () => {
+  useNoIndex()
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
