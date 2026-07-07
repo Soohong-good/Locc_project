@@ -110,6 +110,7 @@ public class SecurityConfig {
                         // ========== 정적 리소스 ==========
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/.well-known/**").permitAll()
+                        .requestMatchers("/sitemap.xml").permitAll()
 
                         // ========== 방문자 카운트 — 비로그인 포함 전체 허용 ==========
                         .requestMatchers(HttpMethod.POST, "/api/visitor/count").permitAll()
