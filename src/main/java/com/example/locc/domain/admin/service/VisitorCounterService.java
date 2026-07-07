@@ -73,16 +73,6 @@ public class VisitorCounterService {
     }
     
     /**
-     * 방문 증가 (레거시, 사용 안 함)
-     */
-    @Deprecated
-    public void incrementVisit() {
-        String key = VISIT_KEY_PREFIX + LocalDate.now(KST).format(DATE_FORMATTER);
-        redisTemplate.opsForValue().increment(key);
-        log.trace("방문 증가: {}", key);
-    }
-    
-    /**
      * 특정 날짜의 페이지뷰 카운트 조회
      */
     public Long getPageViewCount(LocalDate date) {

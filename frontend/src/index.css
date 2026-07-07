@@ -38,14 +38,6 @@
   color: #94a3b8;
 }
 
-/* 공지 리스트 아이템 호버 */
-.church-notice-item:hover {
-  background-color: var(--church-ivory-warm);
-}
-.church-notice-item:hover .church-notice-arrow {
-  color: #475569;
-}
-
 /* ── 전역 기본값 ──────────────────────────────────── */
 * {
   font-family: 'Pretendard', 'Noto Sans KR', 'Inter', sans-serif;
@@ -114,17 +106,6 @@ button:disabled {
   color: #0f172a;
 }
 
-/* ── 모바일 메뉴 슬라이드 ──────────────────────────── */
-.mobile-menu-enter {
-  overflow: hidden;
-  animation: slideDown 0.25s ease-out forwards;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ── 페이지 진입 애니메이션 ───────────────────────── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(24px); }
@@ -143,12 +124,6 @@ button:disabled {
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out forwards;
 }
-
-/* 딜레이 유틸리티 */
-.animation-delay-100 { animation-delay: 0.1s; opacity: 0; }
-.animation-delay-200 { animation-delay: 0.2s; opacity: 0; }
-.animation-delay-300 { animation-delay: 0.3s; opacity: 0; }
-.animation-delay-500 { animation-delay: 0.5s; opacity: 0; }
 
 /* ── 국기 펄럭임 (선교 현황 배경 장식) ────────────────── */
 @keyframes flagWave {
