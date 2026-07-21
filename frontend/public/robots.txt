@@ -1,0 +1,18 @@
+# 그리스도사랑교회 (locc.kr)
+
+User-agent: *
+Allow: /
+
+# 색인 가치가 없거나 개인/관리 영역은 크롤 제외
+Disallow: /admin
+Disallow: /mypage
+Disallow: /login
+Disallow: /register
+Disallow: /training/my
+Disallow: /api/
+
+# 주의: 구 홈페이지 잔재 URL(/숫자, ?bmode=, ?q=)은 여기서 차단하지 않는다.
+# 차단하면 크롤러가 410(Gone) 응답을 보지 못해 색인이 오히려 남는다.
+# nginx에서 410을 돌려주어 색인에서 제거되도록 한다.
+
+Sitemap: https://locc.kr/sitemap.xml
