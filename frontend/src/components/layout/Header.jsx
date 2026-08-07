@@ -21,6 +21,7 @@ const NAV_MENUS = [
       { href: '/church/worship-guide', label: '예배 안내' },
       { href: '/church/staff',         label: '섬기는 분들' },
       { href: '/church/mission',       label: '선교' },
+      { href: '/church/gallery',       label: '갤러리' },
       { href: '/church/contact',       label: '오시는 길' },
     ],
   },

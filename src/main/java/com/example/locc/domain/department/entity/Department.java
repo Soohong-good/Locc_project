@@ -11,6 +11,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Department {
 
+    /**
+     * 교회 자체 갤러리 전용 코드 — 사역 부서가 아니라 "그리스도사랑교회 > 갤러리"의 저장소 역할
+     * (gallery_image.department_id가 NOT NULL이라 부서 레코드를 빌려 쓰는 구조)
+     * 부서 목록·부서 갤러리 조회에서는 제외된다.
+     */
+    public static final String CHURCH_CODE = "church";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

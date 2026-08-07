@@ -6,6 +6,7 @@ import {
 } from '@phosphor-icons/react'
 import { getGalleryDetail, getGalleryGroupImages } from '@/api/gallery'
 import { deleteGalleryImage } from '@/api/departments'
+import { CHURCH_GALLERY_CODE } from '@/constants/departments'
 import useAuthStore from '@/stores/authStore'
 import useNoIndex from '@/hooks/useNoIndex'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
@@ -68,6 +69,8 @@ const GalleryDetailPage = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleting,   setDeleting]   = useState(false)
 
+  // 부서 갤러리(/department/gallery)와 교회 갤러리(/church/gallery)가 이 상세 페이지를 공용으로 쓴다
+
   const { data: image, isLoading, isError } = useQuery({
     queryKey: ['gallery-detail', imageId],
     queryFn:  () => getGalleryDetail(imageId),
@@ -83,12 +86,16 @@ const GalleryDetailPage = () => {
     enabled:  !!image,
   })
 
+  const listPath = image?.departmentCode === CHURCH_GALLERY_CODE
+    ? '/church/gallery'
+    : '/department/gallery'
+
   const handleDelete = async () => {
     setDeleting(true)
     try {
       await deleteGalleryImage(image.departmentCode, imageId)
       queryClient.invalidateQueries({ queryKey: ['galleries'] })
-      navigate('/department/gallery')
+      navigate(listPath)
     } catch {
       toast.error('이미지 삭제 중 오류가 발생했습니다.')
       setDeleting(false)
@@ -197,7 +204,7 @@ const GalleryDetailPage = () => {
         {/* 목록으로 */}
         <div className="mt-20 flex justify-center pb-8">
           <button
-            onClick={() => navigate('/department/gallery')}
+            onClick={() => navigate(listPath)}
             className="border border-[#E5E5E5] bg-transparent text-xs font-bold tracking-[0.1em] uppercase py-5 px-16 text-[#171717] hover:bg-[#171717] hover:text-[#FAF9F6] hover:border-[#171717] transition-all duration-300 flex items-center gap-3"
           >
             <List size={18} />

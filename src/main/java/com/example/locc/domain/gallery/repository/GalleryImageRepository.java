@@ -34,22 +34,28 @@ public interface GalleryImageRepository extends JpaRepository<GalleryImage, Long
     
     /**
      * 통합 갤러리 이미지 목록 조회 (게시판용 Page)
-     * departmentCode가 null이면 전체, 있으면 해당 부서만 필터링
+     * departmentCode가 null이면 전체 부서, 있으면 해당 부서만 필터링
+     * 전체 조회 시 교회 갤러리(excludedCode)는 부서 갤러리가 아니므로 제외 —
+     * departmentCode로 교회 코드를 직접 지정하면 교회 갤러리만 조회된다.
      * groupId별로 첫 번째 이미지만 표시 (1 업로드 = 1 게시물)
      */
     @EntityGraph(attributePaths = {"department", "uploader"})
     @Query("""
         SELECT gi FROM GalleryImage gi
         WHERE (:departmentCode IS NULL OR gi.department.code = :departmentCode)
+        AND (:departmentCode IS NOT NULL OR gi.department.code <> :excludedCode)
         AND gi.id IN (
             SELECT MIN(gi2.id)
             FROM GalleryImage gi2
             WHERE (:departmentCode IS NULL OR gi2.department.code = :departmentCode)
+            AND (:departmentCode IS NOT NULL OR gi2.department.code <> :excludedCode)
             GROUP BY gi2.groupId
         )
         ORDER BY gi.createdAt DESC
         """)
-    Page<GalleryImage> findForBoard(@Param("departmentCode") String departmentCode, Pageable pageable);
+    Page<GalleryImage> findForBoard(@Param("departmentCode") String departmentCode,
+                                    @Param("excludedCode") String excludedCode,
+                                    Pageable pageable);
 
     /**
      * groupId로 모든 이미지 조회 (상세 페이지용)

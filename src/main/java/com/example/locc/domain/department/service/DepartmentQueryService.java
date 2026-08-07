@@ -31,10 +31,10 @@ public class DepartmentQueryService {
         return departmentRepository.count();
     }
 
-    // 부서 전체 목록 조회
+    // 부서 전체 목록 조회 (교회 갤러리 전용 church 의사 부서는 제외)
     @Cacheable(value = CacheConfig.CACHE_DEPARTMENTS, key = "'all'")
     public List<DepartmentResponse> findAll() {
-        return departmentRepository.findAll()
+        return departmentRepository.findAllByCodeNot(Department.CHURCH_CODE)
                 .stream()
                 .map(DepartmentResponse::from)
                 .collect(java.util.stream.Collectors.toList());

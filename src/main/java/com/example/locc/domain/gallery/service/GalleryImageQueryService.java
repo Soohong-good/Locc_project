@@ -1,6 +1,7 @@
 package com.example.locc.domain.gallery.service;
 
 import com.example.locc.config.CacheConfig;
+import com.example.locc.domain.department.entity.Department;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupDto;
 import com.example.locc.domain.gallery.dto.response.GalleryGroupResponse;
 import com.example.locc.domain.gallery.dto.response.GalleryImageDetailResponse;
@@ -60,12 +61,12 @@ public class GalleryImageQueryService {
 
     /**
      * 통합 갤러리 이미지 목록 조회 (게시판 형태)
-     * departmentCode가 null이면 전체, 있으면 해당 부서만 필터링
+     * departmentCode가 null이면 전체 부서(교회 갤러리 제외), 있으면 해당 코드만 필터링
      * groupId별로 그룹화하여 첫 번째 이미지만 표시, 이미지 개수 포함
      */
     public Page<GalleryImageResponse> getImageListForBoardAll(String departmentCode, int page) {
         PageRequest pageRequest = PageRequest.of(page, 12);
-        Page<GalleryImage> imagePage = galleryImageRepository.findForBoard(departmentCode, pageRequest);
+        Page<GalleryImage> imagePage = galleryImageRepository.findForBoard(departmentCode, Department.CHURCH_CODE, pageRequest);
 
         List<String> groupIds = imagePage.getContent().stream()
                 .map(GalleryImage::getGroupId)

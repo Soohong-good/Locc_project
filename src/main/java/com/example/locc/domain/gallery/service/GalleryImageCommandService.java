@@ -71,6 +71,11 @@ public class GalleryImageCommandService {
         Department department = departmentRepository.findByCode(commands.get(0).departmentCode())
                 .orElseThrow(() -> new NotFoundException("부서를 찾을 수 없습니다."));
 
+        // 2-1. 교회 갤러리는 교회 공식 갤러리이므로 관리자/운영자만 업로드 가능
+        if (Department.CHURCH_CODE.equals(department.getCode()) && !uploader.isAdminOrOperator()) {
+            throw new AccessDeniedException("교회 갤러리는 관리자/운영자만 업로드할 수 있습니다.");
+        }
+
         // 3. 파일 I/O (검증·저장·리사이즈·썸네일) — 성공한 엔티티만 수집
         List<GalleryImage> entities = new ArrayList<>();
         List<String> failedFilenames = new ArrayList<>();

@@ -14,6 +14,7 @@ import GuestRoute from '@/components/common/GuestRoute'
 import OAuth2Callback from '@/components/common/OAuth2Callback'
 import Layout from '@/components/layout/Layout'
 import AdminLayout from '@/components/layout/AdminLayout'
+import MarketLayout from '@/components/layout/MarketLayout'
 
 // ── 페이지 컴포넌트 — 라우트별 코드 스플리팅 ──────────────────────────
 const LoginPage              = lazy(() => import('@/pages/auth/LoginPage'))
@@ -44,6 +45,7 @@ const StaffPage              = lazy(() => import('@/pages/church/StaffPage'))
 const MissionPage            = lazy(() => import('@/pages/church/MissionPage'))
 const ContactPage            = lazy(() => import('@/pages/church/ContactPage'))
 const WorshipGuidePage       = lazy(() => import('@/pages/church/WorshipGuidePage'))
+const ChurchGalleryPage      = lazy(() => import('@/pages/church/ChurchGalleryPage'))
 
 const NewYearServicePage     = lazy(() => import('@/pages/worship/NewYearServicePage'))
 const SundayMorningPage      = lazy(() => import('@/pages/worship/SundayMorningPage'))
@@ -74,6 +76,10 @@ const GalleryDetailPage      = lazy(() => import('@/pages/departments/GalleryDet
 const ApplicationListPage    = lazy(() => import('@/pages/applications/ApplicationListPage'))
 const ApplicationFormPage    = lazy(() => import('@/pages/applications/ApplicationFormPage'))
 const ApplicationDetailPage  = lazy(() => import('@/pages/applications/ApplicationDetailPage'))
+
+const MarketHomePage         = lazy(() => import('@/pages/market/MarketHomePage'))
+const MarketListPage         = lazy(() => import('@/pages/market/MarketListPage'))
+const MarketDetailPage       = lazy(() => import('@/pages/market/MarketDetailPage'))
 
 const AdminDashboardPage         = lazy(() => import('@/pages/admin/AdminDashboardPage'))
 const AdminNoticePage            = lazy(() => import('@/pages/admin/AdminNoticePage'))
@@ -125,6 +131,8 @@ const AppRoutes = () => {
           <Route path="/church/mission"       element={<MissionPage />} />
           <Route path="/church/contact"       element={<ContactPage />} />
           <Route path="/church/worship-guide" element={<WorshipGuidePage />} />
+          <Route path="/church/gallery"           element={<ChurchGalleryPage />} />
+          <Route path="/church/gallery/:imageId"  element={<GalleryDetailPage />} />
 
           {/* 예배 페이지 */}
           <Route path="/worship/newyear"                 element={<NewYearServicePage />} />
@@ -180,6 +188,13 @@ const AppRoutes = () => {
           <Route path="/applications/:id"  element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} />
 
           <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
+        </Route>
+
+        {/* 그사랑 마켓 — 독립 레이아웃 (교회 Header/Footer 미사용), 로그인 필수 */}
+        <Route path="/market" element={<PrivateRoute><MarketLayout /></PrivateRoute>}>
+          <Route index                 element={<MarketHomePage />} />
+          <Route path="category/:category" element={<MarketListPage />} />
+          <Route path=":id"            element={<MarketDetailPage />} />
         </Route>
 
         {/* 관리자 전용 (AdminLayout) */}

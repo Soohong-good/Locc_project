@@ -51,11 +51,11 @@ class DepartmentQueryServiceTest {
     }
 
     @Test
-    @DisplayName("전체 부서 목록 - DepartmentResponse 리스트로 매핑된다")
+    @DisplayName("전체 부서 목록 - 교회 갤러리용 church 코드를 제외하고 DepartmentResponse 리스트로 매핑된다")
     void findAll() {
         Department dept1 = Department.create("nursery", "태영아부", "Nursery Ministry");
         Department dept2 = Department.create("preschool", "유아유치부", "Preschool Ministry");
-        given(departmentRepository.findAll()).willReturn(List.of(dept1, dept2));
+        given(departmentRepository.findAllByCodeNot(Department.CHURCH_CODE)).willReturn(List.of(dept1, dept2));
 
         List<DepartmentResponse> result = departmentQueryService.findAll();
 
