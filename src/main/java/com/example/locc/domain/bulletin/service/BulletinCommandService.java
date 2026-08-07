@@ -138,6 +138,17 @@ public class BulletinCommandService {
     }
 
     /**
+     * 본문 에디터 이미지 업로드 (Notice·PraiseSheet와 동일 방식)
+     * @return 공개 이미지 URL (/api/files/image/{id})
+     */
+    public String uploadContentImage(MultipartFile image, String email) {
+        if (!userPermissionService.hasPermission(email, AreaType.BULLETIN)) {
+            throw new IllegalStateException("주보 작성 권한이 없습니다.");
+        }
+        return fileCommandService.uploadBulletinContentImage(image, email);
+    }
+
+    /**
      * 조회수 증가
      */
     public void increaseViewCount(Long id) {

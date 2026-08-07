@@ -1,3 +1,6 @@
+import DOMPurify from 'dompurify'
+// 본문 HTML(.ql-editor)의 정렬·목록 등 Quill 기본 스타일 — 이 페이지는 에디터를 띄우지 않아 CSS만 따로 불러온다
+import 'quill/dist/quill.snow.css'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -7,6 +10,7 @@ import { downloadFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import toast from '@/utils/toast'
+import { isHtmlContent } from '@/utils/richText'
 
 /* ── 날짜 포맷: 원본 yyyy. MM. dd ───────────────────────────────── */
 const formatDate = (dt) => {
@@ -140,10 +144,17 @@ const BulletinDetailPage = () => {
           </div>
         )}
 
-        {/* 본문 */}
-        <div className="prose prose-lg max-w-none text-base md:text-lg leading-[1.8] text-[#2C2C2C] font-light tracking-[-0.01em] break-keep [&_p]:mb-8 min-h-[80px]">
+        {/* 본문 — 에디터 HTML은 그대로, 에디터 도입 이전 순수 텍스트는 줄바꿈 유지해서 출력 */}
+        <div className="prose prose-lg max-w-none text-base md:text-lg leading-[1.8] text-[#2C2C2C] font-light tracking-[-0.01em] break-keep [&_p]:mb-8 [&_img]:max-w-full [&_img]:h-auto min-h-[80px]">
           {bulletin.content ? (
-            <div className="whitespace-pre-wrap">{bulletin.content}</div>
+            isHtmlContent(bulletin.content) ? (
+              <div
+                className="ql-editor ql-output"
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bulletin.content) }}
+              />
+            ) : (
+              <div className="whitespace-pre-wrap">{bulletin.content}</div>
+            )
           ) : (
             <div className="text-[#A3A3A3] text-center py-12">작성된 내용이 없습니다.</div>
           )}

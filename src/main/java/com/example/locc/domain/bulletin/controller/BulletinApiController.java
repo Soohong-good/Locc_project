@@ -19,6 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 /**
  * Bulletin ApiController
  * - REST API 전용
@@ -76,6 +78,17 @@ public class BulletinApiController {
         BulletinDetailResponse bulletin = bulletinCommandService.updateBulletin(
                 id, request.toUpdateCommand(), thumbnail, authentication.getName());
         return ResponseEntity.ok(ApiResponse.ok(bulletin));
+    }
+
+    /** 본문 에디터 이미지 업로드 (Notice·PraiseSheet와 동일 규약: image 필드 → { url }) */
+    @PostMapping("/upload-image")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadContentImage(
+            @RequestParam("image") MultipartFile image,
+            Authentication authentication) {
+
+        log.debug("주보 에디터 이미지 업로드: filename={}, size={}", image.getOriginalFilename(), image.getSize());
+        String imageUrl = bulletinCommandService.uploadContentImage(image, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("url", imageUrl)));
     }
 
     @DeleteMapping("/{id}")

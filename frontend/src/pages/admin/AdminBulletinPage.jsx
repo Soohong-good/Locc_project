@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getBulletins, createBulletin, updateBulletin, deleteBulletin } from '@/api/bulletins'
+import { getBulletins, createBulletin, updateBulletin, deleteBulletin, uploadBulletinImage } from '@/api/bulletins'
 import useAuthStore from '@/stores/authStore'
+import useQuillEditor from '@/hooks/useQuillEditor.jsx'
+import { toEditorHtml, stripHtml } from '@/utils/richText'
 import {
   Newspaper, PlusCircle, MagnifyingGlass, Bell, Question,
   CalendarBlank, Eye, Clock, Funnel,
@@ -22,13 +24,25 @@ const isThisMonth = (val) => {
   return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth()
 }
 
+/* 모달 안에서 쓰는 Quill 스타일 — 본문에 이미지·서식을 넣을 수 있게 에디터로 대체 */
+const QUILL_STYLE = `
+  .ql-tooltip { display: none !important; }
+  .ql-container { min-height: 260px; font-size: 14px; border-color: #c5c6cd !important; }
+  .ql-editor    { min-height: 260px; background-color: #fff; font-family: inherit; }
+  .ql-toolbar   { background-color: #f8f9ff; border-color: #c5c6cd !important; }
+  .ql-editor a  { color: #2563eb !important; text-decoration: underline !important; }
+  .ql-editor img { max-width: 100%; height: auto; }
+`
+
 /* ── 등록 모달 ── */
 function WriteModal({ onClose, onSaved }) {
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
   const [file, setFile] = useState(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const handleImageUpload = useCallback((image) => uploadBulletinImage(image), [])
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({ onImageUpload: handleImageUpload })
 
   const handleFile = (e) => {
     const f = e.target.files[0]
@@ -41,9 +55,10 @@ function WriteModal({ onClose, onSaved }) {
   const handleSave = async () => {
     setError('')
     if (!title.trim()) { setError('제목을 입력해주세요.'); return }
+    const content = getHTML()
     const fd = new FormData()
     fd.append('title', title.trim())
-    if (content.trim()) fd.append('content', content.trim())
+    if (content) fd.append('content', content)
     if (file) fd.append('thumbnail', file)
     setSaving(true)
     try { await createBulletin(fd); onSaved() }
@@ -52,13 +67,14 @@ function WriteModal({ onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <style>{QUILL_STYLE}</style>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative bg-white w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#c5c6cd]">
           <h2 className="text-[18px] font-semibold text-[#0b1c30]">새 주보 등록</h2>
           <button onClick={onClose} className="p-1.5 text-[#45474c] hover:text-[#0b1c30] hover:bg-[#eff4ff] rounded-lg transition-colors"><X size={20} /></button>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           <div>
             <label className="block text-[12px] font-semibold text-[#45474c] uppercase tracking-wider mb-1.5">제목 <span className="text-[#ba1a1a]">*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="주보 제목을 입력하세요"
@@ -76,9 +92,10 @@ function WriteModal({ onClose, onSaved }) {
             </label>
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#45474c] uppercase tracking-wider mb-1.5">내용</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3} placeholder="주보 내용을 입력하세요 (선택)"
-              className="w-full border border-[#c5c6cd] rounded-lg px-3 py-2 text-[14px] text-[#0b1c30] focus:outline-none focus:ring-2 focus:ring-[#091426]/20 resize-none transition-all" />
+            <label className="block text-[12px] font-semibold text-[#45474c] uppercase tracking-wider mb-1.5">
+              내용 <span className="text-[11px] font-normal text-[#75777d] normal-case ml-1">(이미지 삽입·드래그·붙여넣기 가능)</span>
+            </label>
+            <div ref={containerRef} />
           </div>
         </div>
         {error && (
@@ -95,6 +112,7 @@ function WriteModal({ onClose, onSaved }) {
           </button>
         </div>
       </div>
+      <LinkTooltip />
     </div>
   )
 }
@@ -102,9 +120,15 @@ function WriteModal({ onClose, onSaved }) {
 /* ── 수정 모달 ── */
 function EditModal({ bulletin, onClose, onSaved }) {
   const [title, setTitle] = useState(bulletin.title ?? '')
-  const [content, setContent] = useState(bulletin.content ?? '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const handleImageUpload = useCallback((image) => uploadBulletinImage(image), [])
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({
+    onImageUpload: handleImageUpload,
+    // 에디터 도입 이전 순수 텍스트 본문도 줄바꿈을 유지한 채 불러온다
+    initialValue: toEditorHtml(bulletin.content),
+  })
 
   const handleSave = async () => {
     setError('')
@@ -113,7 +137,8 @@ function EditModal({ bulletin, onClose, onSaved }) {
     try {
       const fd = new FormData()
       fd.append('title', title.trim())
-      if (content.trim()) fd.append('content', content.trim())
+      // 내용을 비운 경우도 반영되도록 빈 문자열까지 전송한다
+      fd.append('content', getHTML())
       await updateBulletin(bulletin.id, fd)
       onSaved()
     } catch (e) { setError(e?.response?.data?.message ?? '수정에 실패했습니다.'); setSaving(false) }
@@ -121,22 +146,24 @@ function EditModal({ bulletin, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <style>{QUILL_STYLE}</style>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative bg-white w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#c5c6cd]">
           <h2 className="text-[18px] font-semibold text-[#0b1c30]">주보 수정</h2>
           <button onClick={onClose} className="p-1.5 text-[#45474c] hover:text-[#0b1c30] hover:bg-[#eff4ff] rounded-lg transition-colors"><X size={20} /></button>
         </div>
-        <div className="px-6 py-5 space-y-4">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
           <div>
             <label className="block text-[12px] font-semibold text-[#45474c] uppercase tracking-wider mb-1.5">제목 <span className="text-[#ba1a1a]">*</span></label>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               className="w-full border border-[#c5c6cd] rounded-lg px-3 py-2 text-[14px] text-[#0b1c30] focus:outline-none focus:ring-2 focus:ring-[#091426]/20 transition-all" />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#45474c] uppercase tracking-wider mb-1.5">내용</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={3}
-              className="w-full border border-[#c5c6cd] rounded-lg px-3 py-2 text-[14px] text-[#0b1c30] focus:outline-none focus:ring-2 focus:ring-[#091426]/20 resize-none transition-all" />
+            <label className="block text-[12px] font-semibold text-[#45474c] uppercase tracking-wider mb-1.5">
+              내용 <span className="text-[11px] font-normal text-[#75777d] normal-case ml-1">(이미지 삽입·드래그·붙여넣기 가능)</span>
+            </label>
+            <div ref={containerRef} />
           </div>
         </div>
         {error && (
@@ -153,6 +180,7 @@ function EditModal({ bulletin, onClose, onSaved }) {
           </button>
         </div>
       </div>
+      <LinkTooltip />
     </div>
   )
 }
@@ -356,7 +384,7 @@ export default function AdminBulletinPage() {
                                 className="text-[16px] font-bold text-[#0b1c30] hover:text-[#091426] hover:underline text-left block max-w-xs truncate">
                                 {b.title}
                               </button>
-                              {b.content && <p className="text-[12px] text-[#45474c] mt-0.5 max-w-xs truncate">{b.content}</p>}
+                              {b.content && <p className="text-[12px] text-[#45474c] mt-0.5 max-w-xs truncate">{stripHtml(b.content)}</p>}
                             </div>
                           </div>
                         </td>

@@ -1,15 +1,27 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getBulletins, createBulletin, updateBulletin, deleteBulletin } from '@/api/bulletins'
+import { getBulletins, createBulletin, updateBulletin, deleteBulletin, uploadBulletinImage } from '@/api/bulletins'
 import { deleteFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
+import useQuillEditor from '@/hooks/useQuillEditor.jsx'
 import toast from '@/utils/toast'
 import { MagnifyingGlass, CaretLeft, CaretRight } from '@phosphor-icons/react'
 import { getPageRange } from '@/utils/pagination'
 import { formatDateDot as fmtDot } from '@/utils/dateFormat'
+import { toEditorHtml } from '@/utils/richText'
 
 const PAGE_SIZE = 10
+
+/* 모달 안에서 쓰는 Quill 스타일 — 본문에 이미지·서식을 넣을 수 있게 에디터로 대체 */
+const QUILL_STYLE = `
+  .ql-tooltip { display: none !important; }
+  .ql-container { min-height: 280px; font-size: 16px; border-color: #E5E5E5 !important; }
+  .ql-editor    { min-height: 280px; background-color: #fff; font-family: inherit; }
+  .ql-toolbar   { background-color: #fff; border-color: #E5E5E5 !important; }
+  .ql-editor a  { color: #2563eb !important; text-decoration: underline !important; }
+  .ql-editor img { max-width: 100%; height: auto; }
+`
 
 const PdfFileInput = ({ file, onChange, onClear }) => (
   <div className="space-y-1.5">
@@ -28,10 +40,12 @@ const PdfFileInput = ({ file, onChange, onClear }) => (
 
 const WriteModal = ({ onClose, onSaved }) => {
   const [title,   setTitle]   = useState('')
-  const [content, setContent] = useState('')
   const [file,    setFile]    = useState(null)
   const [error,   setError]   = useState('')
   const [saving,  setSaving]  = useState(false)
+
+  const handleImageUpload = useCallback((image) => uploadBulletinImage(image), [])
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({ onImageUpload: handleImageUpload })
 
   const handleFileChange = (e) => {
     const f = e.target.files[0]
@@ -45,9 +59,10 @@ const WriteModal = ({ onClose, onSaved }) => {
   const handleSave = async () => {
     setError('')
     if (!title.trim()) { setError('제목을 입력해주세요.'); return }
+    const content = getHTML()
     const fd = new FormData()
     fd.append('title', title.trim())
-    if (content.trim()) fd.append('content', content.trim())
+    if (content) fd.append('content', content)
     if (file) fd.append('thumbnail', file)
     setSaving(true)
     try {
@@ -61,6 +76,7 @@ const WriteModal = ({ onClose, onSaved }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <style>{QUILL_STYLE}</style>
       <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-[#FAF9F6] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E5E5E5]">
         <div className="flex items-center justify-between px-8 py-6 border-b border-[#E5E5E5]">
@@ -83,10 +99,10 @@ const WriteModal = ({ onClose, onSaved }) => {
             <PdfFileInput file={file} onChange={handleFileChange} onClear={() => setFile(null)} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#2C2C2C]">내용</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)}
-              rows={5} placeholder="주보 내용을 입력하세요 (선택)"
-              className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all resize-none" />
+            <label className="text-sm font-medium text-[#2C2C2C]">
+              내용 <span className="text-xs text-[#737373]">(이미지 삽입·드래그·붙여넣기 가능)</span>
+            </label>
+            <div ref={containerRef} />
           </div>
         </div>
         {error && <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm">{error}</div>}
@@ -98,18 +114,25 @@ const WriteModal = ({ onClose, onSaved }) => {
           </button>
         </div>
       </div>
+      <LinkTooltip />
     </div>
   )
 }
 
 const EditModal = ({ bulletin, onClose, onSaved }) => {
   const [title,        setTitle]        = useState(bulletin.title ?? '')
-  const [content,      setContent]      = useState(bulletin.content ?? '')
   const [file,         setFile]         = useState(null)
   const [error,        setError]        = useState('')
   const [saving,       setSaving]       = useState(false)
   const [hasExistingFile, setHasExistingFile] = useState(!!bulletin.fileId)
   const [deletingFile, setDeletingFile] = useState(false)
+
+  const handleImageUpload = useCallback((image) => uploadBulletinImage(image), [])
+  const { containerRef, getHTML, LinkTooltip } = useQuillEditor({
+    onImageUpload: handleImageUpload,
+    // 에디터 도입 이전 순수 텍스트 본문도 줄바꿈을 유지한 채 불러온다
+    initialValue: toEditorHtml(bulletin.content),
+  })
 
   const handleFileChange = (e) => {
     const f = e.target.files[0]
@@ -136,9 +159,11 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
   const handleSave = async () => {
     setError('')
     if (!title.trim()) { setError('제목을 입력해주세요.'); return }
+    const content = getHTML()
     const fd = new FormData()
     fd.append('title', title.trim())
-    if (content.trim()) fd.append('content', content.trim())
+    // 내용을 비운 경우도 반영되도록 빈 문자열까지 전송한다
+    fd.append('content', content)
     if (file) fd.append('thumbnail', file)
     setSaving(true)
     try {
@@ -152,6 +177,7 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <style>{QUILL_STYLE}</style>
       <div className="absolute inset-0 bg-[#171717]/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-[#FAF9F6] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-[#E5E5E5]">
         <div className="flex items-center justify-between px-8 py-6 border-b border-[#E5E5E5]">
@@ -187,10 +213,10 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
             <PdfFileInput file={file} onChange={handleFileChange} onClear={() => setFile(null)} />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#2C2C2C]">내용</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)}
-              rows={5} placeholder="주보 내용을 입력하세요 (선택)"
-              className="w-full px-4 py-3 bg-white border border-[#E5E5E5] focus:border-[#171717] outline-none transition-all resize-none" />
+            <label className="text-sm font-medium text-[#2C2C2C]">
+              내용 <span className="text-xs text-[#737373]">(이미지 삽입·드래그·붙여넣기 가능)</span>
+            </label>
+            <div ref={containerRef} />
           </div>
         </div>
         {error && <div className="px-8 py-3 bg-red-50 border-t border-red-200 text-red-700 text-sm">{error}</div>}
@@ -202,6 +228,7 @@ const EditModal = ({ bulletin, onClose, onSaved }) => {
           </button>
         </div>
       </div>
+      <LinkTooltip />
     </div>
   )
 }

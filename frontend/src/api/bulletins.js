@@ -27,6 +27,16 @@ export const updateBulletin = (id, formData) =>
     headers: { 'Content-Type': 'multipart/form-data' },
   }).then((r) => r.data.data)
 
+/** 본문 에디터 이미지 업로드 → 이미지 URL 반환 */
+export const uploadBulletinImage = async (file) => {
+  const form = new FormData()
+  form.append('image', file)
+  const { data } = await client.post('/api/bulletin/upload-image', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data.data.url
+}
+
 /** 주보 삭제 (ADMIN) */
 export const deleteBulletin = (id) =>
   client.delete(`/api/bulletin/${id}`).then((r) => r.data)

@@ -287,6 +287,11 @@ public class FileCommandService {
         return uploadContentImage(image, File.EntityType.POPUP, email);
     }
 
+    /** Bulletin 본문 이미지 업로드 → 공개 이미지 URL 반환 */
+    public String uploadBulletinContentImage(MultipartFile image, String email) {
+        return uploadContentImage(image, File.EntityType.BULLETIN, email);
+    }
+
     /** Bulletin PDF 업로드 + 썸네일 생성 */
     public PdfUploadResult uploadBulletinPdf(MultipartFile pdfFile, Long entityId, User user) {
         return uploadPdfWithThumbnail(pdfFile, File.EntityType.BULLETIN, entityId, user);
