@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { uploadGalleryImages } from '@/api/departments'
+import { resizeImageFiles, formatFileSize } from '@/utils/imageResize'
 import Button from '@/components/ui/Button'
 
 /**
@@ -14,26 +15,39 @@ const GalleryUploadModal = ({ deptCode, onClose, onSaved }) => {
   const [preview, setPreview] = useState(null)   // { src, count }
   const [error,  setError]  = useState('')
   const [saving, setSaving] = useState(false)
+  const [preparing, setPreparing] = useState(false)
 
-  const handleFiles = (e) => {
+  // 원본 파일 허용 상한 — 전송 전에 1920px로 줄이므로 카메라 원본도 그대로 선택 가능
+  const MAX_SOURCE_SIZE = 30 * 1024 * 1024
+
+  const handleFiles = async (e) => {
     const selected = Array.from(e.target.files)
+    if (selected.length === 0) { setFiles([]); setPreview(null); return }
+
     const ALLOWED_IMG_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
     const invalidType = selected.find((f) => !ALLOWED_IMG_TYPES.includes(f.type))
     if (invalidType) { setError(`이미지 파일(JPG, PNG, GIF, WEBP)만 업로드 가능합니다: ${invalidType.name}`); return }
-    const over = selected.find((f) => f.size > 10 * 1024 * 1024)
-    if (over) { setError('파일 1개당 10MB를 초과할 수 없습니다.'); return }
-    setError('')
-    setFiles(selected)
+    const over = selected.find((f) => f.size > MAX_SOURCE_SIZE)
+    if (over) { setError(`파일 1개당 30MB를 초과할 수 없습니다: ${over.name}`); return }
 
-    // 첫 번째 이미지 미리보기
-    if (selected.length > 0) {
+    setError('')
+    setPreparing(true)
+    try {
+      // 전송 전 1920px로 축소 — 서버 저장 화질(1920px)과 동일하므로 손실 없음
+      const resized = await resizeImageFiles(selected)
+      setFiles(resized)
+
       const reader = new FileReader()
-      reader.onload = (ev) => setPreview({ src: ev.target.result, count: selected.length })
-      reader.readAsDataURL(selected[0])
-    } else {
-      setPreview(null)
+      reader.onload = (ev) => setPreview({ src: ev.target.result, count: resized.length })
+      reader.readAsDataURL(resized[0])
+    } catch {
+      setError('이미지를 준비하는 중 오류가 발생했습니다.')
+    } finally {
+      setPreparing(false)
     }
   }
+
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0)
 
   const handleSave = async () => {
     setError('')
@@ -101,9 +115,15 @@ const GalleryUploadModal = ({ deptCode, onClose, onSaved }) => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-700">
-                  {files.length > 0 ? `${files.length}장 선택됨` : '이미지 추가'}
+                  {preparing
+                    ? '이미지 준비 중...'
+                    : files.length > 0
+                      ? `${files.length}장 선택됨 · 전송 용량 ${formatFileSize(totalSize)}`
+                      : '이미지 추가'}
                 </p>
-                <p className="text-xs text-slate-400">JPG, PNG, GIF, WEBP · 최대 10MB · 여러 장 선택 가능</p>
+                <p className="text-xs text-slate-400">
+                  JPG, PNG, GIF, WEBP · 여러 장 선택 가능 · 업로드 전 자동으로 1920px로 축소됩니다
+                </p>
               </div>
               <input
                 type="file" accept="image/*" multiple onChange={handleFiles}
@@ -146,8 +166,8 @@ const GalleryUploadModal = ({ deptCode, onClose, onSaved }) => {
         )}
         <div className="flex justify-end gap-3 px-8 py-6 bg-slate-50 border-t border-slate-100">
           <Button variant="ghost" size="md" onClick={onClose}>취소</Button>
-          <Button variant="primary" size="md" onClick={handleSave} isLoading={saving}>
-            {saving ? '업로드 중...' : '업로드'}
+          <Button variant="primary" size="md" onClick={handleSave} isLoading={saving} disabled={preparing || saving}>
+            {saving ? '업로드 중...' : preparing ? '준비 중...' : '업로드'}
           </Button>
         </div>
       </div>

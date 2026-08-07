@@ -7,6 +7,7 @@ import {
   updateGalleryGroup,
   addImagesToGalleryGroup,
 } from '@/api/departments'
+import { resizeImageFiles, formatFileSize } from '@/utils/imageResize'
 
 /**
  * 갤러리 제목·설명 수정 + 이미지 추가/개별 삭제 모달
@@ -20,6 +21,7 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
   const [newFiles, setNewFiles] = useState([])
   const [previews, setPreviews] = useState([])
   const [saving,   setSaving]   = useState(false)
+  const [preparing, setPreparing] = useState(false)
   const [error,    setError]    = useState('')
 
   // 그룹 내 전체 이미지 불러오기
@@ -36,10 +38,21 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
     onError: () => toast.error('삭제에 실패했습니다.'),
   })
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files)
-    setNewFiles(files)
-    setPreviews(files.map((f) => URL.createObjectURL(f)))
+  const handleFileChange = async (e) => {
+    const selected = Array.from(e.target.files)
+    if (selected.length === 0) { setNewFiles([]); setPreviews([]); return }
+
+    setPreparing(true)
+    try {
+      // 등록 모달과 동일하게 전송 전 1920px로 축소 (서버 저장 화질과 동일)
+      const resized = await resizeImageFiles(selected)
+      setNewFiles(resized)
+      setPreviews(resized.map((f) => URL.createObjectURL(f)))
+    } catch {
+      setError('이미지를 준비하는 중 오류가 발생했습니다.')
+    } finally {
+      setPreparing(false)
+    }
   }
 
   const handleSave = async () => {
@@ -152,7 +165,11 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
                   d="M12 4v16m8-8H4" />
               </svg>
               <span className="text-sm text-slate-600">
-                {newFiles.length > 0 ? `${newFiles.length}장 선택됨` : '파일 선택 (여러 장 가능)'}
+                {preparing
+                  ? '이미지 준비 중...'
+                  : newFiles.length > 0
+                    ? `${newFiles.length}장 선택됨 · 전송 용량 ${formatFileSize(newFiles.reduce((s, f) => s + f.size, 0))}`
+                    : '파일 선택 (여러 장 가능 · 자동으로 1920px 축소)'}
               </span>
               <input type="file" accept="image/*" multiple onChange={handleFileChange} className="hidden" />
             </label>
@@ -181,9 +198,9 @@ const GalleryEditModal = ({ image, deptCode, onClose, onSaved }) => {
         {/* 푸터 */}
         <div className="flex justify-end gap-3 px-6 py-4 bg-slate-50 border-t border-slate-100 flex-shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition">취소</button>
-          <button onClick={handleSave} disabled={saving}
+          <button onClick={handleSave} disabled={saving || preparing}
             className="px-5 py-2 text-sm bg-slate-900 text-white hover:bg-slate-700 disabled:opacity-50 transition">
-            {saving ? '저장 중...' : '저장'}
+            {saving ? '저장 중...' : preparing ? '준비 중...' : '저장'}
           </button>
         </div>
       </div>
