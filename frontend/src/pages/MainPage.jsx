@@ -11,6 +11,8 @@ import { fetchNewYear } from '@/api/newYearApi'
 import { getLatestNotices } from '@/api/notices'
 import { getPublicRecentGallery } from '@/api/departments'
 import { getChoirVideos } from '@/api/choir'
+import { MAIN_CHOIR_SLOT_ORDER } from '@/constants/choirs'
+import { CHURCH_GALLERY_CODE } from '@/constants/departments'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import PopupOverlay from '@/components/common/PopupOverlay'
@@ -363,7 +365,7 @@ const onChoirThumbError = (e) => {
   if (el.src.includes('maxresdefault')) el.src = el.src.replace('maxresdefault', 'hqdefault')
 }
 
-const ChoirSection = ({ videos, onPlayVideo }) => (
+const ChoirSection = ({ slots, onPlayVideo }) => (
   <section className="border-b border-neutral-200 bg-white">
     <div className="max-w-[1600px] mx-auto p-8 md:p-16 lg:p-24 border-x border-b border-neutral-200 bg-white flex items-end justify-between gap-6">
       <div>
@@ -377,18 +379,18 @@ const ChoirSection = ({ videos, onPlayVideo }) => (
         전체보기 <ArrowUpRight size={18} />
       </Link>
     </div>
-    {videos.length > 0 ? (
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-neutral-200 gap-px border-x border-neutral-200">
-        {videos.map((video) => {
-          const vid = extractVideoId(video.videoUrl)
-          return (
-            <div
-              key={video.id}
-              onClick={() => vid && onPlayVideo(vid)}
-              className="bg-white p-6 md:p-10 group cursor-pointer"
-            >
-              <div className="aspect-video bg-neutral-100 relative overflow-hidden mb-6">
-                {vid ? (
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 bg-neutral-200 gap-px border-x border-neutral-200">
+      {slots.map(({ choirName, video }) => {
+        const vid = video ? extractVideoId(video.videoUrl) : null
+        return (
+          <div
+            key={choirName}
+            onClick={() => vid && onPlayVideo(vid)}
+            className={`bg-white p-6 md:p-10 group ${vid ? 'cursor-pointer' : ''}`}
+          >
+            <div className="aspect-video bg-neutral-100 relative overflow-hidden mb-6">
+              {vid ? (
+                <>
                   <img
                     src={`https://img.youtube.com/vi/${vid}/maxresdefault.jpg`}
                     alt={video.title}
@@ -396,32 +398,28 @@ const ChoirSection = ({ videos, onPlayVideo }) => (
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     onError={onChoirThumbError}
                   />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Play size={24} className="text-neutral-300" />
+                  <div className="absolute inset-0 bg-neutral-900/30 flex items-center justify-center group-hover:bg-neutral-900/20 transition-colors">
+                    <div className="w-12 h-12 bg-white text-neutral-900 flex items-center justify-center">
+                      <Play size={18} weight="fill" />
+                    </div>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-neutral-900/30 flex items-center justify-center group-hover:bg-neutral-900/20 transition-colors">
-                  <div className="w-12 h-12 bg-white text-neutral-900 flex items-center justify-center">
-                    <Play size={18} weight="fill" />
-                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Play size={24} className="text-neutral-300" />
                 </div>
-              </div>
-              <span className="text-sm font-mono text-neutral-400 mb-2 block uppercase tracking-widest">
-                {video.choirName ?? 'Choir'}
-              </span>
-              <h4 className="text-base font-bold text-neutral-900 group-hover:text-neutral-500 transition-colors break-keep line-clamp-2">
-                {video.title}
-              </h4>
+              )}
             </div>
-          )
-        })}
-      </div>
-    ) : (
-      <div className="max-w-[1600px] mx-auto border-x border-neutral-200 bg-white py-20 text-center">
-        <p className="text-neutral-400 font-light">등록된 찬양대 영상이 없습니다</p>
-      </div>
-    )}
+            <span className="text-sm font-mono text-neutral-400 mb-2 block uppercase tracking-widest">
+              {choirName}
+            </span>
+            <h4 className="text-base font-bold text-neutral-900 group-hover:text-neutral-500 transition-colors break-keep line-clamp-2">
+              {video ? video.title : '등록된 영상이 없습니다'}
+            </h4>
+          </div>
+        )
+      })}
+    </div>
   </section>
 )
 
@@ -517,7 +515,7 @@ const NoticeGallerySection = ({ notices, user, galleryImages }) => (
             {galleryImages.slice(0, 4).map((img) => (
               <Link
                 key={img.id}
-                to={`/department/gallery/${img.id}`}
+                to={`${img.departmentCode === CHURCH_GALLERY_CODE ? '/church' : '/department'}/gallery/${img.id}`}
                 className="aspect-square bg-neutral-100 overflow-hidden relative group block"
               >
                 <img
@@ -628,12 +626,35 @@ export default function MainPage() {
     staleTime: Infinity,
   })
 
-  const { data: choirData } = useQuery({
-    queryKey: ['choir', 'latest', 4],
-    queryFn: () => getChoirVideos({ page: 0, size: 4 }),
+  // 찬양대는 최신순 4개가 아니라 찬양대별 고정 슬롯 — 순서·구성이 항상 동일하게 유지된다
+  const [hallelujahSlot, sionSlot, afternoonSlot, juyounggwangSlot] = MAIN_CHOIR_SLOT_ORDER
+  const { data: hallelujahChoir } = useQuery({
+    queryKey: ['choir', 'latest', hallelujahSlot],
+    queryFn: () => getChoirVideos({ page: 0, size: 1, choirName: hallelujahSlot }),
     staleTime: 5 * 60 * 1000,
   })
-  const choirVideos = choirData?.content ?? []
+  const { data: sionChoir } = useQuery({
+    queryKey: ['choir', 'latest', sionSlot],
+    queryFn: () => getChoirVideos({ page: 0, size: 1, choirName: sionSlot }),
+    staleTime: 5 * 60 * 1000,
+  })
+  const { data: afternoonChoir } = useQuery({
+    queryKey: ['choir', 'latest', afternoonSlot],
+    queryFn: () => getChoirVideos({ page: 0, size: 1, choirName: afternoonSlot }),
+    staleTime: 5 * 60 * 1000,
+  })
+  const { data: juyounggwangChoir } = useQuery({
+    queryKey: ['choir', 'latest', juyounggwangSlot],
+    queryFn: () => getChoirVideos({ page: 0, size: 1, choirName: juyounggwangSlot }),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const choirSlots = [
+    { choirName: hallelujahSlot,   video: hallelujahChoir?.content?.[0]   ?? null },
+    { choirName: sionSlot,         video: sionChoir?.content?.[0]         ?? null },
+    { choirName: afternoonSlot,    video: afternoonChoir?.content?.[0]    ?? null },
+    { choirName: juyounggwangSlot, video: juyounggwangChoir?.content?.[0] ?? null },
+  ]
 
   const { data: noticesData } = useQuery({
     queryKey: ['notices', 'latest', 5],
@@ -662,7 +683,7 @@ export default function MainPage() {
           categorySermons={categorySermons}
           onPlayVideo={setModalVideoId}
         />
-        <ChoirSection videos={choirVideos} onPlayVideo={setModalVideoId} />
+        <ChoirSection slots={choirSlots} onPlayVideo={setModalVideoId} />
         <DepartmentsSection />
         <NoticeGallerySection
           notices={notices}

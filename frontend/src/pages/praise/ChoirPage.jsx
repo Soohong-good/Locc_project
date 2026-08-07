@@ -4,6 +4,7 @@ import {
   Play, CaretLeft, CaretRight, VideoCamera,
 } from '@phosphor-icons/react'
 import { getChoirVideos } from '@/api/choir'
+import { CHOIR_NAMES } from '@/constants/choirs'
 import { getPageRange } from '@/utils/pagination'
 import { formatDateDot as fmtDot } from '@/utils/dateFormat'
 import { extractYouTubeId as extractVideoId } from '@/utils/youtube'
@@ -119,10 +120,10 @@ const HeroSection = () => (
 /* ── 카테고리 탭 ────────────────────────────────────────────── */
 const CHOIR_TABS = [
   { value: undefined, label: '전체' },
-  { value: '시온찬양대', label: '시온찬양대' },
-  { value: '할렐루야찬양대', label: '할렐루야찬양대' },
-  { value: '주영광찬양대', label: '주영광찬양대' },
-  { value: '주일오후찬양대', label: '주일오후찬양대' },
+  { value: CHOIR_NAMES.SION,             label: CHOIR_NAMES.SION },
+  { value: CHOIR_NAMES.HALLELUJAH,       label: CHOIR_NAMES.HALLELUJAH },
+  { value: CHOIR_NAMES.JUYOUNGGWANG,     label: CHOIR_NAMES.JUYOUNGGWANG },
+  { value: CHOIR_NAMES.SUNDAY_AFTERNOON, label: CHOIR_NAMES.SUNDAY_AFTERNOON },
 ]
 
 const CategoryTabs = ({ active, onChange }) => (
