@@ -14,7 +14,6 @@ import GuestRoute from '@/components/common/GuestRoute'
 import OAuth2Callback from '@/components/common/OAuth2Callback'
 import Layout from '@/components/layout/Layout'
 import AdminLayout from '@/components/layout/AdminLayout'
-import MarketLayout from '@/components/layout/MarketLayout'
 
 // ── 페이지 컴포넌트 — 라우트별 코드 스플리팅 ──────────────────────────
 const LoginPage              = lazy(() => import('@/pages/auth/LoginPage'))
@@ -76,10 +75,6 @@ const GalleryDetailPage      = lazy(() => import('@/pages/departments/GalleryDet
 const ApplicationListPage    = lazy(() => import('@/pages/applications/ApplicationListPage'))
 const ApplicationFormPage    = lazy(() => import('@/pages/applications/ApplicationFormPage'))
 const ApplicationDetailPage  = lazy(() => import('@/pages/applications/ApplicationDetailPage'))
-
-const MarketHomePage         = lazy(() => import('@/pages/market/MarketHomePage'))
-const MarketListPage         = lazy(() => import('@/pages/market/MarketListPage'))
-const MarketDetailPage       = lazy(() => import('@/pages/market/MarketDetailPage'))
 
 const AdminDashboardPage         = lazy(() => import('@/pages/admin/AdminDashboardPage'))
 const AdminNoticePage            = lazy(() => import('@/pages/admin/AdminNoticePage'))
@@ -188,13 +183,6 @@ const AppRoutes = () => {
           <Route path="/applications/:id"  element={<PrivateRoute><ApplicationDetailPage /></PrivateRoute>} />
 
           <Route path="/mypage" element={<PrivateRoute><MyPage /></PrivateRoute>} />
-        </Route>
-
-        {/* 그사랑 마켓 — 독립 레이아웃 (교회 Header/Footer 미사용), 로그인 필수 */}
-        <Route path="/market" element={<PrivateRoute><MarketLayout /></PrivateRoute>}>
-          <Route index                 element={<MarketHomePage />} />
-          <Route path="category/:category" element={<MarketListPage />} />
-          <Route path=":id"            element={<MarketDetailPage />} />
         </Route>
 
         {/* 관리자 전용 (AdminLayout) */}
