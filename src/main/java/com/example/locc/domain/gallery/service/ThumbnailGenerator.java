@@ -12,8 +12,13 @@ import java.nio.file.Path;
 @Component
 public class ThumbnailGenerator {
 
-    private static final int THUMBNAIL_WIDTH  = 400;
-    private static final int THUMBNAIL_HEIGHT = 300;
+    /**
+     * 썸네일 최대 변(가로·세로 공통)
+     * 400×300 박스 방식이었을 때 세로 사진이 높이 300에 걸려 200×300으로만 생성돼
+     * 갤러리 매소너리 목록(한 칸 약 480px)에서 크게 확대되며 뭉개졌다.
+     * 정사각 박스 + 비율 유지로 긴 변을 1000px에 맞춰 세로/가로 사진 모두 선명하게 유지한다.
+     */
+    private static final int THUMBNAIL_MAX_DIMENSION = 1000;
     private static final String THUMBNAIL_PREFIX = "thumb_";
 
     /** 원본 리사이즈 최대 너비 (이 이하면 리사이즈 생략) */
@@ -49,7 +54,7 @@ public class ThumbnailGenerator {
     }
 
     /**
-     * 썸네일 생성 (400×300, 비율 유지)
+     * 썸네일 생성 (긴 변 1000px, 비율 유지)
      */
     public String generateThumbnail(Path galleryDir, String storedFilename) {
         try {
@@ -58,9 +63,9 @@ public class ThumbnailGenerator {
             Path thumbPath = galleryDir.resolve(thumbnailFilename);
 
             Thumbnails.of(source.toFile())
-                    .size(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
+                    .size(THUMBNAIL_MAX_DIMENSION, THUMBNAIL_MAX_DIMENSION)
                     .keepAspectRatio(true)
-                    .outputQuality(0.80)
+                    .outputQuality(0.82)
                     .toFile(thumbPath.toFile());
 
             log.debug("썸네일 생성 완료: {}", thumbnailFilename);

@@ -119,6 +119,7 @@ const ChurchGalleryPage = () => {
                         <img
                           src={`/uploads/gallery/${image.thumbnailFilename || image.storedFilename}`}
                           alt={image.title}
+                          loading="lazy"
                           className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                           onError={(e) => { e.target.src = '/images/no-image.png' }}
                         />
