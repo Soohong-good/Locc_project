@@ -4,9 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Component;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Iterator;
 
 @Slf4j
 @Component
@@ -38,6 +42,15 @@ public class ThumbnailGenerator {
         try {
             Path target = galleryDir.resolve(storedFilename);
 
+            // 이미 1920px 이하이면 재인코딩하지 않고 그대로 둔다.
+            // 프론트에서 업로드 전에 1920px로 줄여 보내므로 대부분 여기서 걸러진다.
+            // (불필요한 재압축으로 화질이 한 번 더 깎이고, 장수가 많으면 처리 시간도 길어졌다)
+            int[] size = readImageSize(target);
+            if (size != null && size[0] <= RESIZE_MAX_WIDTH && size[1] <= RESIZE_MAX_WIDTH) {
+                log.debug("원본 리사이즈 생략({}x{} ≤ {}px): {}", size[0], size[1], RESIZE_MAX_WIDTH, storedFilename);
+                return storedFilename;
+            }
+
             Thumbnails.of(target.toFile())
                     .size(RESIZE_MAX_WIDTH, RESIZE_MAX_WIDTH)
                     .keepAspectRatio(true)
@@ -50,6 +63,29 @@ public class ThumbnailGenerator {
         } catch (IOException e) {
             log.error("원본 이미지 리사이즈 실패: {}", storedFilename, e);
             return storedFilename;
+        }
+    }
+
+    /**
+     * 이미지 픽셀 크기만 읽는다 (전체 디코딩 없이 헤더만 해석)
+     * @return {width, height} / 읽지 못하면 null
+     */
+    private int[] readImageSize(Path path) {
+        try (ImageInputStream in = ImageIO.createImageInputStream(path.toFile())) {
+            if (in == null) return null;
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+            if (!readers.hasNext()) return null;
+
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(in);
+                return new int[]{ reader.getWidth(0), reader.getHeight(0) };
+            } finally {
+                reader.dispose();
+            }
+        } catch (Exception e) {
+            log.debug("이미지 크기 확인 실패, 리사이즈 진행: {}", path.getFileName());
+            return null;
         }
     }
 

@@ -18,6 +18,22 @@ const client = axios.create({
   timeout: 15000,
 })
 
+/**
+ * 업로드(multipart/form-data) 전용 타임아웃
+ * 파일 전송뿐 아니라 서버의 리사이즈·썸네일 생성까지 끝나야 응답이 오므로
+ * 일반 API용 15초를 적용하면 처리 도중 브라우저가 요청을 끊는다.
+ * 이 경우 서버는 정상 완료되는데 화면만 실패로 보이고,
+ * 사용자가 다시 올리면 같은 사진이 중복 저장되는 문제가 발생했다.
+ */
+const UPLOAD_TIMEOUT = 180000
+
+client.interceptors.request.use((config) => {
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    config.timeout = UPLOAD_TIMEOUT
+  }
+  return config
+})
+
 // ───── 응답 인터셉터: 토큰 만료 시 자동 갱신 ─────
 let isRefreshing = false
 let refreshQueue = []  // 갱신 중 대기 중인 요청들
