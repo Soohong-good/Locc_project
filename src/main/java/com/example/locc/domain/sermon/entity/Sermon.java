@@ -80,6 +80,12 @@ public class Sermon extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private boolean autoCreated;
 
+    // 운영 DB는 ddl-auto=validate라 자동 생성되지 않음 → 서버에 수동 적용 필요:
+    //   ALTER TABLE sermon ADD COLUMN view_count INT NOT NULL DEFAULT 0;
+    @Builder.Default
+    @Column(name = "view_count", nullable = false)
+    private Integer viewCount = 0;
+
     // ===== 팩토리 메서드 =====
 
     /**
@@ -138,6 +144,13 @@ public class Sermon extends BaseEntity {
         this.sermonDate = command.getSermonDate();
         this.category = command.getCategory();
         this.serviceNumber = command.getServiceNumber();
+    }
+
+    /**
+     * 조회수 증가
+     */
+    public void increaseViews() {
+        this.viewCount = (this.viewCount == null ? 0 : this.viewCount) + 1;
     }
 
     /**

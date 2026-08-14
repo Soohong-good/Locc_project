@@ -44,6 +44,7 @@ public class SermonDetailResponse {
     
     // 추가 정보
     private final boolean isNew;
+    private final Integer viewCount;
     
     /**
      * Entity to Response (파일 정보 포함)
@@ -68,6 +69,7 @@ public class SermonDetailResponse {
                 .updatedAt(sermon.getUpdatedAt())
                 .attachments(files)
                 .isNew(isNew(sermon.getCreatedAt()))
+                .viewCount(sermon.getViewCount())
                 .build();
     }
     

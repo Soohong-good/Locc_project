@@ -123,6 +123,14 @@ public class SermonCommandService {
     }
 
     /**
+     * 조회수 증가 (공지·주보·찬양악보와 동일하게 상세 진입 시 1회 호출)
+     */
+    public void increaseViews(Long sermonId) {
+        Sermon sermon = sermonQueryService.findById(sermonId);
+        sermon.increaseViews();
+    }
+
+    /**
      * 본문 이미지 업로드 (에디터용)
      */
     public String uploadContentImage(MultipartFile image, String email) {

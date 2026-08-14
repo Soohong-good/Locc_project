@@ -16,6 +16,12 @@ export const getSermon = async (id) => {
   return data.data
 }
 
+// 조회수 증가 (상세 진입 시 1회, 비로그인도 허용)
+export const increaseSermonViews = async (id) => {
+  const { data } = await client.post(`/api/sermons/${id}/views`)
+  return data
+}
+
 // 최신 설교 조회
 export const getLatestSermons = async (limit = 5) => {
   const { data } = await client.get('/api/sermons/latest', { params: { limit } })

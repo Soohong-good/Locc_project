@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  MagnifyingGlass, Play, ArrowRight, CaretLeft, CaretRight, VideoCamera,
+  MagnifyingGlass, Play, ArrowRight, CaretLeft, CaretRight, VideoCamera, Eye,
 } from '@phosphor-icons/react'
 import { getTrainingMessageData } from '@/api/sermons'
 import useAuthStore from '@/stores/authStore'
@@ -115,8 +115,10 @@ const SermonCard = ({ sermon, canWrite, isAdmin, userId, onEdit, onDelete }) => 
       </div>
 
       <div className="p-8 pb-7 flex flex-col flex-1">
-        <div className="text-[11px] text-[#A0A0A0] mb-4 font-mono tracking-wider uppercase">
-          {fmtDot(sermon.sermonDate)}
+        <div className="text-[11px] text-[#A0A0A0] mb-4 font-mono tracking-wider uppercase flex items-center gap-2">
+          <span>{fmtDot(sermon.sermonDate)}</span>
+          <span className="text-[#D8D8D8]">·</span>
+          <span className="inline-flex items-center gap-1"><Eye size={12} />{sermon.viewCount ?? 0}</span>
         </div>
         <h3 className="text-[18px] font-bold text-[#1A1A1A] mb-4 leading-[1.45] break-keep line-clamp-2">
           {sermon.title || '(제목 없음)'}

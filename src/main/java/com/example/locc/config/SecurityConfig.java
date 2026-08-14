@@ -172,7 +172,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/praise-sheets/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/praise-sheets/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/praise-sheets/**").authenticated()
-                        // 설교 — ADMIN + OPERATOR
+                        // 설교 — 조회수 증가는 permitAll(비로그인 공개 페이지), 나머지 쓰기는 ADMIN + OPERATOR
+                        .requestMatchers(HttpMethod.POST, "/api/sermons/*/views").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.PUT, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/sermons/**").hasAnyRole("ADMIN", "OPERATOR")

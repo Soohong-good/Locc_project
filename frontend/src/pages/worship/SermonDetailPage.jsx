@@ -1,12 +1,12 @@
 import DOMPurify from 'dompurify'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  User, CalendarBlank, BookOpen, ShareNetwork,
+  User, CalendarBlank, BookOpen, ShareNetwork, Eye,
   ArrowLeft, List, Play, House, CaretRight,
 } from '@phosphor-icons/react'
-import { getSermon, updateSermon, deleteSermon } from '@/api/sermons'
+import { getSermon, updateSermon, deleteSermon, increaseSermonViews } from '@/api/sermons'
 import { downloadFile } from '@/api/files'
 import { getBiblePassage } from '@/api/bible'
 import useAuthStore from '@/stores/authStore'
@@ -137,6 +137,11 @@ const SermonDetailPage = () => {
   // 존재하지 않는 설교 id도 SPA 특성상 200 OK가 나가므로 색인에서 제외
   useNoIndex(!isLoading && (!!error || !sermon))
 
+  // 조회수 증가 — 상세 진입 시 1회 (공지·주보와 동일 방식, 실패해도 화면에 영향 없음)
+  useEffect(() => {
+    if (id) increaseSermonViews(id).catch(() => {})
+  }, [id])
+
   const { data: bibleData } = useQuery({
     queryKey: ['bible-passage', sermon?.scripture],
     queryFn:  () => getBiblePassage(sermon.scripture),
@@ -246,6 +251,10 @@ const SermonDetailPage = () => {
                   <span>{sermon.scripture}</span>
                 </div>
               )}
+              <div className="flex items-center gap-2">
+                <Eye size={14} />
+                <span>{sermon.viewCount ?? 0}</span>
+              </div>
             </div>
 
             {/* 관리자 버튼 */}

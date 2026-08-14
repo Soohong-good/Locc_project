@@ -2,11 +2,11 @@ import DOMPurify from 'dompurify'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
-  House, CaretRight, User, CalendarBlank, BookOpen,
+  House, CaretRight, User, CalendarBlank, BookOpen, Eye,
   Play, DownloadSimple, YoutubeLogo, Rows, ArrowLeft, ArrowRight,
 } from '@phosphor-icons/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getSundayMorningByDate, deleteSermon } from '@/api/sermons'
+import { getSundayMorningByDate, deleteSermon, increaseSermonViews } from '@/api/sermons'
 import { downloadFile } from '@/api/files'
 import useAuthStore from '@/stores/authStore'
 import useNoIndex from '@/hooks/useNoIndex'
@@ -52,6 +52,16 @@ const SundayMorningDetailPage = () => {
 
   // 존재하지 않는 날짜도 SPA 특성상 200 OK가 나가므로 색인에서 제외
   useNoIndex(!isLoading && !!error)
+
+  // 주일오전은 이 페이지에서 본문을 읽으므로(/worship/sermon/:id 를 거치지 않음) 여기서 조회수를 올린다.
+  // 아래 sermon 선택 규칙과 동일 — 1부/2부 탭을 바꾸면 해당 부의 조회수가 올라간다.
+  const viewedSermonId = activePart === 1
+    ? (group?.part1?.id ?? group?.part2?.id)
+    : (group?.part2?.id ?? group?.part1?.id)
+
+  useEffect(() => {
+    if (viewedSermonId) increaseSermonViews(viewedSermonId).catch(() => {})
+  }, [viewedSermonId])
 
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteSermon(id),
@@ -126,6 +136,10 @@ const SundayMorningDetailPage = () => {
               <span>{sermon.scripture}</span>
             </div>
           )}
+          <div className="flex items-center gap-2">
+            <Eye size={15} />
+            <span>{sermon?.viewCount ?? 0}</span>
+          </div>
         </div>
       </div>
 

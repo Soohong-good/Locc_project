@@ -135,22 +135,25 @@ const ChurchGalleryPage = () => {
                             {fmtDate(image.createdAt)}
                           </span>
                           <h3 className="text-[#FAF9F6] font-bold text-lg break-keep">{image.title}</h3>
-                          {image.description ? (
+                          {/* 조회수는 상단 배지에서 항상 보이므로 여기서는 설명만 표시 */}
+                          {image.description && (
                             <p className="text-[#FAF9F6]/70 text-xs font-light mt-1 line-clamp-2 break-keep">{image.description}</p>
-                          ) : (
-                            <p className="text-[#FAF9F6]/70 text-xs font-light mt-1 flex items-center gap-1">
-                              <Eye size={12} /> {image.viewCount ?? 0}
-                            </p>
                           )}
                         </div>
 
-                        {/* 장수 배지 */}
-                        {count > 1 && (
-                          <span className="absolute top-3 left-3 flex items-center gap-1 bg-[#171717]/80 text-white text-xs font-medium px-2 py-0.5">
-                            <Stack size={12} />
-                            {count}
+                        {/* 장수·조회수 배지 — 호버 없이 항상 보이도록 썸네일 위에 표시 */}
+                        <div className="absolute top-3 left-3 flex items-center gap-1">
+                          {count > 1 && (
+                            <span className="flex items-center gap-1 bg-[#171717]/80 text-white text-xs font-medium px-2 py-0.5">
+                              <Stack size={12} />
+                              {count}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 bg-[#171717]/80 text-white text-xs font-medium px-2 py-0.5">
+                            <Eye size={12} />
+                            {image.viewCount ?? 0}
                           </span>
-                        )}
+                        </div>
 
                         {/* 수정/삭제 버튼 — 모바일은 항상 표시, 데스크탑은 호버 시 표시 */}
                         {canWrite && (

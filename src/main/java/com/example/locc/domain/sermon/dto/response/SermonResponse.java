@@ -30,6 +30,7 @@ public class SermonResponse {
     private final String authorId;   // 작성자 UUID — 프론트 본인 여부 판단용
     private final LocalDateTime createdAt;
     private final boolean isNew;
+    private final Integer viewCount;
     
     /**
      * Entity to Response (목록용 - 간소화)
@@ -50,6 +51,7 @@ public class SermonResponse {
                 .authorId(sermon.getAuthor() != null ? sermon.getAuthor().getId().toString() : null)
                 .createdAt(sermon.getCreatedAt())
                 .isNew(isNew(sermon.getCreatedAt()))
+                .viewCount(sermon.getViewCount())
                 .build();
     }
     

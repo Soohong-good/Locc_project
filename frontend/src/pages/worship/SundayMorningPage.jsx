@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  MagnifyingGlass, Play, ArrowRight, CaretLeft, CaretRight, VideoCamera,
+  MagnifyingGlass, Play, ArrowRight, CaretLeft, CaretRight, VideoCamera, Eye,
 } from '@phosphor-icons/react'
 import { getSundayMorningGroupedData } from '@/api/sermons'
 import useAuthStore from '@/stores/authStore'
@@ -68,8 +68,13 @@ const GroupCard = ({ group, canEdit, onEditGroup, onDeleteGroup }) => {
       </div>
 
       <div className="p-8 pb-7 flex flex-col flex-1">
-        <div className="text-[11px] text-[#A0A0A0] mb-4 font-mono tracking-wider uppercase">
-          {fmtDot(group.sermonDate)}
+        <div className="text-[11px] text-[#A0A0A0] mb-4 font-mono tracking-wider uppercase flex items-center gap-2">
+          <span>{fmtDot(group.sermonDate)}</span>
+          <span className="text-[#D8D8D8]">·</span>
+          {/* 주일오전은 1·2부가 한 카드로 묶이므로 두 설교의 조회수를 합산해 표시 */}
+          <span className="inline-flex items-center gap-1">
+            <Eye size={12} />{(group.part1?.viewCount ?? 0) + (group.part2?.viewCount ?? 0)}
+          </span>
         </div>
         <h3 className="text-[18px] font-bold text-[#1A1A1A] mb-4 leading-[1.45] break-keep line-clamp-2">
           {group.representativeTitle ?? '(제목 없음)'}

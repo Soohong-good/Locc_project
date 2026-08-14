@@ -57,6 +57,13 @@ public class SermonApiController {
         return ResponseEntity.ok(ApiResponse.ok(sermonQueryService.findDetail(id)));
     }
 
+    /** 조회수 증가 (공지·찬양악보와 동일한 경로 규칙) */
+    @PostMapping("/{id}/views")
+    public ResponseEntity<ApiResponse<Void>> increaseViews(@PathVariable Long id) {
+        sermonCommandService.increaseViews(id);
+        return ResponseEntity.ok(ApiResponse.ok());
+    }
+
     @GetMapping("/latest")
     public ResponseEntity<ApiResponse<List<SermonResponse>>> latest(
             @Max(50) @RequestParam(defaultValue = "5") int limit) {
