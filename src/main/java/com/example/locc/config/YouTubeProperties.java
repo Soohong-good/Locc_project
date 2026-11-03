@@ -28,6 +28,7 @@ public class YouTubeProperties {
      * - sunday-afternoon: 주일오후
      * - wednesday: 수요예배
      * - friday: 금요기도회
+     * - retreat: 수련회/특강
      */
     private Map<String, String> playlists;
 

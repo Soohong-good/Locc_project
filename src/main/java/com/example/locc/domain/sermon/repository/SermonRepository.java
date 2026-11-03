@@ -108,6 +108,22 @@ public interface SermonRepository extends JpaRepository<Sermon, Long> {
                                                        Pageable pageable);
 
     /**
+     * 카테고리 + serviceNumber 정확히 일치 + 검색 (제목 + 본문 + 설교자) — 수련회/특강 탭 검색용
+     */
+    @EntityGraph(attributePaths = {"author"})
+    @Query("SELECT s FROM Sermon s " +
+           "WHERE s.category = :category " +
+           "  AND s.serviceNumber = :serviceNumber " +
+           "  AND (s.title LIKE %:keyword% " +
+           "       OR s.scripture LIKE %:keyword% " +
+           "       OR s.preacher LIKE %:keyword%) " +
+           "ORDER BY s.sermonDate DESC, s.createdAt DESC")
+    Page<Sermon> searchByCategoryAndServiceNumberExact(@Param("category") String category,
+                                                        @Param("serviceNumber") Integer serviceNumber,
+                                                        @Param("keyword") String keyword,
+                                                        Pageable pageable);
+
+    /**
      * 카테고리 + serviceNumber 정확히 일치 최신 조회 (훈련메시지 탭 구분용)
      */
     @EntityGraph(attributePaths = {"author"})

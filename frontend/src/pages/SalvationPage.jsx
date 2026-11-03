@@ -137,7 +137,7 @@ const NewLifeSection = () => (
 
 const VIDEOS = [
   { id: 'SaKP1_ppwyA', startTime: null,  date: '2026년 1월 2일 금요기도회 말씀', title: '예수님은 누구신가 1', subtitle: '죄에서 우리를 구원할 예수 (마태복음 1:18–23)' },
-  { id: 'cHtB4Id_Nyw',  startTime: 7869, date: '2024년 12월 22일',              title: '성탄생명초청축제 말씀', subtitle: null },
+  { id: 'HMaVpELyCfg',  startTime: null, date: '2026년 7월 29일 · 최신광 목사',   title: '그 사랑 축제 1강. 다시 복음으로!', subtitle: '로마서 1:16–17' },
 ]
 
 const VideoSection = () => {

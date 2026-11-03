@@ -1,6 +1,5 @@
 package com.example.locc.domain.sermon.service;
 
-import com.example.locc.config.YouTubeProperties;
 import com.example.locc.domain.department.service.YouTubeService;
 import com.example.locc.domain.sermon.dto.request.SermonSearchCondition;
 import com.example.locc.domain.sermon.dto.response.SermonDetailResponse;
@@ -43,7 +42,7 @@ public class SermonQueryService {
     private final SermonRepository sermonRepository;
     private final FileQueryService fileQueryService;
     private final YouTubeService youTubeService;
-    private final YouTubeProperties youTubeProperties;
+    private final SermonPlaylistResolver sermonPlaylistResolver;
 
     // ─────────────────────────────────────────────
     // 기본 조회
@@ -196,6 +195,43 @@ public class SermonQueryService {
     }
 
     /**
+     * 수련회/특강 통합 조회 — 재생목록 동기화로 등록된 설교만 노출
+     * serviceNumber: null=전체, 1=수련회, 2=특강
+     */
+    public SermonPageResponse getRetreatPage(Integer serviceNumber, int page, int size, String keyword) {
+        if (serviceNumber != null && serviceNumber != 1 && serviceNumber != 2) {
+            throw new InvalidInputException("지원하지 않는 수련회/특강 구분입니다. (허용: 1=수련회, 2=특강)");
+        }
+        String category = "수련회특강";
+        String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+
+        Page<SermonResponse> sermons;
+        List<SermonResponse> latestList;
+        if (serviceNumber == null) {
+            SermonSearchCondition condition = SermonSearchCondition.builder()
+                    .category(category).keyword(normalizedKeyword).page(page).size(size).build();
+            sermons = findList(condition);
+            latestList = findLatestByCategory(category, 1);
+        } else {
+            sermons = (normalizedKeyword == null
+                    ? sermonRepository.findByCategoryAndServiceNumberExact(category, serviceNumber, PageRequest.of(page, size))
+                    : sermonRepository.searchByCategoryAndServiceNumberExact(category, serviceNumber, normalizedKeyword, PageRequest.of(page, size)))
+                    .map(SermonResponse::from);
+            latestList = findLatestByCategoryAndServiceNumberExact(category, serviceNumber, 1);
+        }
+
+        return SermonPageResponse.builder()
+                .sermons(sermons.getContent())
+                .latestSermon(latestList.isEmpty() ? null : latestList.get(0))
+                .youtubeVideos(List.of())
+                .currentPage(page)
+                .totalPages(sermons.getTotalPages())
+                .totalItems(sermons.getTotalElements())
+                .selectedServiceNumber(serviceNumber)
+                .build();
+    }
+
+    /**
      * 수요예배 / 금요기도회 통합 조회
      */
     public SermonPageResponse getWeekdayPage(String type, int page, int size, String keyword) {
@@ -324,7 +360,7 @@ public class SermonQueryService {
     // ─────────────────────────────────────────────
 
     private List<Map<String, String>> fetchYoutubeVideos(String playlistKey) {
-        String playlistId = youTubeProperties.getPlaylistId(playlistKey);
+        String playlistId = sermonPlaylistResolver.resolve(playlistKey);
         if (playlistId == null || playlistId.isEmpty()) {
             return List.of();
         }

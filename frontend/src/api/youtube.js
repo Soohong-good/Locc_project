@@ -83,7 +83,7 @@ export const getSermonPlaylistStatus = async () => {
  *  @returns {Promise<{ succeeded: string[], failed: string[] }>}
  */
 export const refreshAllSermonPlaylists = async () => {
-  const keys = ['sunday-morning-1', 'sunday-morning-2', 'sunday-afternoon', 'wednesday', 'friday']
+  const keys = ['sunday-morning-1', 'sunday-morning-2', 'sunday-afternoon', 'wednesday', 'friday', 'retreat']
   const succeeded = []
   const failed = []
   for (const key of keys) {
@@ -98,7 +98,7 @@ export const refreshAllSermonPlaylists = async () => {
 }
 
 /** 특정 예배 재생목록 최신 영상 수동 갱신
- *  @param {string} playlistKey - 'sunday-morning-1' | 'sunday-morning-2' | 'sunday-afternoon' | 'wednesday' | 'friday'
+ *  @param {string} playlistKey - 'sunday-morning-1' | 'sunday-morning-2' | 'sunday-afternoon' | 'wednesday' | 'friday' | 'retreat'
  */
 export const refreshSermonPlaylist = async (playlistKey) => {
   const { data } = await client.post(`/api/admin/youtube/sermon-playlists/${playlistKey}/refresh`)

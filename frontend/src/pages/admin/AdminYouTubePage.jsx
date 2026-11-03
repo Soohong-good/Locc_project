@@ -139,6 +139,7 @@ function EditableRow({ label, currentValue, placeholder, onSave, isSaving }) {
 const SERMON_PLAYLIST_LABELS = {
   'sunday-morning-1': '주일오전 1부', 'sunday-morning-2': '주일오전 2부',
   'sunday-afternoon': '주일오후', 'wednesday': '수요예배', 'friday': '금요기도회',
+  'retreat': '수련회/특강',
 }
 
 function ApiSettingsModal({ onClose, departments, playlists, worshipStatus, onToast, queryClient }) {
@@ -280,6 +281,7 @@ function ApiSettingsModal({ onClose, departments, playlists, worshipStatus, onTo
 const ALL_SERMON_ITEMS = [
   { key: 'sunday-morning-1', label: '주일오전 1부' }, { key: 'sunday-morning-2', label: '주일오전 2부' },
   { key: 'sunday-afternoon', label: '주일오후' }, { key: 'wednesday', label: '수요예배' }, { key: 'friday', label: '금요기도회' },
+  { key: 'retreat', label: '수련회/특강' },
 ]
 
 function SearchResults({ keyword, departments, playlists, worshipStatus, onRefreshDept, onRefreshPlaylist, pendingDeptCode, pendingPlaylistKey }) {
@@ -364,6 +366,9 @@ const SERMON_GROUPS = [
   { groupKey: 'weekday', groupLabel: '수요·금요예배', items: [
     { key: 'wednesday', label: '수요예배' },
     { key: 'friday', label: '금요기도회' },
+  ]},
+  { groupKey: 'retreat', groupLabel: '수련회/특강', items: [
+    { key: 'retreat', label: '수련회/특강' },
   ]},
 ]
 

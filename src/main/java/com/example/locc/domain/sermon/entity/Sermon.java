@@ -64,7 +64,7 @@ public class Sermon extends BaseEntity {
 
     @Size(max = 50, message = "카테고리는 50자를 초과할 수 없습니다")
     @Column(length = 50)
-    private String category;  // 주일오전, 주일오후, 수요예배, 금요기도회, 훈련용메시지
+    private String category;  // 주일오전, 주일오후, 수요예배, 금요기도회, 훈련용메시지, 수련회특강
 
     @Column
     private Integer serviceNumber;  // 1부, 2부 구분 (주일오전/주일오후 등에서 사용, null 가능)

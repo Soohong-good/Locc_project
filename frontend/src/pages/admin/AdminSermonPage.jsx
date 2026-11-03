@@ -6,6 +6,7 @@ import {
   getSundayAfternoonData,
   getWeekdayData,
   getTrainingMessageData,
+  getRetreatData,
   deleteSermon,
   syncYouTubeAll,
 } from '@/api/sermons'
@@ -23,6 +24,7 @@ const TABS = [
   { key: 'wed',      label: '수요예배' },
   { key: 'fri',      label: '금요기도회' },
   { key: 'training', label: '훈련용메시지' },
+  { key: 'retreat',  label: '수련회/특강' },
 ]
 
 const fetchByTab = (tabKey, page, keyword) => {
@@ -32,6 +34,7 @@ const fetchByTab = (tabKey, page, keyword) => {
     case 'wed':      return getWeekdayData({ type: 'wednesday', page, size: 15, keyword })
     case 'fri':      return getWeekdayData({ type: 'friday',    page, size: 15, keyword })
     case 'training': return getTrainingMessageData({ page, size: 15, keyword })
+    case 'retreat':  return getRetreatData({ page, size: 15, keyword })
     default:         return Promise.resolve({ sermons: [], totalPages: 0 })
   }
 }

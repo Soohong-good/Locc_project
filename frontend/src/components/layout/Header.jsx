@@ -34,6 +34,7 @@ const NAV_MENUS = [
       { href: '/worship/sermon/weekday',          label: '수요예배·금요기도회' },
       { href: '/worship/training-intro',          label: '훈련소개' },
       { href: '/worship/sermon/training-message', label: '훈련 메시지' },
+      { href: '/worship/sermon/retreat',          label: '수련회/특강 말씀' },
     ],
   },
   {
@@ -104,6 +105,13 @@ const DesktopDropdown = ({ label, children, minWidth, isActive }) => {
   )
 }
 
+// ── 승인 대기 회원 수 배지 (관리자 전용) ────────────────
+const PendingBadge = ({ count }) => (
+  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-0.5">
+    {count > 9 ? '9+' : count}
+  </span>
+)
+
 // ── 유저 드롭다운 (로그인 시) ──────────────────────────
 const UserDropdown = ({ user, isAdmin, pendingCount, onLogout, isLoggingOut }) => {
   const [open, setOpen] = useState(false)
@@ -122,11 +130,7 @@ const UserDropdown = ({ user, isAdmin, pendingCount, onLogout, isLoggingOut }) =
           <span className="w-7 h-7 rounded-full bg-[#171717] text-white text-xs flex items-center justify-center font-medium">
             {user.name?.charAt(0) ?? '?'}
           </span>
-          {isAdmin && pendingCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center px-0.5">
-              {pendingCount > 9 ? '9+' : pendingCount}
-            </span>
-          )}
+          {isAdmin && pendingCount > 0 && <PendingBadge count={pendingCount} />}
         </span>
         <span>{user.name}</span>
         <CaretDown size={12} weight="bold" className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
@@ -143,6 +147,9 @@ const UserDropdown = ({ user, isAdmin, pendingCount, onLogout, isLoggingOut }) =
         }}
       >
         <Link to="/mypage">마이페이지</Link>
+        {isAdmin && pendingCount > 0 && (
+          <Link to="/admin/users" className="!text-red-500 font-bold">승인 대기 회원 {pendingCount}명</Link>
+        )}
         {isAdmin && <Link to="/admin">관리자 대시보드</Link>}
         <button onClick={onLogout} disabled={isLoggingOut}>
           {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
@@ -295,8 +302,9 @@ export default function Header() {
         </div>
 
         {/* 모바일 햄버거 */}
-        <button className="lg:hidden text-[#171717]" onClick={() => setOpen(true)}>
+        <button className="lg:hidden relative text-[#171717]" onClick={() => setOpen(true)}>
           <List size={28} />
+          {isAdmin && pendingCount > 0 && <PendingBadge count={pendingCount} />}
         </button>
       </div>
 
@@ -342,8 +350,11 @@ export default function Header() {
             {user ? (
               <div className="w-full space-y-2">
                 <div className="flex items-center gap-3 pb-4 border-b border-[#E5E5E5]">
-                  <span className="w-9 h-9 rounded-full bg-[#171717] text-white text-sm flex items-center justify-center font-medium">
-                    {user.name?.charAt(0) ?? '?'}
+                  <span className="relative">
+                    <span className="w-9 h-9 rounded-full bg-[#171717] text-white text-sm flex items-center justify-center font-medium">
+                      {user.name?.charAt(0) ?? '?'}
+                    </span>
+                    {isAdmin && pendingCount > 0 && <PendingBadge count={pendingCount} />}
                   </span>
                   <div>
                     <p className="font-bold text-[#171717]">{user.name}</p>
@@ -355,13 +366,14 @@ export default function Header() {
                 )}
                 {[
                   { to: '/mypage', label: '마이페이지' },
+                  ...(isAdmin && pendingCount > 0 ? [{ to: '/admin/users', label: `승인 대기 회원 ${pendingCount}명`, alert: true }] : []),
                   ...(isAdmin ? [{ to: '/admin', label: '관리자 대시보드' }] : []),
-                ].map(({ to, label }) => (
+                ].map(({ to, label, alert }) => (
                   <Link
                     key={to}
                     to={to}
                     onClick={() => setOpen(false)}
-                    className="block py-3 text-lg font-medium text-[#737373] hover:text-[#171717] transition-colors"
+                    className={`block py-3 text-lg transition-colors ${alert ? 'font-bold text-red-500 hover:text-red-600' : 'font-medium text-[#737373] hover:text-[#171717]'}`}
                   >
                     {label}
                   </Link>

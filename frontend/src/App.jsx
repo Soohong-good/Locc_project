@@ -51,6 +51,7 @@ const SundayMorningPage      = lazy(() => import('@/pages/worship/SundayMorningP
 const SundayAfternoonPage    = lazy(() => import('@/pages/worship/SundayAfternoonPage'))
 const WeekdayPage            = lazy(() => import('@/pages/worship/WeekdayPage'))
 const TrainingMessagePage    = lazy(() => import('@/pages/worship/TrainingMessagePage'))
+const RetreatPage            = lazy(() => import('@/pages/worship/RetreatPage'))
 const WorshipSermonDetailPage     = lazy(() => import('@/pages/worship/SermonDetailPage'))
 const SundayMorningDetailPage    = lazy(() => import('@/pages/worship/SundayMorningDetailPage'))
 const TrainingIntroPage      = lazy(() => import('@/pages/training/TrainingIntroPage'))
@@ -136,6 +137,7 @@ const AppRoutes = () => {
           <Route path="/worship/sermon/sunday-afternoon"      element={<SundayAfternoonPage />} />
           <Route path="/worship/sermon/weekday"               element={<WeekdayPage />} />
           <Route path="/worship/sermon/training-message"      element={<TrainingMessagePage />} />
+          <Route path="/worship/sermon/retreat"               element={<RetreatPage />} />
           <Route path="/worship/sermon/:id"                   element={<WorshipSermonDetailPage />} />
           <Route path="/worship/training-intro"          element={<TrainingIntroPage />} />
 

@@ -1,6 +1,5 @@
 package com.example.locc.domain.sermon.service;
 
-import com.example.locc.config.YouTubeProperties;
 import com.example.locc.domain.department.service.YouTubeService;
 import com.example.locc.domain.sermon.entity.Sermon;
 import com.example.locc.domain.sermon.repository.SermonRepository;
@@ -15,19 +14,23 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
  * YouTube 재생목록 기반 설교 자동 동기화 서비스
  *
  * 스케줄:
- *   - 월요일 03:00 KST: 주일오전 1·2부 + 주일오후
+ *   - 월요일 03:00 KST: 주일오전 1·2부 + 주일오후 + 수련회/특강
  *   - 목요일 03:00 KST: 수요예배
  *   - 토요일 03:00 KST: 금요기도회
  *
  * 중복 방지 기준 (둘 다 체크):
  *   1. youtubeVideoId — 동일 영상 재등록 방지
  *   2. category + sermonDate (+ serviceNumber) — 수동 작성 설교와의 충돌 방지
+ *
+ * 수련회/특강은 예외: 하루에 1강·2강이 함께 올라오고 비정기적으로 추가되므로
+ * 재생목록 전체를 조회하고 youtubeVideoId 로만 중복을 거른다.
  */
 @Slf4j
 @Service
@@ -36,12 +39,22 @@ public class SermonYouTubeSyncService {
 
     private final YouTubeService youTubeService;
     private final SermonRepository sermonRepository;
-    private final YouTubeProperties youTubeProperties;
+    private final SermonPlaylistResolver sermonPlaylistResolver;
 
     // 제목에서 날짜를 추출하는 패턴 (우선순위 순)
+    private static final String RETREAT_KEY      = "retreat";
+    private static final String RETREAT_CATEGORY = "수련회특강";
+    // 수련회/특강 재생목록 전체 조회 시 하한 날짜 (사실상 전체)
+    private static final LocalDate RETREAT_SINCE = LocalDate.of(2020, 1, 1);
+    // 수련회/특강 세부 구분 (serviceNumber) — 제목에 "축제"가 있으면 수련회, 그 외는 특강
+    private static final int RETREAT_SN_RETREAT = 1;
+    private static final int RETREAT_SN_LECTURE = 2;
+
     private static final List<Pattern> DATE_PATTERNS = List.of(
             // 2024. 5. 26. / 2024.05.26 / 2024-05-26 / 2024/05/26
             Pattern.compile("(\\d{4})[.\\-/]\\s*(\\d{1,2})[.\\-/]\\s*(\\d{1,2})"),
+            // 24.05.26 (yy.MM.dd — 교회 재생목록 제목 기본 형식)
+            Pattern.compile("(?<!\\d)(\\d{2})\\.(\\d{1,2})\\.(\\d{1,2})(?!\\d)"),
             // 2024년 5월 26일
             Pattern.compile("(\\d{4})년\\s*(\\d{1,2})월\\s*(\\d{1,2})일"),
             // 240526 (yyMMdd, 6자리 단독)
@@ -122,6 +135,7 @@ public class SermonYouTubeSyncService {
         syncPlaylist("sunday-morning-1", "주일오전", 1);
         syncPlaylist("sunday-morning-2", "주일오전", 2);
         syncPlaylist("sunday-afternoon", "주일오후", null);
+        syncRetreatPlaylist();
         log.info("[YouTube 동기화] 주일 예배 완료");
     }
 
@@ -155,6 +169,7 @@ public class SermonYouTubeSyncService {
             case "sunday-afternoon" -> syncPlaylist("sunday-afternoon", "주일오후", null);
             case "wednesday"        -> syncPlaylist("wednesday", "수요예배", null);
             case "friday"           -> syncPlaylist("friday", "금요기도회", null);
+            case RETREAT_KEY        -> syncRetreatPlaylist();
             default -> throw new IllegalArgumentException("알 수 없는 재생목록 키: " + playlistKey);
         };
     }
@@ -170,20 +185,46 @@ public class SermonYouTubeSyncService {
                 "sunday-morning-2", syncPlaylist("sunday-morning-2", "주일오전", 2),
                 "sunday-afternoon", syncPlaylist("sunday-afternoon", "주일오후", null),
                 "wednesday",        syncPlaylist("wednesday", "수요예배", null),
-                "friday",           syncPlaylist("friday", "금요기도회", null)
+                "friday",           syncPlaylist("friday", "금요기도회", null),
+                RETREAT_KEY,        syncRetreatPlaylist()
         );
     }
 
     // ── 내부 동기화 로직 ─────────────────────────────────────────────
 
     private int syncPlaylist(String playlistKey, String category, Integer serviceNumber) {
-        String playlistId = youTubeProperties.getPlaylistId(playlistKey);
+        String playlistId = sermonPlaylistResolver.resolve(playlistKey);
         if (!StringUtils.hasText(playlistId)) {
             log.warn("[YouTube 동기화] 재생목록 ID 없음: key={}", playlistKey);
             return 0;
         }
 
         List<Map<String, String>> videos = youTubeService.getLatestVideos(playlistId, 3);
+        return createSermons(playlistKey, videos, category, title -> serviceNumber, true);
+    }
+
+    /**
+     * 수련회/특강 — 재생목록 전체를 조회하고 날짜 중복 체크는 생략 (같은 날 여러 강의)
+     */
+    private int syncRetreatPlaylist() {
+        String playlistId = sermonPlaylistResolver.resolve(RETREAT_KEY);
+        if (!StringUtils.hasText(playlistId)) {
+            log.warn("[YouTube 동기화] 재생목록 ID 없음: key={}", RETREAT_KEY);
+            return 0;
+        }
+
+        List<Map<String, String>> videos = youTubeService.getAllVideosFromPlaylistSince(playlistId, RETREAT_SINCE);
+        return createSermons(RETREAT_KEY, videos, RETREAT_CATEGORY,
+                title -> title != null && title.contains("축제") ? RETREAT_SN_RETREAT : RETREAT_SN_LECTURE, false);
+    }
+
+    /**
+     * 영상 목록 → 설교 생성
+     * @param serviceNumberOf    영상 제목 → serviceNumber (재생목록 고정값이면 상수 반환)
+     * @param checkDateDuplicate true 면 category + sermonDate (+ serviceNumber) 중복도 건너뜀
+     */
+    private int createSermons(String playlistKey, List<Map<String, String>> videos, String category,
+                              Function<String, Integer> serviceNumberOf, boolean checkDateDuplicate) {
         if (videos.isEmpty()) {
             log.warn("[YouTube 동기화] 영상 없음: key={}", playlistKey);
             return 0;
@@ -195,6 +236,7 @@ public class SermonYouTubeSyncService {
             String title     = video.get("title");
             String thumbnail = video.get("thumbnail");
             String publishedAt = video.get("publishedAt");
+            Integer serviceNumber = serviceNumberOf.apply(title);
 
             // ① videoId 중복 체크 (동일 영상 재등록 방지)
             if (sermonRepository.existsByYoutubeVideoId(videoId)) {
@@ -213,9 +255,9 @@ public class SermonYouTubeSyncService {
             }
 
             // ③ 날짜+카테고리(+부) 중복 체크 (수동 작성 설교 충돌 방지)
-            boolean exists = serviceNumber != null
+            boolean exists = checkDateDuplicate && (serviceNumber != null
                     ? sermonRepository.existsByCategoryAndSermonDateAndServiceNumber(category, sermonDate, serviceNumber)
-                    : sermonRepository.existsByCategoryAndSermonDate(category, sermonDate);
+                    : sermonRepository.existsByCategoryAndSermonDate(category, sermonDate));
             if (exists) {
                 log.info("[YouTube 동기화] 해당 날짜 설교 이미 존재: category={}, date={}, serviceNumber={}",
                         category, sermonDate, serviceNumber);

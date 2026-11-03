@@ -1,6 +1,5 @@
 package com.example.locc.domain.admin.service;
 
-import com.example.locc.config.YouTubeProperties;
 import com.example.locc.domain.admin.dto.response.BibleSchoolYouTubeStatus;
 import com.example.locc.domain.admin.dto.response.SermonPlaylistStatus;
 import com.example.locc.domain.admin.dto.response.WorshipYouTubeStatus;
@@ -17,6 +16,7 @@ import com.example.locc.exception.NotFoundException;
 import com.example.locc.domain.newyear.dto.response.NewYearResponse;
 import com.example.locc.domain.newyear.entity.NewYear;
 import com.example.locc.domain.newyear.service.NewYearQueryService;
+import com.example.locc.domain.sermon.service.SermonPlaylistResolver;
 import com.example.locc.exception.InvalidInputException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,12 +40,12 @@ public class AdminYouTubeQueryService {
     private final NewYearQueryService newYearQueryService;
     private final BibleSchoolQueryService bibleSchoolQueryService;
     private final YouTubeService youTubeService;
-    private final YouTubeProperties youTubeProperties;
+    private final SermonPlaylistResolver sermonPlaylistResolver;
     private final SermonPlaylistCacheRepository sermonPlaylistCacheRepository;
 
     private static final List<String> PLAYLIST_ORDER = List.of(
             "sunday-morning-1", "sunday-morning-2",
-            "sunday-afternoon", "wednesday", "friday"
+            "sunday-afternoon", "wednesday", "friday", "retreat"
     );
 
     private static final Map<String, String> WORSHIP_PLAYLIST_LABELS = Map.of(
@@ -53,7 +53,8 @@ public class AdminYouTubeQueryService {
             "sunday-morning-2", "주일오전 2부",
             "sunday-afternoon", "주일오후",
             "wednesday",        "수요예배",
-            "friday",           "금요기도회"
+            "friday",           "금요기도회",
+            "retreat",          "수련회/특강"
     );
 
     /**
@@ -89,9 +90,7 @@ public class AdminYouTubeQueryService {
                 .map(entry -> {
                     String key = entry.getKey();
                     SermonPlaylistCache cache = cacheMap.get(key);
-                    String playlistId = (cache != null && cache.getPlaylistIdOverride() != null)
-                            ? cache.getPlaylistIdOverride()
-                            : youTubeProperties.getPlaylistId(key);
+                    String playlistId = sermonPlaylistResolver.resolve(key);
                     return new SermonPlaylistStatus(
                             key,
                             entry.getValue(),
@@ -116,7 +115,7 @@ public class AdminYouTubeQueryService {
     }
 
     public String getPlaylistId(String playlistKey) {
-        return youTubeProperties.getPlaylistId(playlistKey);
+        return sermonPlaylistResolver.resolve(playlistKey);
     }
 
     /**
@@ -154,7 +153,7 @@ public class AdminYouTubeQueryService {
 
         String playlistId = getPlaylistId(playlistKey);
         if (playlistId == null || playlistId.isBlank()) {
-            throw new InvalidInputException("재생목록 ID가 설정되지 않았습니다 (application.yml 확인)");
+            throw new InvalidInputException("재생목록 ID가 설정되지 않았습니다 (API 설정 또는 application.yml 확인)");
         }
 
         String[] info = youTubeService.getLatestVideoFromPlaylist(playlistId);

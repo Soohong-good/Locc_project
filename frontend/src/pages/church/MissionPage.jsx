@@ -91,10 +91,10 @@ const WavingFlag = ({ code }) => {
 }
 
 const missionFields = [
-  { name: 'GLL센터 (TCK문화센터)', en: 'TCK Culture Kids',    sub: 'Third Culture Kids',    missionary: null,       desc: '제3문화권 아이들을 위한 문화센터로서, 다문화 가정과 해외 거주 경험이 있는 아이들의 정체성 확립과 문화적응을 돕는 사역을 지원하고 있습니다.' },
-  { name: '미국',                   en: 'USA',                 sub: null,                   missionary: '이원규 선교사', desc: '미국 내 한인 디아스포라와 현지인을 대상으로 복음 전파와 교회 개척 사역을 감당하고 있습니다.' },
-  { name: '필리핀',                 en: 'Philippines',         sub: null,                   missionary: '신남선 선교사', desc: '필리핀 중부지역(central Luzon)에서 성경적 교회를 세우고, 후대를 치유하며, 현지인 교회를 살리는 사역을 하고 있습니다.' },
-  { name: '성경번역 선교회',         en: 'Bible Translation',   sub: null,                   missionary: '임오랑 선교사', desc: '자국어 성경이 없는 소수민족들을 위한 성경 번역 및 문자 개발 사역을 지원하고 있습니다.' },
+  { name: 'GLL센터 (다문화센터)',   en: 'Multicultural Center', sub: null,                   missionary: null,       desc: '다문화 가정 아이들을 위한 문화센터로서, 다문화 가정과 해외 거주 경험이 있는 아이들의 정체성 확립과 문화적응을 돕는 사역을 지원하고 있습니다.' },
+  { name: '미국',                   en: 'USA',                 sub: null,                   missionary: '이원규 협력선교사', desc: '미국 내 한인 디아스포라와 현지인을 대상으로 복음 전파와 교회 개척 사역을 감당하고 있습니다.' },
+  { name: '필리핀',                 en: 'Philippines',         sub: null,                   missionary: '신남선 협력선교사', desc: '필리핀 중부지역(central Luzon)에서 성경적 교회를 세우고, 후대를 치유하며, 현지인 교회를 살리는 사역을 하고 있습니다.' },
+  { name: '성경번역 선교회',         en: 'Bible Translation',   sub: null,                   missionary: '임오랑 협력선교사', desc: '자국어 성경이 없는 소수민족들을 위한 성경 번역 및 문자 개발 사역을 지원하고 있습니다.' },
   { name: '액츠신학 연구원 후원',    en: 'All Nations Christ Theological Seminaries (ACTS)', sub: null, missionary: null, desc: '액츠신학 연구원(ACTS)을 통해 차세대 선교 리더 양성과 신학 교육을 지원하고 있습니다.' },
 ]
 

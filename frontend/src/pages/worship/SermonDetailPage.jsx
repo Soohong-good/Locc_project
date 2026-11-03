@@ -36,6 +36,7 @@ const CATEGORY_TO_PATH = {
   '수요예배':     '/worship/sermon/weekday',
   '금요기도회':   '/worship/sermon/weekday',
   '훈련용메시지': '/worship/sermon/training-message',
+  '수련회특강':   '/worship/sermon/retreat',
 }
 
 const CATEGORY_LABEL = {
@@ -44,6 +45,7 @@ const CATEGORY_LABEL = {
   '수요예배':     '수요예배',
   '금요기도회':   '금요기도회',
   '훈련용메시지': '훈련메시지',
+  '수련회특강':   '수련회/특강',
 }
 
 function getServiceLabel(category, serviceNumber) {

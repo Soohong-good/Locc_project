@@ -83,6 +83,7 @@ public class SitemapController {
         addUrl(xml, "/worship/sermon/sunday-afternoon", "0.8", null);
         addUrl(xml, "/worship/sermon/weekday", "0.8", null);
         addUrl(xml, "/worship/sermon/training-message", "0.7", null);
+        addUrl(xml, "/worship/sermon/retreat", "0.7", null);
         addUrl(xml, "/worship/training-intro", "0.6", null);
         addUrl(xml, "/notices", "0.8", null);
         addUrl(xml, "/praise-sheets", "0.6", null);

@@ -1,6 +1,5 @@
 package com.example.locc.domain.sermon.service;
 
-import com.example.locc.config.YouTubeProperties;
 import com.example.locc.domain.department.service.YouTubeService;
 import com.example.locc.domain.file.service.FileQueryService;
 import com.example.locc.domain.sermon.dto.response.SermonPageResponse;
@@ -38,7 +37,7 @@ class SermonQueryServiceTest {
     @Mock private SermonRepository sermonRepository;
     @Mock private FileQueryService fileQueryService;
     @Mock private YouTubeService youTubeService;
-    @Mock private YouTubeProperties youTubeProperties;
+    @Mock private SermonPlaylistResolver sermonPlaylistResolver;
 
     @InjectMocks private SermonQueryService sermonQueryService;
 
@@ -93,7 +92,7 @@ class SermonQueryServiceTest {
     @DisplayName("수요예배 통합 조회 - 빈 데이터에서도 응답을 정상 조립한다")
     void getWeekdayPage_wednesday_returnsAggregatedResponse() {
         // wednesday → 카테고리 "수요예배" (serviceNumber 없이 카테고리로만 구분)
-        given(youTubeProperties.getPlaylistId("wednesday")).willReturn(null); // 유튜브 없음
+        given(sermonPlaylistResolver.resolve("wednesday")).willReturn(null); // 유튜브 없음
         // toPageable()이 정렬 조건을 붙이므로 페이지 세부값 대신 any(Pageable)로 매칭
         given(sermonRepository.findByCategory(eq("수요예배"), any(Pageable.class)))
                 .willReturn(Page.empty());

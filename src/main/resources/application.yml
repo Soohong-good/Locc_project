@@ -123,6 +123,8 @@ youtube:
     wednesday: ${YOUTUBE_PLAYLIST_WEDNESDAY:PLj3rgPIpeTF1UT1T-9yPnzcnZBQBSGkaT}
     # 금요기도회 재생목록
     friday: ${YOUTUBE_PLAYLIST_FRIDAY:PLj3rgPIpeTF0xu1vRW8R5Det5MD_IrMYu}
+    # 수련회/특강 재생목록 (수련회·세미나·특강 강의 모음)
+    retreat: ${YOUTUBE_PLAYLIST_RETREAT:PLj3rgPIpeTF0SGiDnuLuXL3WLEUh7HV8R}
     # 송구영신예배 재생목록 (없으면 빈값 → 관리자가 UI에서 직접 설정)
     newyear: ${YOUTUBE_PLAYLIST_NEWYEAR:}
     # 찬양대 재생목록 (2025-01-01 이후 게시 영상만 동기화)

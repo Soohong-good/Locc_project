@@ -135,6 +135,16 @@ public class SermonApiController {
                 sermonQueryService.getSundayAfternoonPage(page, size, keyword)));
     }
 
+    @GetMapping("/retreat")
+    public ResponseEntity<ApiResponse<SermonPageResponse>> getRetreatData(
+            @RequestParam(required = false) Integer serviceNumber,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                sermonQueryService.getRetreatPage(serviceNumber, page, size, keyword)));
+    }
+
     @GetMapping("/weekday/{type}")
     public ResponseEntity<ApiResponse<SermonPageResponse>> getWeekdayData(
             @PathVariable String type,

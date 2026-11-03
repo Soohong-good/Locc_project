@@ -38,7 +38,7 @@ const features = [
 const processSteps = [
   { step: '01', title: '등록 및 오리엔테이션', desc: '참가 신청 후 오리엔테이션을 통해 리딩지저스 방법론과 일정을 안내합니다.' },
   { step: '02', title: '매주 읽기 & 소그룹', desc: '정해진 본문을 주중에 개인으로 읽고, 주말 소그룹에서 함께 나눕니다.' },
-  { step: '03', title: '수료 및 다음 단계', desc: '12주 과정 수료 후 그리스도 제자대학 진학 등 다음 훈련 단계로 연결됩니다.' },
+  { step: '03', title: '수료 및 다음 단계', desc: '12주 과정 수료 후 그사랑 제자대학 진학 등 다음 훈련 단계로 연결됩니다.' },
 ]
 
 const semesterCurriculum = {
@@ -76,7 +76,7 @@ const HeroSection = () => (
       <div className="lg:col-span-4 bg-[#141414] border-l border-white/10 p-8 md:p-16 flex flex-col justify-end">
         <span className="text-xs uppercase tracking-[0.2em] font-semibold text-white/40 font-mono mb-6 block">Programs</span>
         <ul className="space-y-4 text-white/70">
-          {['01 리딩지저스 성경읽기', '02 그리스도 제자대학', '03 특강 및 기타 훈련'].map(item => (
+          {['01 리딩지저스 성경읽기', '02 그사랑 제자대학', '03 특강 및 기타 훈련'].map(item => (
             <li key={item} className="flex items-center gap-3 text-base font-light">
               <CaretRight size={14} className="text-white/40 shrink-0" />
               {item}
@@ -184,7 +184,7 @@ const DiscipleUniversitySection = () => (
       <span className="text-[120px] lg:text-[200px] font-mono font-bold text-[#2C2C2C]/5 absolute -top-10 right-4 md:right-12 leading-none select-none z-0">02</span>
       <div className="relative z-10 pt-10 pb-0 p-8 md:p-16 lg:p-24">
         <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#737373] font-mono mb-4 block">Disciple University</span>
-        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#2C2C2C]">그리스도 제자대학</h2>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-[#2C2C2C]">그사랑 제자대학</h2>
       </div>
     </div>
     <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">

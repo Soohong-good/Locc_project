@@ -7,7 +7,9 @@ import { DateInput } from '@/components/ui/DateInput'
 import { getErrorMessage } from '@/lib/apiError'
 import toast from '@/utils/toast'
 
-const CATEGORIES = ['주일오전', '주일오후', '수요예배', '금요기도회', '훈련용메시지']
+const CATEGORIES = ['주일오전', '주일오후', '수요예배', '금요기도회', '훈련용메시지', '수련회특강']
+// 저장값과 화면 표기가 다른 카테고리만 정의
+const CATEGORY_LABEL = { '수련회특강': '수련회/특강' }
 
 /**
  * 관리자 설교 생성·수정 폼 (통합)
@@ -98,7 +100,8 @@ const AdminSermonFormPage = () => {
   }
   const removeFile = (idx) => setFiles((prev) => prev.filter((_, i) => i !== idx))
 
-  const showServiceNumber = ['주일오전', '주일오후'].includes(fields.category)
+  const showServiceNumber = ['주일오전', '주일오후', '수련회특강'].includes(fields.category)
+  const isRetreat = fields.category === '수련회특강'
 
   if (isEdit && isDetailLoading) return (
     <div className="p-8 max-w-3xl space-y-6">
@@ -136,17 +139,17 @@ const AdminSermonFormPage = () => {
             <select value={fields.category} onChange={set('category')} required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
               {(isEdit && fields.category === '주일오전' ? CATEGORIES : CATEGORIES.filter((c) => c !== '주일오전'))
-                .map((c) => <option key={c} value={c}>{c}</option>)}
+                .map((c) => <option key={c} value={c}>{CATEGORY_LABEL[c] ?? c}</option>)}
             </select>
           </div>
           {showServiceNumber && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">예배부</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{isRetreat ? '구분' : '예배부'}</label>
               <select value={fields.serviceNumber} onChange={set('serviceNumber')}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                 <option value="">선택 안 함</option>
-                <option value="1">1부</option>
-                <option value="2">2부</option>
+                <option value="1">{isRetreat ? '수련회' : '1부'}</option>
+                <option value="2">{isRetreat ? '특강' : '2부'}</option>
               </select>
             </div>
           )}

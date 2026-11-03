@@ -21,6 +21,7 @@ const SITEMAP = [
       { to: '/worship/sermon/sunday-afternoon', label: '주일오후예배' },
       { to: '/worship/sermon/weekday',          label: '수요예배·금요기도회' },
       { to: '/worship/sermon/training-message', label: '훈련 메시지' },
+      { to: '/worship/sermon/retreat',          label: '수련회/특강 말씀' },
     ],
   },
   {

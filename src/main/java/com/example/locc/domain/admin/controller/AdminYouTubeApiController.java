@@ -7,6 +7,7 @@ import com.example.locc.domain.admin.dto.response.SermonPlaylistStatus;
 import com.example.locc.domain.admin.dto.response.WorshipYouTubeStatus;
 import com.example.locc.domain.admin.service.AdminYouTubeQueryService;
 import com.example.locc.domain.department.dto.response.DepartmentResponse;
+import com.example.locc.domain.sermon.service.SermonYouTubeSyncService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ import java.util.List;
 public class AdminYouTubeApiController {
 
     private final AdminYouTubeQueryService adminYouTubeQueryService;
+    private final SermonYouTubeSyncService sermonYouTubeSyncService;
 
     /**
      * 부서 전체 목록 (YouTube 현황 포함)
@@ -87,6 +89,7 @@ public class AdminYouTubeApiController {
 
     /**
      * 특정 예배 재생목록 최신 영상 수동 갱신
+     * 최신 영상 캐시 갱신 후, 재생목록의 새 영상을 설교 목록에도 등록한다 (설교 관리 "YouTube 동기화"와 동일 로직)
      */
     @PostMapping("/sermon-playlists/{playlistKey}/refresh")
     public ResponseEntity<ApiResponse<SermonPlaylistStatus>> refreshSermonPlaylist(
@@ -94,7 +97,8 @@ public class AdminYouTubeApiController {
 
         log.info("예배 재생목록 수동 갱신 요청: key={}", playlistKey);
         SermonPlaylistStatus result = adminYouTubeQueryService.refreshSermonPlaylist(playlistKey);
-        log.info("갱신 완료: key={}, videoId={}", playlistKey, result.latestVideoId());
+        int created = sermonYouTubeSyncService.syncByKey(playlistKey);
+        log.info("갱신 완료: key={}, videoId={}, 신규 설교={}건", playlistKey, result.latestVideoId(), created);
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }
