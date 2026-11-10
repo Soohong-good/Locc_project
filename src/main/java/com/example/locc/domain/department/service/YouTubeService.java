@@ -10,6 +10,8 @@ import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
+import com.google.api.services.youtube.model.Thumbnail;
+import com.google.api.services.youtube.model.ThumbnailDetails;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import lombok.RequiredArgsConstructor;
@@ -295,10 +297,14 @@ public class YouTubeService {
             List<Map<String, String>> videos = new ArrayList<>();
             
             for (PlaylistItem item : items) {
+                String thumbnail = extractThumbnailUrl(item);
+                if (thumbnail == null) {
+                    continue;   // 비공개·삭제된 영상
+                }
                 Map<String, String> video = new HashMap<>();
                 video.put("videoId", item.getContentDetails().getVideoId());
                 video.put("title", item.getSnippet().getTitle());
-                video.put("thumbnail", item.getSnippet().getThumbnails().getMedium().getUrl());
+                video.put("thumbnail", thumbnail);
                 video.put("publishedAt", item.getSnippet().getPublishedAt().toString());
                 videos.add(video);
             }
@@ -384,10 +390,15 @@ public class YouTubeService {
                             continue;
                         }
 
+                        String thumbnail = extractThumbnailUrl(item);
+                        if (thumbnail == null) {
+                            continue;   // 비공개·삭제된 영상
+                        }
+
                         Map<String, String> video = new HashMap<>();
                         video.put("videoId", item.getContentDetails().getVideoId());
                         video.put("title", item.getSnippet().getTitle());
-                        video.put("thumbnail", item.getSnippet().getThumbnails().getMedium().getUrl());
+                        video.put("thumbnail", thumbnail);
                         video.put("publishedAt", publishedAt);
                         result.add(video);
                     }
@@ -404,6 +415,20 @@ public class YouTubeService {
             log.error("YouTube 전체 페이지 조회 실패: playlistId={}", playlistId, e);
             return List.of();
         }
+    }
+
+    /**
+     * 재생목록 항목의 썸네일 URL (medium → high → default 순)
+     * 비공개·삭제된 영상은 YouTube가 썸네일을 내려주지 않으므로 null 반환 → 호출부에서 건너뜀.
+     * (null 체크 없이 getMedium().getUrl()을 호출하면 비공개 영상 하나 때문에 동기화 전체가 NPE로 중단됨)
+     */
+    private String extractThumbnailUrl(PlaylistItem item) {
+        ThumbnailDetails thumbnails = item.getSnippet().getThumbnails();
+        if (thumbnails == null) return null;
+        Thumbnail thumbnail = thumbnails.getMedium() != null ? thumbnails.getMedium()
+                : thumbnails.getHigh() != null ? thumbnails.getHigh()
+                : thumbnails.getDefault();
+        return thumbnail != null ? thumbnail.getUrl() : null;
     }
 
     private java.time.LocalDate parsePublishedDate(String publishedAt) {
