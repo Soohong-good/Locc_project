@@ -10,6 +10,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
@@ -99,6 +100,17 @@ public class RestExceptionHandler {
         log.warn("Bad credentials");
         ErrorResponse response = ErrorResponse.of(ErrorCode.INVALID_CREDENTIALS);
         return ResponseEntity.status(ErrorCode.INVALID_CREDENTIALS.getHttpStatus()).body(response);
+    }
+
+    /**
+     * 계정 단위 인증 실패 한도 초과 (LoginAttemptService)
+     */
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ErrorResponse> handleLocked(LockedException e) {
+        log.warn("LockedException: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.of(ErrorCode.RATE_LIMIT_EXCEEDED,
+                "인증 실패 횟수가 초과되었습니다. 15분 후 다시 시도해주세요.");
+        return ResponseEntity.status(ErrorCode.RATE_LIMIT_EXCEEDED.getHttpStatus()).body(response);
     }
 
     @ExceptionHandler(AuthenticationException.class)

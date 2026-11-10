@@ -30,8 +30,12 @@ public class ErrorReportController {
             HttpServletRequest httpRequest
     ) {
         String ip = httpRequest.getRemoteAddr();
-        log.warn("[프론트 에러] type={} url={} ip={} message={}",
-                request.type(), request.url(), ip, request.message());
+        // [SECURITY] 비로그인 공개 API — 길이 제한 + 개행 제거(로그 위조 방지) 후 사용
+        String type    = clean(request.type(), 50);
+        String url     = clean(request.url(), 300);
+        String message = clean(request.message(), 500);
+        String stack   = request.stack() != null ? truncate(request.stack(), 4000) : null;
+        log.warn("[프론트 에러] type={} url={} ip={} message={}", type, url, ip, message);
 
         String detail = """
                 URL     : %s
@@ -41,20 +45,30 @@ public class ErrorReportController {
                 Stack:
                 %s
                 """.formatted(
-                request.url(),
+                url,
                 ip,
-                httpRequest.getHeader("User-Agent"),
-                request.stack() != null ? request.stack() : "(없음)"
+                clean(httpRequest.getHeader("User-Agent"), 300),
+                stack != null ? stack : "(없음)"
         );
 
         asyncEmailSender.sendErrorAlert(
-                "프론트 에러 발생 (" + request.type() + ")",
-                request.type(),
-                request.message(),
+                "프론트 에러 발생 (" + type + ")",
+                type,
+                message,
                 detail
         );
 
         return ResponseEntity.ok().build();
+    }
+
+    private static String truncate(String value, int max) {
+        return value.length() > max ? value.substring(0, max) + "…(생략)" : value;
+    }
+
+    /** 길이 제한 + 제어문자(개행 포함) 제거 — 한 줄짜리 필드용 */
+    private static String clean(String value, int max) {
+        if (value == null) return null;
+        return truncate(value.replaceAll("\\p{Cntrl}", " "), max);
     }
 
     record ErrorReportRequest(

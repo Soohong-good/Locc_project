@@ -13,12 +13,15 @@ import com.example.locc.domain.user.service.UserCommandService;
 import com.example.locc.domain.user.service.UserPermissionService;
 import com.example.locc.domain.user.service.UserQueryService;
 import com.example.locc.security.CookieUtil;
+import com.example.locc.security.LoginAttemptService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +46,7 @@ public class UserApiController {
     private final UserQueryService    userQueryService;
     private final UserPermissionService userPermissionService;
     private final CookieUtil         cookieUtil;
+    private final LoginAttemptService loginAttemptService;
 
     // ===== 인증 관련 API =====
 
@@ -79,7 +83,20 @@ public class UserApiController {
             HttpServletResponse response) {
         log.debug("Login request received");
 
-        UserAuthResponse auth = userCommandService.login(request.toCommand());
+        // [SECURITY] 계정 단위 실패 횟수 제한 — IP를 바꿔가며 한 계정을 대입하는 공격 차단
+        String email = request.getEmail();
+        if (loginAttemptService.isLocked(LoginAttemptService.SCOPE_PASSWORD, email)) {
+            throw new LockedException("로그인 실패 횟수 초과");
+        }
+
+        UserAuthResponse auth;
+        try {
+            auth = userCommandService.login(request.toCommand());
+        } catch (BadCredentialsException e) {
+            loginAttemptService.recordFailure(LoginAttemptService.SCOPE_PASSWORD, email);
+            throw e;
+        }
+        loginAttemptService.reset(LoginAttemptService.SCOPE_PASSWORD, email);
 
         // TOTP 2차 인증 필요 — JWT 쿠키 설정 없이 preAuthToken만 반환
         if (Boolean.TRUE.equals(auth.getTotpRequired())) {

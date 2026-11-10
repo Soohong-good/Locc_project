@@ -9,6 +9,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  * 비동기 이메일 발송 전용 서비스
@@ -191,7 +192,7 @@ public class AsyncEmailSender {
                   </table>
                 </body>
                 </html>
-                """.formatted(errorType, message, detail);
+                """.formatted(esc(errorType), esc(message), esc(detail));
     }
 
     private String buildVerificationCodeHtml(String code) {
@@ -313,7 +314,7 @@ public class AsyncEmailSender {
                   </table>
                 </body>
                 </html>
-                """.formatted(name, loginUrl);
+                """.formatted(esc(name), loginUrl);
     }
 
     private String buildPasswordResetHtml(String name, String resetUrl) {
@@ -382,6 +383,11 @@ public class AsyncEmailSender {
                   </table>
                 </body>
                 </html>
-                """.formatted(name, resetUrl);
+                """.formatted(esc(name), resetUrl);
+    }
+
+    /** 메일 본문에 넣는 외부 입력값 HTML 이스케이프 (HTML 주입 방지) */
+    private static String esc(String value) {
+        return value == null ? "" : HtmlUtils.htmlEscape(value);
     }
 }

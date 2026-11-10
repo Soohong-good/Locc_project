@@ -56,13 +56,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
         Map.entry("/api/help-request",                 new RateLimitPolicy(10, Duration.ofMinutes(10))),
         // TOTP 2차 인증 — preAuthToken 유효시간(5분) 내 6자리 코드 무차별 대입 방지
         Map.entry("/api/auth/totp/verify",             new RateLimitPolicy(10, Duration.ofMinutes(5))),
-        Map.entry("/api/auth/totp/enable",             new RateLimitPolicy(10, Duration.ofMinutes(5)))
+        Map.entry("/api/auth/totp/enable",             new RateLimitPolicy(10, Duration.ofMinutes(5))),
+        Map.entry("/api/auth/totp/setup",              new RateLimitPolicy(10, Duration.ofMinutes(5))),
+        // 프론트 에러 리포트 — 호출마다 관리자 메일 발송 → 메일 폭탄·SMTP 한도 소진 방지
+        Map.entry("/api/error-report",                 new RateLimitPolicy(5,  Duration.ofMinutes(10)))
     );
 
     // 동적 경로 패턴 기반 Rate Limit 정책
     // key: 정규식 패턴, value: 정책
     private static final Map<Pattern, RateLimitPolicy> PATTERN_POLICIES = Map.of(
-        Pattern.compile("^/api/notices/\\d+/views$"), new RateLimitPolicy(20, Duration.ofMinutes(1))
+        // 조회수 증가 — 비로그인 공개 API, 반복 호출로 조회수 부풀리기 방지
+        Pattern.compile("^/api/(notices|sermons|praise-sheets)/\\d+/views$"), new RateLimitPolicy(20, Duration.ofMinutes(1))
     );
 
     // ───── 필터 처리 ─────────────────────────────────────────────────────────

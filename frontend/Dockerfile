@@ -24,6 +24,7 @@ FROM nginx:1.25-alpine
 # 기본 nginx 설정 제거 후 커스텀 설정 적용
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 
 # 빌드된 React 정적 파일 복사
 COPY --from=builder /app/dist /usr/share/nginx/html

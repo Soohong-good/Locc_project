@@ -1,6 +1,7 @@
 package com.example.locc.domain.auth.service;
 
 import com.example.locc.domain.user.entity.User;
+import com.example.locc.domain.user.repository.RefreshTokenRepository;
 import com.example.locc.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class PasswordResetService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final AsyncEmailSender asyncEmailSender;
@@ -99,6 +101,9 @@ public class PasswordResetService {
         // 비밀번호 암호화 및 변경
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.changePassword(encodedPassword);
+
+        // [SECURITY] 기존 로그인 세션 종료 — 계정 탈취 후 재설정으로 복구하는 경우 공격자 세션이 남지 않도록
+        refreshTokenRepository.deleteByUser(user);
 
         // 토큰 삭제 (재사용 방지)
         redisTemplate.delete(key);

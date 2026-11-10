@@ -368,6 +368,11 @@ public class UserCommandService {
     public String setupTotp(String preAuthToken) {
         String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
         User user = userQueryService.findByEmail(email);
+        // [SECURITY] 이미 활성화된 계정의 재발급 차단 — 허용하면 비밀번호만 아는 공격자가
+        // 비밀키를 덮어쓰고 /enable 로 2차 인증을 우회할 수 있다. 분실 시에는 관리자 초기화(disableTotp) 경유.
+        if (Boolean.TRUE.equals(user.getTotpEnabled())) {
+            throw new InvalidInputException("이미 2차 인증이 설정된 계정입니다. 인증 코드를 입력해주세요.");
+        }
         String secret = totpService.generateSecret();
         user.setupTotp(secret);
         return totpService.generateQrCodeImageUri(secret, email);
@@ -379,6 +384,10 @@ public class UserCommandService {
     public User enableTotpAndGetUser(String preAuthToken, String code) {
         String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
         User user = userQueryService.findByEmail(email);
+        // [SECURITY] 이미 활성화된 계정은 /verify 로만 통과 (재활성화 경로 차단)
+        if (Boolean.TRUE.equals(user.getTotpEnabled())) {
+            throw new InvalidInputException("이미 2차 인증이 설정된 계정입니다. 인증 코드를 입력해주세요.");
+        }
         if (user.getTotpSecret() == null) {
             throw new InvalidInputException("QR 코드를 먼저 발급받으세요.");
         }

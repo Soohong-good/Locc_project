@@ -7,13 +7,16 @@ import com.example.locc.domain.user.service.UserCommandService;
 import com.example.locc.exception.InvalidInputException;
 import com.example.locc.security.CookieUtil;
 import com.example.locc.security.JwtTokenProvider;
+import com.example.locc.security.LoginAttemptService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Slf4j
 @RestController
@@ -24,6 +27,7 @@ public class TotpApiController {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserCommandService userCommandService;
     private final CookieUtil cookieUtil;
+    private final LoginAttemptService loginAttemptService;
 
     /**
      * QR 코드 발급 (로그인 흐름 중, preAuthToken 기반)
@@ -49,7 +53,7 @@ public class TotpApiController {
         String code = body.get("code");
         if (preAuthToken == null || code == null) throw new InvalidInputException("preAuthToken과 code는 필수입니다.");
 
-        User user = userCommandService.enableTotpAndGetUser(preAuthToken, code);
+        User user = checkCode(preAuthToken, () -> userCommandService.enableTotpAndGetUser(preAuthToken, code));
         return issueJwt(user, response, "2차 인증이 활성화되었습니다.");
     }
 
@@ -64,8 +68,27 @@ public class TotpApiController {
         String code = body.get("code");
         if (preAuthToken == null || code == null) throw new InvalidInputException("preAuthToken과 code는 필수입니다.");
 
-        User user = userCommandService.verifyTotpAndGetUser(preAuthToken, code);
+        User user = checkCode(preAuthToken, () -> userCommandService.verifyTotpAndGetUser(preAuthToken, code));
         return issueJwt(user, response, "로그인에 성공했습니다.");
+    }
+
+    /**
+     * [SECURITY] 계정 단위 코드 대입 제한 — 6자리 코드를 IP를 바꿔가며 무차별 대입하는 공격 차단
+     */
+    private User checkCode(String preAuthToken, Supplier<User> verification) {
+        String email = jwtTokenProvider.getEmailFromPreAuthToken(preAuthToken);
+        if (loginAttemptService.isLocked(LoginAttemptService.SCOPE_TOTP, email)) {
+            throw new LockedException("2차 인증 실패 횟수 초과");
+        }
+        User user;
+        try {
+            user = verification.get();
+        } catch (InvalidInputException e) {
+            loginAttemptService.recordFailure(LoginAttemptService.SCOPE_TOTP, email);
+            throw e;
+        }
+        loginAttemptService.reset(LoginAttemptService.SCOPE_TOTP, email);
+        return user;
     }
 
     private ResponseEntity<ApiResponse<UserAuthResponse>> issueJwt(
