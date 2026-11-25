@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 const programInfoItems = [
   { label: 'Program', value: '리딩지저스 성경읽기' },
   { label: 'Duration', value: '12주 과정' },
-  { label: 'Location', value: '교육관 3층' },
   { label: 'Application', value: '교회 사무실 문의' },
 ]
 
@@ -90,7 +89,7 @@ const HeroSection = () => (
 
 const ProgramInfoSection = () => (
   <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
-    <div className="max-w-[1600px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
+    <div className="max-w-[1600px] mx-auto grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
       {programInfoItems.map(({ label, value }) => (
         <div key={label} className="p-6 sm:p-8 md:p-12 flex flex-col">
           <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-3">{label}</span>
