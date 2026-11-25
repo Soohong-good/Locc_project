@@ -1,12 +1,6 @@
 import { BookOpen, Clock, Info, CheckCircle, CaretRight, Desktop, ChalkboardTeacher, Books } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
 
-const programInfoItems = [
-  { label: 'Program', value: '리딩지저스 성경읽기' },
-  { label: 'Duration', value: '12주 과정' },
-  { label: 'Application', value: '교회 사무실 문의' },
-]
-
 const features = [
   {
     num: '01',
@@ -87,19 +81,6 @@ const HeroSection = () => (
   </section>
 )
 
-const ProgramInfoSection = () => (
-  <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
-    <div className="max-w-[1600px] mx-auto grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-[#E5E5E5] border-x border-[#E5E5E5]">
-      {programInfoItems.map(({ label, value }) => (
-        <div key={label} className="p-6 sm:p-8 md:p-12 flex flex-col">
-          <span className="text-xs font-mono uppercase tracking-[0.2em] text-[#737373] mb-3">{label}</span>
-          <span className="text-xl font-bold text-[#2C2C2C]">{value}</span>
-        </div>
-      ))}
-    </div>
-  </section>
-)
-
 const ReadingJesusSection = () => (
   <section className="bg-[#FAF9F6] border-b border-[#E5E5E5]">
     <div className="max-w-[1600px] mx-auto border-x border-[#E5E5E5] relative overflow-hidden">
@@ -124,10 +105,9 @@ const ReadingJesusSection = () => (
         <h4 className="text-xl font-bold text-[#2C2C2C] mb-8 border-b border-[#E5E5E5] pb-4">프로그램 안내</h4>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           {[
-            { dt: '대상', dd: '등록 교인 누구나' },
+            { dt: '대상', dd: '본교회에 문의' },
             { dt: '기간', dd: '매년 1월 ~ 12월 (연간 운영)' },
-            { dt: '시간', dd: '주일 오후 (소그룹별 조율)' },
-            { dt: '장소', dd: '교육관 소그룹실' },
+            { dt: '시간', dd: '본교회에 문의' },
           ].map(({ dt, dd }) => (
             <div key={dt}>
               <dt className="text-xs font-mono uppercase tracking-widest text-[#737373] mb-2">{dt}</dt>
@@ -284,7 +264,6 @@ export default function TrainingIntroPage() {
   return (
     <main className="bg-[#FAF9F6] text-[#2C2C2C]">
       <HeroSection />
-      <ProgramInfoSection />
       <ReadingJesusSection />
       <FeaturesSection />
       <ProcessSection />
